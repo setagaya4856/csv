@@ -5,6 +5,10 @@
     <title>空家データ入力</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     <style>
+body {
+  zoom: 1.5;
+  -moz-transform: scale(1.5);
+}
 table td {
   background: #eee;
 }
@@ -84,9 +88,9 @@ table tr:nth-child(odd) td {
     			input_tr.setAttribute("onclick", "cellplus(" + (Number(cells[0])) + ")");
 			td.appendChild(input_tr);
 		}else{
-                	const trx = document.createElement('td');
-                	tdx.contentEditable = false;
-                	tdx.textContent = "";
+                	const trx = document.createElement('tr');
+                	trx.contentEditable = false;
+                	trx.textContent = "";
 			td.appendChild(trx);
 		};
 		tr.appendChild(td);
