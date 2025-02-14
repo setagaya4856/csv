@@ -77,11 +77,18 @@ table tr:nth-child(odd) td {
                 tr.appendChild(td0);
 
                 const td = document.createElement('td');
-    		const input_tr = document.createElement("input");
-    		input_tr.setAttribute("type", "button");
-    		input_tr.setAttribute("value", "＋");
-    		input_tr.setAttribute("onclick", "cellplus(" + (Number(cells[0])) + ")");
-		td.appendChild(input_tr);
+		if(Number(cells[5]) == 1){
+    			const input_tr = document.createElement("input");
+    			input_tr.setAttribute("type", "button");
+    			input_tr.setAttribute("value", "＋");
+    			input_tr.setAttribute("onclick", "cellplus(" + (Number(cells[0])) + ")");
+			td.appendChild(input_tr);
+		}else{
+                	const trx = document.createElement('td');
+                	tdx.contentEditable = false;
+                	tdx.textContent = "";
+			td.appendChild(trx);
+		};
 		tr.appendChild(td);
 		
                 const td1 = document.createElement('td');
