@@ -78,16 +78,16 @@
                 trM.appendChild(tdM1);
                 const tdM = document.createElement('td');
                 tdM.textContent = "増";
+		trM.appendChild(tdM);
                 const tdM2 = document.createElement('td');
                 tdM2.contentEditable = false;
                 tdM2.textContent = "数量";
                 trM.appendChild(tdM2);
-                table.appendChild(trM);
                 const tdM3 = document.createElement('td');
                 tdM3.contentEditable = false;
                 tdM3.textContent = "単位";
                 trM.appendChild(tdM3);
-		trM.appendChild(tdM);
+                table.appendChild(trM);
 		
             rows.forEach((row) => {
 		const tr = document.createElement('tr');
