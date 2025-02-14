@@ -23,15 +23,10 @@ input[type="file"]::focus,
 input[type="button"]::focus {
   outline-offset: -2px;
 }
-body {
-  zoom: 1.5;
-  -moz-transform: scale(1.5);
-}
-table td {
-  background: #eee;
-}
-table tr:nth-child(odd) td {
-  background: #fff;
+table {
+  table-layout: fixed;
+  width: 350px;
+  overflow: hidden;
 }
         table, th, td {
             border: 1px solid black;
@@ -40,6 +35,24 @@ table tr:nth-child(odd) td {
         th, td {
             padding: 8px;
         }
+.naiyo{
+    width: 200px;
+}
+.count{
+    width: 50px;
+}
+.unit{
+    width: 50px;
+}
+.btn{
+    width: 50px;
+}
+table td {
+  background: #eee;
+}
+table tr:nth-child(odd) td {
+  background: #fff;
+}
 
     </style>
 </head>
@@ -73,22 +86,22 @@ table tr:nth-child(odd) td {
                 tdM0.textContent = "No";
 		trM.appendChild(tdM0);
 		
-                const tdM = document.createElement('td');
-                tdM.textContent = "増";
-		trM.appendChild(tdM);
                 const tdM1 = document.createElement('td');
                 tdM1.contentEditable = false;
                 tdM1.textContent = "内容";
                 trM.appendChild(tdM1);
                 const tdM2 = document.createElement('td');
                 tdM2.contentEditable = false;
-                tdM2.textContent = "単位";
+                tdM2.textContent = "数量";
                 trM.appendChild(tdM2);
+                table.appendChild(trM);
                 const tdM3 = document.createElement('td');
                 tdM3.contentEditable = false;
-                tdM3.textContent = "数量";
+                tdM3.textContent = "単位";
                 trM.appendChild(tdM3);
-                table.appendChild(trM);
+                const tdM = document.createElement('td');
+                tdM.textContent = "増";
+		trM.appendChild(tdM);
 		
             rows.forEach((row) => {
 		const tr = document.createElement('tr');
@@ -97,6 +110,24 @@ table tr:nth-child(odd) td {
                 td0.contentEditable = false;
                 td0.textContent = cells[1];
                 tr.appendChild(td0);
+                const td1 = document.createElement('td');
+                td1.contentEditable = false;
+                td1.textContent = cells[2];
+                tr.appendChild(td1);
+                const td2 = document.createElement('td');
+		if(Number(cells[5]) == 1){
+                	td2.contentEditable = true;
+                	td2.textContent = cells[3];
+		}else{
+                	td2.textContent = false;
+                	td2.textContent = "*";
+		};
+                tr.appendChild(td2);
+                table.appendChild(tr);
+                const td3 = document.createElement('td');
+                td3.contentEditable = false;
+                td3.textContent = cells[4];
+                tr.appendChild(td3);
 
                 const td = document.createElement('td');
 		if(Number(cells[5]) == 1){
@@ -112,25 +143,6 @@ table tr:nth-child(odd) td {
 			td.appendChild(trx);
 		};
 		tr.appendChild(td);
-		
-                const td1 = document.createElement('td');
-                td1.contentEditable = false;
-                td1.textContent = cells[2];
-                tr.appendChild(td1);
-                const td2 = document.createElement('td');
-                td2.contentEditable = false;
-                td2.textContent = cells[3];
-                tr.appendChild(td2);
-                const td3 = document.createElement('td');
-		if(Number(cells[5]) == 1){
-                	td3.contentEditable = true;
-                	td3.textContent = cells[4];
-		}else{
-                	td3.textContent = false;
-                	td3.textContent = "*";
-		};
-                tr.appendChild(td3);
-                table.appendChild(tr);
             });
         }
 	
@@ -139,12 +151,16 @@ table tr:nth-child(odd) td {
       		var rows = table.rows;
       		for (var i = 0; i < rows.length; i++) {
         		rows[i].cells[0].style.display = "none";
+			rows[i].cells[1].className='naiyo';
+			rows[i].cells[2].className='count';
+			rows[i].cells[3].className='unit';
+			rows[i].cells[4].className='btn';
       		}
     	}
 
         function cellplus(rowNo) {
             	const table = document.getElementById('csvTable');
-		table.rows[rowNo].cells[4].innerText = Number(table.rows[rowNo].cells[4].innerText) + 1;
+		table.rows[rowNo].cells[2].innerText = Number(table.rows[rowNo].cells[2].innerText) + 1;
         }
 
         function downloadCSV() {
