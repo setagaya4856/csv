@@ -36,7 +36,7 @@ table tr:nth-child(odd) td {
                 reader.onload = function(e) {
                     const text = e.target.result;
                     displayCSV(text);
-		    hideColumn(0);
+		    hideColumn();
                 };
                 reader.readAsText(file);
             }
@@ -66,8 +66,12 @@ table tr:nth-child(odd) td {
                 tdM3.contentEditable = true;
                 tdM3.textContent = "数量";
                 trM.appendChild(tdM3);
+                const tdM4 = document.createElement('td');
+                tdM4.contentEditable = true;
+                tdM4.textContent = "書込";
+                trM.appendChild(tdM4);
                 table.appendChild(trM);
-
+		
             rows.forEach((row) => {
 		const tr = document.createElement('tr');
 		const cells = row.split(',');
@@ -86,25 +90,33 @@ table tr:nth-child(odd) td {
 		
                 const td1 = document.createElement('td');
                 td1.contentEditable = false;
-                td1.textContent = cells[2];
+                td1.textContent = cells[2] + cells[3];
                 tr.appendChild(td1);
                 const td2 = document.createElement('td');
                 td2.contentEditable = false;
-                td2.textContent = cells[3];
+                td2.textContent = cells[4];
                 tr.appendChild(td2);
                 const td3 = document.createElement('td');
                 td3.contentEditable = true;
-                td3.textContent = cells[4];
+                td3.textContent = cells[5];
                 tr.appendChild(td3);
+                const td4 = document.createElement('td');
+                td4.contentEditable = false;
+                td4.textContent = cells[6];
+                tr.appendChild(td4);
                 table.appendChild(tr);
             });
         }
 	
-    	function hideColumn(columnIndex) {
+    	function hideColumn() {
       		var table = document.getElementsByTagName("table")[0];
       		var rows = table.rows;
       		for (var i = 0; i < rows.length; i++) {
-        		rows[i].cells[columnIndex].style.display = "none";
+        		rows[i].cells[0].style.display = "none";
+        		rows[i].cells[5].style.display = "none";
+			if (rows[i].cells[5].innerText = 1){
+        			rows[i].cells[4].contentEditable = false;
+			}
       		}
     	}
 
