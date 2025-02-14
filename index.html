@@ -66,11 +66,6 @@ table tr:nth-child(odd) td {
                 tdM3.contentEditable = false;
                 tdM3.textContent = "数量";
                 trM.appendChild(tdM3);
-                const tdM4 = document.createElement('td');
-                tdM4.contentEditable = false;
-                tdM4.textContent = "書込";
-                trM.appendChild(tdM4);
-                table.appendChild(trM);
 		
             rows.forEach((row) => {
 		const tr = document.createElement('tr');
@@ -97,13 +92,13 @@ table tr:nth-child(odd) td {
                 td2.textContent = cells[3];
                 tr.appendChild(td2);
                 const td3 = document.createElement('td');
-                td3.contentEditable = true;
+		if (cells[5] = "1"){
+                	td3.contentEditable = true;
+		}else{
+                	td3.contentEditable = true;
+		}
                 td3.textContent = cells[4];
                 tr.appendChild(td3);
-                const td4 = document.createElement('td');
-                td4.contentEditable = false;
-                td4.textContent = cells[5];
-                tr.appendChild(td4);
                 table.appendChild(tr);
             });
         }
@@ -113,10 +108,6 @@ table tr:nth-child(odd) td {
       		var rows = table.rows;
       		for (var i = 0; i < rows.length; i++) {
         		rows[i].cells[0].style.display = "none";
-        		rows[i].cells[5].style.display = "none";
-			if (rows[i].cells[5].textContent = 1){
-        			rows[i].cells[4].contentEditable = false;
-			}
       		}
     	}
 
