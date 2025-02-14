@@ -93,7 +93,7 @@ table tr:nth-child(odd) td {
                 td2.textContent = cells[3];
                 tr.appendChild(td2);
                 const td3 = document.createElement('td');
-                td3.contentEditable = Boolean(Number(cells[5]));
+                td3.contentEditable = cells[5];
                 td3.textContent = cells[4];
                 tr.appendChild(td3);
                 table.appendChild(tr);
