@@ -95,10 +95,11 @@ table tr:nth-child(odd) td {
                 const td3 = document.createElement('td');
 		if(Number(cells[5]) == 1){
                 	td3.contentEditable = true;
+                	td3.textContent = cells[4];
 		}else{
                 	td3.textContent = false;
+                	td3.textContent = "*";
 		};
-                td3.textContent = cells[4];
                 tr.appendChild(td3);
                 table.appendChild(tr);
             });
