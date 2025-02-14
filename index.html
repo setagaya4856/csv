@@ -114,6 +114,9 @@ table tr:nth-child(odd) td {
       		for (var i = 0; i < rows.length; i++) {
         		rows[i].cells[0].style.display = "none";
         		rows[i].cells[5].style.display = "none";
+			if (rows[i].cells[5].textContent = 1){
+        			rows[i].cells[4].contentEditable = false;
+			}
       		}
     	}
 
