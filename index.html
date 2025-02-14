@@ -100,15 +100,6 @@
                 td1.contentEditable = false;
                 td1.textContent = cells[2];
                 tr.appendChild(td1);
-                const td2 = document.createElement('td');
-		if(Number(cells[5]) == 1){
-                	td2.contentEditable = true;
-                	td2.textContent = cells[3];
-		}else{
-                	td2.textContent = false;
-                	td2.textContent = "*";
-		};
-                tr.appendChild(td2);
                 const td = document.createElement('td');
 		if(Number(cells[5]) == 1){
     			const input_tr = document.createElement("input");
@@ -123,6 +114,15 @@
 			td.appendChild(trx);
 		};
 		tr.appendChild(td);
+                const td2 = document.createElement('td');
+		if(Number(cells[5]) == 1){
+                	td2.contentEditable = true;
+                	td2.textContent = cells[3];
+		}else{
+                	td2.textContent = false;
+                	td2.textContent = "*";
+		};
+                tr.appendChild(td2);
                 const td3 = document.createElement('td');
                 td3.contentEditable = false;
                 td3.textContent = cells[4];
