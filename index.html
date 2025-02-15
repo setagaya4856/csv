@@ -20,12 +20,12 @@
 	  	table-layout: fixed;
 	  	width: 635px;
 	  	overflow: hidden;
+		font-size: 20px;
 	}
 	table, th, td {
 	        border: 1px solid black;
 	        border-collapse: collapse;
 		overflow: hidden;
-		font-size: 20px;
 	}
 	th, td {
 		padding: 8px;
@@ -40,11 +40,11 @@
 	}
 	.count{
 	    	width: 80px;
-		text-align: left;
+		text-align: right;
 	}
 	.unit{
 	   	width: 50px;
-		text-align: right;
+		text-align: left;
 	}
 	table td {
 	  	background: #eee;
@@ -64,7 +64,7 @@
 <body>
   	<header>
     		<p><big>空家データ入力　　　　　　　　<input type="file" id="csvFileInput" accept=".csv"></big></p>
-    		場所:<input type="text" id="name" name="name"  style="width:400px;height:20px;">　　<button style="width:100px;height:30px;" onclick="downloadCSV()">CSVを保存</button>
+    		場所:<input type="text" id="name" name="name"  style="width:400px;height:20px;font-size:20px;">　　<button style="width:100px;height:30px;" onclick="downloadCSV()">CSVを保存</button>
   	</header>
 	<br>
 	<br>
