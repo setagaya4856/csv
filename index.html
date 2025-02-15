@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -5,50 +6,76 @@
     <title>空家データ入力</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     <style>
+	header {
+  		position: fixed;
+  		left: 0;
+  		top: 0;
+		width: 100%;
+		background: #DDFFFF;
+	}
 	body {
-	  width: 640px;
+	  	width: 640px;
         }
 	table {
-	  table-layout: fixed;
-	  width: 635px;
-	  overflow: hidden;
+	  	table-layout: fixed;
+	  	width: 635px;
+	  	overflow: hidden;
 	}
 	table, th, td {
 	        border: 1px solid black;
 	        border-collapse: collapse;
 		overflow: hidden;
+		font-size: 20px;
 	}
 	th, td {
 		padding: 8px;
 		overflow: hidden;
 	}
 	.naiyo{
-	    width: 400px;
-	}
-	.count{
-	    width: 50px;
-	}
-	.unit{
-	    width: 50px;
+	    	width: 430px;
 	}
 	.btn{
-	    width: 50px;
+	    	width: 70px;
+		text-align: center;
+	}
+	.count{
+	    	width: 80px;
+		text-align: left;
+	}
+	.unit{
+	   	width: 50px;
+		text-align: right;
 	}
 	table td {
-	  background: #eee;
+	  	background: #eee;
 	}
-	table tr:nth-child(odd) td {
-	  background: #fff;
+		table tr:nth-child(odd) td {
+	  	background: #fff;
+	}
+	footer {
+  		position: fixed;
+  		left: 0;
+  		bottom: 0;
+		width: 100%;
+		background: #FFFFCC;
 	}
     </style>
 </head>
 <body>
-    <p><big>空家データ入力</big></p>
-    場所:<input type="text" id="name" name="name" size="100" /><br>
-    <input type="file" id="csvFileInput" accept=".csv" size="100"> <br><br>
-    <button onclick="downloadCSV()" size="100">CSVを保存</button>
-    <table id="csvTable">
-</table>
+  	<header>
+    		<p><big>空家データ入力　　　　　　　　<input type="file" id="csvFileInput" accept=".csv"></big></p>
+    		場所:<input type="text" id="name" name="name"  style="width:400px;height:20px;">　　<button style="width:100px;height:30px;" onclick="downloadCSV()">CSVを保存</button>
+  	</header>
+	<br>
+	<br>
+	<br>
+	<br>
+	<table id="csvTable">
+	</table>
+	<br>
+<footer>
+	<input type="file" id="csvFileInput" accept=".csv">
+</footer>
     <script>
         document.getElementById('csvFileInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
