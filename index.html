@@ -129,11 +129,11 @@
 		table.innerHTML = '';
 		const tableb = document.getElementById('btnTable');
 		tableb.innerHTML = '';
+		
 		const trM = document.createElement('tr');
 		const tdM0 = document.createElement('td');
 		tdM0.textContent = "No";
 		trM.appendChild(tdM0);
-	
 		const tdM1 = document.createElement('td');
 		tdM1.contentEditable = false;
 		tdM1.textContent = "内容";
@@ -204,8 +204,8 @@
 			td3.textContent = cells[4];
 			tr.appendChild(td3);
 			table.appendChild(tr);
-			tableb.appendChild(trb);
 		});
+		tableb.appendChild(trb);
 	}
 
 	function hideColumn() {
