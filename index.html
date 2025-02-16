@@ -75,12 +75,6 @@
 		width: 110vw;
 		background: #FFFFCC;
 	}
-	table td {
-	  	background: #eee;
-	}
-	table tr:nth-child(odd) td {
-	  	background: #fff;
-	}
 	</style>
 </head>
 <body>
@@ -200,7 +194,11 @@
 			rows[i].cells[4].className='unit';
 			if(rows[i].cells[0].textContent == "#"){
 				rows[i].cells[0].className　=　rows[i].cells[0].textContent;
-				rows[i].style.backgroundColor = 'orange';
+				rows[i].cells[0].style.backgroundColor = 'orange';
+				rows[i].cells[1].style.backgroundColor = 'orange';
+				rows[i].cells[2].style.backgroundColor = 'orange';
+				rows[i].cells[3].style.backgroundColor = 'orange';
+				rows[i].cells[4].style.backgroundColor = 'orange';
 			}
 		}
 	}
