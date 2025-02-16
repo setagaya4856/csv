@@ -132,7 +132,8 @@
 		
 		const tableb = document.getElementById('btnTable');
 		tableb.innerHTML = '';
-		let trb = document.createElement('tr');
+		const trb = document.createElement('tr');
+		const trb2 = document.createElement('tr');
 		
 		const trM = document.createElement('tr');
 		const tdM0 = document.createElement('td');
@@ -185,9 +186,10 @@
 					input_trb.setAttribute("onclick", "alert("+(cells[1])+")");
 					input_trb.setAttribute("class", "mbtn");
 					tdb.appendChild(input_trb);
-					trb.appendChild(tdb);
-					if(cells[1] == "#10"){
-						tableb.appendChild(trb);
+					if(Number(cells[1].substr(2)) > 10){
+						trb2.appendChild(tdb);
+					}else{
+						trb.appendChild(tdb);
 					}
 				}else{
 					td.textContent = "";
@@ -209,6 +211,8 @@
 			tr.appendChild(td3);
 			table.appendChild(tr);
 		});
+		tableb.appendChild(trb);
+		tableb.appendChild(trb2);
 	}
 
 	function hideColumn() {
