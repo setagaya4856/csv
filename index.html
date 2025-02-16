@@ -47,7 +47,7 @@
 	.btn{
 		width: 8vw;
 		text-align: center;
-		font-size: 40px;
+		font-size: 45px;
 	}
 	.count{
 		width: 10vw;
@@ -75,6 +75,11 @@
 		width: 110vw;
 		background: #FFFFCC;
 	}
+	.btntd{
+		width: 8vw;
+		text-align: center;
+		font-size: 45px;
+	}
 	</style>
 </head>
 <body>
@@ -93,7 +98,8 @@
 	</table>
 	<br>
 	<footer>
-		<input type="file" id="csvFileInput" accept=".csv">
+		<table id="btnTable">
+		</table>
 	</footer>
     	<script>
 	document.getElementById('csvFileInput').addEventListener('change', function(event) {
@@ -203,7 +209,16 @@
 			}
 		}
 	}
-
+		
+	function movecell(idNo) {
+		const element = document.getElementById(idNo);
+		const targetDOMRect = element.getBoundingClientRect();
+		const targetTop = targetDOMRect.top + window.pageYOffset;
+		window.scrollTo({
+		  top: targetTop,
+		  behavior: 'smooth'
+	});
+		
 	function cellplus(rowNo) {
 		const table = document.getElementById('csvTable');
 		table.rows[rowNo].cells[3].innerText = Number(table.rows[rowNo].cells[3].innerText) + 1;
