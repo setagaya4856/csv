@@ -177,7 +177,10 @@
 			}else{
 				td.contentEditable = false;
 				if(Number(cells[5]) == 2){
-					td.textContent = "#";
+					td.textContent = "#";			
+					if(cells[1] == "#11"){
+						let trb = document.createElement('tr');
+					}
 					const tdb = document.createElement('td');
 					const input_trb = document.createElement("input");
 					input_trb.setAttribute("type", "button");
@@ -188,7 +191,6 @@
 					trb.appendChild(tdb);
 					if(cells[1] == "#10"){
 						tableb.appendChild(trb);
-						let trb = document.createElement('tr');
 					}
 				}else{
 					td.textContent = "";
