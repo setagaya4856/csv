@@ -187,6 +187,11 @@
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
 		for (var i = 0; i < rows.length; i++) {
+			if( i % 2 == 1){
+				rows[i].style.backgroundColor = "#eee";
+			}else{
+				rows[i].style.backgroundColor = "#fff";
+			}
 			rows[i].cells[0].style.display = "none";
 			rows[i].cells[1].className='naiyo';
 			rows[i].cells[2].className='btn';
