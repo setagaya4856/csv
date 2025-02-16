@@ -92,6 +92,9 @@
 		padding: 10px;
 		text-align: center;
 	}
+	.m1 {
+  		background: red;
+	}
 	</style>
 </head>
 <body>
@@ -183,13 +186,13 @@
 				td.contentEditable = false;
 				if(Number(cells[5]) == 2){
 					td.textContent = "#";	
-					td.setAttribute("id", cells[1]);
+					td.setAttribute("id", "m" + cells[1].substr(1));
 					const tdb = document.createElement('td');
 					tdb.setAttribute("class", "mb");
 					const input_trb = document.createElement("input");
 					input_trb.setAttribute("type", "button");
 					input_trb.setAttribute("value", cells[4]);
-					input_trb.setAttribute("onclick", "alert(" + (cells[1]) + ")");
+					input_trb.setAttribute("onclick", "alert(" + ("m" + cells[1].substr(1)) + ")");
 					input_trb.setAttribute("class", "mbtn");
 					tdb.appendChild(input_trb);
 					if(Number(cells[1].substr(1)) > 10){
