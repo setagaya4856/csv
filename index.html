@@ -2,10 +2,10 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8" name="apple-mobile-web-app-capable" content="yes">
-    <title>空家データ入力</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
-    <style>
+	<meta charset="UTF-8" name="apple-mobile-web-app-capable" content="yes">
+    	<title>空家データ入力</title>
+    	<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
+    	<style>
 	header {
   		position: fixed;
   		left: 0;
@@ -72,7 +72,7 @@
 		width: 100vw;
 		background: #FFFFCC;
 	}
-    </style>
+	</style>
 </head>
 <body>
   	<header>
@@ -89,160 +89,143 @@
 	<table id="csvTable">
 	</table>
 	<br>
-<footer>
-	<input type="file" id="csvFileInput" accept=".csv">
-</footer>
-    <script>
-        document.getElementById('csvFileInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const text = e.target.result;
-                    displayCSV(text);
-		    hideColumn();
-                };
-                reader.readAsText(file);
-            }
-        });
+	<footer>
+		<input type="file" id="csvFileInput" accept=".csv">
+	</footer>
+    	<script>
+	document.getElementById('csvFileInput').addEventListener('change', function(event) {
+		const file = event.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = function(e) {
+				const text = e.target.result;
+				displayCSV(text);
+				hideColumn();
+			};
+		reader.readAsText(file);
+		}	
+	});
 
-        function displayCSV(text) {
-            const rows = text.split('\n');
-            const table = document.getElementById('csvTable');
-            table.innerHTML = '';
+	function displayCSV(text) {
+		const rows = text.split('\n');
+		const table = document.getElementById('csvTable');
+		table.innerHTML = '';
 		const trM = document.createElement('tr');
-                const tdM0 = document.createElement('td');
-                tdM0.textContent = "No";
+		const tdM0 = document.createElement('td');
+		tdM0.textContent = "No";
 		trM.appendChild(tdM0);
-		
-                const tdM1 = document.createElement('td');
-                tdM1.contentEditable = false;
-                tdM1.textContent = "内容";
-                trM.appendChild(tdM1);
-                const tdM = document.createElement('td');
-                tdM.textContent = "増";
-		trM.appendChild(tdM);
-                const tdM2 = document.createElement('td');
-                tdM2.contentEditable = false;
-                tdM2.textContent = "数量";
-                trM.appendChild(tdM2);
-                const tdM3 = document.createElement('td');
-                tdM3.contentEditable = false;
-                tdM3.textContent = "単位";
-                trM.appendChild(tdM3);
-                table.appendChild(trM);
-		
-            rows.forEach((row) => {
-		const tr = document.createElement('tr');
-		const cells = row.split(',');
-                const td0 = document.createElement('td');
-                td0.contentEditable = false;
-                td0.textContent = cells[1];
-                tr.appendChild(td0);
-                const td1 = document.createElement('td');
-                td1.contentEditable = false;
-                td1.textContent = cells[2];
-                tr.appendChild(td1);
-                const td = document.createElement('td');
-		if(Number(cells[5]) == 1){
-    			const input_tr = document.createElement("input");
-    			input_tr.setAttribute("type", "button");
-    			input_tr.setAttribute("value", "＋");
-    			input_tr.setAttribute("onclick", "cellplus(" + (Number(cells[0])) + ")");
-			td.appendChild(input_tr);
-		}else{
-                	const trx = document.createElement('tr');
-                	trx.contentEditable = false;
-                	trx.textContent = "";
-			td.appendChild(trx);
-		};
-		tr.appendChild(td);
-                const td2 = document.createElement('td');
-		if(Number(cells[5]) == 1){
-                	td2.contentEditable = true;
-                	td2.textContent = cells[3];
-		}else{
-                	td2.textContent = false;
-                	td2.textContent = "*";
-		};
-                tr.appendChild(td2);
-                const td3 = document.createElement('td');
-                td3.contentEditable = false;
-                td3.textContent = cells[4];
-                tr.appendChild(td3);
-
-                table.appendChild(tr);
-            });
-        }
 	
-    	function hideColumn() {
-      		var table = document.getElementsByTagName("table")[0];
-      		var rows = table.rows;
-      		for (var i = 0; i < rows.length; i++) {
-        		rows[i].cells[0].style.display = "none";
+		const tdM1 = document.createElement('td');
+		tdM1.contentEditable = false;
+		tdM1.textContent = "内容";
+		trM.appendChild(tdM1);
+		const tdM = document.createElement('td');
+		tdM.textContent = "増";
+		trM.appendChild(tdM);
+		const tdM2 = document.createElement('td');
+		tdM2.contentEditable = false;
+		tdM2.textContent = "数量";
+		trM.appendChild(tdM2);
+		const tdM3 = document.createElement('td');
+		tdM3.contentEditable = false;
+		tdM3.textContent = "単位";
+		trM.appendChild(tdM3);
+		table.appendChild(trM);
+	
+		rows.forEach((row) => {
+			const tr = document.createElement('tr');
+			const cells = row.split(',');
+			const td0 = document.createElement('td');
+			td0.contentEditable = false;
+			td0.textContent = cells[1];
+			tr.appendChild(td0);
+			const td1 = document.createElement('td');
+			td1.contentEditable = false;
+			td1.textContent = cells[2];
+			tr.appendChild(td1);
+			const td = document.createElement('td');
+			if(Number(cells[5]) == 1){
+				const input_tr = document.createElement("input");
+				input_tr.setAttribute("type", "button");
+				input_tr.setAttribute("value", "＋");
+				input_tr.setAttribute("onclick", "cellplus(" + (Number(cells[0])) + ")");
+				td.appendChild(input_tr);
+			}else{
+				const trx = document.createElement('tr');
+				trx.contentEditable = false;
+				trx.textContent = "";
+				td.appendChild(trx);
+			};
+			tr.appendChild(td);
+			const td2 = document.createElement('td');
+			if(Number(cells[5]) == 1){
+				td2.contentEditable = true;
+				td2.textContent = cells[3];
+			}else{
+				td2.textContent = false;
+				td2.textContent = "*";
+			};
+			tr.appendChild(td2);
+			const td3 = document.createElement('td');
+			td3.contentEditable = false;
+			td3.textContent = cells[4];
+			tr.appendChild(td3);
+
+			table.appendChild(tr);
+		});
+	}
+
+	function hideColumn() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].cells[0].style.display = "none";
 			rows[i].cells[1].className='naiyo';
 			rows[i].cells[2].className='btn';
 			rows[i].cells[3].className='count';
 			rows[i].cells[4].className='unit';
-      		}
-    	}
+		}
+	}
 
-        function cellplus(rowNo) {
-            	const table = document.getElementById('csvTable');
+	function cellplus(rowNo) {
+		const table = document.getElementById('csvTable');
 		table.rows[rowNo].cells[3].innerText = Number(table.rows[rowNo].cells[3].innerText) + 1;
-        }
+	}
 
-        function downloadCSV() {
-            const table = document.getElementById('csvTable');
-            let csvContent = '';
-            for (let row of table.rows) {
-                let rowData = [];
-                for (let cell of row.cells) {
-                    rowData.push(cell.textContent);
-                }
-                csvContent += rowData.join(',') + '\n';
-            }
-            const encoding = 'UTF8';
-            let bom = [];
-            let encodedData;
+	function downloadCSV() {
+		const table = document.getElementById('csvTable');
+		let csvContent = '';
+		for (let row of table.rows) {
+			let rowData = [];
+			for (let cell of row.cells) {
+				rowData.push(cell.textContent);
+			}
+			csvContent += rowData.join(',') + '\n';
+		}
+		const encoding = 'UTF8';
+		let bom = [];
+		let encodedData;
 
-            switch (encoding) {
-                case 'UTF8_BOM':
-                    bom = [0xEF, 0xBB, 0xBF];
-                    encodedData = Encoding.convert(Encoding.stringToCode(csvContent), 'UTF8', 'UNICODE');
-                    break;
-                case 'UTF16LE_BOM':
-                    bom = [0xFF, 0xFE];
-                    encodedData = Encoding.convert(Encoding.stringToCode(csvContent), 'UTF16LE', 'UNICODE');
-                    break;
-                case 'UTF16BE_BOM':
-                    bom = [0xFE, 0xFF];
-                    encodedData = Encoding.convert(Encoding.stringToCode(csvContent), 'UTF16BE', 'UNICODE');
-                    break;
-                default:
-                    encodedData = Encoding.convert(Encoding.stringToCode(csvContent), encoding, 'UNICODE');
-                    break;
-            }
-
-            const blob = new Blob([new Uint8Array([...bom, ...encodedData])], { type: 'text/csv;charset=' + encoding.toLowerCase() + ';' });
-            
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            var dt = new Date();
-  	    var y = dt.getFullYear();
- 	    var m = ("00" + (dt.getMonth()+1)).slice(-2);
-            var d = ("00" + (dt.getDate())).slice(-2);
-            var h = ("00" + (dt.getHours())).slice(-2);
-            var mi = ("00" + (dt.getMinutes())).slice(-2);
-            var s = ("00" + (dt.getSeconds())).slice(-2);
- 	    var result = y  + m +  d + h + mi + s;
-            const bname = document.getElementById('name').value;
-            a.download = bname + result + '.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
+		encodedData = Encoding.convert(Encoding.stringToCode(csvContent), encoding, 'UNICODE');
+		const blob = new Blob([new Uint8Array([...bom, ...encodedData])], { type: 'text/csv;charset=' + encoding.toLowerCase() + ';' });
+    
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		var dt = new Date();
+		var y = dt.getFullYear();
+		var m = ("00" + (dt.getMonth()+1)).slice(-2);
+		var d = ("00" + (dt.getDate())).slice(-2);
+		var h = ("00" + (dt.getHours())).slice(-2);
+		var mi = ("00" + (dt.getMinutes())).slice(-2);
+		var s = ("00" + (dt.getSeconds())).slice(-2);
+		var result = y  + m +  d + h + mi + s;
+		const bname = document.getElementById('name').value;
+		a.download = bname + result + '.csv';
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+	}
     </script>
 </body>
 </html>
