@@ -163,9 +163,13 @@
 			}else{
 				const trx = document.createElement('tr');
 				trx.contentEditable = false;
-				trx.textContent = "";
+				if(Number(cells[5]) == 2){
+					trx.textContent = "#";
+				}else{
+					trx.textContent = "";
+				};
 				td.appendChild(trx);
-			};
+			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
 			if(Number(cells[5]) == 1){
@@ -174,7 +178,7 @@
 			}else{
 				td2.textContent = false;
 				td2.textContent = "*";
-			};
+			}
 			tr.appendChild(td2);
 			const td3 = document.createElement('td');
 			td3.contentEditable = false;
@@ -194,6 +198,10 @@
 			rows[i].cells[2].className='btn';
 			rows[i].cells[3].className='count';
 			rows[i].cells[4].className='unit';
+			if(rows[i].cells[0].textContent == "#"){
+				rows[i].cells[0].className　=　rows[i].cells[0].textContent;
+				rows[i].style.backgroundColor = 'orange';
+			}
 		}
 	}
 
