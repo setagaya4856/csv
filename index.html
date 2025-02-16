@@ -169,14 +169,12 @@
 				input_tr.setAttribute("class", "pbtn");
 				td.appendChild(input_tr);
 			}else{
-				const trx = document.createElement('tr');
-				trx.contentEditable = false;
+				td.contentEditable = false;
 				if(Number(cells[5]) == 2){
-					trx.textContent = "#";
+					td.textContent = "#";
 				}else{
-					trx.textContent = "";
+					td.textContent = "";
 				};
-				td.appendChild(trx);
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
