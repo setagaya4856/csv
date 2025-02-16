@@ -128,6 +128,10 @@
 		const table = document.getElementById('csvTable');
 		table.innerHTML = '';
 		
+		const tableb = document.getElementById('btnTable');
+		tableb.innerHTML = '';
+		const trb = document.createElement('tr');
+		
 		const trM = document.createElement('tr');
 		const tdM0 = document.createElement('td');
 		tdM0.textContent = "No";
@@ -172,6 +176,14 @@
 				td.contentEditable = false;
 				if(Number(cells[5]) == 2){
 					td.textContent = "#";
+					const tdb = document.createElement('td');
+					const input_trb = document.createElement("input");
+					input_trb.setAttribute("type", "button");
+					input_trb.setAttribute("value", "＋");
+					input_trb.setAttribute("onclick", "movecell(3)");
+					input_trb.setAttribute("class", "mbtn");
+					tdb.appendChild(input_trb);
+					trb.appendChild(tdb);
 				}else{
 					td.textContent = "";
 				};
@@ -192,17 +204,6 @@
 			tr.appendChild(td3);
 			table.appendChild(tr);
 		});
-		const tableb = document.getElementById('btnTable');
-		tableb.innerHTML = '';
-		const trb = document.createElement('tr');
-		const tdb = document.createElement('td');
-		const input_trb = document.createElement("input");
-		input_trb.setAttribute("type", "button");
-		input_trb.setAttribute("value", "＋");
-		input_trb.setAttribute("onclick", "movecell(3)");
-		input_trb.setAttribute("class", "mbtn");
-		tdb.appendChild(input_trb);
-		trb.appendChild(tdb);
 		tableb.appendChild(trb);
 	}
 
