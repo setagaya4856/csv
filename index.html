@@ -20,7 +20,7 @@
         }
 	table {
 	  	table-layout: fixed;
-		width: 98vw;
+		width: 96vw;
 	  	overflow: hidden;
 	}
 	table, th, td {
@@ -192,7 +192,7 @@
 					const input_trb = document.createElement("input");
 					input_trb.setAttribute("type", "button");
 					input_trb.setAttribute("value", cells[4]);
-					input_trb.setAttribute("onclick", "alert(" + "m1" + ")");
+					input_trb.setAttribute("onclick", "movecell()");
 					input_trb.setAttribute("class", "mbtn");
 					tdb.appendChild(input_trb);
 					if(Number(cells[1].substr(1)) > 10){
@@ -245,8 +245,8 @@
 		}
 	}
 		
-	function movecell(idNo) {
-		const element = document.getElementById(idNo);
+	function movecell() {
+		const element = document.getElementById("m1");
 		const targetDOMRect = element.getBoundingClientRect();
 		const targetTop = targetDOMRect.top + window.pageYOffset;
 		window.scrollTo({
