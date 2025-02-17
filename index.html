@@ -250,7 +250,7 @@
 		const targetDOMRect = element.getBoundingClientRect();
 		const targetTop = targetDOMRect.top + window.pageYOffset;
 		window.scrollTo({
-			top: targetTop,
+			top: targetTop-10,
 			behavior: 'smooth'
 		});
 	}
