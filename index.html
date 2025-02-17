@@ -243,11 +243,11 @@
 	}
 		
 	function movecell() {
-		const element = document.getElementById("m1");
+		const element = document.getElementById("m2");
 		const targetDOMRect = element.getBoundingClientRect();
 		const targetTop = targetDOMRect.top + window.pageYOffset;
 		window.scrollTo({
-			top: targetTop-50,
+			top: targetTop+100,
 			behavior: 'smooth'
 		});
 	}
