@@ -289,12 +289,12 @@
 			let rowData = [];
 			if (row.cells[0].textContent !== "Row"){
 				rowData.push(row.cells[0].textContent);
+				rowData.push(row.cells[1].textContent);
 				if(row.cells[2].textContent == ""){
 					rowData.push("#");
 				}else{
 					rowData.push(row.cells[2].textContent);
 				}
-				rowData.push(row.cells[1].textContent);
 				rowData.push(row.cells[4].textContent);
 				rowData.push(row.cells[5].textContent);
 				rowData.push(row.cells[6].textContent);
