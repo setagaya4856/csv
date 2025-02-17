@@ -253,9 +253,9 @@
 	function movecell(idName) {
 		const element = document.getElementById("m" + String(idName));
 		const targetDOMRect = element.getBoundingClientRect();
-		const targetTop = targetDOMRect.top + window.pageYOffset;
+		const targetTop = targetDOMRect.top + window.pageYOffset + 1000;
 		window.scrollTo({
-			top: targetTop+100,
+			top: targetTop,
 			behavior: 'smooth'
 		});
 	}
