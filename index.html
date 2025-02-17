@@ -100,7 +100,7 @@
 <body>
   	<header>
     		<p>　空家データ入力　　<input type="file" id="csvFileInput" accept=".csv" style="width:50vw;height:3vh;" class="filecsv"></p>
-    		<p>　場所 : <input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;" class="filename">　　<button style="width:10vw;height:3vh;" onclick="downloadCSV()" class="csvbtn">CSVを保存</button></p>
+    		<p>　場所 : <input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename">　　<button style="width:10vw;height:3vh;" onclick="downloadCSV()" class="csvbtn">CSVを保存</button></p>
   	</header>
 	<br>
 	<br>
@@ -171,8 +171,12 @@
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
 			const td1 = document.createElement('td');
+			if(String(cells[2]) == "#"){
+				td1.contentEditable = true;
+			}else{
 				td1.contentEditable = false;
-				td1.textContent = cells[2];	
+				td1.textContent = cells[2];
+			}
 			tr.appendChild(td1);
 			const td = document.createElement('td');
 			if(Number(cells[5]) == 1){
@@ -248,7 +252,7 @@
 	function movecell(idName) {
 		const element = document.getElementById("m" + String(idName));
 		const targetDOMRect = element.getBoundingClientRect();
-		const targetTop = targetDOMRect.top + window.pageYOffset + 1000;
+		const targetTop = targetDOMRect.top + window.pageYOffset - 200;
 		window.scrollTo({
 			top: targetTop,
 			behavior: 'smooth'
