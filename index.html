@@ -144,6 +144,9 @@
 		const trb2 = document.createElement('tr');
 		
 		const trM = document.createElement('tr');
+		const tdMR = document.createElement('td');
+		tdMR.textContent = "Row";
+		trM.appendChild(tdMR);
 		const tdM0 = document.createElement('td');
 		tdM0.textContent = "No";
 		trM.appendChild(tdM0);
@@ -162,11 +165,19 @@
 		tdM3.contentEditable = false;
 		tdM3.textContent = "単位";
 		trM.appendChild(tdM3);
+		const tdM4 = document.createElement('td');
+		tdM4.contentEditable = false;
+		tdM4.textContent = "単位";
+		trM.appendChild(tdM4);
 		table.appendChild(trM);
 
 		rows.forEach((row) => {
 			const tr = document.createElement('tr');
 			const cells = row.split(',');
+			const tdR = document.createElement('td');
+			tdR.contentEditable = false;
+			tdR.textContent = cells[0];
+			tr.appendChild(tdR);
 			const td0 = document.createElement('td');
 			td0.contentEditable = false;
 			td0.textContent = cells[1];
@@ -223,6 +234,10 @@
 			td3.contentEditable = false;
 			td3.textContent = cells[4];
 			tr.appendChild(td3);
+			const td4 = document.createElement('td');
+			td4.contentEditable = false;
+			td4.textContent = cells[5];
+			tr.appendChild(td4);
 			table.appendChild(tr);
 		});
 		tableb.appendChild(trb);
@@ -239,10 +254,12 @@
 				rows[i].style.backgroundColor = "#fff";
 			}
 			rows[i].cells[0].style.display = "none";
-			rows[i].cells[1].className='naiyo';
-			rows[i].cells[2].className='btn';
-			rows[i].cells[3].className='count';
-			rows[i].cells[4].className='unit';
+			rows[i].cells[1].style.display = "none";
+			rows[i].cells[2].className='naiyo';
+			rows[i].cells[3].className='btn';
+			rows[i].cells[4].className='count';
+			rows[i].cells[5].className='unit';
+			rows[i].cells[6].style.display = "none";
 			if(rows[i].cells[2].textContent == "#"){
 				rows[i].cells[0].className　=　rows[i].cells[0].textContent;
 				rows[i].style.backgroundColor = 'orange';
@@ -262,7 +279,7 @@
 		
 	function cellplus(rowNo) {
 		const table = document.getElementById('csvTable');
-		table.rows[Number(rowNo)].cells[3].innerText = Number(table.rows[Number(rowNo)].cells[3].innerText) + 1;
+		table.rows[Number(rowNo)].cells[4].innerText = Number(table.rows[Number(rowNo)].cells[4].innerText) + 1;
 	}
 
 	function downloadCSV() {
@@ -271,7 +288,14 @@
 		for (let row of table.rows) {
 			let rowData = [];
 			for (let cell of row.cells) {
-				rowData.push(cell.textContent);
+				if (row.cells[0].textContent !== "Row"){
+					rowData.push(row.cells[0].textContent);
+					rowData.push(row.cells[1].textContent);
+					rowData.push(row.cells[2].textContent);
+					rowData.push(row.cells[4].textContent);
+					rowData.push(row.cells[5].textContent);
+					rowData.push(row.cells[6].textContent);
+				}
 			}
 			csvContent += rowData.join(',') + '\n';
 		}
