@@ -242,8 +242,8 @@
 		}
 	}
 		
-	function movecell() {
-		const element = document.getElementById("m2");
+	function movecell(idName) {
+		const element = document.getElementById(idName);
 		const targetDOMRect = element.getBoundingClientRect();
 		const targetTop = targetDOMRect.top + window.pageYOffset;
 		window.scrollTo({
