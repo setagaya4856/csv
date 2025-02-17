@@ -287,17 +287,15 @@
 		let csvContent = '';
 		for (let row of table.rows) {
 			let rowData = [];
-			for (let cell of row.cells) {
-				if (row.cells[0].textContent !== "Row"){
-					rowData.push(row.cells[0].textContent);
-					rowData.push(row.cells[1].textContent);
-					rowData.push(row.cells[2].textContent);
-					rowData.push(row.cells[4].textContent);
-					rowData.push(row.cells[5].textContent);
-					rowData.push(row.cells[6].textContent);
-				}
+			if (row.cells[0].textContent !== "Row"){
+				rowData.push(row.cells[0].textContent);
+				rowData.push(row.cells[1].textContent);
+				rowData.push(row.cells[2].textContent);
+				rowData.push(row.cells[4].textContent);
+				rowData.push(row.cells[5].textContent);
+				rowData.push(row.cells[6].textContent);
+				csvContent += rowData.join(',') + '\n';
 			}
-			csvContent += rowData.join(',') + '\n';
 		}
 		const encoding = 'UTF8';
 		let bom = [];
