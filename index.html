@@ -199,9 +199,15 @@
 				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
 				input_tr.setAttribute("class", "pbtn");
 				td.appendChild(input_tr);
-			}else{
+			}else if(Number(cells[5]) == 3){
+				const input_tr = document.createElement("input");
+				input_tr.setAttribute("type", "button");
+				input_tr.setAttribute("value", "＋");
+				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
+				input_tr.setAttribute("class", "pbtn");
+				td.appendChild(input_tr);{
 				td.contentEditable = false;
-				if(Number(cells[5]) == 2){
+			}else if(Number(cells[5]) == 2){
 					td.textContent = "#";	
 					td.setAttribute("id", cells[1]);
 					const tdb = document.createElement('td');
@@ -223,7 +229,10 @@
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
-			if(Number(cells[5]) == 1 || Number(cells[5]) == 3){
+			if(Number(cells[5]) == 1){
+				td2.contentEditable = true;
+				td2.textContent = cells[3];
+			}else if(Number(cells[5]) == 3){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
 			}else{
