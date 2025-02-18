@@ -206,8 +206,8 @@
 				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
 				input_tr.setAttribute("class", "pbtn");
 				td.appendChild(input_tr);{
-				td.contentEditable = false;
 			}else if(Number(cells[5]) == 2){
+					td.contentEditable = false;
 					td.textContent = "#";	
 					td.setAttribute("id", cells[1]);
 					const tdb = document.createElement('td');
