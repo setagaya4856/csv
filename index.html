@@ -183,10 +183,11 @@
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
 			const td1 = document.createElement('td');
-			if(String(cells[2]) == "#"){
-				td1.contentEditable = true;
-			}else{
+			if(Number(cells[5]) == 3){
 				td1.contentEditable = false;
+				td1.textContent = cells[2];
+			}else{
+				td1.contentEditable = true;
 				td1.textContent = cells[2];
 			}
 			tr.appendChild(td1);
@@ -222,7 +223,7 @@
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
-			if(Number(cells[5]) == 1){
+			if(Number(cells[5]) == 1 || Number(cells[5]) == 3){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
 			}else{
