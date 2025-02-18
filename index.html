@@ -205,27 +205,26 @@
 				input_tr.setAttribute("value", "＋");
 				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
 				input_tr.setAttribute("class", "pbtn");
-				td.appendChild(input_tr);{
+				td.appendChild(input_tr);
 			}else if(Number(cells[5]) == 2){
-					td.contentEditable = false;
-					td.textContent = "#";	
-					td.setAttribute("id", cells[1]);
-					const tdb = document.createElement('td');
-					tdb.setAttribute("class", "mb");
-					const input_trb = document.createElement("input");
-					input_trb.setAttribute("type", "button");
-					input_trb.setAttribute("value", cells[4]);
-					input_trb.setAttribute("onclick", "movecell(" + cells[1].substr(1) + ")");
-					input_trb.setAttribute("class", "mbtn");
-					tdb.appendChild(input_trb);
-					if(Number(cells[1].substr(1)) > 10){
-						trb2.appendChild(tdb);
-					}else{
-						trb.appendChild(tdb);
-					}
+				td.contentEditable = false;
+				td.textContent = "#";	
+				td.setAttribute("id", cells[1]);
+				const tdb = document.createElement('td');
+				tdb.setAttribute("class", "mb");
+				const input_trb = document.createElement("input");
+				input_trb.setAttribute("type", "button");
+				input_trb.setAttribute("value", cells[4]);
+				input_trb.setAttribute("onclick", "movecell(" + cells[1].substr(1) + ")");
+				input_trb.setAttribute("class", "mbtn");
+				tdb.appendChild(input_trb);
+				if(Number(cells[1].substr(1)) > 10){
+					trb2.appendChild(tdb);
 				}else{
-					td.textContent = "";
-				};
+					trb.appendChild(tdb);
+				}
+			}else{
+				td.textContent = "";
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
