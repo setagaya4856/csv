@@ -134,10 +134,6 @@
 	});
 		
 	document.getElementById('searchInput').addEventListener('keyup', function() {
-		window.scrollTo({
-			top: 0,
-			behavior: 'auto'
-		  });
 		let searchValue = this.value.toLowerCase();
 		let table = document.getElementById('csvTable');
 		var rows = table.rows;
