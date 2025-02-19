@@ -134,6 +134,10 @@
 	});
 		
 	document.getElementById('searchInput').addEventListener('keyup', function() {
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
 		let searchValue = this.value.toLowerCase();
 		let table = document.getElementById('csvTable');
 		var rows = table.rows;
@@ -148,6 +152,7 @@
 			if (rowText.indexOf(searchValue) > -1) {
 				tableRows[i].style.display = '';
 			} else {
+				tableRows[i].style.display = 'none';
 			}
 		}
   		document.body.style.zoom = "100%";
