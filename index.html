@@ -118,7 +118,7 @@
 	document.getElementById('csvFileInput').addEventListener('change', function(event) {  
 		window.scrollTo({
 			top: 0,
-			behavior: "auto"
+			behavior: 'smooth'
 		  });
 		const file = event.target.files[0];
 		if (file) {
@@ -152,15 +152,15 @@
 		}
 		window.scrollTo({
 			top: 0,
-			behavior: "auto"
-		  });
+			behavior: 'smooth'
+		});
   		document.body.style.zoom = "100%";
 	});
 
 	function searchOnly() {
 		window.scrollTo({
 			top: 0,
-			behavior: "auto"
+			behavior: 'smooth'
 		  });
 		let element = document.getElementById('searchInput');
 		element.value = '';
