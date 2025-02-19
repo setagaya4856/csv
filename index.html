@@ -162,7 +162,7 @@
 		}else{
 			rows[0].style.display == "none"
 			for (var i = 1; i < rows.length; i++) {
-				if ((rows[i].cells[3].textContent !== "*" && rows[i].cells[3].textContent !== "" ) || (rows[i].cells[2].textContent !== "#" && rows[i].cells[3].textContent == "*")){
+				if (rows[i].cells[4].textContent !== "" ){
 					rows[i].style.display = "";
 				}else{
 					rows[i].style.display = "none";
