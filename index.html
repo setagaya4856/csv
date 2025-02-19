@@ -92,7 +92,7 @@
 <body>
   	<header>
     		<p>　空家データ入力　　<input type="file" id="csvFileInput" accept=".csv" style="width:30vw;height:3vh;" class="filecsv">　<button style="width:10vw;height:3vh;font-size:50px;" onclick="downloadCSV()" class="csvbtn">CSV</button> 　<button style="width:10vw;height:3vh;font-size:50px;" onclick="searchOnly()" class="searchbtn">切替</button></p></p>
-    		<p>　<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> <input type="text" id="searchInput" name="searchInput"  style="width:20vw;height:2.3vh;font-size:50px;" class="searchword"></p>
+    		<p>　<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename">　　　<input type="text" id="searchInput" name="searchInput"  style="width:20vw;height:2.3vh;font-size:50px;" class="searchword"></p>
   	</header>
 	<br>
 	<br>
@@ -132,21 +132,29 @@
 	});
 		
 	document.getElementById('searchInput').addEventListener('keyup', function() {
-	  let searchValue = this.value.toLowerCase();
-	  let tableRows = document.getElementById('csvTable').getElementsByTagName('tr');
-	  
-	  for (let i = 1; i < tableRows.length; i++) {
-	    let rowText = tableRows[i].textContent.toLowerCase();
-	    if (rowText.indexOf(searchValue) > -1) {
-	      tableRows[i].style.display = '';
-	    } else {
-	      tableRows[i].style.display = 'none';
-	    }
-	  }
+		let searchValue = this.value.toLowerCase();
+		let table = document.getElementById('csvTable');
+		var rows = table.rows;
+		let tableRows = table.getElementsByTagName('tr');
+		if(searchValue == ""){
+			rows[0].cells[3].textContent = "全";
+		}else{
+			rows[0].cells[3].textContent = "絞";
+		}
+		for (let i = 1; i < tableRows.length; i++) {
+			let rowText = tableRows[i].textContent.toLowerCase();
+			if (rowText.indexOf(searchValue) > -1) {
+				tableRows[i].style.display = '';
+			} else {
+				tableRows[i].style.display = 'none';
+			}
+		}
 	});
 
 	function searchOnly() {
-		var table = document.getElementsByTagName("table")[0];
+		let element = document.getElementById('searchInput');
+		element.value = '';
+		var table = document.getElementById('csvTable');
 		var rows = table.rows;
 		if(rows[0].cells[3].textContent == "絞"){
 			rows[0].cells[3].textContent = "全";
