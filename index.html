@@ -121,11 +121,7 @@
 				const text = e.target.result;
 				displayCSV(text);
 				hideColumn();
-				// オプションの設定
-				var tableOptions = {
-  					"ordering": false,
-				}
-				$("#csvTable").DataTable(tableOptions);
+  				document.body.style.zoom = "100%";
 			};
 		reader.readAsText(file);
 		}	
