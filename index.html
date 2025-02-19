@@ -115,7 +115,11 @@
 		</table>
 	</footer>
     	<script>
-	document.getElementById('csvFileInput').addEventListener('change', function(event) {
+	document.getElementById('csvFileInput').addEventListener('change', function(event) {  
+		window.scrollTo({
+			top: 0,
+			behavior: "smooth"
+		  });
 		const file = event.target.files[0];
 		if (file) {
 			const reader = new FileReader();
@@ -123,7 +127,6 @@
 				const text = e.target.result;
 				displayCSV(text);
 				hideColumn();
-  				document.body.style.zoom = "100%";
 			};
 		reader.readAsText(file);
 		}
@@ -131,6 +134,10 @@
 	});
 		
 	document.getElementById('searchInput').addEventListener('keyup', function() {
+		window.scrollTo({
+			top: 0,
+			behavior: "smooth"
+		  });
 		let searchValue = this.value.toLowerCase();
 		let table = document.getElementById('csvTable');
 		var rows = table.rows;
@@ -145,13 +152,16 @@
 			if (rowText.indexOf(searchValue) > -1) {
 				tableRows[i].style.display = '';
 			} else {
-				tableRows[i].style.display = 'none';
 			}
 		}
   		document.body.style.zoom = "100%";
 	});
 
 	function searchOnly() {
+		window.scrollTo({
+			top: 0,
+			behavior: "smooth"
+		  });
 		let element = document.getElementById('searchInput');
 		element.value = '';
 		var table = document.getElementById('csvTable');
