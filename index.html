@@ -100,7 +100,7 @@
 </head>
 <body>
   	<header>
-    		<p>　空家データ入力　　<input type="file" id="csvFileInput" accept=".csv" style="width:50vw;height:3vh;" class="filecsv">　<button style="width:15vw;height:3vh;" onclick="downloadCSV()" class="csvbtn">CSVを保存</button></p>
+    		<p>　空家データ入力　　<input type="file" id="csvFileInput" accept=".csv" style="width:50vw;height:3vh;" class="filecsv">　<button style="width:15vw;height:3vh;" onclick="downloadCSV()" class="csvbtn">CSVを保存</button> 　<button style="width:10vw;height:3vh;" onclick="searchOnly()" class="csvbtn">絞込</button></p></p>
     		<p>　<input type="text" id="name" name="name"  style="width:70vw;height:2.3vh;font-size:50px;" class="filename"><input type="text" id="searchInput" name="searchInput"  style="width:20vw;height:2.3vh;font-size:50px;" class="filename"></p>
   	</header>
 	<br>
@@ -151,6 +151,25 @@
 	    }
 	  }
 	});
+
+	function searchOnly() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		if(rows[0].style.display == "none"){
+			for (var i = 0; i < rows.length; i++) {
+				rows[i].style.display = "";
+			}
+		}else{
+			for (var i = 0; i < rows.length; i++) {
+				if ((rows[i].cells[3].textContent !== "*" && rows[i].cells[3].textContent !== "" ) || (rows[i].cells[2].textContent !== "#" && rows[i].cells[3].textContent == "*")){
+					rows[i].style.display = "";
+				}else{
+					rows[i].style.display = "none";
+				}
+			}
+		}
+	}
+		
 	function displayCSV(text) {
 		const rows = text.split('\n');
 		const table = document.getElementById('csvTable');
