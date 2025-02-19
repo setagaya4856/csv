@@ -155,12 +155,13 @@
 	function searchOnly() {
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
-		if(rows[0].style.display == "none"){
+		if(rows[0].cells[3].textContent == "絞"){
+			rows[0].cells[3].textContent = "全";
 			for (var i = 0; i < rows.length; i++) {
 				rows[i].style.display = "";
 			}
 		}else{
-			rows[0].style.display == "none"
+			rows[0].cells[3].textContent = "絞";
 			for (var i = 1; i < rows.length; i++) {
 				if (rows[i].cells[4].textContent !== "" ){
 					rows[i].style.display = "";
@@ -193,7 +194,7 @@
 		tdM1.textContent = "内容";
 		trM.appendChild(tdM1);
 		const tdM = document.createElement('td');
-		tdM.textContent = "増";
+		tdM.textContent = "全";
 		trM.appendChild(tdM);
 		const tdM2 = document.createElement('td');
 		tdM2.contentEditable = false;
