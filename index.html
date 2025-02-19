@@ -126,7 +126,8 @@
   				document.body.style.zoom = "100%";
 			};
 		reader.readAsText(file);
-		}	
+		}
+  		document.body.style.zoom = "100%";
 	});
 		
 	document.getElementById('searchInput').addEventListener('keyup', function() {
@@ -159,6 +160,7 @@
 			rows[0].cells[3].textContent = "全";
 			for (var i = 0; i < rows.length; i++) {
 				rows[i].style.display = "";
+  				document.body.style.zoom = "100%";
 			}
 		}else{
 			rows[0].cells[3].textContent = "絞";
@@ -167,6 +169,7 @@
 					rows[i].style.display = "";
 				}else{
 					rows[i].style.display = "none";
+  					document.body.style.zoom = "100%";
 				}
 			}
 		}
