@@ -295,7 +295,11 @@
 		
 	function cellplus(rowNo) {
 		const table = document.getElementById('csvTable');
-		table.rows[Number(rowNo)].cells[4].innerText = Number(table.rows[Number(rowNo)].cells[4].innerText) + 1;
+		for (let row of table.rows) {
+			if(Number(row.cells[0].textContent) == Number(rowNo)){
+				row.cells[4].innerText = Number(row.cells[4].innerText) + 1;
+			}
+		}
 	}
 
 	function downloadCSV() {
