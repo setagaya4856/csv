@@ -70,14 +70,9 @@
 		width: 100vw;
 		background: #FFFFCC;
 	}
-	.btnTable{
-		width: 8vw;
-		text-align: center;
-		font-size: 45px;
-	}
 	.mbtn {
-		width: 7vw;
-		height: 4vh;
+		width: 10vw;
+		height: 6vh;
   		background: #FFCC99;
 		font-size: 30px;
 		padding: 2px;
@@ -196,6 +191,7 @@
 		tableb.innerHTML = '';
 		const trb = document.createElement('tr');
 		const trb2 = document.createElement('tr');
+		const trb3 = document.createElement('tr');
 		
 		const trM = document.createElement('tr');
 		const tdMR = document.createElement('td');
@@ -272,7 +268,9 @@
 				input_trb.setAttribute("onclick", "movecell(" + cells[1].substr(1) + ")");
 				input_trb.setAttribute("class", "mbtn");
 				tdb.appendChild(input_trb);
-				if(Number(cells[1].substr(1)) > 10){
+				if(Number(cells[1].substr(1)) > 14){
+					trb3.appendChild(tdb);
+				}else if(Number(cells[1].substr(1)) > 7){
 					trb2.appendChild(tdb);
 				}else{
 					trb.appendChild(tdb);
@@ -305,6 +303,7 @@
 		});
 		tableb.appendChild(trb);
 		tableb.appendChild(trb2);
+		tableb.appendChild(trb3);
 	}
 
 	function hideColumn() {
