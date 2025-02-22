@@ -161,7 +161,92 @@
 		document.getElementById('roomSelect').options[0].selected = true;
   		document.body.style.zoom = "100%";
 	});
-		
+	
+	document.getElementById('searchInput').addEventListener('keyup', function() {
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
+		let searchValue = this.value.toLowerCase();
+		let table = document.getElementById('csvTable');
+		var rows = table.rows;
+		var changef = rows[0].cells[3].textContent;
+		let element = document.getElementById('roomSelect');
+		var searchValue2 = element.value;
+		let tableRows = table.getElementsByTagName('tr');
+		for (let i = 1; i < tableRows.length; i++) {
+			let rowText = tableRows[i].textContent.toLowerCase();
+			if (searchValue2 == "" && changef == "全"){
+				if (rowText.indexOf(searchValue) > -1 || rowText.indexOf("#") > -1) {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 !== "" && changef == "全"){
+				if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 ) || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 == "" && changef == "絞"){
+				if ((rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 !== "" && changef == "絞"){
+				if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}
+		}
+  		document.body.style.zoom = "100%";
+	});
+	
+	document.getElementById('roomSelect').addEventListener('change', function() {
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
+		let searchValue = this.value.toLowerCase();
+		let table = document.getElementById('csvTable');
+		var rows = table.rows;
+		var changef = rows[0].cells[3].textContent;
+		let element = document.getElementById('searchInput');
+		var searchValue2 = element.value;
+		let tableRows = table.getElementsByTagName('tr');
+		for (let i = 1; i < tableRows.length; i++) {
+			let rowText = tableRows[i].textContent.toLowerCase();
+			if (searchValue2 == "" && changef == "全"){
+				if (rowText.indexOf(searchValue) > -1 || rowText.indexOf("#") > -1) {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 !== "" && changef == "全"){
+				if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 ) || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 == "" && changef == "絞"){
+				if ((rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 !== "" && changef == "絞"){
+				if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}
+		}
+  		document.body.style.zoom = "100%";
+	});	
 		
 	function searchOnly() {
 		window.scrollTo({
