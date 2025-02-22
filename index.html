@@ -255,10 +255,8 @@
 			top: 0,
 			behavior: 'auto'
 		  });
-		let elementsi = document.getElementById('searchInput');
-		elementsi.value = '';
-		let elementrs = document.getElementById('roomSelect');
-		elementrs.value = '';
+		document.getElementById('searchInput').value = '';
+		document.getElementById('roomSelect').options[0].selected = true;
 		var table = document.getElementById('csvTable');
 		var rows = table.rows;
 		var changef = rows[0].cells[3].textContent;
