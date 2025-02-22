@@ -95,11 +95,10 @@
 </head>
 <body>
   	<header>
-    		<p>　空家データ入力　　<input type="file" id="csvFileInput" accept=".csv" style="width:30vw;height:3vh;font-size:30px;" class="filecsv">　
-		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">CSV</button> 　
-		<button style="width:15vw;height:3vh;font-size:30px;" onclick="searchOnly()" class="searchbtn">切替</button></p>
-    		<p>　<input type="text" id="name" name="name"  style="width:40vw;height:2.3vh;font-size:50px;" class="filename"> 
-		<input type="text" id="searchInput" class="searchword" style="width:20vw;height:2.3vh;font-size:50px;"/> 
+    		<p>　<input type="file" id="csvFileInput" accept=".csv" style="width:30vw;height:3vh;font-size:30px;" class="filecsv">　
+		<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> 
+		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">CSV</button></p>
+    		<p>　<input type="text" id="searchInput" class="searchword" style="width:20vw;height:2.3vh;font-size:50px;"/> 
 		<select id="roomSelect" class="roomword" style="width:20vw;height:3vh;font-size:35px;">
   			<option value=""></option>
   			<option value="玄関">玄関</option>
@@ -111,7 +110,8 @@
   			<option value="居室2">居室2</option>
   			<option value="居室3">居室3</option>
   			<option value="バルコニー">バルコニー</option>
-		</select>
+		</select> 
+		<button style="width:15vw;height:3vh;font-size:30px;" onclick="searchOnly()" class="searchbtn">切替</button>
 		</p>
   	</header>
 	<br>
