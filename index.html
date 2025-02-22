@@ -83,7 +83,7 @@
 		text-align: center;
 	}	
 	.searchword {
-  		background: #eee;
+  		background: #edd4d4;
 	}
 	</style>
 </head>
@@ -151,6 +151,28 @@
   		document.body.style.zoom = "100%";
 	});
 		
+	document.getElementById('roomSelect').addEventListener('change', function() {
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
+		let searchValue = this.value.toLowerCase();
+		let table = document.getElementById('csvTable');
+		var rows = table.rows;
+		let tableRows = table.getElementsByTagName('tr');
+		rows[0].cells[3].textContent = "絞";
+		
+		for (let i = 1; i < tableRows.length; i++) {
+			let rowText = tableRows[i].textContent.toLowerCase();
+			if (rowText.indexOf(searchValue) > -1 && rowText.indexOf("#") > -1) {
+				tableRows[i].style.display = '';
+			} else {
+				tableRows[i].style.display = 'none';
+			}
+		}
+  		document.body.style.zoom = "100%";
+	});
+
 	document.getElementById('searchInput').addEventListener('keyup', function() {
 		window.scrollTo({
 			top: 0,
@@ -167,7 +189,7 @@
 		}
 		for (let i = 1; i < tableRows.length; i++) {
 			let rowText = tableRows[i].textContent.toLowerCase();
-			if (rowText.indexOf(searchValue) > -1 && rowText.indexOf("#") > -1) {
+			if (rowText.indexOf(searchValue) > -1 || rowText.indexOf("#") > -1) {
 				tableRows[i].style.display = '';
 			} else {
 				tableRows[i].style.display = 'none';
@@ -175,7 +197,7 @@
 		}
   		document.body.style.zoom = "100%";
 	});
-
+		
 	function searchOnly() {
 		window.scrollTo({
 			top: 0,
