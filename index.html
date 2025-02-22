@@ -157,6 +157,8 @@
 			};
 		reader.readAsText(file);
 		}
+		document.getElementById('searchInput').value = '';
+		document.getElementById('roomSelect').options[0].selected = true;
   		document.body.style.zoom = "100%";
 	});
 		
@@ -180,19 +182,19 @@
 				} else {
 					tableRows[i].style.display = 'none';
 				}
-			}else if (searchValue2 !== "" && changef == "全"){{
+			}else if (searchValue2 !== "" && changef == "全"){
 				if ((rowText.indexOf(searchValue2) > -1 && rowText.indexOf(searchValue) > -1 ) || rowText.indexOf("#") > -1) {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
 				}
-			}else if (searchValue2 == "" && changef == "絞"){{
+			}else if (searchValue2 == "" && changef == "絞"){
 				if ((rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent !== "") || rowText.indexOf("#") > -1 ||) {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
 				}
-			}else if (searchValue2 !== "" && changef == "絞"){{
+			}else if (searchValue2 !== "" && changef == "絞"){
 				if ((rowText.indexOf(searchValue2) > -1 && rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent !== "") || rowText.indexOf("#") > -1) {
 					tableRows[i].style.display = '';
 				} else {
@@ -223,19 +225,19 @@
 				} else {
 					tableRows[i].style.display = 'none';
 				}
-			}else if (searchValue2 !== "" && changef == "全"){{
+			}else if (searchValue2 !== "" && changef == "全"){
 				if ((rowText.indexOf(searchValue2) > -1 && rowText.indexOf(searchValue) > -1 ) || rowText.indexOf("#") > -1) {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
 				}
-			}else if (searchValue2 == "" && changef == "絞"){{
+			}else if (searchValue2 == "" && changef == "絞"){
 				if ((rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent !== "") || rowText.indexOf("#") > -1 ||) {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
 				}
-			}else if (searchValue2 !== "" && changef == "絞"){{
+			}else if (searchValue2 !== "" && changef == "絞"){
 				if ((rowText.indexOf(searchValue2) > -1 && rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent !== "") || rowText.indexOf("#") > -1) {
 					tableRows[i].style.display = '';
 				} else {
