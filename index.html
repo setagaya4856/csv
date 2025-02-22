@@ -157,10 +157,8 @@
 			};
 		reader.readAsText(file);
 		}
-		let elementsi = document.getElementById('searchInput');
-		elementsi.value = "";
-		let elementrs = document.getElementById('roomSelect');
-		elementrs.value = "";
+		document.getElementById('searchInput').value = '';
+		document.getElementById('roomSelect').options[0].selected = true;
   		document.body.style.zoom = "100%";
 	});
 		
