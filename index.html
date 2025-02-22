@@ -84,6 +84,7 @@
 	}	
 	.searchword {
   		background: #FFFFCC;
+		border: 1px solid #333;
 	}
 	.searchbtn {
   		background: #FFFFCC;
@@ -91,6 +92,7 @@
 	}
 	.roomword {
   		background: #FFFFCC;
+		border: 1px solid #333;
 	}
 	</style>
 </head>
@@ -99,7 +101,7 @@
     		<p>　<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">　
 		<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> 
 		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">CSV</button></p>
-    		<p>　<input type="text" id="searchInput" class="searchword" style="width:40vw;height:2.3vh;font-size:50px;"/> 
+    		<p>　<input type="text" id="searchInput" class="searchword" style="width:43vw;height:2.3vh;font-size:50px;"/> 
 		<select id="roomSelect" class="roomword" style="width:25vw;height:3vh;font-size:35px;">
   			<option value=""></option>
   			<option value="玄関">玄関</option>
@@ -158,7 +160,7 @@
   		document.body.style.zoom = "100%";
 	});
 		
-	document.getElementById('roomSelect').addEventListener('change', function() {
+	document.getElementById('searchInput').addEventListener('keyup', function() {
 		window.scrollTo({
 			top: 0,
 			behavior: 'auto'
@@ -167,11 +169,14 @@
 		let table = document.getElementById('csvTable');
 		var rows = table.rows;
 		let tableRows = table.getElementsByTagName('tr');
-		rows[0].cells[3].textContent = "絞";
-		
+		if(searchValue == ""){
+			rows[0].cells[3].textContent = "全";
+		}else{
+			rows[0].cells[3].textContent = "絞";
+		}
 		for (let i = 1; i < tableRows.length; i++) {
 			let rowText = tableRows[i].textContent.toLowerCase();
-			if (rowText.indexOf(searchValue) > -1 && rowText.indexOf("#") > -1) {
+			if (rowText.indexOf(searchValue) > -1 || rowText.indexOf("#") > -1) {
 				tableRows[i].style.display = '';
 			} else {
 				tableRows[i].style.display = 'none';
@@ -179,8 +184,8 @@
 		}
   		document.body.style.zoom = "100%";
 	});
-
-	document.getElementById('searchInput').addEventListener('keyup', function() {
+	
+	document.getElementById('roomSelect').addEventListener('change', function() {
 		window.scrollTo({
 			top: 0,
 			behavior: 'auto'
