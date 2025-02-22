@@ -253,12 +253,12 @@
 			top: 0,
 			behavior: 'auto'
 		  });
-		document.getElementById('searchInput').value = '';
-		document.getElementById('roomSelect').options[0].selected = true;
 		var table = document.getElementById('csvTable');
 		var rows = table.rows;
 		var changef = rows[0].cells[3].textContent;
-		if(changef == "絞"){
+		if(changef == "絞" || document.getElementById('searchInput').value !== "" || document.getElementById('roomSelect').value !== ""){
+			document.getElementById('searchInput').value = '';
+			document.getElementById('roomSelect').options[0].selected = true;
 			rows[0].cells[3].textContent = "全";
 			for (var i = 0; i < rows.length; i++) {
 				rows[i].style.display = "";
