@@ -86,13 +86,17 @@
 </head>
 <body>
   	<header>
-    		<p>　空家データ入力　　<input type="file" id="csvFileInput" accept=".csv" style="width:30vw;height:3vh;font-size:30px;" class="filecsv">　<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">CSV</button> 　<button style="width:15vw;height:3vh;font-size:30px;" onclick="searchOnly()" class="searchbtn">切替</button></p></p>
-    		<p>　<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename">　　　<input type="text" id="searchInput" name="searchInput"  style="width:20vw;height:2.3vh;font-size:50px;" class="searchword"　list='obj_list'></p>
+    		<p>　空家データ入力　　<input type="file" id="csvFileInput" accept=".csv" style="width:30vw;height:3vh;font-size:30px;" class="filecsv">　
+		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">CSV</button> 　
+		<button style="width:15vw;height:3vh;font-size:30px;" onclick="searchOnly()" class="searchbtn">切替</button></p>
+    		<p>　<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename">　　　
+		<input type="text" id="searchInput" name="searchInput"  style="width:20vw;height:2.3vh;font-size:50px;" class="searchword"　list='obj_list' />
 		<datalist id='obj_list'>
     			<option  value="にんじん"></option>
     			<option  value="たまねぎ"></option>
     			<option  value="きゅうり"></option>
 		</datalist>
+		</p>
   	</header>
 	<br>
 	<br>
