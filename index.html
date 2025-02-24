@@ -330,7 +330,7 @@
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
 			const td1 = document.createElement('td');
-			if(Number(cells[5]) == 3){
+			if(Number(cells[5]) == 3 || Number(cells[5]) == 4 ){
 				td1.contentEditable = true;
 				td1.textContent = cells[2];
 			}else{
@@ -346,7 +346,7 @@
 				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
 				input_tr.setAttribute("class", "pbtn");
 				td.appendChild(input_tr);
-			}else if(Number(cells[5]) == 3){
+			}else if(Number(cells[5]) == 3 || Number(cells[5]) == 4){
 				const input_tr = document.createElement("input");
 				input_tr.setAttribute("type", "button");
 				input_tr.setAttribute("value", "＋");
@@ -381,7 +381,7 @@
 			if(Number(cells[5]) == 1){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
-			}else if(Number(cells[5]) == 3){
+			}else if(Number(cells[5]) == 3 || Number(cells[5]) == 4){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
 			}else{
@@ -412,6 +412,9 @@
 				rows[i].style.backgroundColor = "#eee";
 			}else{
 				rows[i].style.backgroundColor = "#fff";
+			}
+			if(Number(rows[i].cells[6].textContent) == 3 || Number(rows[i].cells[6].textContent) == 4){
+				rows[i].cells[2].style.backgroundColor = "#FFFFCC";
 			}
 			rows[i].cells[0].style.display = "none";
 			rows[i].cells[1].style.display = "none";
