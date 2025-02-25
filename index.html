@@ -311,7 +311,7 @@
 		const trb3 = document.createElement('tr');
 		
 		const selectRoomWord = document.getElementById('roomword');
-		for (var i = 1; i < selectRoomWord.length + 1; i++) {
+		while (1 < selectRoomWord.childNodes.length) {
 			selectRoomWord.remove(1) ;
 		}
 		const trM = document.createElement('tr');
