@@ -310,10 +310,14 @@
 		const trb2 = document.createElement('tr');
 		const trb3 = document.createElement('tr');
 		
-		const selectRoomWord = document.getElementById('roomword');
-		while (1 < selectRoomWord.childNodes.length) {
-			selectRoomWord.remove(1) ;
+		const selectRoomWord = document.getElementById('roomword');	
+		while(selectRoomWord.lastChild){
+			selectRoomWord.removeChild(selectRoomWord.lastChild);
 		}
+		const optionb = document.createElement('option');
+		optionb.value = "";
+		optionb.textContent = "";
+		selectRoomWord.appendChild(optionb)
 		const trM = document.createElement('tr');
 		const tdMR = document.createElement('td');
 		tdMR.textContent = "Row";
