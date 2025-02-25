@@ -177,25 +177,33 @@
 		for (let i = 1; i < tableRows.length; i++) {
 			let rowText = tableRows[i].textContent.toLowerCase();
 			if (searchValue2 == "" && changef == "全"){
-				if (rowText.indexOf(searchValue) > -1 || rowText.indexOf("#") > -1) {
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (rowText.indexOf(searchValue) > -1 || rowText.indexOf("#") > -1) {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
 				}
 			}else if (searchValue2 !== "" && changef == "全"){
-				if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 ) || rows[i].cells[3].textContent == "#") {
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 ) || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
 				}
 			}else if (searchValue2 == "" && changef == "絞"){
-				if ((rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if ((rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
 				}
 			}else if (searchValue2 !== "" && changef == "絞"){
-				if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
@@ -220,25 +228,33 @@
 		for (let i = 1; i < tableRows.length; i++) {
 			let rowText = tableRows[i].textContent.toLowerCase();
 			if (searchValue2 == "" && changef == "全"){
-				if (rowText.indexOf(searchValue) > -1 || rowText.indexOf("#") > -1) {
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (rowText.indexOf(searchValue) > -1 || rowText.indexOf("#") > -1) {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
 				}
 			}else if (searchValue2 !== "" && changef == "全"){
-				if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 ) || rows[i].cells[3].textContent == "#") {
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 ) || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
 				}
 			}else if (searchValue2 == "" && changef == "絞"){
-				if ((rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if ((rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
 				}
 			}else if (searchValue2 !== "" && changef == "絞"){
-				if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
@@ -261,17 +277,21 @@
 			document.getElementById('roomSelect').options[0].selected = true;
 			rows[0].cells[3].textContent = "全";
 			for (var i = 0; i < rows.length; i++) {
-				rows[i].style.display = "";
-  				document.body.style.zoom = "100%";
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else{
+					rows[i].style.display = "";
+				}
 			}
 		}else{
 			rows[0].cells[3].textContent = "絞";
 			for (var i = 1; i < rows.length; i++) {
-				if (rows[i].cells[4].textContent !== "" ){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (rows[i].cells[4].textContent !== "" ){
 					rows[i].style.display = "";
 				}else{
 					rows[i].style.display = "none";
-  					document.body.style.zoom = "100%";
 				}
 			}
 		}
@@ -290,6 +310,10 @@
 		const trb2 = document.createElement('tr');
 		const trb3 = document.createElement('tr');
 		
+		const selectRoomWord = document.getElementById('roomword');
+		for (var i = 1; i < 10; i++) {
+			selectRoomWord.remove(i) ;
+		}
 		const trM = document.createElement('tr');
 		const tdMR = document.createElement('td');
 		tdMR.textContent = "Row";
@@ -398,6 +422,12 @@
 			td4.textContent = cells[5];
 			tr.appendChild(td4);
 			table.appendChild(tr);
+			if(Number(cells[5]) == 99){
+				const option = document.createElement('option');
+				option.value = cells[2];
+				option.textContent = cells[2];
+				selectRoomWord.appendChild(option)
+			}
 		});
 		tableb.appendChild(trb);
 		tableb.appendChild(trb2);
@@ -426,7 +456,9 @@
 			rows[i].cells[4].className='count';
 			rows[i].cells[5].className='unit';
 			rows[i].cells[6].style.display = "none";
-			if(rows[i].cells[3].textContent == "#"){
+			if(Number(rows[i].cells[1].textContent) == 0){
+				rows[i].style.display = "none";
+			}else if(rows[i].cells[3].textContent == "#"){
 				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
 				rows[i].style.backgroundColor = 'orange';
 			}else if(rows[i].cells[4].textContent == "*"){
