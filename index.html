@@ -143,10 +143,6 @@
 	</footer>
     	<script>
 	document.getElementById('csvFileInput').addEventListener('change', function(event) {  
-		window.scrollTo({
-			top: 0,
-			behavior: 'auto'
-		  });
 		const file = event.target.files[0];
 		if (file) {
 			const reader = new FileReader();
@@ -160,13 +156,13 @@
 		document.getElementById('searchInput').value = '';
 		document.getElementById('roomword').options[0].selected = true;
   		document.body.style.zoom = "100%";
-	});
-	
-	document.getElementById('searchInput').addEventListener('keyup', function() {
 		window.scrollTo({
 			top: 0,
 			behavior: 'auto'
 		  });
+	});
+	
+	document.getElementById('searchInput').addEventListener('keyup', function() {
 		let searchValue = this.value.toLowerCase();
 		let table = document.getElementById('csvTable');
 		var rows = table.rows;
@@ -211,13 +207,13 @@
 			}
 		}
   		document.body.style.zoom = "100%";
-	});
-	
-	document.getElementById('roomword').addEventListener('change', function() {
 		window.scrollTo({
 			top: 0,
 			behavior: 'auto'
 		  });
+	});
+	
+	document.getElementById('roomword').addEventListener('change', function() {
 		let searchValue = this.value.toLowerCase();
 		let table = document.getElementById('csvTable');
 		var rows = table.rows;
@@ -262,13 +258,13 @@
 			}
 		}
   		document.body.style.zoom = "100%";
-	});	
-		
-	function searchOnly() {
 		window.scrollTo({
 			top: 0,
 			behavior: 'auto'
 		  });
+	});	
+		
+	function searchOnly() {
 		var table = document.getElementById('csvTable');
 		var rows = table.rows;
 		var changef = rows[0].cells[3].textContent;
@@ -296,6 +292,10 @@
 			}
 		}
   		document.body.style.zoom = "100%";
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
 	}
 		
 	function displayCSV(text) {
