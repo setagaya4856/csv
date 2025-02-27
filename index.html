@@ -523,10 +523,7 @@
 		var y = dt.getFullYear();
 		var m = ("00" + (dt.getMonth()+1)).slice(-2);
 		var d = ("00" + (dt.getDate())).slice(-2);
-		var h = ("00" + (dt.getHours())).slice(-2);
-		var mi = ("00" + (dt.getMinutes())).slice(-2);
-		var s = ("00" + (dt.getSeconds())).slice(-2);
-		var result = y  + m +  d + h + mi + s;
+		var result = y  + m +  d;
 		const bname = document.getElementById('name').value;
 		a.download = bname + result + '.csv';
 		document.body.appendChild(a);
