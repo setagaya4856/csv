@@ -508,17 +508,7 @@
 				if(Number(row.cells[0].textContent) == Number(rowNo)){
 					if(row.cells[5].textContent.substr(0,1) == "!"){
 						row.cells[5].innerText = row.cells[5].textContent.substr(1);
-						if( row.rowIndex % 2 == 1){
-							row.style.backgroundColor = "#eee";
-							if(Number(row.cells[6].textContent) == 3 || Number(row.cells[6].textContent) == 4){
-								row.cells[2].style.backgroundColor = "#c8e6c8";
-							}
-						}else{
-							row.style.backgroundColor = "#fff";
-							if(Number(row.cells[6].textContent) == 3 || Number(row.cells[6].textContent) == 4){
-								row.cells[2].style.backgroundColor = "#DDFFDD";
-							}
-						}
+						row.style.backgroundColor = "fff";
 					}else{
 						row.cells[5].innerText = "!" + row.cells[5].innerText;
 						row.style.backgroundColor = "#f07c78";
@@ -541,12 +531,7 @@
 			}
 		}else{
 			rows[0].cells[5].textContent = "単位";
-			for (var i = 0; i < rows.length; i++) {
-				rows[i].cells[3].style.backgroundColor = "#eee";
-				if(rows[i].cells[3].textContent == "#"){
-					rows[i].cells[3].style.backgroundColor = 'orange';
-				}
-			}
+			hideColumn();
 		}
 	}
 	
