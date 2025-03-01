@@ -509,6 +509,7 @@
 					if(row.cells[5].textContent.substr(0,1) == "!"){
 						row.cells[5].innerText = row.cells[5].textContent.substr(1);
 						row.style.backgroundColor = "fff";
+						row.cells[3].style.backgroundColor = "#f07c78";
 					}else{
 						row.cells[5].innerText = "!" + row.cells[5].innerText;
 						row.style.backgroundColor = "#f07c78";
@@ -531,7 +532,37 @@
 			}
 		}else{
 			rows[0].cells[5].textContent = "単位";
-			hideColumn();
+			for (var i = 0; i < rows.length; i++) {
+				if( i % 2 == 1){
+					rows[i].style.backgroundColor = "#eee";
+					if(Number(rows[i].cells[6].textContent) == 3 || Number(rows[i].cells[6].textContent) == 4){
+						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
+					}
+				}else{
+					rows[i].style.backgroundColor = "#fff";
+					if(Number(rows[i].cells[6].textContent) == 3 || Number(rows[i].cells[6].textContent) == 4){
+						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
+					}
+				}
+				rows[i].cells[3].backgroundColor = "#fff";
+				rows[i].cells[0].style.display = "none";
+				rows[i].cells[1].style.display = "none";
+				rows[i].cells[2].className='naiyo';
+				rows[i].cells[3].className='btn';
+				rows[i].cells[4].className='count';
+				rows[i].cells[5].className='unit';
+				rows[i].cells[6].style.display = "none";
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if(rows[i].cells[3].textContent == "#"){
+					rows[i].cells[1].className　=　rows[i].cells[1].textContent;
+					rows[i].style.backgroundColor = 'orange';
+				}else if(rows[i].cells[5].textContent !== ""){
+					if(rows[i].cells[5].textContent.substr(0,1) == "!"){
+						rows[i].style.backgroundColor = "#f07c78";
+					}
+				}
+			}
 		}
 	}
 	
