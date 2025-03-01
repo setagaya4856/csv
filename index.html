@@ -475,9 +475,11 @@
 			}else if(rows[i].cells[3].textContent == "#"){
 				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
 				rows[i].style.backgroundColor = 'orange';
+				rows[i].cells[3].style.backgroundColor = 'orange';
 			}else if(rows[i].cells[5].textContent !== ""){
 				if(rows[i].cells[5].textContent.substr(0,1) == "!"){
 					rows[i].style.backgroundColor = "#f07c78";
+					rows[i].cells[3].style.backgroundColor = "#f07c78";
 				}
 			}
 		}
@@ -547,9 +549,11 @@
 				rows[i].cells[3].style.backgroundColor = "#fff";
 				if(rows[i].cells[3].textContent == "#"){
 					rows[i].style.backgroundColor = 'orange';
+					rows[i].cells[3].style.backgroundColor = 'orange';
 				}else if(rows[i].cells[5].textContent !== ""){
 					if(rows[i].cells[5].textContent.substr(0,1) == "!"){
 						rows[i].style.backgroundColor = "#f07c78";
+						rows[i].cells[3].style.backgroundColor = "#f07c78";
 					}
 				}
 			}
