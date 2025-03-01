@@ -54,23 +54,10 @@
 		text-align: left;
 		font-size: 25px;
 	}
-	.change{
-		width: 7vw;
-		text-align: left;
-		font-size: 25px;
-	}
 	.pbtn {
 		width: 7vw;
 		height: 4vh;
   		background: #DDFFDD;
-		font-size: 30px;
-		padding: 2px;
-		text-align: center;
-	}
-	.cbtn {
-		width: 6vw;
-		height: 4vh;
-  		background: #f07c78;
 		font-size: 30px;
 		padding: 2px;
 		text-align: center;
@@ -362,10 +349,6 @@
 		tdM4.contentEditable = false;
 		tdM4.textContent = "隠";
 		trM.appendChild(tdM4);		
-		const tdM5 = document.createElement('td');
-		tdM5.contentEditable = false;
-		tdM5.textContent = "強調";
-		trM.appendChild(tdM5);
 		table.appendChild(trM);
 
 		rows.forEach((row) => {
@@ -450,20 +433,6 @@
 			td4.contentEditable = false;
 			td4.textContent = cells[5];
 			tr.appendChild(td4);
-			const td5 = document.createElement('td');
-			if(Number(cells[5]) == 1 || Number(cells[5]) == 3 || Number(cells[5]) == 4){
-				const input_tr2 = document.createElement("input");
-				input_tr2.setAttribute("type", "button");
-				input_tr2.setAttribute("value", "!");
-				input_tr2.setAttribute("onclick", "cellchange(" + (cells[0]) + ")");
-				input_tr2.setAttribute("class", "cbtn");
-				td5.appendChild(input_tr2);
-				td5.textContent = "";
-			}else if(Number(cells[5]) == 99){
-				td5.textContent = "*";
-			}
-			td5.contentEditable = false;
-			tr.appendChild(td5);
 			
 			table.appendChild(tr);
 			if(Number(cells[5]) == 99){
@@ -493,6 +462,7 @@
 					rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 				}
 			}
+			rows[i].cells[3].backgroundColor = "#fff";
 			rows[i].cells[0].style.display = "none";
 			rows[i].cells[1].style.display = "none";
 			rows[i].cells[2].className='naiyo';
@@ -500,7 +470,6 @@
 			rows[i].cells[4].className='count';
 			rows[i].cells[5].className='unit';
 			rows[i].cells[6].style.display = "none";
-			rows[i].cells[7].className='change';
 			if(Number(rows[i].cells[1].textContent) == 0){
 				rows[i].style.display = "none";
 			}else if(rows[i].cells[3].textContent == "#"){
@@ -529,33 +498,36 @@
 		
 	function cellplus(rowNo) {
 		const table = document.getElementById('csvTable');
-		for (let row of table.rows) {
-			if(Number(row.cells[0].textContent) == Number(rowNo)){
-				row.cells[4].innerText = Number(row.cells[4].innerText) + 1;
+		var rows = table.rows;
+		if(rows[0].cells[5].textContent == "単位"){
+			for (let row of table.rows) {
+				if(Number(row.cells[0].textContent) == Number(rowNo)){
+					row.cells[4].innerText = Number(row.cells[4].innerText) + 1;
+				}
 			}
-		}
-	}
-		
-	function cellchange(rowNo) {
-		const table = document.getElementById('csvTable');
-		for (let row of table.rows) {
-			if(Number(row.cells[0].textContent) == Number(rowNo)){
-				if(row.cells[5].textContent.substr(0,1) == "!"){
-					row.cells[5].innerText = row.cells[5].textContent.substr(1);
-					if( row.rowIndex % 2 == 1){
-						row.style.backgroundColor = "#eee";
-						if(Number(row.cells[6].textContent) == 3 || Number(row.cells[6].textContent) == 4){
-							row.cells[2].style.backgroundColor = "#c8e6c8";
+		}else if(rows[0].cells[5].textContent == "強調"){
+			for (let row of table.rows) {
+				if(Number(row.cells[0].textContent) == Number(rowNo)){
+					if(row.cells[5].textContent.substr(0,1) == "!"){
+						row.cells[5].innerText = row.cells[5].textContent.substr(1);
+						if( row.rowIndex % 2 == 1){
+							row.style.backgroundColor = "#eee";
+							if(Number(row.cells[6].textContent) == 3 || Number(row.cells[6].textContent) == 4){
+								row.cells[2].style.backgroundColor = "#c8e6c8";
+							}
+						}else{
+							row.style.backgroundColor = "#fff";
+							if(Number(row.cells[6].textContent) == 3 || Number(row.cells[6].textContent) == 4){
+								row.cells[2].style.backgroundColor = "#DDFFDD";
+							}
+						}
+						if(rows[i].cells[3].textContent == "#"){
+							rows[i].style.backgroundColor = 'orange';
 						}
 					}else{
-						row.style.backgroundColor = "#fff";
-						if(Number(row.cells[6].textContent) == 3 || Number(row.cells[6].textContent) == 4){
-							row.cells[2].style.backgroundColor = "#DDFFDD";
-						}
+						row.cells[5].innerText = "!" + row.cells[5].innerText;
+						row.style.backgroundColor = "#f07c78";
 					}
-				}else{
-					row.cells[5].innerText = "!" + row.cells[5].innerText;
-					row.style.backgroundColor = "#f07c78";
 				}
 			}
 		}
@@ -564,15 +536,31 @@
 	function changeColumn() {
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
-		if(rows[0].cells[5].style.display == "none"){		
+		if(rows[0].cells[5].textContent == "単位"){
+			rows[0].cells[5].textContent = "強調";
 			for (var i = 0; i < rows.length; i++) {
-				rows[i].cells[5].style.display = "";
-				rows[i].cells[7].style.display = "none";
+				if( i % 2 == 1){
+					rows[i].cells[3].style.backgroundColor = "#eee";
+					if(Number(rows[i].cells[6].textContent) == 3 || Number(rows[i].cells[6].textContent) == 4){
+						rows[i].cells[3].style.backgroundColor = "#c8e6c8";
+					}
+				}else{
+					rows[i].style.backgroundColor = "#fff";
+					if(Number(rows[i].cells[6].textContent) == 3 || Number(rows[i].cells[6].textContent) == 4){
+						rows[i].cells[3].style.backgroundColor = "#DDFFDD";
+					}
+				}
+				if(rows[i].cells[3].textContent == "#"){
+					rows[i].cells[3].style.backgroundColor = 'orange';
+				}
 			}
 		}else{
+			rows[0].cells[5].textContent = "単位";
 			for (var i = 0; i < rows.length; i++) {
-				rows[i].cells[5].style.display = "none";
-				rows[i].cells[7].style.display = "";
+				rows[i].cells[3].style.backgroundColor = "#eee";
+				if(rows[i].cells[3].textContent == "#"){
+					rows[i].cells[3].style.backgroundColor = 'orange';
+				}
 			}
 		}
 	}
