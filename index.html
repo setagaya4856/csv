@@ -508,7 +508,7 @@
 				if(Number(row.cells[0].textContent) == Number(rowNo)){
 					if(row.cells[5].textContent.substr(0,1) == "!"){
 						row.cells[5].innerText = row.cells[5].textContent.substr(1);
-						row.style.backgroundColor = "fff";
+						row.style.backgroundColor = "#fff";
 						row.cells[3].style.backgroundColor = "#f07c78";
 					}else{
 						row.cells[5].innerText = "!" + row.cells[5].innerText;
@@ -544,7 +544,7 @@
 						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 					}
 				}
-				rows[i].cells[3].backgroundColor = "#fff";
+				rows[i].cells[3].style.backgroundColor = "#fff";
 				if(rows[i].cells[3].textContent == "#"){
 					rows[i].style.backgroundColor = 'orange';
 				}else if(rows[i].cells[5].textContent !== ""){
