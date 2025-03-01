@@ -458,14 +458,12 @@
 				input_tr2.setAttribute("onclick", "cellchange(" + (cells[0]) + ")");
 				input_tr2.setAttribute("class", "cbtn");
 				td5.appendChild(input_tr2);
-				td5.contentEditable = false;
 				td5.textContent = "";
-				tr.appendChild(td5);
 			}else if(Number(cells[5]) == 99){
-				td5.contentEditable = false;
 				td5.textContent = "*";
-				tr.appendChild(td5);
 			}
+			td5.contentEditable = false;
+			tr.appendChild(td5);
 			
 			table.appendChild(tr);
 			if(Number(cells[5]) == 99){
