@@ -54,10 +54,23 @@
 		text-align: left;
 		font-size: 25px;
 	}
+	.change{
+		width: 7vw;
+		text-align: left;
+		font-size: 25px;
+	}
 	.pbtn {
 		width: 7vw;
 		height: 4vh;
   		background: #DDFFDD;
+		font-size: 30px;
+		padding: 2px;
+		text-align: center;
+	}
+	.cbtn {
+		width: 6vw;
+		height: 4vh;
+  		background: #f07c78;
 		font-size: 30px;
 		padding: 2px;
 		text-align: center;
@@ -90,6 +103,10 @@
   		background: #FFFFCC;
 		border: 1px solid #333;
 	}
+	.changebtn {
+  		background: #FFFFCC;
+		border: 1px solid #333;
+	}
 	.roomword {
   		background: #FFFFCC;
 		border: 1px solid #333;
@@ -101,8 +118,9 @@
     		<p>　<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">　
 		<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> 
 		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button></p>
-    		<p>　<input type="text" id="searchInput" class="searchword" style="width:43vw;height:2.3vh;font-size:50px;"/> 
-		<select id="roomword" class="roomword" style="width:25vw;height:3vh;font-size:35px;">
+    		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="changeCol()" class="changebtn">!</button>
+		<input type="text" id="searchInput" class="searchword" style="width:40vw;height:2.3vh;font-size:50px;"/> 
+		<select id="roomword" class="roomword" style="width:23vw;height:3vh;font-size:35px;">
   			<option value=""></option>
   			<option value="玄関">玄関</option>
   			<option value="DK">DK</option>
@@ -342,8 +360,12 @@
 		trM.appendChild(tdM3);
 		const tdM4 = document.createElement('td');
 		tdM4.contentEditable = false;
-		tdM4.textContent = "単位";
-		trM.appendChild(tdM4);
+		tdM4.textContent = "隠1";
+		trM.appendChild(tdM4);		
+		const tdM5 = document.createElement('td');
+		tdM5.contentEditable = false;
+		tdM5.textContent = "隠2";
+		trM.appendChild(tdM5);
 		table.appendChild(trM);
 
 		rows.forEach((row) => {
@@ -416,7 +438,7 @@
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
 			}else{
-				td2.textContent = false;
+				td2.contentEditable = false;
 				td2.textContent = "*";
 			}
 			tr.appendChild(td2);
@@ -428,6 +450,23 @@
 			td4.contentEditable = false;
 			td4.textContent = cells[5];
 			tr.appendChild(td4);
+			const td5 = document.createElement('td');
+			if(Number(cells[5]) == 1 || Number(cells[5]) == 3 || Number(cells[5]) == 4){
+				const input_tr2 = document.createElement("input");
+				input_tr2.setAttribute("type", "button");
+				input_tr2.setAttribute("value", "!");
+				input_tr2.setAttribute("onclick", "cellchange(" + (cells[0]) + ")");
+				input_tr2.setAttribute("class", "cbtn");
+				td5.appendChild(input_tr2);
+				td5.contentEditable = false;
+				td5.textContent = "";
+				tr.appendChild(td5);
+			}else if(Number(cells[5]) == 99){
+				td5.contentEditable = false;
+				td5.textContent = "*";
+				tr.appendChild(td5);
+			}
+			
 			table.appendChild(tr);
 			if(Number(cells[5]) == 99){
 				const option = document.createElement('option');
@@ -463,6 +502,8 @@
 			rows[i].cells[4].className='count';
 			rows[i].cells[5].className='unit';
 			rows[i].cells[6].style.display = "none";
+			rows[i].cells[7].className='change';
+			rows[i].cells[7].style.display = "none";
 			if(Number(rows[i].cells[1].textContent) == 0){
 				rows[i].style.display = "none";
 			}else if(rows[i].cells[3].textContent == "#"){
@@ -470,6 +511,8 @@
 				rows[i].style.backgroundColor = 'orange';
 			}else if(rows[i].cells[4].textContent == "*"){
 				rows[i].style.backgroundColor = "#FFFFCC";
+			}else if(rows[i].cells[5].textContent == "!"){
+				rows[i].style.backgroundColor = "#f07c78";
 			}
 		}
 	}
