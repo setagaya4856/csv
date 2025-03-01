@@ -545,17 +545,7 @@
 					}
 				}
 				rows[i].cells[3].backgroundColor = "#fff";
-				rows[i].cells[0].style.display = "none";
-				rows[i].cells[1].style.display = "none";
-				rows[i].cells[2].className='naiyo';
-				rows[i].cells[3].className='btn';
-				rows[i].cells[4].className='count';
-				rows[i].cells[5].className='unit';
-				rows[i].cells[6].style.display = "none";
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if(rows[i].cells[3].textContent == "#"){
-					rows[i].cells[1].className　=　rows[i].cells[1].textContent;
+				if(rows[i].cells[3].textContent == "#"){
 					rows[i].style.backgroundColor = 'orange';
 				}else if(rows[i].cells[5].textContent !== ""){
 					if(rows[i].cells[5].textContent.substr(0,1) == "!"){
