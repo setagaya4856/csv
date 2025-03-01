@@ -475,8 +475,6 @@
 			}else if(rows[i].cells[3].textContent == "#"){
 				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
 				rows[i].style.backgroundColor = 'orange';
-			}else if(rows[i].cells[4].textContent == "*"){
-				rows[i].style.backgroundColor = "#FFFFCC";
 			}else if(rows[i].cells[5].textContent !== ""){
 				if(rows[i].cells[5].textContent.substr(0,1) == "!"){
 					rows[i].style.backgroundColor = "#f07c78";
@@ -521,9 +519,6 @@
 								row.cells[2].style.backgroundColor = "#DDFFDD";
 							}
 						}
-						if(rows[i].cells[3].textContent == "#"){
-							rows[i].style.backgroundColor = 'orange';
-						}
 					}else{
 						row.cells[5].innerText = "!" + row.cells[5].innerText;
 						row.style.backgroundColor = "#f07c78";
@@ -539,17 +534,7 @@
 		if(rows[0].cells[5].textContent == "単位"){
 			rows[0].cells[5].textContent = "強調";
 			for (var i = 0; i < rows.length; i++) {
-				if( i % 2 == 1){
-					rows[i].cells[3].style.backgroundColor = "#eee";
-					if(Number(rows[i].cells[6].textContent) == 3 || Number(rows[i].cells[6].textContent) == 4){
-						rows[i].cells[3].style.backgroundColor = "#c8e6c8";
-					}
-				}else{
-					rows[i].style.backgroundColor = "#fff";
-					if(Number(rows[i].cells[6].textContent) == 3 || Number(rows[i].cells[6].textContent) == 4){
-						rows[i].cells[3].style.backgroundColor = "#DDFFDD";
-					}
-				}
+				rows[i].cells[3].style.backgroundColor = "#f07c78";
 				if(rows[i].cells[3].textContent == "#"){
 					rows[i].cells[3].style.backgroundColor = 'orange';
 				}
