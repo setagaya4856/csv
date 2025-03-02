@@ -105,7 +105,7 @@
     		<p>　<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">　
 		<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> 
 		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button></p>
-    		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" class="changebtn">!</button>　
+    		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" class="changebtn"></button>　
 		<input type="text" id="searchInput" class="searchword" style="width:38vw;height:2.3vh;font-size:50px;"/> 
 		<select id="roomword" class="roomword" style="width:21vw;height:3vh;font-size:35px;">
   			<option value=""></option>
@@ -185,7 +185,7 @@
 				} else {
 					tableRows[i].style.display = 'none';
 				}
-			}else if (searchValue2 !== "" && changef == "全"){
+			}else if (searchValue2 == "" && changef == "全"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
 				}else if ((rowText.indexOf(searchValue) > -1 && rowText.indexOf(searchValue2) > -1 ) || rows[i].cells[3].textContent == "#") {
@@ -196,7 +196,7 @@
 			}else if (searchValue2 == "" && changef == "絞"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
-				}else if ((rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+				}else if ((rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent == "") || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
@@ -477,7 +477,7 @@
 				rows[i].style.backgroundColor = 'orange';
 				rows[i].cells[3].style.backgroundColor = 'orange';
 			}else if(rows[i].cells[5].textContent !== ""){
-				if(rows[i].cells[5].textContent.substr(0,1) == "!"){
+				if(rows[i].cells[5].textContent.substr(0,1) == "！"){
 					rows[i].style.backgroundColor = "#f07c78";
 					rows[i].cells[3].style.backgroundColor = "#f07c78";
 				}
@@ -508,12 +508,12 @@
 		}else if(rows[0].cells[5].textContent == "強調"){
 			for (let row of table.rows) {
 				if(Number(row.cells[0].textContent) == Number(rowNo)){
-					if(row.cells[5].textContent.substr(0,1) == "!"){
+					if(row.cells[5].textContent.substr(0,1) == "！"){
 						row.cells[5].innerText = row.cells[5].textContent.substr(1);
 						row.style.backgroundColor = "#fff";
 						row.cells[3].style.backgroundColor = "#f07c78";
 					}else{
-						row.cells[5].innerText = "!" + row.cells[5].innerText;
+						row.cells[5].innerText = "！" + row.cells[5].innerText;
 						row.style.backgroundColor = "#f07c78";
 					}
 				}
@@ -551,7 +551,7 @@
 					rows[i].style.backgroundColor = 'orange';
 					rows[i].cells[3].style.backgroundColor = 'orange';
 				}else if(rows[i].cells[5].textContent !== ""){
-					if(rows[i].cells[5].textContent.substr(0,1) == "!"){
+					if(rows[i].cells[5].textContent.substr(0,1) == "！"){
 						rows[i].style.backgroundColor = "#f07c78";
 						rows[i].cells[3].style.backgroundColor = "#f07c78";
 					}
