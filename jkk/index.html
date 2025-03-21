@@ -228,10 +228,10 @@
 		let tableRows = table.getElementsByTagName('tr');
 		for (let i = 1; i < tableRows.length; i++) {
 			let rowText = tableRows[i].textContent.toLowerCase();
-			if (searchValue2 == "" && changef == "全"){
+			if (searchValue == 0 && searchValue2 == "" && changef == "全"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0 || rows[i].cells[3].textContent == "#") {
+				}else if (searchValue == 0 || Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0 || rows[i].cells[3].textContent == "#"　) {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
@@ -239,7 +239,7 @@
 			}else if (searchValue2 !== "" && changef == "全"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValue2) > -1 ) || rows[i].cells[3].textContent == "#") {
+				}else if (((searchValue == 0 || Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValue2) > -1 ) || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
@@ -247,7 +247,7 @@
 			}else if (searchValue2 == "" && changef == "絞"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0) && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+				}else if (((searchValue == 0 || Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0) && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
@@ -255,7 +255,7 @@
 			}else if (searchValue2 !== "" && changef == "絞"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValue2) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+				}else if (((searchValue == 0 || Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValue2) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
@@ -376,7 +376,14 @@
 			const td = document.createElement('td');
 			if(Number(cells[5]) == 0){
 				td.contentEditable = false;
-				td.textContent = "#";			
+				td.textContent = "#";
+			}else if(Number(cells[5]) < 20){
+				const input_tr = document.createElement("input");
+				input_tr.setAttribute("type", "button");
+				input_tr.setAttribute("value", "＋");
+				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
+				input_tr.setAttribute("class", "pbtn");
+				td.appendChild(input_tr);		
 			}else if(Number(cells[5]) == 20){
 				td.contentEditable = false;
 				td.textContent = "#";	
@@ -397,13 +404,6 @@
 				}else{
 					trb.appendChild(tdb);
 				}
-			}else if(Number(cells[5]) < 20){
-				const input_tr = document.createElement("input");
-				input_tr.setAttribute("type", "button");
-				input_tr.setAttribute("value", "＋");
-				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
-				input_tr.setAttribute("class", "pbtn");
-				td.appendChild(input_tr);
 			}else if(Number(cells[5]) == 30 || Number(cells[5]) == 40){
 				const input_tr = document.createElement("input");
 				input_tr.setAttribute("type", "button");
@@ -411,9 +411,6 @@
 				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
 				input_tr.setAttribute("class", "pbtn");
 				td.appendChild(input_tr);
-			}else if(Number(cells[5]) == 0){
-				td.contentEditable = false;
-				td.textContent = "#";
 			}else{
 				td.textContent = "";
 			}
