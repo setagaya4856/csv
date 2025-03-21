@@ -217,6 +217,7 @@
 
 		alert('2');
 		rows.forEach((row) => {
+		alert('3');
 			const tr = document.createElement('tr');
 			const cells = row.split(',');
 			const tdR = document.createElement('td');
@@ -227,6 +228,7 @@
 			td0.contentEditable = false;
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
+		alert('4');
 			const td1 = document.createElement('td');
 				td1.contentEditable = false;
 				td1.textContent = cells[2];
@@ -238,6 +240,7 @@
 			}else{
 				td.textContent = "";
 			}
+		alert('5');
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
 				td2.contentEditable = false;
@@ -252,8 +255,10 @@
 			td4.textContent = cells[5];
 			tr.appendChild(td4);
 			
+		alert('6');
 			table.appendChild(tr);
 			if(Number(cells[5]) == 99){
+		alert('a');
 				const option = document.createElement('option');
 				option.value = cells[2];
 				option.textContent = cells[2];
