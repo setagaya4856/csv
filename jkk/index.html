@@ -228,32 +228,13 @@
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
 			const td1 = document.createElement('td');
-			if(Number(cells[5]) == 30 || Number(cells[5]) == 40 ){
-				td1.contentEditable = true;
-				td1.textContent = cells[2];
-			}else{
 				td1.contentEditable = false;
 				td1.textContent = cells[2];
-			}
 			tr.appendChild(td1);
 			const td = document.createElement('td');}
 			if(Number(cells[5]) == 0){
 				td.contentEditable = false;
 				td.textContent = "#";
-			}else if(Number(cells[5]) < 20){
-				const input_tr = document.createElement("input");
-				input_tr.setAttribute("type", "button");
-				input_tr.setAttribute("value", "＋");
-				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
-				input_tr.setAttribute("class", "pbtn");
-				td.appendChild(input_tr);
-			}else if(Number(cells[5]) == 30 || Number(cells[5]) == 40){
-				const input_tr = document.createElement("input");
-				input_tr.setAttribute("type", "button");
-				input_tr.setAttribute("value", "＋");
-				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
-				input_tr.setAttribute("class", "pbtn");
-				td.appendChild(input_tr);
 			}else if(Number(cells[5]) == 20){
 				td.contentEditable = false;
 				td.textContent = "#";	
@@ -274,24 +255,13 @@
 				}else{
 					trb.appendChild(tdb);
 				}
-			}else if(Number(cells[5]) == 0){
-				td.contentEditable = false;
-				td.textContent = "#";
 			}else{
 				td.textContent = "";
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
-			if(Number(cells[5]) > 9 && Number(cells[5]) < 20 ){
-				td2.contentEditable = true;
-				td2.textContent = cells[3];
-			}else if(Number(cells[5]) == 30 || Number(cells[5]) == 40){
-				td2.contentEditable = true;
-				td2.textContent = cells[3];
-			}else{
 				td2.contentEditable = false;
 				td2.textContent = "*";
-			}
 			tr.appendChild(td2);
 			const td3 = document.createElement('td');
 			td3.contentEditable = false;
