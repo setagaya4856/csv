@@ -363,7 +363,7 @@
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
 			const td1 = document.createElement('td');
-			if(Number(cells[5]) == 30 || Number(cells[5]) == 40 ){
+			if(Number(cells[5]) == 30 || Number(cells[5]) == 40 || (Number(cells[5]) > 50 && Number(cells[5]) < 60 )){
 				td1.contentEditable = true;
 				td1.textContent = cells[2];
 			}else{
@@ -402,7 +402,7 @@
 				}else{
 					trb.appendChild(tdb);
 				}
-			}else if(Number(cells[5]) == 30 || Number(cells[5]) == 40){
+			}else if(Number(cells[5]) == 30 || Number(cells[5]) == 40 || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
 				const input_tr = document.createElement("input");
 				input_tr.setAttribute("type", "button");
 				input_tr.setAttribute("value", "＋");
@@ -417,7 +417,7 @@
 			if(Number(cells[5]) > 9 && Number(cells[5]) < 20 ){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
-			}else if(Number(cells[5]) == 30 || Number(cells[5]) == 40){
+			}else if(Number(cells[5]) == 30 || Number(cells[5]) == 40 || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
 			}else{
@@ -462,7 +462,7 @@
 				rows[i].style.backgroundColor = "#fff";
 				if(Number(rows[i].cells[6].textContent) == 30 ){
 					rows[i].cells[2].style.backgroundColor = "#c8e6c8";
-				}else if(Number(rows[i].cells[6].textContent) == 40){
+				}else if(Number(rows[i].cells[6].textContent) == 40 || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
 					rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 				}
 			}
