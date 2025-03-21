@@ -154,6 +154,7 @@
 			reader.onload = function(e) {
 				const text = e.target.result;
 				displayCSV(text);
+				hideColumn();
 			};
 		reader.readAsText(file);
 		}
@@ -165,6 +166,142 @@
 			behavior: 'auto'
 		  });
 	});
+	
+	document.getElementById('searchInput').addEventListener('keyup', function() {
+		let searchValue = this.value.toLowerCase();
+		let table = document.getElementById('csvTable');
+		var rows = table.rows;
+		var changef = rows[0].cells[3].textContent;
+		let element = document.getElementById('roomword');
+		var searchValue2 = element.selectedIndex;
+		let tableRows = table.getElementsByTagName('tr');
+		for (let i = 1; i < tableRows.length; i++) {
+			let rowText = tableRows[i].textContent.toLowerCase();
+			if (searchValue2 == 0 && changef == "全"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (rowText.indexOf(searchValue) > -1 || rowText.indexOf("#") > -1) {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 !== 0 && changef == "全"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if ((rowText.indexOf(searchValue) > -1 && (Number(rows[i].cells[6].textContent) % 10 == searchValue2 || Number(rows[i].cells[6].textContent) % 10 == 0) ) || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 == 0 && changef == "絞"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if ((rowText.indexOf(searchValue) > -1 && rows[i].cells[4].textContent == "") || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 !== 0 && changef == "絞"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if ((rowText.indexOf(searchValue) > -1 && (Number(rows[i].cells[6].textContent) % 10 == searchValue2 || Number(rows[i].cells[6].textContent) % 10 == 0) && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}
+		}
+  		document.body.style.zoom = "100%";
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
+	});
+	
+	document.getElementById('roomword').addEventListener('change', function() {
+		let searchValue = this.selectedIndex;
+		let table = document.getElementById('csvTable');
+		var rows = table.rows;
+		var changef = rows[0].cells[3].textContent;
+		let element = document.getElementById('searchInput');
+		var searchValue2 = element.value;
+		let tableRows = table.getElementsByTagName('tr');
+		for (let i = 1; i < tableRows.length; i++) {
+			let rowText = tableRows[i].textContent.toLowerCase();
+			if (searchValue2 == "" && changef == "全"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0 || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 !== "" && changef == "全"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValue2) > -1 ) || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 == "" && changef == "絞"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0) && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValue2 !== "" && changef == "絞"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValue2) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}
+		}
+  		document.body.style.zoom = "100%";
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
+	});	
+		
+	function searchOnly() {
+		var table = document.getElementById('csvTable');
+		var rows = table.rows;
+		var changef = rows[0].cells[3].textContent;
+		if(changef == "絞" || document.getElementById('searchInput').value !== "" || document.getElementById('roomword').value !== ""){
+			document.getElementById('searchInput').value = '';
+			document.getElementById('roomword').options[0].selected = true;
+			rows[0].cells[3].textContent = "全";
+			for (var i = 0; i < rows.length; i++) {
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else{
+					rows[i].style.display = "";
+				}
+			}
+		}else{
+			rows[0].cells[3].textContent = "絞";
+			for (var i = 1; i < rows.length; i++) {
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (rows[i].cells[4].textContent !== "" ){
+					rows[i].style.display = "";
+				}else{
+					rows[i].style.display = "none";
+				}
+			}
+		}
+  		document.body.style.zoom = "100%";
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
+	}
 		
 	function displayCSV(text) {
 		alert('1');
@@ -217,7 +354,6 @@
 
 		alert('2');
 		rows.forEach((row) => {
-		alert('3');
 			const tr = document.createElement('tr');
 			const cells = row.split(',');
 			const tdR = document.createElement('td');
@@ -228,23 +364,71 @@
 			td0.contentEditable = false;
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
-		alert('4');
 			const td1 = document.createElement('td');
+			if(Number(cells[5]) == 30 || Number(cells[5]) == 40 ){
+				td1.contentEditable = true;
+				td1.textContent = cells[2];
+			}else{
 				td1.contentEditable = false;
 				td1.textContent = cells[2];
+			}
 			tr.appendChild(td1);
-			const td = document.createElement('td');}
+			const td = document.createElement('td');
 			if(Number(cells[5]) == 0){
+				td.contentEditable = false;
+				td.textContent = "#";			
+			}else if(Number(cells[5]) == 20){
+				td.contentEditable = false;
+				td.textContent = "#";	
+				td.setAttribute("id", cells[1]);
+				const tdb = document.createElement('td');
+				tdb.setAttribute("class", "mb");
+				const input_trb = document.createElement("input");
+				input_trb.setAttribute("type", "button");
+				input_trb.setAttribute("value", cells[4]);
+				input_trb.setAttribute("onclick", "movecell(" + cells[1].substr(1) + ")");
+				input_trb.setAttribute("class", "mbtn");
+				tdb.appendChild(input_trb);
+				if(Number(cells[1].substr(1)) > 14){
+					trb3.appendChild(tdb);
+					foot.style.height = "22vh";
+				}else if(Number(cells[1].substr(1)) > 7){
+					trb2.appendChild(tdb);
+				}else{
+					trb.appendChild(tdb);
+				}
+			}else if(Number(cells[5]) < 20){
+				const input_tr = document.createElement("input");
+				input_tr.setAttribute("type", "button");
+				input_tr.setAttribute("value", "＋");
+				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
+				input_tr.setAttribute("class", "pbtn");
+				td.appendChild(input_tr);
+			}else if(Number(cells[5]) == 30 || Number(cells[5]) == 40){
+				const input_tr = document.createElement("input");
+				input_tr.setAttribute("type", "button");
+				input_tr.setAttribute("value", "＋");
+				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
+				input_tr.setAttribute("class", "pbtn");
+				td.appendChild(input_tr);
+			}else if(Number(cells[5]) == 0){
 				td.contentEditable = false;
 				td.textContent = "#";
 			}else{
 				td.textContent = "";
 			}
-		alert('5');
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
+			if(Number(cells[5]) > 9 && Number(cells[5]) < 20 ){
+				td2.contentEditable = true;
+				td2.textContent = cells[3];
+			}else if(Number(cells[5]) == 30 || Number(cells[5]) == 40){
+				td2.contentEditable = true;
+				td2.textContent = cells[3];
+			}else{
 				td2.contentEditable = false;
 				td2.textContent = "*";
+			}
 			tr.appendChild(td2);
 			const td3 = document.createElement('td');
 			td3.contentEditable = false;
@@ -255,10 +439,8 @@
 			td4.textContent = cells[5];
 			tr.appendChild(td4);
 			
-		alert('6');
 			table.appendChild(tr);
 			if(Number(cells[5]) == 99){
-		alert('a');
 				const option = document.createElement('option');
 				option.value = cells[2];
 				option.textContent = cells[2];
@@ -268,6 +450,164 @@
 		tableb.appendChild(trb);
 		tableb.appendChild(trb2);
 		tableb.appendChild(trb3);
+	}
+
+	function hideColumn() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		for (var i = 0; i < rows.length; i++) {
+			if( i % 2 == 1){
+				rows[i].style.backgroundColor = "#eee";
+				if(Number(rows[i].cells[6].textContent) == 30 ){
+					rows[i].cells[2].style.backgroundColor = "#c8e6c8";
+				}else if(Number(rows[i].cells[6].textContent) == 40){
+					rows[i].cells[2].style.backgroundColor = "#DDFFDD";
+				}
+			}else{
+				rows[i].style.backgroundColor = "#fff";
+				if(Number(rows[i].cells[6].textContent) == 30 ){
+					rows[i].cells[2].style.backgroundColor = "#c8e6c8";
+				}else if(Number(rows[i].cells[6].textContent) == 40){
+					rows[i].cells[2].style.backgroundColor = "#DDFFDD";
+				}
+			}
+			rows[i].cells[3].backgroundColor = "#fff";
+			rows[i].cells[0].style.display = "none";
+			rows[i].cells[1].style.display = "none";
+			rows[i].cells[2].className='naiyo';
+			rows[i].cells[3].className='btn';
+			rows[i].cells[4].className='count';
+			rows[i].cells[5].className='unit';
+			rows[i].cells[6].style.display = "none";
+			if(Number(rows[i].cells[1].textContent) == 0){
+				rows[i].style.display = "none";
+			}else if(rows[i].cells[3].textContent == "#"){
+				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
+				rows[i].style.backgroundColor = 'orange';
+				rows[i].cells[3].style.backgroundColor = 'orange';
+			}else if(rows[i].cells[5].textContent !== ""){
+				if(rows[i].cells[5].textContent.substr(0,1) == "！"){
+					rows[i].style.backgroundColor = "#f07c78";
+					rows[i].cells[3].style.backgroundColor = "#f07c78";
+				}
+			}
+		}
+	}
+		
+	function movecell(idName) {
+		const element = document.getElementById("m" + String(idName));
+		const targetDOMRect = element.getBoundingClientRect();
+		const targetTop = targetDOMRect.top + window.pageYOffset - 190;
+		window.scrollTo({
+			top: targetTop,
+			behavior: 'smooth'
+		});
+  		document.body.style.zoom = "100%";
+	}
+		
+	function cellplus(rowNo) {
+		const table = document.getElementById('csvTable');
+		var rows = table.rows;
+		if(rows[0].cells[5].textContent == "単位"){
+			for (let row of table.rows) {
+				if(Number(row.cells[0].textContent) == Number(rowNo)){
+					row.cells[4].innerText = Number(row.cells[4].innerText) + 1;
+				}
+			}
+		}else if(rows[0].cells[5].textContent == "強調"){
+			for (let row of table.rows) {
+				if(Number(row.cells[0].textContent) == Number(rowNo)){
+					if(row.cells[5].textContent.substr(0,1) == "！"){
+						row.cells[5].innerText = row.cells[5].textContent.substr(1);
+						row.style.backgroundColor = "#fff";
+						row.cells[3].style.backgroundColor = "#f07c78";
+					}else{
+						row.cells[5].innerText = "！" + row.cells[5].innerText;
+						row.style.backgroundColor = "#f07c78";
+					}
+				}
+			}
+		}
+	}
+
+	function changeColumn() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		if(rows[0].cells[5].textContent == "単位"){
+			rows[0].cells[5].textContent = "強調";
+			for (var i = 0; i < rows.length; i++) {
+				rows[i].cells[3].style.backgroundColor = "#f07c78";
+				if(rows[i].cells[3].textContent == "#"){
+					rows[i].cells[3].style.backgroundColor = 'orange';
+				}
+			}
+		}else{
+			rows[0].cells[5].textContent = "単位";
+			for (var i = 0; i < rows.length; i++) {
+				if( i % 2 == 1){
+					if(Number(rows[i].cells[6].textContent) == 30 ){
+						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
+					}else if(Number(rows[i].cells[6].textContent) == 40){
+						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
+					}
+					rows[i].style.backgroundColor = "#eee";
+				}else{
+					rows[i].style.backgroundColor = "#fff";
+					if(Number(rows[i].cells[6].textContent) == 30 ){
+						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
+					}else if(Number(rows[i].cells[6].textContent) == 40){
+						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
+					}
+				}
+				rows[i].cells[3].style.backgroundColor = "#fff";
+				if(rows[i].cells[3].textContent == "#"){
+					rows[i].style.backgroundColor = 'orange';
+					rows[i].cells[3].style.backgroundColor = 'orange';
+				}else if(rows[i].cells[5].textContent !== ""){
+					if(rows[i].cells[5].textContent.substr(0,1) == "！"){
+						rows[i].style.backgroundColor = "#f07c78";
+						rows[i].cells[3].style.backgroundColor = "#f07c78";
+					}
+				}
+			}
+		}
+	}
+	
+	function downloadCSV() {
+		const table = document.getElementById('csvTable');
+		let csvContent = '';
+		for (let row of table.rows) {
+			let rowData = [];
+			if (row.cells[0].textContent !== "Row"){
+				rowData.push(row.cells[0].textContent);
+				rowData.push(row.cells[1].textContent);
+				rowData.push(row.cells[2].textContent);
+				rowData.push(row.cells[4].textContent);
+				rowData.push(row.cells[5].textContent);
+				rowData.push(row.cells[6].textContent);
+				csvContent += rowData.join(',') + '\n';
+			}
+		}
+		const encoding = 'UTF8';
+		let bom = [];
+		let encodedData;
+
+		encodedData = Encoding.convert(Encoding.stringToCode(csvContent), encoding, 'UNICODE');
+		const blob = new Blob([new Uint8Array([...bom, ...encodedData])], { type: 'text/csv;charset=' + encoding.toLowerCase() + ';' });
+    
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		var dt = new Date();
+		var y = dt.getFullYear();
+		var m = ("00" + (dt.getMonth()+1)).slice(-2);
+		var d = ("00" + (dt.getDate())).slice(-2);
+		var result = y  + m +  d;
+		const bname = document.getElementById('name').value;
+		a.download = bname + result + '.csv';
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
 	}
     </script>
 </body>
