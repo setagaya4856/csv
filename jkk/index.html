@@ -228,7 +228,7 @@
 		let tableRows = table.getElementsByTagName('tr');
 		for (let i = 1; i < tableRows.length; i++) {
 			let rowText = tableRows[i].textContent.toLowerCase();
-			if (searchValue == 0 && searchValue2 == "" && changef == "全"){
+			if (searchValue2 == "" && changef == "全"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
 				}else if (searchValue == 0 || Number(rows[i].cells[6].textContent) % 10 == searchValue || Number(rows[i].cells[6].textContent) % 10 == 0 || rows[i].cells[3].textContent == "#"　) {
