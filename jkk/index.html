@@ -304,6 +304,7 @@
 	}
 		
 	function displayCSV(text) {
+		alert('1');
 		const rows = text.split('\n');
 		const table = document.getElementById('csvTable');
 		const foot = document.getElementById('footer');
@@ -351,6 +352,7 @@
 		trM.appendChild(tdM4);		
 		table.appendChild(trM);
 
+		alert('2');
 		rows.forEach((row) => {
 			const tr = document.createElement('tr');
 			const cells = row.split(',');
