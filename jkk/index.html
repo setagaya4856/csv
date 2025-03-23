@@ -383,7 +383,7 @@
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
 			const td1 = document.createElement('td');
-			if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 50 && Number(cells[5]) < 60 )){
+			if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 50 && Number(cells[5]) < 60 ) || Number(cells[5]) == 3 ){
 				td1.contentEditable = true;
 				td1.textContent = cells[2];
 			}else{
@@ -473,12 +473,12 @@
 		for (var i = 0; i < rows.length; i++) {
 			if( i % 2 == 1){
 				rows[i].style.backgroundColor = "#eee";
-				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40) || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
+				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40) || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || (Number(rows[i].cells[6].textContent) == 3){
 					rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 				}
 			}else{
 				rows[i].style.backgroundColor = "#fff";
-				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40) || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
+				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40) || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || (Number(rows[i].cells[6].textContent) == 3){
 					rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 				}
 			}
@@ -557,12 +557,12 @@
 			for (var i = 0; i < rows.length; i++) {
 				if( i % 2 == 1){
 					rows[i].style.backgroundColor = "#eee";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)|| (Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 					}
 				}else{
 					rows[i].style.backgroundColor = "#fff";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)|| (Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 					}
 				}
