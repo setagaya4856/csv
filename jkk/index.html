@@ -166,7 +166,7 @@
 			behavior: 'auto'
 		  });
 	});
-	
+
 	document.getElementById('searchInput').addEventListener('keyup', function() {
 		let searchValueW = this.value.toLowerCase();
 		let table = document.getElementById('csvTable');
@@ -221,7 +221,7 @@
 			behavior: 'auto'
 		  });
 	});
-	
+
 	document.getElementById('roomword').addEventListener('change', function() {
 		let searchValueR = this.selectedIndex;
 		let table = document.getElementById('csvTable');
@@ -288,7 +288,7 @@
 			behavior: 'auto'
 		  });
 	});	
-		
+
 	function searchOnly() {
 		var table = document.getElementById('csvTable');
 		var rows = table.rows;
@@ -322,19 +322,19 @@
 			behavior: 'auto'
 		  });
 	}
-		
+
 	function displayCSV(text) {
 		const rows = text.split('\n');
 		const table = document.getElementById('csvTable');
 		const foot = document.getElementById('footer');
 		table.innerHTML = '';
-		
+
 		const tableb = document.getElementById('btnTable');
 		tableb.innerHTML = '';
 		const trb = document.createElement('tr');
 		const trb2 = document.createElement('tr');
 		const trb3 = document.createElement('tr');
-		
+
 		const selectRoomWord = document.getElementById('roomword');
 		for(var i=0 ; i < selectRoomWord.length ; i++){
 			selectRoomWord.remove(i--);
@@ -453,7 +453,7 @@
 			td4.contentEditable = false;
 			td4.textContent = cells[5];
 			tr.appendChild(td4);
-			
+
 			table.appendChild(tr);
 			if(Number(cells[5]) == 99){
 				const option = document.createElement('option');
@@ -473,12 +473,12 @@
 		for (var i = 0; i < rows.length; i++) {
 			if( i % 2 == 1){
 				rows[i].style.backgroundColor = "#eee";
-				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40) || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40) || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
 					rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 				}
 			}else{
 				rows[i].style.backgroundColor = "#fff";
-				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40) || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40) || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
 					rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 				}
 			}
@@ -504,7 +504,7 @@
 			}
 		}
 	}
-		
+
 	function movecell(idName) {
 		const element = document.getElementById("m" + String(idName));
 		const targetDOMRect = element.getBoundingClientRect();
@@ -515,7 +515,7 @@
 		});
   		document.body.style.zoom = "100%";
 	}
-		
+
 	function cellplus(rowNo) {
 		const table = document.getElementById('csvTable');
 		var rows = table.rows;
@@ -557,12 +557,12 @@
 			for (var i = 0; i < rows.length; i++) {
 				if( i % 2 == 1){
 					rows[i].style.backgroundColor = "#eee";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)|| (Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
 						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 					}
 				}else{
 					rows[i].style.backgroundColor = "#fff";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)|| (Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
 						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 					}
 				}
@@ -579,7 +579,7 @@
 			}
 		}
 	}
-	
+
 	function downloadCSV() {
 		const table = document.getElementById('csvTable');
 		let csvContent = '';
@@ -601,7 +601,7 @@
 
 		encodedData = Encoding.convert(Encoding.stringToCode(csvContent), encoding, 'UNICODE');
 		const blob = new Blob([new Uint8Array([...bom, ...encodedData])], { type: 'text/csv;charset=' + encoding.toLowerCase() + ';' });
-    
+
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.href = url;
