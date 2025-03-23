@@ -188,6 +188,8 @@
 			}else if (searchValueR !== 0 && changef == "全"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
+					tableRows[i].style.display = "none";
 				}else if ((rowText.indexOf(searchValueW) > -1 && (Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) ) || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
@@ -204,6 +206,8 @@
 			}else if (searchValueR !== 0 && changef == "絞"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
+					tableRows[i].style.display = "none";
 				}else if ((rowText.indexOf(searchValueW) > -1 && (Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
@@ -233,6 +237,8 @@
 			}else if (searchValueR !== 0 && searchValueW == "" && changef == "全"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
+					tableRows[i].style.display = "none";
 				}else if (Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0 || rows[i].cells[3].textContent == "#"　) {
 					tableRows[i].style.display = '';
 				} else {
@@ -249,6 +255,8 @@
 			}else if (searchValueR !== 0 && searchValueW !== "" && changef == "全"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
+					tableRows[i].style.display = "none";
 				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 ) || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
@@ -265,6 +273,8 @@
 			}else if (searchValueR !== 0 && searchValueW !== "" && changef == "絞"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
+					tableRows[i].style.display = "none";
 				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
 					tableRows[i].style.display = '';
 				} else {
@@ -373,7 +383,7 @@
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
 			const td1 = document.createElement('td');
-			if(Number(cells[5]) == 30 || Number(cells[5]) == 40 || (Number(cells[5]) > 50 && Number(cells[5]) < 60 )){
+			if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 50 && Number(cells[5]) < 60 )){
 				td1.contentEditable = true;
 				td1.textContent = cells[2];
 			}else{
@@ -412,7 +422,7 @@
 				}else{
 					trb.appendChild(tdb);
 				}
-			}else if(Number(cells[5]) == 30 || Number(cells[5]) == 40 || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
+			}else if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
 				const input_tr = document.createElement("input");
 				input_tr.setAttribute("type", "button");
 				input_tr.setAttribute("value", "＋");
@@ -427,7 +437,7 @@
 			if(Number(cells[5]) > 9 && Number(cells[5]) < 20 ){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
-			}else if(Number(cells[5]) == 30 || Number(cells[5]) == 40 || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
+			}else if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
 			}else{
@@ -463,16 +473,12 @@
 		for (var i = 0; i < rows.length; i++) {
 			if( i % 2 == 1){
 				rows[i].style.backgroundColor = "#eee";
-				if(Number(rows[i].cells[6].textContent) == 30 ){
+				if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
 					rows[i].cells[2].style.backgroundColor = "#c8e6c8";
-				}else if(Number(rows[i].cells[6].textContent) == 40 || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
-					rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 				}
 			}else{
 				rows[i].style.backgroundColor = "#fff";
-				if(Number(rows[i].cells[6].textContent) == 30 ){
-					rows[i].cells[2].style.backgroundColor = "#c8e6c8";
-				}else if(Number(rows[i].cells[6].textContent) == 40 || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
+				if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
 					rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 				}
 			}
@@ -550,17 +556,13 @@
 			rows[0].cells[5].textContent = "単位";
 			for (var i = 0; i < rows.length; i++) {
 				if( i % 2 == 1){
-					if(Number(rows[i].cells[6].textContent) == 30 ){
-						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
-					}else if(Number(rows[i].cells[6].textContent) == 40){
-						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
-					}
 					rows[i].style.backgroundColor = "#eee";
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
+						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
+					}
 				}else{
 					rows[i].style.backgroundColor = "#fff";
-					if(Number(rows[i].cells[6].textContent) == 30 ){
-						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
-					}else if(Number(rows[i].cells[6].textContent) == 40){
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(crows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60)){
 						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 					}
 				}
