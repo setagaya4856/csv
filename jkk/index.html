@@ -434,7 +434,7 @@
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
-			if(Number(cells[5]) > 9 && Number(cells[5]) < 20 ){
+			if(Number(cells[5]) > 0 && Number(cells[5]) < 20 ){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
 			}else if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
