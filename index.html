@@ -474,8 +474,13 @@
 				rows[i].style.display = "none";
 			}else if(rows[i].cells[3].textContent == "#"){
 				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
-				rows[i].style.backgroundColor = 'orange';
-				rows[i].cells[3].style.backgroundColor = 'orange';
+				if (Number(rows[i].cells[6].textContent) == 0){
+					rows[i].style.backgroundColor = '#FFCC99';
+					rows[i].cells[3].style.backgroundColor = '#FFCC99';
+				}else if{
+					rows[i].style.backgroundColor = 'orange';
+					rows[i].cells[3].style.backgroundColor = 'orange';
+				}
 			}else if(rows[i].cells[5].textContent !== ""){
 				if(rows[i].cells[5].textContent.substr(0,1) == "！"){
 					rows[i].style.backgroundColor = "#f07c78";
