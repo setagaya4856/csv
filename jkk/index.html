@@ -199,7 +199,7 @@
 				}
 				rows[i].cells[3].style.backgroundColor = "#fff";
 				if(rows[i].cells[3].textContent == "#"){
-					if (Number(rows[i].cells[6].textContent) == 0){
+					if (Number(rows[i].cells[6].textContent) % 10 !== 0){
 						rows[i].style.backgroundColor = "#FFCC99";
 						rows[i].cells[3].style.backgroundColor = "#FFCC99";
 					}else{
@@ -322,6 +322,9 @@
 				}else{
 					trb.appendChild(tdb);
 				}
+			}else if(Number(cells[5]) < 30){
+				td.contentEditable = false;
+				td.textContent = "#";
 			}else if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
 				const input_tr = document.createElement("input");
 				input_tr.setAttribute("type", "button");
@@ -394,7 +397,7 @@
 				rows[i].style.display = "none";
 			}else if(rows[i].cells[3].textContent == "#"){
 				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
-				if (Number(rows[i].cells[6].textContent) == 0){
+				if (Number(rows[i].cells[6].textContent) % 10 !== 0){
 					rows[i].style.backgroundColor = "#FFCC99";
 					rows[i].cells[3].style.backgroundColor = "#FFCC99";
 				}else{
@@ -454,7 +457,7 @@
 			for (var i = 0; i < rows.length; i++) {
 				rows[i].cells[3].style.backgroundColor = "#f07c78";
 				if(rows[i].cells[3].textContent == "#"){
-					if (Number(rows[i].cells[6].textContent) == 0){
+					if (Number(rows[i].cells[6].textContent) % 10 !== 0){
 						rows[i].cells[3].style.backgroundColor = "#FFCC99";
 					}else{
 						rows[i].cells[3].style.backgroundColor = 'orange';
@@ -477,7 +480,7 @@
 				}
 				rows[i].cells[3].style.backgroundColor = "#fff";
 				if(rows[i].cells[3].textContent == "#"){
-					if (Number(rows[i].cells[6].textContent) == 0){
+					if (Number(rows[i].cells[6].textContent) % 10 !== 0){
 						rows[i].style.backgroundColor = "#FFCC99";
 						rows[i].cells[3].style.backgroundColor = "#FFCC99";
 					}else{
@@ -511,7 +514,7 @@
 					rows[i].style.display = "none";
 				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
 					tableRows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0 || rows[i].cells[3].textContent == "#"　) {
+				}else if (Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0 ) {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
@@ -529,7 +532,7 @@
 					rows[i].style.display = "none";
 				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
 					tableRows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 ) || rows[i].cells[3].textContent == "#") {
+				}else if ((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && (rowText.indexOf(searchValueW) > -1  || rows[i].cells[3].textContent == "#") ) {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
@@ -537,7 +540,7 @@
 			}else if (searchValueR == 0 && searchValueW !== "" && changef == "絞"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
-				}else if ((rowText.indexOf(searchValueW) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+				}else if ((rowText.indexOf(searchValueW) > -1 || rows[i].cells[3].textContent == "#") && rows[i].cells[4].textContent !== "") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
@@ -547,7 +550,7 @@
 					rows[i].style.display = "none";
 				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
 					tableRows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+				}else if ((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0)  && rows[i].cells[4].textContent !== ""){
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
@@ -557,7 +560,7 @@
 					rows[i].style.display = "none";
 				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
 					tableRows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+				}else if ((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && (rowText.indexOf(searchValueW) > -1  || rows[i].cells[3].textContent == "#") && rows[i].cells[4].textContent !== "") {
 					tableRows[i].style.display = '';
 				} else {
 					tableRows[i].style.display = 'none';
