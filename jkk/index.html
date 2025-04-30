@@ -94,6 +94,10 @@
   		background: #FFFFCC;
 		border: 1px solid #333;
 	}
+	.delbtn {
+  		background: #FFFFCC;
+		border: 1px solid #333;
+	}
 	.roomword {
   		background: #FFFFCC;
 		border: 1px solid #333;
@@ -106,7 +110,8 @@
 		<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> 
 		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button></p>
     		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>　
-		<input type="text" id="searchInput" class="searchword" style="width:38vw;height:2.3vh;font-size:50px;"/> 
+    		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button>　
+		<input type="text" id="searchInput" class="searchword" style="width:30vw;height:2.3vh;font-size:50px;"/> 
 		<select id="roomword" class="roomword" style="width:21vw;height:3vh;font-size:35px;">
   			<option value=""></option>
   			<option value="玄関">玄関</option>
@@ -185,6 +190,8 @@
 			document.getElementById('searchbtn').style.backgroundColor = "#FFFFCC";
 			rows[0].cells[5].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			rows[0].cells[4].textContent = "数量";
+			document.getElementById('delbtn').style.backgroundColor = "#FFFFCC";
 			for (var i = 0; i < rows.length; i++) {
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = 'none';
@@ -506,7 +513,60 @@
 		}
 	}
 
-		
+	function delColumn() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		if(rows[0].cells[4].textContent == "数量"){
+			rows[0].cells[4].textContent = "削除";
+			rows[0].cells[5].textContent = "単位";
+			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			document.getElementById('delbtn').style.backgroundColor = "#f07c78";
+			for (var i = 0; i < rows.length; i++) {
+				rows[i].cells[3].style.backgroundColor = "#FFFFCC";
+				if(rows[i].cells[3].textContent == "#"){
+					if (Number(rows[i].cells[6].textContent) % 10 !== 0){
+						rows[i].cells[3].style.backgroundColor = "#FFCC99";
+					}else{
+						rows[i].cells[3].style.backgroundColor = 'orange';
+					}
+				}
+			}
+		}else{
+			rows[0].cells[4].textContent = "数量";
+			rows[0].cells[5].textContent = "単位";
+			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			document.getElementById('delbtn').style.backgroundColor = "#FFFFCC";
+			for (var i = 0; i < rows.length; i++) {
+				if( i % 2 == 1){
+					rows[i].style.backgroundColor = "#eee";
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
+					}
+				}else{
+					rows[i].style.backgroundColor = "#fff";
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
+					}
+				}
+				rows[i].cells[3].style.backgroundColor = "#fff";
+				if(rows[i].cells[3].textContent == "#"){
+					if (Number(rows[i].cells[6].textContent) % 10 !== 0){
+						rows[i].style.backgroundColor = "#FFCC99";
+						rows[i].cells[3].style.backgroundColor = "#FFCC99";
+					}else{
+						rows[i].style.backgroundColor = 'orange';
+						rows[i].cells[3].style.backgroundColor = 'orange';
+					}
+				}else if(rows[i].cells[5].textContent !== ""){
+					if(rows[i].cells[5].textContent.substr(0,1) == "！"){
+						rows[i].style.backgroundColor = "#f07c78";
+						rows[i].cells[3].style.backgroundColor = "#f07c78";
+					}
+				}
+			}
+		}
+	}
+	
 	function colChange() {
 		var searchValueW = document.getElementById('searchInput').value;
 		var searchValueR = document.getElementById('roomword').selectedIndex;
