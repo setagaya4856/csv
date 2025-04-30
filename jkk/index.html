@@ -497,7 +497,8 @@
 		
 	function colChange() {
 		var changef = rows[0].cells[3].textContent;
-		var searchValueW = document.getElementById('searchInput').value;
+		var ele = document.getElementById('searchInput');
+		var searchValueW = ele.value;
 		alert(searchValueW);
 		var searchValueR = document.getElementById('roomword').selectedIndex;
 		alert(searchValueR);
