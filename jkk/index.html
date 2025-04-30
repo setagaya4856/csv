@@ -168,187 +168,20 @@
 	});
 
 	document.getElementById('searchInput').addEventListener('keyup', function() {
-		let searchValueW = this.value.toLowerCase();
-		let table = document.getElementById('csvTable');
-		var rows = table.rows;
-		var changef = rows[0].cells[3].textContent;
-		let element = document.getElementById('roomword');
-		var searchValueR = element.selectedIndex;
-		let tableRows = table.getElementsByTagName('tr');
-		for (let i = 1; i < tableRows.length; i++) {
-			let rowText = tableRows[i].textContent.toLowerCase();
-			if (searchValueR == 0 && searchValueW == "" && changef == "全"){
-				tableRows[i].style.display = '';
-			}else if (searchValueR !== 0 && searchValueW == "" && changef == "全"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-					tableRows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0 || rows[i].cells[3].textContent == "#"　) {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}
-			}else if (searchValueR == 0 && searchValueW !== "" && changef == "全"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (rowText.indexOf(searchValueW) > -1 || rows[i].cells[3].textContent == "#") {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}
-			}else if (searchValueR !== 0 && searchValueW !== "" && changef == "全"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-					tableRows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 ) || rows[i].cells[3].textContent == "#") {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}
-			}else if (searchValueR == 0 && searchValueW !== "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if ((rowText.indexOf(searchValueW) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}			
-			}else if (searchValueR !== 0 && searchValueW == "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-					tableRows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}
-			}else if (searchValueR !== 0 && searchValueW !== "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-					tableRows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}
-			}else if (searchValueR == 0 && searchValueW == "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (rows[i].cells[4].textContent !== "" ){
-					rows[i].style.display = "";
-				}else{
-					rows[i].style.display = "none";
-				}
-			}
-		}
-  		document.body.style.zoom = "100%";
-		window.scrollTo({
-			top: 0,
-			behavior: 'auto'
-		  });
+		colChange();
 	});
 
 	document.getElementById('roomword').addEventListener('change', function() {
-		let searchValueR = this.selectedIndex;
-		let table = document.getElementById('csvTable');
-		var rows = table.rows;
-		var changef = rows[0].cells[3].textContent;
-		let element = document.getElementById('searchInput');
-		var searchValueW = element.value;
-		let tableRows = table.getElementsByTagName('tr');
-		for (let i = 1; i < tableRows.length; i++) {
-			let rowText = tableRows[i].textContent.toLowerCase();
-			if (searchValueR == 0 && searchValueW == "" && changef == "全"){
-				tableRows[i].style.display = '';
-			}else if (searchValueR !== 0 && searchValueW == "" && changef == "全"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-					tableRows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0 || rows[i].cells[3].textContent == "#"　) {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}
-			}else if (searchValueR == 0 && searchValueW !== "" && changef == "全"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (rowText.indexOf(searchValueW) > -1 || rows[i].cells[3].textContent == "#") {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}
-			}else if (searchValueR !== 0 && searchValueW !== "" && changef == "全"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-					tableRows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 ) || rows[i].cells[3].textContent == "#") {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}
-			}else if (searchValueR == 0 && searchValueW !== "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if ((rowText.indexOf(searchValueW) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}			
-			}else if (searchValueR !== 0 && searchValueW == "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-					tableRows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}
-			}else if (searchValueR !== 0 && searchValueW !== "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-					tableRows[i].style.display = "none";
-				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
-					tableRows[i].style.display = '';
-				} else {
-					tableRows[i].style.display = 'none';
-				}
-			}else if (searchValueR == 0 && searchValueW == "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (rows[i].cells[4].textContent !== "" ){
-					rows[i].style.display = "";
-				}else{
-					rows[i].style.display = "none";
-				}
-			}
-		}
-  		document.body.style.zoom = "100%";
-		window.scrollTo({
-			top: 0,
-			behavior: 'auto'
-		  });
+		colChange();
 	});	
 
 	function searchOnly() {
-		var changef = rows[0].cells[3].textContent;
-		let element = document.getElementById('searchInput');
-		var searchValueW = element.value;
-		let element2 = document.getElementById('roomword');
-		var searchValueR = element2.selectedIndex;
-		let tableRows = table.getElementsByTagName('tr');
 		var table = document.getElementById('csvTable');
 		var rows = table.rows;
 		if(rows[0].cells[5].textContent == "強調"){
-			element.value = "";
-			element2.selectedIndex = 0;
+			var tableRows = table.getElementsByTagName('tr');
+			document.getElementById('searchInput').value = "";
+			ocument.getElementById('roomword').selectedIndex = 0;
 			rows[0].cells[3].textContent = "全";
 			rows[0].cells[5].textContent = "単位";
 			for (var i = 0; i < rows.length; i++) {
@@ -381,88 +214,12 @@
 				}
 			}
 		}else{
-			if(changef == "絞"){
+			if(rows[0].cells[3].textContent == "絞"){
 				rows[0].cells[3].textContent = "全";
-				changef = rows[0].cells[3].textContent;
 			}else{
 				rows[0].cells[3].textContent = "絞";
-				changef = rows[0].cells[3].textContent;
 			}
-			for (let i = 1; i < tableRows.length; i++) {
-				let rowText = tableRows[i].textContent.toLowerCase();
-				if (searchValueR == 0 && searchValueW == "" && changef == "全"){
-					tableRows[i].style.display = '';
-				}else if (searchValueR !== 0 && searchValueW == "" && changef == "全"){
-					if(Number(rows[i].cells[1].textContent) == 0){
-						rows[i].style.display = "none";
-					}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-						tableRows[i].style.display = "none";
-					}else if (Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0 || rows[i].cells[3].textContent == "#"　) {
-						tableRows[i].style.display = '';
-					} else {
-						tableRows[i].style.display = 'none';
-					}
-				}else if (searchValueR == 0 && searchValueW !== "" && changef == "全"){
-					if(Number(rows[i].cells[1].textContent) == 0){
-						rows[i].style.display = "none";
-					}else if (rowText.indexOf(searchValueW) > -1 || rows[i].cells[3].textContent == "#") {
-						tableRows[i].style.display = '';
-					} else {
-						tableRows[i].style.display = 'none';
-					}
-				}else if (searchValueR !== 0 && searchValueW !== "" && changef == "全"){
-					if(Number(rows[i].cells[1].textContent) == 0){
-						rows[i].style.display = "none";
-					}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-						tableRows[i].style.display = "none";
-					}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 ) || rows[i].cells[3].textContent == "#") {
-						tableRows[i].style.display = '';
-					} else {
-						tableRows[i].style.display = 'none';
-					}
-				}else if (searchValueR == 0 && searchValueW !== "" && changef == "絞"){
-					if(Number(rows[i].cells[1].textContent) == 0){
-						rows[i].style.display = "none";
-					}else if ((rowText.indexOf(searchValueW) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
-						tableRows[i].style.display = '';
-					} else {
-						tableRows[i].style.display = 'none';
-					}			
-				}else if (searchValueR !== 0 && searchValueW == "" && changef == "絞"){
-					if(Number(rows[i].cells[1].textContent) == 0){
-						rows[i].style.display = "none";
-					}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-						tableRows[i].style.display = "none";
-					}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
-						tableRows[i].style.display = '';
-					} else {
-						tableRows[i].style.display = 'none';
-					}
-				}else if (searchValueR !== 0 && searchValueW !== "" && changef == "絞"){
-					if(Number(rows[i].cells[1].textContent) == 0){
-						rows[i].style.display = "none";
-					}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
-						tableRows[i].style.display = "none";
-					}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
-						tableRows[i].style.display = '';
-					} else {
-						tableRows[i].style.display = 'none';
-					}
-				}else if (searchValueR == 0 && searchValueW == "" && changef == "絞"){
-					if(Number(rows[i].cells[1].textContent) == 0){
-						rows[i].style.display = "none";
-					}else if (rows[i].cells[4].textContent !== "" ){
-						rows[i].style.display = "";
-					}else{
-						rows[i].style.display = "none";
-					}
-				}
-			}
-	  		document.body.style.zoom = "100%";
-			window.scrollTo({
-				top: 0,
-				behavior: 'auto'
-			  });
+			colChange();
 		}
 	}
 
@@ -737,6 +494,93 @@
 		}
 	}
 
+		
+	function colChange() {
+		var changef = rows[0].cells[3].textContent;
+		let element = document.getElementById('searchInput');
+		var searchValueW = element.value;
+		let element2 = document.getElementById('roomword');
+		var searchValueR = element2.selectedIndex;
+		let tableRows = table.getElementsByTagName('tr');
+		var table = document.getElementById('csvTable');
+		var rows = table.rows;
+		for (let i = 1; i < tableRows.length; i++) {
+			let rowText = tableRows[i].textContent.toLowerCase();
+			if (searchValueR == 0 && searchValueW == "" && changef == "全"){
+				tableRows[i].style.display = '';
+			}else if (searchValueR !== 0 && searchValueW == "" && changef == "全"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
+					tableRows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0 || rows[i].cells[3].textContent == "#"　) {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValueR == 0 && searchValueW !== "" && changef == "全"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (rowText.indexOf(searchValueW) > -1 || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValueR !== 0 && searchValueW !== "" && changef == "全"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
+					tableRows[i].style.display = "none";
+				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 ) || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValueR == 0 && searchValueW !== "" && changef == "絞"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if ((rowText.indexOf(searchValueW) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}			
+			}else if (searchValueR !== 0 && searchValueW == "" && changef == "絞"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
+					tableRows[i].style.display = "none";
+				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValueR !== 0 && searchValueW !== "" && changef == "絞"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) == 1 || Number(rows[i].cells[6].textContent) == 3) {
+					tableRows[i].style.display = "none";
+				}else if (((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && rowText.indexOf(searchValueW) > -1 && rows[i].cells[4].textContent !== "") || rows[i].cells[3].textContent == "#") {
+					tableRows[i].style.display = '';
+				} else {
+					tableRows[i].style.display = 'none';
+				}
+			}else if (searchValueR == 0 && searchValueW == "" && changef == "絞"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (rows[i].cells[4].textContent !== "" ){
+					rows[i].style.display = "";
+				}else{
+					rows[i].style.display = "none";
+				}
+			}
+		}
+		document.body.style.zoom = "100%";
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
+	}
+	
 	function downloadCSV() {
 		const table = document.getElementById('csvTable');
 		let csvContent = '';
