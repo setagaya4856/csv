@@ -496,12 +496,14 @@
 
 		
 	function colChange() {
-		var changef = rows[0].cells[3].textContent;
+		var searchValueW = document.getElementById('searchInput').value;
+		alert(searchValueW);
 		var searchValueR = document.getElementById('roomword').selectedIndex;
 		alert(searchValueR);
 		var table = document.getElementById('csvTable');
 		var tableRows = table.getElementsByTagName('tr');
 		var rows = table.rows;
+		var changef = rows[0].cells[3].textContent;
 		for (let i = 1; i < tableRows.length; i++) {
 			let rowText = tableRows[i].textContent.toLowerCase();
 			if (searchValueR == 0 && searchValueW == "" && changef == "全"){
