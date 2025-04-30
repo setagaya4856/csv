@@ -476,6 +476,8 @@
 		if(rows[0].cells[5].textContent == "単位"){
 			rows[0].cells[5].textContent = "強調";
 			document.getElementById('changebtn').style.backgroundColor = "#f07c78";
+			rows[0].cells[4].textContent = "数量";
+			document.getElementById('delbtn').style.backgroundColor = "#FFFFCC";
 			for (var i = 0; i < rows.length; i++) {
 				rows[i].cells[3].style.backgroundColor = "#f07c78";
 				if(rows[i].cells[3].textContent == "#"){
@@ -489,6 +491,8 @@
 		}else{
 			rows[0].cells[5].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			rows[0].cells[4].textContent = "数量";
+			document.getElementById('delbtn').style.backgroundColor = "#FFFFCC";
 			for (var i = 0; i < rows.length; i++) {
 				if( i % 2 == 1){
 					rows[i].style.backgroundColor = "#eee";
@@ -525,9 +529,9 @@
 		var rows = table.rows;
 		if(rows[0].cells[4].textContent == "数量"){
 			rows[0].cells[4].textContent = "削除";
+			document.getElementById('delbtn').style.backgroundColor = "#f07c78";
 			rows[0].cells[5].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
-			document.getElementById('delbtn').style.backgroundColor = "#f07c78";
 			for (var i = 0; i < rows.length; i++) {
 				rows[i].cells[3].style.backgroundColor = "#FFFFCC";
 				if(rows[i].cells[3].textContent == "#"){
@@ -540,9 +544,9 @@
 			}
 		}else{
 			rows[0].cells[4].textContent = "数量";
+			document.getElementById('delbtn').style.backgroundColor = "#FFFFCC";
 			rows[0].cells[5].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
-			document.getElementById('delbtn').style.backgroundColor = "#FFFFCC";
 			for (var i = 0; i < rows.length; i++) {
 				if( i % 2 == 1){
 					rows[i].style.backgroundColor = "#eee";
