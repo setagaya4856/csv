@@ -91,7 +91,7 @@
 		border: 1px solid #333;
 	}
 	.changebtn {
-  		background: #f07c78;
+  		background: #FFFFCC;
 		border: 1px solid #333;
 	}
 	.roomword {
@@ -105,7 +105,7 @@
     		<p>　<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">　
 		<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> 
 		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button></p>
-    		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" class="changebtn">!</button>　
+    		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>　
 		<input type="text" id="searchInput" class="searchword" style="width:38vw;height:2.3vh;font-size:50px;"/> 
 		<select id="roomword" class="roomword" style="width:21vw;height:3vh;font-size:35px;">
   			<option value=""></option>
@@ -457,6 +457,7 @@
 		var rows = table.rows;
 		if(rows[0].cells[5].textContent == "単位"){
 			rows[0].cells[5].textContent = "強調";
+			document.getElementById('changebtn').style.backgroundColor = "#f07c78";
 			for (var i = 0; i < rows.length; i++) {
 				rows[i].cells[3].style.backgroundColor = "#f07c78";
 				if(rows[i].cells[3].textContent == "#"){
@@ -469,6 +470,7 @@
 			}
 		}else{
 			rows[0].cells[5].textContent = "単位";
+			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
 			for (var i = 0; i < rows.length; i++) {
 				if( i % 2 == 1){
 					rows[i].style.backgroundColor = "#eee";
