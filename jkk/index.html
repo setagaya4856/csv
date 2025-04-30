@@ -119,7 +119,7 @@
   			<option value="居室3">居室3</option>
   			<option value="バルコニー">バルコニー</option>
 		</select> 
-		<button style="width:20vw;height:3vh;font-size:30px;" onclick="searchOnly()" class="searchbtn">切替</button>
+		<button style="width:20vw;height:3vh;font-size:30px;" onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
 		</p>
   	</header>
 	<br>
@@ -183,6 +183,7 @@
 			document.getElementById('searchInput').value = "";
 			document.getElementById('roomword').selectedIndex = 0;
 			rows[0].cells[3].textContent = "全";
+			document.getElementById('searchbtn').style.backgroundColor = "#FFFFCC";
 			rows[0].cells[5].textContent = "単位";
 			for (var i = 0; i < rows.length; i++) {
 				tableRows[i].style.display = '';
@@ -216,8 +217,10 @@
 		}else{
 			if(rows[0].cells[3].textContent == "絞"){
 				rows[0].cells[3].textContent = "全";
+				document.getElementById('searchbtn').style.backgroundColor = "#FFFFCC";
 			}else{
 				rows[0].cells[3].textContent = "絞";
+				document.getElementById('searchbtn').style.backgroundColor = "#f07c78";
 			}
 			colChange();
 		}
