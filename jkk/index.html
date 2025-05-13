@@ -152,6 +152,18 @@
 		</table>
 	</footer>
     	<script>
+	{
+		let taptmr, tapcount = 0;
+		window.addEventListener( "touchstart", evt => {
+			if( tapcount ){ evt.preventDefault(); tapcount=0; console.log( "ダブルタップ" ) }
+			else{
+				tapcount++;
+				clearTimeout( taptmr );
+				taptmr = setTimeout( () => { tapcount = 0 }, 350 );
+			}
+		}, { passive: false } );
+	}
+		
 	document.getElementById('csvFileInput').addEventListener('change', function(event) {  
 		const file = event.target.files[0];
 		if (file) {
