@@ -394,9 +394,13 @@
 				rows[i].cells[2].style.backgroundColor = "#f0f0f0";
 			}else if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
 				rows[i].style.backgroundColor = "#f0f0f0";
+				rows[i].cells[3].style.backgroundColor = "#f0f0f0";
 			}else if(Number(rows[i].cells[6].textContent) == 40){
+				rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 				rows[i].cells[3].style.backgroundColor = "#f0f0f0";
 				rows[i].cells[4].style.backgroundColor = "#f0f0f0";
+			}else if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
+				rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 			}
 			rows[i].cells[0].style.display = "none";
 			rows[i].cells[1].style.display = "none";
