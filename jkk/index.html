@@ -323,7 +323,7 @@
 				td.textContent = "#";
 			}else if(Number(cells[5]) == 20){
 				td.contentEditable = false;
-				td.textContent = "#";	
+				td.textContent = "#";
 				td.setAttribute("id", cells[1]);
 				const tdb = document.createElement('td');
 				tdb.setAttribute("class", "mb");
@@ -409,7 +409,7 @@
 				rows[i].style.display = "none";
 			}else if(rows[i].cells[3].textContent == "#"){
 				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
-				if (Number(rows[i].cells[6].textContent) % 10 !== 0){
+				if (Number(rows[i].cells[6].textContent) == 20){
 					rows[i].style.backgroundColor = "#FFCC99";
 					rows[i].cells[3].style.backgroundColor = "#FFCC99";
 				}
