@@ -212,12 +212,12 @@
 				}
 				if( i % 2 == 1){
 					rows[i].style.backgroundColor = "#eee";
-					if((Number(rows[i].cells[6].textContent) >= 40 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 41 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 					}
 				}else{
 					rows[i].style.backgroundColor = "#fff";
-					if((Number(rows[i].cells[6].textContent) >= 40 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 41 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 					}
 				}
@@ -363,10 +363,7 @@
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
-			if(Number(cells[5]) > 0 && Number(cells[5]) < 20 ){
-				td2.contentEditable = true;
-				td2.textContent = cells[3];
-			}else if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
+			if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 40 && Number(cells[5]) < 50) || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
 			}else{
@@ -402,12 +399,12 @@
 		for (var i = 0; i < rows.length; i++) {
 			if( i % 2 == 1){
 				rows[i].style.backgroundColor = "#eee";
-				if((Number(rows[i].cells[6].textContent) >= 40 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+				if((Number(rows[i].cells[6].textContent) >= 41 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 					rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 				}
 			}else{
 				rows[i].style.backgroundColor = "#fff";
-				if((Number(rows[i].cells[6].textContent) >= 40 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+				if((Number(rows[i].cells[6].textContent) >= 41 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 					rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 				}
 			}
@@ -508,12 +505,12 @@
 			for (var i = 0; i < rows.length; i++) {
 				if( i % 2 == 1){
 					rows[i].style.backgroundColor = "#eee";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 41 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 					}
 				}else{
 					rows[i].style.backgroundColor = "#fff";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 41 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 					}
 				}
@@ -562,12 +559,12 @@
 			for (var i = 0; i < rows.length; i++) {
 				if( i % 2 == 1){
 					rows[i].style.backgroundColor = "#eee";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 41 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 					}
 				}else{
 					rows[i].style.backgroundColor = "#fff";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 41 && Number(rows[i].cells[6].textContent) < 50)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 					}
 				}
