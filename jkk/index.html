@@ -212,12 +212,12 @@
 				}
 				if( i % 2 == 1){
 					rows[i].style.backgroundColor = "#eee";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 41)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 					}
 				}else{
 					rows[i].style.backgroundColor = "#fff";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 41)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 					}
 				}
@@ -309,11 +309,11 @@
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
 			const td1 = document.createElement('td');
-			if((Number(cells[5]) >= 20 && Number(cells[5]) < 30) || Number(cells[5]) == 1 || Number(cells[5]) == 99 || Number(cells[5]) == 10){
-				td1.contentEditable = false;
+			if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 50 && Number(cells[5]) < 60 ) || Number(cells[5]) == 3){
+				td1.contentEditable = true;
 				td1.textContent = cells[2];
 			}else{
-				td1.contentEditable = true;
+				td1.contentEditable = false;
 				td1.textContent = cells[2];
 			}
 			tr.appendChild(td1);
@@ -348,10 +348,10 @@
 				}else{
 					trb.appendChild(tdb);
 				}
-			}else if(Number(cells[5]) == 40){
+			}else if(Number(cells[5]) < 30){
 				td.contentEditable = false;
-				td.textContent = "*";
-			}else if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) >= 41 && Number(cells[5]) < 50) || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
+				td.textContent = "#";
+			}else if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
 				const input_tr = document.createElement("input");
 				input_tr.setAttribute("type", "button");
 				input_tr.setAttribute("value", "＋");
@@ -363,7 +363,10 @@
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
-			if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 40 && Number(cells[5]) < 50) || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
+			if(Number(cells[5]) > 0 && Number(cells[5]) < 20 ){
+				td2.contentEditable = true;
+				td2.textContent = cells[3];
+			}else if((Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 50 && Number(cells[5]) < 60)){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
 			}else{
@@ -399,12 +402,12 @@
 		for (var i = 0; i < rows.length; i++) {
 			if( i % 2 == 1){
 				rows[i].style.backgroundColor = "#eee";
-				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 41)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40) || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 					rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 				}
 			}else{
 				rows[i].style.backgroundColor = "#fff";
-				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 41)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+				if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40) || (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 					rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 				}
 			}
@@ -505,12 +508,12 @@
 			for (var i = 0; i < rows.length; i++) {
 				if( i % 2 == 1){
 					rows[i].style.backgroundColor = "#eee";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 41)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 					}
 				}else{
 					rows[i].style.backgroundColor = "#fff";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 41)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 					}
 				}
@@ -559,12 +562,12 @@
 			for (var i = 0; i < rows.length; i++) {
 				if( i % 2 == 1){
 					rows[i].style.backgroundColor = "#eee";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 41)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#c8e6c8";
 					}
 				}else{
 					rows[i].style.backgroundColor = "#fff";
-					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 41)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
+					if((Number(rows[i].cells[6].textContent) >= 30 && Number(rows[i].cells[6].textContent) < 40)|| (Number(rows[i].cells[6].textContent) > 50 && Number(rows[i].cells[6].textContent) < 60) || Number(rows[i].cells[6].textContent) == 3){
 						rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 					}
 				}
