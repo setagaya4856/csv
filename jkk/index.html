@@ -212,7 +212,7 @@
 		var rows = table.rows;
 		var changef = rows[0].cells[3].textContent;
 		for (var i = 1; i < rows.length; i++) {
-			let rowText = rows[i].textContent.toLowerCase();
+			let rowText = rows[i].cells[2].textContent;
 			if (searchValueR == 0 && searchValueW == "" && changef == "全"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
@@ -247,6 +247,7 @@
 						rows[i + 8].style.display = '';
 						rows[i + 9].style.display = '';
 					}
+					i = i + 9;
 				} else {
 					rows[i].style.display = 'none';
 				}
