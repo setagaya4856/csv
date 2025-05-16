@@ -344,6 +344,7 @@
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
 		for (var i = 0; i < rows.length; i++) {
+			rows[i].style.display = "";
 			rows[i].style.backgroundColor = "#fff";
 			rows[i].cells[3].style.backgroundColor = "#fff";
 			if(Number(rows[i].cells[6].textContent) == 1){
