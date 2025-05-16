@@ -219,21 +219,6 @@
 				}else{
 					rows[i].style.display = '';
 				}
-			}else if (searchValueR == 0 && searchValueW == "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (rows[i].cells[4].textContent !== "" && rows[i].cells[3].textContent !== "*"){
-					rows[i].style.display = "";
-				}else if (rows[i].cells[4].textContent == "*" && rows[i].cells[3].textContent == "*" && Number(rows[i].cells[6].textContent) == 40){
-					if(rows[i + 1].cells[4].textContent == "" && rows[i + 2].cells[4].textContent == "" && rows[i + 3].cells[4].textContent == "" && rows[i + 4].cells[4].textContent == "" && rows[i + 5].cells[4].textContent == ""
-					&& rows[i + 6].cells[4].textContent == "" && rows[i + 7].cells[4].textContent == "" && rows[i + 8].cells[4].textContent == "" && rows[i + 9].cells[4].textContent == ""){
-						rows[i].style.display = "none";
-					else{
-						rows[i].style.display = "";
-					}
-				}else{
-					rows[i].style.display = "none";
-				}
 			}
 		}
 		document.body.style.zoom = "100%";
