@@ -204,7 +204,45 @@
 		}
 		colChange();
 	}
-
+	
+	function colChange() {
+		var searchValueW = document.getElementById('searchInput').value;
+		var searchValueR = document.getElementById('roomword').selectedIndex;
+		var table = document.getElementById('csvTable');
+		var rows = table.rows;
+		var changef = rows[0].cells[3].textContent;
+		for (var i = 1; i < rows.length; i++) {
+			let rowText = rows[i].textContent.toLowerCase();
+			if (searchValueR == 0 && searchValueW == "" && changef == "全"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else{
+					rows[i].style.display = '';
+				}
+			}else if (searchValueR == 0 && searchValueW == "" && changef == "絞"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (rows[i].cells[4].textContent !== "" && rows[i].cells[3].textContent !== "*"){
+					rows[i].style.display = "";
+				}else if (rows[i].cells[4].textContent == "*" && rows[i].cells[3].textContent == "*" && Number(rows[i].cells[6].textContent) == 40){
+					if(rows[i + 1].cells[4].textContent == "" && rows[i + 2].cells[4].textContent == "" && rows[i + 3].cells[4].textContent == "" && rows[i + 4].cells[4].textContent == "" && rows[i + 5].cells[4].textContent == ""
+					&& rows[i + 6].cells[4].textContent == "" && rows[i + 7].cells[4].textContent == "" && rows[i + 8].cells[4].textContent == "" && rows[i + 9].cells[4].textContent == ""){
+						rows[i].style.display = "none";
+					else{
+						rows[i].style.display = "";
+					}
+				}else{
+					rows[i].style.display = "none";
+				}
+			}
+		}
+		document.body.style.zoom = "100%";
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
+	}
+	
 	function displayCSV(text) {
 		const rows = text.split('\n');
 		const table = document.getElementById('csvTable');
