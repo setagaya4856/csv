@@ -235,12 +235,9 @@
 				}else if ((rowText.indexOf(searchValueW) > -1 || rows[i].cells[3].textContent == "#" ) && Number(rows[i].cells[6].textContent) !== 40) {
 					rows[i].style.display = '';
 				}else if (Number(rows[i].cells[6].textContent) == 40) {
-					alert(searchValueW);
-					alert(rowText);
-					alert(rowText.indexOf(searchValueW));
 					if (rowText.indexOf(searchValueW) > -1){
-						rows[i].style.display = '';
-						rows[i + 1].style.display = '';
+						rows[i].style.display = 'none';
+						rows[i + 1].style.display = 'none';
 						rows[i + 2].style.display = '';
 						rows[i + 3].style.display = '';
 						rows[i + 4].style.display = '';
