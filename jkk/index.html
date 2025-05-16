@@ -448,6 +448,8 @@
 	}
 
 	function delColumn() {
+		var table = document.getElementById('csvTable');
+		var rows = table.rows;
 		document.getElementById('searchInput').value = "";
 		document.getElementById('roomword').selectedIndex = 0;
 		rows[0].cells[3].textContent = "全";
