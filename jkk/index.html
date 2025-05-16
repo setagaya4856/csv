@@ -212,7 +212,7 @@
 		var rows = table.rows;
 		var changef = rows[0].cells[3].textContent;
 		for (var i = 1; i < rows.length; i++) {
-			let rowText = rows[i].cells[2].textContent;
+			let rowText = rows[i].textContent.toLowerCase();
 			if (searchValueR == 0 && searchValueW == "" && changef == "全"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
@@ -236,7 +236,6 @@
 					rows[i].style.display = '';
 				}else if (Number(rows[i].cells[6].textContent) == 40) {
 					if (rowText.indexOf(searchValueW) > -1){
-						alert(i);
 						rows[i].style.display = '';
 						rows[i + 1].style.display = '';
 						rows[i + 2].style.display = '';
@@ -247,8 +246,8 @@
 						rows[i + 7].style.display = '';
 						rows[i + 8].style.display = '';
 						rows[i + 9].style.display = '';
+						i = i + 9;
 					}
-					i = i + 9;
 				} else {
 					rows[i].style.display = 'none';
 				}
@@ -263,8 +262,8 @@
 					if (rowText.indexOf(searchValueW) > -1){
 						rows[i].style.display = '';
 						rows[i + searchValueR].style.display = '';
+						i = i + 9;
 					}
-					i = i + 9;
 				} else {
 					rows[i].style.display = 'none';
 				}
@@ -286,8 +285,8 @@
 						rows[i + 7].style.display = '';
 						rows[i + 8].style.display = '';
 						rows[i + 9].style.display = '';
+						i = i + 9;
 					}
-					i = i + 9;
 				}else{
 					rows[i].style.display = 'none';
 				}
@@ -302,8 +301,8 @@
 					if (rows[i + searchValueR].cells[4].textContent !== ""){
 						rows[i].style.display = '';
 						rows[i + searchValueR].style.display = '';
+						i = i + 9;
 					}
-					i = i + 9;
 				} else {
 					rows[i].style.display = 'none';
 				}
@@ -319,8 +318,8 @@
 					if (rowText.indexOf(searchValueW) > -1 && rows[i + searchValueR].cells[4].textContent !== ""){
 						rows[i].style.display = '';
 						rows[i + searchValueR].style.display = '';
+						i = i + 9;
 					}
-					i = i+9;
 				} else {
 					rows[i].style.display = 'none';
 				}
