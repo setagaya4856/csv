@@ -236,8 +236,8 @@
 					rows[i].style.display = '';
 				}else if (Number(rows[i].cells[6].textContent) == 40) {
 					if (rowText.indexOf(searchValueW) > -1){
-						rows[i].style.display = 'none';
-						rows[i + 1].style.display = 'none';
+						rows[i].style.display = '';
+						rows[i + 1].style.display = '';
 						rows[i + 2].style.display = '';
 						rows[i + 3].style.display = '';
 						rows[i + 4].style.display = '';
@@ -247,7 +247,6 @@
 						rows[i + 8].style.display = '';
 						rows[i + 9].style.display = '';
 					}
-					i = i + 9;
 				} else {
 					rows[i].style.display = 'none';
 				}
