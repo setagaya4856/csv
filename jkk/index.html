@@ -511,7 +511,7 @@
 					rows[i].style.display = "none";
 				}else if (Number(rows[i].cells[6].textContent) == 1) {
 					rows[i].style.display = "none";
-				}else if ((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && (rowText.indexOf(searchValueW) > -1  || rows[i].cells[3].textContent == "#") ) && Number(rows[i].cells[6].textContent) !== 40) {
+				}else if ((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && (rowText.indexOf(searchValueW) > -1  || rows[i].cells[3].textContent == "#") && Number(rows[i].cells[6].textContent) !== 40) {
 					rows[i].style.display = '';
 				}else if (Number(rows[i].cells[6].textContent) == 40) {
 					if (rowText.indexOf(searchValueW) > -1){
