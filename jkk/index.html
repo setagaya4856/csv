@@ -236,6 +236,7 @@
 					rows[i].style.display = '';
 				}else if (Number(rows[i].cells[6].textContent) == 40) {
 					if (rowText.indexOf(searchValueW) > -1){
+						alert(i);
 						rows[i].style.display = '';
 						rows[i + 1].style.display = '';
 						rows[i + 2].style.display = '';
