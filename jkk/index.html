@@ -478,7 +478,7 @@
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
 			const td1 = document.createElement('td');
-			if(Number(cells[5]) == 1 || (Number(cells[5]) >= 20 && Number(cells[5]) < 30 ) || Number(cells[5]) == 99 ){
+			if(Number(cells[5]) == 1 || (Number(cells[5]) >= 20 && Number(cells[5]) < 30 )){
 				td1.contentEditable = false;
 				td1.textContent = cells[2];
 			}else{
@@ -553,6 +553,34 @@
 		tableb.appendChild(trb3);
 	}
 
+	function roomColumn() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		rows[0].cells[5].textContent = "部屋";
+		document.getElementById('changebtn').style.backgroundColor = "#f07c78";
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].cells[0].style.display = "none";
+			rows[i].cells[1].style.display = "none";
+			rows[i].cells[6].style.display = "none";
+			if( i < 10 ){
+				rows[i].style.display = "";
+			}else{
+				rows[i].style.display = "none";
+			}
+		}
+	}
+
+	function roomChange() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		for (var i = 0; i < rows.length; i++) {
+			if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
+				rows[i].cells[2].textContent = rows[(Number(rows[i].cells[6].textContent) - 40].cells[2].textContent;
+			}
+		}
+		hideColumn();
+	}
+		
 	function hideColumn() {
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
@@ -644,7 +672,7 @@
 					rows[i].cells[3].style.backgroundColor = "#FFCC99";
 				}
 			}
-		}else{
+		}else　if(rows[0].cells[5].textContent == "強調"){
 			rows[0].cells[5].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
 			for (var i = 0; i < rows.length; i++) {
@@ -657,6 +685,10 @@
 					rows[i].cells[3].style.backgroundColor = "#FFCC99";
 				}
 			}
+		}else　if(rows[0].cells[5].textContent == "部屋"){
+			rows[0].cells[5].textContent = "単位";
+			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			roomChange();
 		}
 	}
 
