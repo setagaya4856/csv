@@ -478,7 +478,7 @@
 			td0.textContent = cells[1];
 			tr.appendChild(td0);
 			const td1 = document.createElement('td');
-			if(Number(cells[5]) == 1 || (Number(cells[5]) >= 20 && Number(cells[5]) < 30 )){
+			if(Number(cells[5]) == 1 || (Number(cells[5]) >= 20 && Number(cells[5]) < 30)){
 				td1.contentEditable = false;
 				td1.textContent = cells[2];
 			}else{
@@ -672,7 +672,7 @@
 					rows[i].cells[3].style.backgroundColor = "#FFCC99";
 				}
 			}
-		}else　if(rows[0].cells[5].textContent == "強調"){
+		}else if(rows[0].cells[5].textContent == "強調"){
 			rows[0].cells[5].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
 			for (var i = 0; i < rows.length; i++) {
@@ -685,7 +685,7 @@
 					rows[i].cells[3].style.backgroundColor = "#FFCC99";
 				}
 			}
-		}else　if(rows[0].cells[5].textContent == "部屋"){
+		}else if(rows[0].cells[5].textContent == "部屋"){
 			rows[0].cells[5].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
 			roomChange();
