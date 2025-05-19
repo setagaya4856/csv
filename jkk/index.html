@@ -172,7 +172,7 @@
 			reader.onload = function(e) {
 				const text = e.target.result;
 				displayCSV(text);
-				hideColumn();
+				roomColumn();
 			};
 		reader.readAsText(file);
 		}
@@ -601,6 +601,23 @@
 			behavior: 'smooth'
 		});
   		document.body.style.zoom = "100%";
+	}
+	
+	function roomColumn() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		rows[0].cells[5].textContent = "部屋";
+		document.getElementById('changebtn').style.backgroundColor = "#f07c78";
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].cells[0].style.display = "none";
+			rows[i].cells[1].style.display = "none";
+			rows[i].cells[6].style.display = "none";
+			if( i < 10 ){
+				rows[i].style.display = "";
+			}else{
+				rows[i].style.display = "none";
+			}
+		}
 	}
 
 	function cellplus(rowNo) {
