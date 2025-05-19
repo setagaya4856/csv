@@ -620,10 +620,24 @@
 	}
 
 	function roomChange() {
+		const selectRoomWord = document.getElementById('roomword');
+		for(var i=0 ; i < selectRoomWord.length ; i++){
+			selectRoomWord.remove(i--);
+		}
+		const optionb = document.createElement('option');
+		optionb.value = "";
+		optionb.textContent = "";
+		selectRoomWord.appendChild(optionb)
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
 		for (var i = 0; i < rows.length; i++) {
 			rows[i].style.display = "";
+			if(Number(cells[6]) == 99){
+				const option = document.createElement('option');
+				option.value = rows[i].cells[2].textContent;
+				option.textContent = rows[i].cells[2].textContent;
+				selectRoomWord.appendChild(option)
+			}
 			if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
 				rows[i].cells[2].textContent = rows[Number(rows[i].cells[6].textContent) - 40].cells[2].textContent;
 			}
