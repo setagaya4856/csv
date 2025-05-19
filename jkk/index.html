@@ -434,10 +434,6 @@
 		for(var i=0 ; i < selectRoomWord.length ; i++){
 			selectRoomWord.remove(i--);
 		}
-		const optionb = document.createElement('option');
-		optionb.value = "";
-		optionb.textContent = "";
-		selectRoomWord.appendChild(optionb)
 		const trM = document.createElement('tr');
 		const tdMR = document.createElement('td');
 		tdMR.textContent = "Row";
@@ -541,12 +537,6 @@
 			tr.appendChild(td4);
 
 			table.appendChild(tr);
-			if(Number(cells[5]) == 99){
-				const option = document.createElement('option');
-				option.value = cells[2];
-				option.textContent = cells[2];
-				selectRoomWord.appendChild(option)
-			}
 		});
 		tableb.appendChild(trb);
 		tableb.appendChild(trb2);
@@ -621,9 +611,6 @@
 
 	function roomChange() {
 		const selectRoomWord = document.getElementById('roomword');
-		for(var i=0 ; i < selectRoomWord.length ; i++){
-			selectRoomWord.remove(i--);
-		}
 		const optionb = document.createElement('option');
 		optionb.value = "";
 		optionb.textContent = "";
