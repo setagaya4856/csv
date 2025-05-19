@@ -571,13 +571,6 @@
 			}else if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
 				rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 			}
-			rows[i].cells[0].style.display = "none";
-			rows[i].cells[1].style.display = "none";
-			rows[i].cells[2].className='naiyo';
-			rows[i].cells[3].className='btn';
-			rows[i].cells[4].className='count';
-			rows[i].cells[5].className='unit';
-			rows[i].cells[6].style.display = "none";
 			if(Number(rows[i].cells[1].textContent) == 0){
 				rows[i].style.display = "none";
 			}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
@@ -609,8 +602,14 @@
 		rows[0].cells[5].textContent = "部屋";
 		document.getElementById('changebtn').style.backgroundColor = "#f07c78";
 		for (var i = 0; i < rows.length; i++) {
+			rows[i].style.backgroundColor = "#fff";
+			rows[i].cells[3].style.backgroundColor = "#fff";
 			rows[i].cells[0].style.display = "none";
 			rows[i].cells[1].style.display = "none";
+			rows[i].cells[2].className='naiyo';
+			rows[i].cells[3].className='btn';
+			rows[i].cells[4].className='count';
+			rows[i].cells[5].className='unit';
 			rows[i].cells[6].style.display = "none";
 			if( i < 10 ){
 				rows[i].style.display = "";
