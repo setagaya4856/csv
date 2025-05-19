@@ -623,6 +623,7 @@
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
 		for (var i = 0; i < rows.length; i++) {
+			rows[i].style.display = "";
 			if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
 				rows[i].cells[2].textContent = rows[Number(rows[i].cells[6].textContent) - 40].cells[2].textContent;
 			}
