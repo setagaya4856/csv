@@ -164,35 +164,42 @@
 			longtap = true;
 			lf();
 				}, sec);
-	})
-	el.addEventListener('touchend',()=>{
-	if(!longtap){
-		clearTimeout(timer);
-		nf();
-		}else{
-			touch = false;
-		}
-	})
-	
-	el.addEventListener('mousedown',()=>{
-	if(touch) return;
-	longclick = false;
-	timer = setTimeout(() => {
-		longclick = true;
-		lf();
-			}, sec);
-	})
-	el.addEventListener('click',()=>{
-		if(touch){
-			touch = false;
-		return;
-	}
-	if(!longclick){
-		clearTimeout(timer);
-		nf();
-		}
+		})
+		el.addEventListener('touchend',()=>{
+		if(!longtap){
+			clearTimeout(timer);
+			nf();
+			}else{
+				touch = false;
+			}
+		})
+		el.addEventListener('mousedown',()=>{
+		if(touch) return;
+		longclick = false;
+		timer = setTimeout(() => {
+			longclick = true;
+			lf();
+				}, sec);
+		})
+		el.addEventListener('click',()=>{
+			if(touch){
+				touch = false;
+			return;
+			}
+			if(!longclick){
+				clearTimeout(timer);
+				nf();
+			}
 		});
 	}
+	function long_func(){
+		window.alert('長押ししました');
+	}
+
+	function s_func(){
+		window.alert('短い');
+	}
+
 
 	{
 		let taptmr, tapcount = 0;
@@ -560,7 +567,7 @@
 				input_tr.setAttribute("id", "pbtn_" + String(cells[0]));
 				td.appendChild(input_tr);
 				const target_element = document.getElementById("pbtn_" + String(cells[0]));
-				//long_press(target_element, cellplus(cells[0]), long_func, check_sec);
+				long_press(target_element, s_func, long_func, check_sec);
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
@@ -588,10 +595,6 @@
 		tableb.appendChild(trb3);
 	}
 		
-	function long_func(){
-		window.alert('長押ししました');
-	}
-
 	function hideColumn() {
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
