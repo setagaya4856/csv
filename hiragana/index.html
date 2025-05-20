@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>CSV 単語ひらがな変換</title>
+  <!-- ✅ defer付きで外部ライブラリを読み込む -->
+  <script src="https://unpkg.com/kuroshiro" defer></script>
+  <script src="https://unpkg.com/kuroshiro-analyzer-kuromoji" defer></script>
 </head>
 <body>
   <h2>CSVをアップロードして 単語のみ ひらがな変換 → ダウンロード</h2>
@@ -10,89 +13,40 @@
   <button onclick="processCSV()">変換してダウンロード</button>
   <p id="status">ファイルを選択してください</p>
 
-  <!-- ✅ 必ず </body> の直前にライブラリとスクリプトを配置！ -->
-  <script src="https://unpkg.com/kuroshiro"></script>
-  <script src="https://unpkg.com/kuroshiro-analyzer-kuromoji"></script>
-  <script>
-    let kuroshiro;
+  <!-- ✅ JSコードを defer で動作させる -->
+  <script defer>
+    window.addEventListener("DOMContentLoaded", () => {
+      let kuroshiro;
 
-    async function initKuroshiro() {
-      kuroshiro = new Kuroshiro();
-      await kuroshiro.init(new KuromojiAnalyzer());
-    }
-
-    function safePreprocess(line) {
-      let cleaned = line
-        .replace(/[0-9０-９\.．]+/g, "") // 数字・小数点除去
-        .replace(/[　\s]+/g, " ")       // 全角スペース・タブ → 半角スペース
-        .trim();
-      return cleaned;
-    }
-
-    async function processCSV() {
-      const fileInput = document.getElementById('csvFileInput');
-      const status = document.getElementById('status');
-
-      if (!fileInput.files.length) {
-        status.textContent = '⚠ ファイルが選択されていません';
-        return;
+      async function initKuroshiro() {
+        kuroshiro = new Kuroshiro();
+        await kuroshiro.init(new KuromojiAnalyzer());
       }
 
-      const file = fileInput.files[0];
-      const reader = new FileReader();
+      function safePreprocess(line) {
+        return line
+          .replace(/[0-9０-９\.．]+/g, "") // 数字・小数点除去
+          .replace(/[　\s]+/g, " ")
+          .trim();
+      }
 
-      reader.onload = async function(e) {
-        try {
-          status.innerHTML = '⏳ 変換中...';
-          const lines = e.target.result.split(/\r?\n/);
-          await initKuroshiro();
+      window.processCSV = async function () {
+        const fileInput = document.getElementById("csvFileInput");
+        const status = document.getElementById("status");
 
-          const convertedLines = [];
-          let errorLog = "";
-
-          for (let i = 0; i < lines.length; i++) {
-            const originalLine = lines[i].trim();
-            try {
-              if (originalLine) {
-                const safeLine = safePreprocess(originalLine);
-                const hira = await kuroshiro.convert(safeLine, { to: "hiragana" });
-                convertedLines.push(hira);
-              } else {
-                convertedLines.push("");
-              }
-            } catch (lineError) {
-              const errorText = `⚠️ 行 ${i + 1} で変換失敗 → 「${originalLine}」`;
-              console.error(errorText, lineError);
-              convertedLines.push(`【変換失敗: ${originalLine}】`);
-              errorLog += errorText + "<br>";
-            }
-          }
-
-          const outputCSV = convertedLines.join("\r\n");
-          downloadCSV(outputCSV, "converted.csv");
-
-          status.innerHTML = '✅ 変換完了！<br>' + (errorLog || 'すべて正常に変換されました。');
-
-        } catch (globalError) {
-          console.error("全体エラー:", globalError);
-          status.innerHTML = '🚨 全体エラー: ' + globalError.message;
+        if (!fileInput.files.length) {
+          status.textContent = "⚠ ファイルが選択されていません";
+          return;
         }
-      };
 
-      reader.onerror = function(err) {
-        console.error("読み込みエラー:", err);
-        status.textContent = '🚨 ファイル読み込みエラー';
-      };
+        const file = fileInput.files[0];
+        const reader = new FileReader();
 
-      reader.readAsText(file, 'utf-8');
-    }
+        reader.onload = async function (e) {
+          try {
+            status.innerHTML = "⏳ 変換中...";
+            const lines = e.target.result.split(/\r?\n/);
+            await initKuroshiro();
 
-    function downloadCSV(content, filename) {
-      const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = filename;
-      link.click();
-    }
-  </script>
-</body
+            const convertedLines = [];
+            let erro
