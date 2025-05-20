@@ -450,7 +450,6 @@
 	}
 	
 	function displayCSV(text) {
-		const check_sec = 500; //ミリ秒
 		const rows = text.split('\n');
 		const table = document.getElementById('csvTable');
 		const foot = document.getElementById('footer');
@@ -545,7 +544,7 @@
 				const input_tr = document.createElement("input");
 				input_tr.setAttribute("type", "button");
 				input_tr.setAttribute("value", "＋");
-				//input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
+				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
 				input_tr.setAttribute("class", "pbtn");
 				input_tr.setAttribute("id", "pbtn_" + String(cells[0]));
 				td.appendChild(input_tr);
@@ -577,6 +576,7 @@
 	}
 		
 	function hideColumn() {
+		const check_sec = 500; //ミリ秒
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
 		for (var i = 0; i < rows.length; i++) {
