@@ -10,10 +10,9 @@
   <button onclick="processCSV()">変換してダウンロード</button>
   <p id="status">ファイルを選択してください</p>
 
-  <!-- Kuroshiro & Kuromoji -->
+  <!-- ✅ 必ず </body> の直前にライブラリとスクリプトを配置！ -->
   <script src="https://unpkg.com/kuroshiro"></script>
   <script src="https://unpkg.com/kuroshiro-analyzer-kuromoji"></script>
-
   <script>
     let kuroshiro;
 
@@ -22,11 +21,10 @@
       await kuroshiro.init(new KuromojiAnalyzer());
     }
 
-    // ✅ 数字・小数点除外、不要な記号除去
     function safePreprocess(line) {
       let cleaned = line
         .replace(/[0-9０-９\.．]+/g, "") // 数字・小数点除去
-        .replace(/[　\s]+/g, " ")       // 全角スペース・タブを半角スペースへ
+        .replace(/[　\s]+/g, " ")       // 全角スペース・タブ → 半角スペース
         .trim();
       return cleaned;
     }
@@ -97,5 +95,4 @@
       link.click();
     }
   </script>
-</body>
-</html>
+</body
