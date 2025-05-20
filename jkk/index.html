@@ -729,9 +729,11 @@ footer {
 					const table = document.getElementById('csvTable');
 					for (let row of table.rows) {
 						if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
-							const confirmed = window.confirm(row.cells[4].textContent + " を空白にしますか？");
-							if (confirmed) {
-								row.cells[4].textContent = "";
+							if(row.cells[4].textContent　!=　""){
+								const confirmed = window.confirm(row.cells[2].textContent + " を空白にしますか？");
+								if (confirmed) {
+									row.cells[4].textContent = "";
+								}
 							}
 							break;
 						}
