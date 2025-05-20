@@ -9,6 +9,13 @@
       border-collapse: collapse;
       padding: 8px;
     }
+    #resultDisplay {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px dashed #666;
+      background-color: #f0f0f0;
+      font-size: 1.2em;
+    }
   </style>
 </head>
 <body>
@@ -33,6 +40,9 @@
 <br>
 <button onclick="startRecognition()">🎤 音声入力開始</button>
 
+<!-- 音声認識の結果を表示するエリア -->
+<div id="resultDisplay">音声入力の内容がここに表示されます</div>
+
 <script>
 function startRecognition() {
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -45,6 +55,10 @@ function startRecognition() {
   recognition.onresult = function(event) {
     const result = event.results[0][0].transcript;
     console.log("音声入力: ", result);
+
+    // 音声入力内容を画面に表示
+    document.getElementById("resultDisplay").textContent = `音声入力: ${result}`;
+
     processInput(result);
   };
 
@@ -77,7 +91,6 @@ function processInput(input) {
     const quantityCell = row.cells[2];
 
     if (nameCell.textContent.includes(searchWord)) {
-      // 一致した行を編集
       if (columnWord === "すうりょう") {
         quantityCell.textContent = number;
         matched = true;
@@ -87,14 +100,13 @@ function processInput(input) {
   }
 
   if (!matched) {
-    // 空白行に追加
     for (let row of rows) {
       const idCell = row.cells[0];
       const nameCell = row.cells[1];
       const quantityCell = row.cells[2];
 
       if (idCell.textContent.trim() === "") {
-        idCell.textContent = generateId(rows); // 自動採番
+        idCell.textContent = generateId(rows);
         nameCell.textContent = searchWord;
         if (columnWord === "すうりょう") {
           quantityCell.textContent = number;
