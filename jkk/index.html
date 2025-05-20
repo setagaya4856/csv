@@ -573,6 +573,7 @@
 		tableb.appendChild(trb);
 		tableb.appendChild(trb2);
 		tableb.appendChild(trb3);
+		attachLongPressEvents();
 	}
 		
 	function hideColumn() {
@@ -604,12 +605,6 @@
 				if(rows[i].cells[5].textContent.substr(0,1) == "！"){
 					rows[i].style.backgroundColor = "#f07c78";
 				}
-			}
-			
-			if(Number(rows[i].cells[6].textContent) == 99){
-			}else{
-				var target_element = document.getElementById("pbtn_" + rows[i].cells[0].textContent);
-				long_press(target_element, s_func, long_func, check_sec);
 			}
 		}
 	}
@@ -694,6 +689,38 @@
 				}
 			}
 		}
+	}
+		
+	function attachLongPressEvents() {
+		const buttons = document.querySelectorAll('.pbtn');
+	
+		buttons.forEach(btn => {
+			let pressTimer;
+			const rowNo = btn.id.replace('pbtn_', '');
+	
+			btn.addEventListener('touchstart', function(e) {
+				pressTimer = setTimeout(() => {
+					const confirmed = window.confirm("値を空白にしますか？");
+					if (confirmed) {
+						const table = document.getElementById('csvTable');
+						for (let row of table.rows) {
+							if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
+								row.cells[4].textContent = "";
+								break;
+							}
+						}
+					}
+				}, 600); // 600ms 長押しで発動
+			});
+	
+			btn.addEventListener('touchend', function(e) {
+				clearTimeout(pressTimer);
+			});
+	
+			btn.addEventListener('touchmove', function(e) {
+				clearTimeout(pressTimer); // スワイプでキャンセル
+			});
+		});
 	}
 
 	function changeColumn() {
