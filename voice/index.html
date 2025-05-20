@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>音声でテーブル編集</title>
+  <style>
+    table, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+      padding: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>商品テーブル</h2>
+<table id="itemTable">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>商品名</th>
+      <th>すうりょう</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>りんご</td><td>3</td></tr>
+    <tr><td>2</td><td>みかん</td><td>2</td></tr>
+    <tr><td></td><td></td><td></td></tr> <!-- 空行 -->
+    <tr><td></td><td></td><td></td></tr> <!-- 空行 -->
+  </tbody>
+</table>
+
+<br>
+<button onclick="startRecognition()">🎤 音声入力開始</button>
+
+<script>
+function startRecognition() {
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = 'ja-JP';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.start();
+
+  recognition.onresult = function(event) {
+    const result = event.results[0][0].transcript;
+    console.log("音声入力: ", result);
+    processInput(result);
+  };
+
+  recognition.onerror = function(event) {
+    alert("音声認識エラー: " + event.error);
+  };
+}
+
+function processInput(input) {
+  const parts = input.trim().split(" ");
+  if (parts.length !== 3) {
+    alert("「検索ワード 切り分けワード 数字」の形式で話してください。");
+    return;
+  }
+
+  const [searchWord, columnWord, numberStr] = parts;
+  const number = parseInt(numberStr);
+  if (isNaN(number)) {
+    alert("数字部分が認識されませんでした。");
+    return;
+  }
+
+  const table = document.getElementById("itemTable");
+  const rows = table.getElementsByTagName("tbody")[0].rows;
+  let matched = false;
+
+  for (let row of rows) {
+    const idCell = row.cells[0];
+    const nameCell = row.cells[1];
+    const quantityCell = row.cells[2];
+
+    if (nameCell.textContent.includes(searchWord)) {
+      // 一致した行を編集
+      if (columnWord === "すうりょう") {
+        quantityCell.textContent = number;
+        matched = true;
+        break;
+      }
+    }
+  }
+
+  if (!matched) {
+    // 空白行に追加
+    for (let row of rows) {
+      const idCell = row.cells[0];
+      const nameCell = row.cells[1];
+      const quantityCell = row.cells[2];
+
+      if (idCell.textContent.trim() === "") {
+        idCell.textContent = generateId(rows); // 自動採番
+        nameCell.textContent = searchWord;
+        if (columnWord === "すうりょう") {
+          quantityCell.textContent = number;
+        }
+        break;
+      }
+    }
+  }
+}
+
+function generateId(rows) {
+  let maxId = 0;
+  for (let row of rows) {
+    const id = parseInt(row.cells[0].textContent);
+    if (!isNaN(id) && id > maxId) {
+      maxId = id;
+    }
+  }
+  return maxId + 1;
+}
+</script>
+
+</body>
+</html>
