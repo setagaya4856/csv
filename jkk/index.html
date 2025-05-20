@@ -173,25 +173,8 @@
 				touch = false;
 			}
 		})
-		el.addEventListener('mousedown',()=>{
-		if(touch) return;
-		longclick = false;
-		timer = setTimeout(() => {
-			longclick = true;
-			lf();
-				}, sec);
-		})
-		el.addEventListener('click',()=>{
-			if(touch){
-				touch = false;
-			return;
-			}
-			if(!longclick){
-				clearTimeout(timer);
-				nf();
-			}
-		});
 	}
+	
 	function long_func(){
 		window.alert('長押ししました');
 	}
@@ -566,8 +549,6 @@
 				input_tr.setAttribute("class", "pbtn");
 				input_tr.setAttribute("id", "pbtn_" + String(cells[0]));
 				td.appendChild(input_tr);
-				const target_element = document.getElementById("pbtn_" + String(cells[0]));
-				long_press(target_element, s_func, long_func, check_sec);
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
@@ -623,6 +604,10 @@
 				if(rows[i].cells[5].textContent.substr(0,1) == "！"){
 					rows[i].style.backgroundColor = "#f07c78";
 				}
+			}
+			if(Number(rows[i].cells[6].textContent) !== 99 && Number(rows[i].cells[6].textContent) !> 19 && Number(rows[i].cells[6].textContent) !< 30  && Number(rows[i].cells[1].textContent) !== 40)){
+				const target_element = document.getElementById("pbtn_" + String(rows[i].cells[0].textContent));
+				long_press(target_element, s_func, long_func, check_sec);
 			}
 		}
 	}
