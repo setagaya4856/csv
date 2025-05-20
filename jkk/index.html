@@ -700,14 +700,14 @@
 	
 			btn.addEventListener('touchstart', function(e) {
 				pressTimer = setTimeout(() => {
-					const confirmed = window.confirm("値を空白にしますか？");
-					if (confirmed) {
-						const table = document.getElementById('csvTable');
-						for (let row of table.rows) {
-							if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
+					const table = document.getElementById('csvTable');
+					for (let row of table.rows) {
+						if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
+							const confirmed = window.confirm(row.cells[4].textContent + " を空白にしますか？");
+							if (confirmed) {
 								row.cells[4].textContent = "";
-								break;
 							}
+							break;
 						}
 					}
 				}, 600); // 600ms 長押しで発動
