@@ -605,9 +605,10 @@
 					rows[i].style.backgroundColor = "#f07c78";
 				}
 			}
+			
 			if(Number(rows[i].cells[6].textContent) == 99 || (Number(rows[i].cells[6].textContent) > 19 && Number(rows[i].cells[6].textContent) < 30 ) || Number(rows[i].cells[6].textContent) == 40)){
 			}else{
-				const target_element = document.getElementById("pbtn_" + rows[i].cells[0].textContent);
+				var target_element = document.getElementById("pbtn_" + rows[i].cells[0].textContent);
 				long_press(target_element, s_func, long_func, check_sec);
 			}
 		}
