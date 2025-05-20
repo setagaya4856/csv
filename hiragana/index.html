@@ -2,16 +2,15 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>CSVのひらがな変換ツール</title>
+  <title>CSV 単語ひらがな変換</title>
 </head>
 <body>
-  <h2>CSVアップロードしてひらがな変換 → 再ダウンロード</h2>
-
+  <h2>CSVをアップロードして 単語のみ ひらがな変換 → ダウンロード</h2>
   <input type="file" id="csvFileInput" accept=".csv" />
   <button onclick="processCSV()">変換してダウンロード</button>
   <p id="status">ファイルを選択してください</p>
 
-  <!-- kuroshiro.js と kuromoji.js の読み込み -->
+  <!-- Kuroshiro & Kuromoji -->
   <script src="https://unpkg.com/kuroshiro"></script>
   <script src="https://unpkg.com/kuroshiro-analyzer-kuromoji"></script>
 
@@ -23,12 +22,21 @@
       await kuroshiro.init(new KuromojiAnalyzer());
     }
 
+    // ✅ 数字・小数点除外、不要な記号除去
+    function safePreprocess(line) {
+      let cleaned = line
+        .replace(/[0-9０-９\.．]+/g, "") // 数字・小数点除去
+        .replace(/[　\s]+/g, " ")       // 全角スペース・タブを半角スペースへ
+        .trim();
+      return cleaned;
+    }
+
     async function processCSV() {
       const fileInput = document.getElementById('csvFileInput');
       const status = document.getElementById('status');
 
       if (!fileInput.files.length) {
-        status.textContent = 'ファイルが選択されていません';
+        status.textContent = '⚠ ファイルが選択されていません';
         return;
       }
 
@@ -36,25 +44,46 @@
       const reader = new FileReader();
 
       reader.onload = async function(e) {
-        status.textContent = '変換中...';
+        try {
+          status.innerHTML = '⏳ 変換中...';
+          const lines = e.target.result.split(/\r?\n/);
+          await initKuroshiro();
 
-        const lines = e.target.result.split(/\r?\n/);
-        await initKuroshiro();
+          const convertedLines = [];
+          let errorLog = "";
 
-        const convertedLines = [];
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (trimmed) {
-            const hira = await kuroshiro.convert(trimmed, { to: "hiragana" });
-            convertedLines.push(hira);
-          } else {
-            convertedLines.push(""); // 空行も維持
+          for (let i = 0; i < lines.length; i++) {
+            const originalLine = lines[i].trim();
+            try {
+              if (originalLine) {
+                const safeLine = safePreprocess(originalLine);
+                const hira = await kuroshiro.convert(safeLine, { to: "hiragana" });
+                convertedLines.push(hira);
+              } else {
+                convertedLines.push("");
+              }
+            } catch (lineError) {
+              const errorText = `⚠️ 行 ${i + 1} で変換失敗 → 「${originalLine}」`;
+              console.error(errorText, lineError);
+              convertedLines.push(`【変換失敗: ${originalLine}】`);
+              errorLog += errorText + "<br>";
+            }
           }
-        }
 
-        const outputCSV = convertedLines.join("\r\n");
-        downloadCSV(outputCSV, "converted.csv");
-        status.textContent = '変換完了！ファイルをダウンロードしました';
+          const outputCSV = convertedLines.join("\r\n");
+          downloadCSV(outputCSV, "converted.csv");
+
+          status.innerHTML = '✅ 変換完了！<br>' + (errorLog || 'すべて正常に変換されました。');
+
+        } catch (globalError) {
+          console.error("全体エラー:", globalError);
+          status.innerHTML = '🚨 全体エラー: ' + globalError.message;
+        }
+      };
+
+      reader.onerror = function(err) {
+        console.error("読み込みエラー:", err);
+        status.textContent = '🚨 ファイル読み込みエラー';
       };
 
       reader.readAsText(file, 'utf-8');
