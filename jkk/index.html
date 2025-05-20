@@ -152,7 +152,48 @@
 		</table>
 	</footer>
     	<script>
+	function long_press(el,nf,lf,sec){
+		let longclick = false;
+		let longtap = false;
+		let touch = false;
+		let timer;
+		el.addEventListener('touchstart',()=>{
+		touch = true;
+		longtap = false;
+		timer = setTimeout(() => {
+			longtap = true;
+			lf();
+				}, sec);
+	})
+	el.addEventListener('touchend',()=>{
+	if(!longtap){
+		clearTimeout(timer);
+		nf();
+		}else{
+			touch = false;
+		}
+	})
 	
+	el.addEventListener('mousedown',()=>{
+	if(touch) return;
+	longclick = false;
+	timer = setTimeout(() => {
+		longclick = true;
+		lf();
+			}, sec);
+	})
+	el.addEventListener('click',()=>{
+		if(touch){
+			touch = false;
+		return;
+	}
+	if(!longclick){
+		clearTimeout(timer);
+		nf();
+		}
+		});
+	}
+
 	{
 		let taptmr, tapcount = 0;
 		window.addEventListener( "touchstart", evt => {
@@ -419,6 +460,7 @@
 	}
 	
 	function displayCSV(text) {
+		const check_sec = 500; //ミリ秒
 		const rows = text.split('\n');
 		const table = document.getElementById('csvTable');
 		const foot = document.getElementById('footer');
@@ -513,9 +555,12 @@
 				const input_tr = document.createElement("input");
 				input_tr.setAttribute("type", "button");
 				input_tr.setAttribute("value", "＋");
-				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
+				//input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
 				input_tr.setAttribute("class", "pbtn");
+				input_tr.setAttribute("id", "pbtn_" + String(cells[0]));
 				td.appendChild(input_tr);
+				const target_element = document.getElementById("pbtn_" + String(cells[0]));
+				long_press(target_element, cellplus(cells[0]), long_func, check_sec);
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
@@ -541,6 +586,10 @@
 		tableb.appendChild(trb);
 		tableb.appendChild(trb2);
 		tableb.appendChild(trb3);
+	}
+		
+	function long_func(){
+		window.alert('長押ししました');
 	}
 
 	function hideColumn() {
@@ -574,7 +623,7 @@
 			}
 		}
 	}
-
+		
 	function movecell(idName) {
 		const element = document.getElementById("m" + String(idName));
 		const targetDOMRect = element.getBoundingClientRect();
