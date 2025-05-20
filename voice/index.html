@@ -2,19 +2,26 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>音声でテーブル編集</title>
+  <title>音声で数量加算</title>
   <style>
     table, th, td {
       border: 1px solid black;
       border-collapse: collapse;
       padding: 8px;
     }
-    #resultDisplay {
+    #resultDisplay, #errorDisplay, #historyLog {
       margin-top: 20px;
       padding: 10px;
       border: 1px dashed #666;
-      background-color: #f0f0f0;
-      font-size: 1.2em;
+      background-color: #f8f8f8;
+      font-size: 1.1em;
+    }
+    button {
+      margin-right: 10px;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -26,7 +33,7 @@
     <tr>
       <th>ID</th>
       <th>商品名</th>
-      <th>すうりょう</th>
+      <th>数量</th>
     </tr>
   </thead>
   <tbody>
@@ -39,45 +46,111 @@
 
 <br>
 <button onclick="startRecognition()">🎤 音声入力開始</button>
+<button onclick="stopRecognition()">⏹️ 停止</button>
+<button id="retryBtn" onclick="startRecognition()" style="display:none;">🔁 再試行</button>
 
-<!-- 音声認識の結果を表示するエリア -->
-<div id="resultDisplay">音声入力の内容がここに表示されます</div>
+<div id="resultDisplay">🎧 音声入力の内容がここに表示されます</div>
+<div id="errorDisplay" class="error"></div>
+<div id="historyLog">
+  <h3>📝 音声履歴ログ</h3>
+  <ul id="historyList"></ul>
+</div>
 
 <script>
+let recognition;
+
 function startRecognition() {
-  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  if (recognition) recognition.abort();
+
+  recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.lang = 'ja-JP';
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
+
+  document.getElementById("resultDisplay").textContent = "🎙️ 音声認識中...";
+  document.getElementById("errorDisplay").textContent = "";
+  document.getElementById("retryBtn").style.display = "none";
 
   recognition.start();
 
   recognition.onresult = function(event) {
     const result = event.results[0][0].transcript;
-    console.log("音声入力: ", result);
-
-    // 音声入力内容を画面に表示
-    document.getElementById("resultDisplay").textContent = `音声入力: ${result}`;
-
+    document.getElementById("resultDisplay").textContent = `✅ 音声入力: ${result}`;
+    addToHistory(result);
     processInput(result);
   };
 
   recognition.onerror = function(event) {
-    alert("音声認識エラー: " + event.error);
+    document.getElementById("errorDisplay").textContent = "⚠️ 音声認識エラー: " + event.error;
+    document.getElementById("retryBtn").style.display = "inline";
+  };
+
+  recognition.onend = function() {
+    console.log("音声認識終了");
   };
 }
 
+function stopRecognition() {
+  if (recognition) {
+    recognition.abort();
+    document.getElementById("resultDisplay").textContent = "⏹️ 音声認識を停止しました。";
+  }
+}
+
+function addToHistory(text) {
+  const li = document.createElement("li");
+  li.textContent = text;
+  document.getElementById("historyList").appendChild(li);
+}
+
+function convertToNumber(raw) {
+  let str = raw
+    .replace(/てん|テン|点/g, ".")
+    .replace(/〇|零/g, "0")
+    .replace(/一/g, "1")
+    .replace(/二/g, "2")
+    .replace(/三/g, "3")
+    .replace(/四/g, "4")
+    .replace(/五/g, "5")
+    .replace(/六/g, "6")
+    .replace(/七/g, "7")
+    .replace(/八/g, "8")
+    .replace(/九/g, "9")
+    .replace(/十/g, "10")
+    .replace(/百/g, "100")
+    .replace(/[^\d.]/g, "");
+
+  const num = parseFloat(str);
+  return isNaN(num) ? null : num;
+}
+
+function generateId(rows) {
+  let maxId = 0;
+  for (let row of rows) {
+    const id = parseInt(row.cells[0].textContent);
+    if (!isNaN(id)) maxId = Math.max(maxId, id);
+  }
+  return maxId + 1;
+}
+
 function processInput(input) {
-  const parts = input.trim().split(" ");
+  const parts = input.trim().split(/\s+/);
   if (parts.length !== 3) {
-    alert("「検索ワード 切り分けワード 数字」の形式で話してください。");
+    alert("形式は「商品名 切り分けワード 数量」で話してください");
     return;
   }
 
-  const [searchWord, columnWord, numberStr] = parts;
-  const number = parseInt(numberStr);
-  if (isNaN(number)) {
-    alert("数字部分が認識されませんでした。");
+  const [searchWord, columnWord, rawNumber] = parts;
+
+  const isQuantity = ["すうりょう", "数量", "めも", "メモ"].includes(columnWord.toLowerCase());
+  if (!isQuantity) {
+    alert(`「${columnWord}」は認識できません。数量扱いできるワードは「すうりょう」「数量」「めも」「メモ」です`);
+    return;
+  }
+
+  const number = convertToNumber(rawNumber);
+  if (number === null) {
+    alert("数量が正しく認識できませんでした。数字や漢数字で話してください。");
     return;
   }
 
@@ -86,46 +159,30 @@ function processInput(input) {
   let matched = false;
 
   for (let row of rows) {
-    const idCell = row.cells[0];
     const nameCell = row.cells[1];
     const quantityCell = row.cells[2];
 
     if (nameCell.textContent.includes(searchWord)) {
-      if (columnWord === "すうりょう") {
-        quantityCell.textContent = number;
-        matched = true;
-        break;
-      }
+      const current = parseFloat(quantityCell.textContent) || 0;
+      quantityCell.textContent = (current + number).toFixed(2).replace(/\.00$/, "");
+      matched = true;
+      break;
     }
   }
 
   if (!matched) {
-    for (let row of rows) {
-      const idCell = row.cells[0];
-      const nameCell = row.cells[1];
-      const quantityCell = row.cells[2];
-
-      if (idCell.textContent.trim() === "") {
-        idCell.textContent = generateId(rows);
-        nameCell.textContent = searchWord;
-        if (columnWord === "すうりょう") {
-          quantityCell.textContent = number;
+    const confirmed = confirm(`「${searchWord}」に一致する行が見つかりませんでした。\n空白行に追加してもよいですか？`);
+    if (confirmed) {
+      for (let row of rows) {
+        if (row.cells[0].textContent.trim() === "") {
+          row.cells[0].textContent = generateId(rows);
+          row.cells[1].textContent = searchWord;
+          row.cells[2].textContent = number;
+          break;
         }
-        break;
       }
     }
   }
-}
-
-function generateId(rows) {
-  let maxId = 0;
-  for (let row of rows) {
-    const id = parseInt(row.cells[0].textContent);
-    if (!isNaN(id) && id > maxId) {
-      maxId = id;
-    }
-  }
-  return maxId + 1;
 }
 </script>
 
