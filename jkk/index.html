@@ -6,103 +6,129 @@
     	<title>空家データ入力</title>
     	<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     	<style>
-	html{
-    		touch-action: manipulation;
-	}
-	header {
-  		position: fixed;
-  		left: 0;
-  		top: 0;
-		height: 12vh;
-		width: 100vw;
-		background: #DDFFFF;
-		font-size: 30px;
-	}
-	body {
-		width: 100vw;
-        }
-	table {
-	  	table-layout: fixed;
-		width: 95vw;
-	  	overflow: hidden;
-		margin:auto;
-	}
-	table, th, td {
-	        border: 1px solid black;
-	        border-collapse: collapse;
-		overflow: hidden;
-	}
-	th, td {
-		padding: 8px;
-	}
-	.naiyo{
-		width: 66vw;
-		font-size: 45px;
-	}
-	.btn{
-		width: 8vw;
-		text-align: center;
-		font-size: 45px;
-	}
-	.count{
-		width: 10vw;
-		text-align: center;
-		font-size: 45px;
-	}
-	.unit{
-		width: 7vw;
-		text-align: left;
-		font-size: 25px;
-	}
-	.pbtn {
-		width: 7vw;
-		height: 4vh;
-  		background: #DDFFDD;
-		font-size: 30px;
-		padding: 2px;
-		text-align: center;
-	}
-	footer {
-  		position: fixed;
-  		left: 0;
-  		bottom: 0;
-		height: 15vh;
-		width: 100vw;
-		background: #FFFFCC;
-	}
-	.mbtn {
-		width: 10.5vw;
-		height: 6vh;
-  		background: #FFCC99;
-		font-size: 40px;
-		padding: 2px;
-		text-align: center;
-	}
-	.mb {
-		padding: 10px;
-		text-align: center;
-	}	
-	.searchword {
-  		background: #FFFFCC;
-		border: 1px solid #333;
-	}
-	.searchbtn {
-  		background: #FFFFCC;
-		border: 1px solid #333;
-	}
-	.changebtn {
-  		background: #FFFFCC;
-		border: 1px solid #333;
-	}
-	.delbtn {
-  		background: #F9F06F;
-		border: 1px solid #333;
-	}
-	.roomword {
-  		background: #FFFFCC;
-		border: 1px solid #333;
-	}
-	</style>
+html, body {
+    overflow-x: hidden;  /* 横スクロールを無効にする */
+    width: 100vw;  /* 横幅を画面いっぱいに設定 */
+    margin: 0;
+    padding: 0;
+    touch-action: manipulation;  /* モバイルでのタッチ操作最適化 */
+}
+
+header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 12vh;
+    width: 100vw;
+    background: #DDFFFF;
+    font-size: 30px;
+}
+
+body {
+    width: 100vw;
+    overflow-x: hidden;  /* bodyにも横スクロール無効 */
+}
+
+table {
+    table-layout: fixed;
+    width: 100vw;  /* テーブルの幅を100vwに設定 */
+    overflow: hidden;  /* テーブル内のコンテンツがはみ出さないように */
+    margin: auto;
+}
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 8px;
+    word-break: break-word;  /* 長い文字列が折り返しされるようにする */
+    white-space: normal;  /* テーブル内で長いテキストが折り返されるように */
+}
+
+/* セルの幅設定 */
+.naiyo {
+    width: 66vw;
+    font-size: 45px;
+}
+
+.btn {
+    width: 8vw;
+    text-align: center;
+    font-size: 45px;
+}
+
+.count {
+    width: 10vw;
+    text-align: center;
+    font-size: 45px;
+}
+
+.unit {
+    width: 7vw;
+    text-align: left;
+    font-size: 25px;
+}
+
+.pbtn {
+    width: 7vw;
+    height: 4vh;
+    background: #DDFFDD;
+    font-size: 30px;
+    padding: 2px;
+    text-align: center;
+}
+
+footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    height: 15vh;
+    width: 100vw;
+    background: #FFFFCC;
+}
+
+.mbtn {
+    width: 10.5vw;
+    height: 6vh;
+    background: #FFCC99;
+    font-size: 40px;
+    padding: 2px;
+    text-align: center;
+}
+
+.mb {
+    padding: 10px;
+    text-align: center;
+}
+
+.searchword {
+    background: #FFFFCC;
+    border: 1px solid #333;
+}
+
+.searchbtn {
+    background: #FFFFCC;
+    border: 1px solid #333;
+}
+
+.changebtn {
+    background: #FFFFCC;
+    border: 1px solid #333;
+}
+
+.delbtn {
+    background: #F9F06F;
+    border: 1px solid #333;
+}
+
+.roomword {
+    background: #FFFFCC;
+    border: 1px solid #333;
+}
+</style>
 </head>
 <body>
   	<header>
