@@ -2,10 +2,22 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>音声で数量加算</title>
+  <title>音声テーブル編集（PWA対応）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="manifest" href="data:application/manifest+json,{
+    &quot;name&quot;:&quot;音声テーブル編集&quot;,
+    &quot;short_name&quot;:&quot;音声編集&quot;,
+    &quot;start_url&quot;:&quot;./index.html&quot;,
+    &quot;display&quot;:&quot;standalone&quot;,
+    &quot;background_color&quot;:&quot;#ffffff&quot;,
+    &quot;theme_color&quot;:&quot;#ffffff&quot;,
+    &quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFklEQVQoU2NkYGBg+M+ABhgFowEAAb0B+ROHkYgAAAAASUVORK5CYII=&quot;,&quot;sizes&quot;:&quot;192x192&quot;,&quot;type&quot;:&quot;image/png&quot;}]
+  }">
   <style>
+    body { font-family: sans-serif; margin: 20px; }
     table, th, td {
-      border: 1px solid black;
+      border: 1px solid #ccc;
       border-collapse: collapse;
       padding: 8px;
     }
@@ -16,36 +28,27 @@
       background-color: #f8f8f8;
       font-size: 1.1em;
     }
-    button {
-      margin-right: 10px;
-    }
-    .error {
-      color: red;
-      font-weight: bold;
-    }
+    .error { color: red; font-weight: bold; }
+    button { margin-right: 10px; padding: 5px 10px; }
   </style>
 </head>
 <body>
 
-<h2>商品テーブル</h2>
+<h2>🎤 音声で数量を加算・追加</h2>
 <table id="itemTable">
   <thead>
-    <tr>
-      <th>ID</th>
-      <th>商品名</th>
-      <th>数量</th>
-    </tr>
+    <tr><th>ID</th><th>商品名</th><th>数量</th></tr>
   </thead>
   <tbody>
     <tr><td>1</td><td>りんご</td><td>3</td></tr>
     <tr><td>2</td><td>みかん</td><td>2</td></tr>
-    <tr><td></td><td></td><td></td></tr> <!-- 空行 -->
-    <tr><td></td><td></td><td></td></tr> <!-- 空行 -->
+    <tr><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td></tr>
   </tbody>
 </table>
 
 <br>
-<button onclick="startRecognition()">🎤 音声入力開始</button>
+<button onclick="startRecognition()">🎙️ 音声入力開始</button>
 <button onclick="stopRecognition()">⏹️ 停止</button>
 <button id="retryBtn" onclick="startRecognition()" style="display:none;">🔁 再試行</button>
 
@@ -59,9 +62,23 @@
 <script>
 let recognition;
 
+if ('serviceWorker' in navigator) {
+  const swScript = `
+    self.addEventListener('fetch', function(event) {
+      return; // no cache logic
+    });
+  `;
+  const blob = new Blob([swScript], { type: 'application/javascript' });
+  const swURL = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swURL).then(() => {
+    console.log('✅ Service Worker registered');
+  }).catch(err => {
+    console.error('❌ Service Worker registration failed:', err);
+  });
+}
+
 function startRecognition() {
   if (recognition) recognition.abort();
-
   recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.lang = 'ja-JP';
   recognition.interimResults = false;
@@ -134,19 +151,17 @@ function generateId(rows) {
 }
 
 function processInput(input) {
-  const parts = input.trim().split(/\s+/);
-  if (parts.length !== 3) {
-    alert("形式は「商品名 切り分けワード 数量」で話してください");
+  const cleanedInput = input.trim().replace(/\s/g, "");
+  const match = cleanedInput.match(/(.+?)(めも|メモ|すうりょう|数量)(.+)/i);
+
+  if (!match) {
+    alert("形式は「商品名 メモ 数量」のように話してください");
     return;
   }
 
-  const [searchWord, columnWord, rawNumber] = parts;
-
-  const isQuantity = ["すうりょう", "数量", "めも", "メモ"].includes(columnWord.toLowerCase());
-  if (!isQuantity) {
-    alert(`「${columnWord}」は認識できません。数量扱いできるワードは「すうりょう」「数量」「めも」「メモ」です`);
-    return;
-  }
+  const searchWord = match[1];
+  const columnWord = match[2];
+  const rawNumber = match[3];
 
   const number = convertToNumber(rawNumber);
   if (number === null) {
