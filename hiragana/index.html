@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>CSVのひらがな変換ツール</title>
+</head>
+<body>
+  <h2>CSVアップロードしてひらがな変換 → 再ダウンロード</h2>
+
+  <input type="file" id="csvFileInput" accept=".csv" />
+  <button onclick="processCSV()">変換してダウンロード</button>
+  <p id="status">ファイルを選択してください</p>
+
+  <!-- kuroshiro.js と kuromoji.js の読み込み -->
+  <script src="https://unpkg.com/kuroshiro"></script>
+  <script src="https://unpkg.com/kuroshiro-analyzer-kuromoji"></script>
+
+  <script>
+    let kuroshiro;
+
+    async function initKuroshiro() {
+      kuroshiro = new Kuroshiro();
+      await kuroshiro.init(new KuromojiAnalyzer());
+    }
+
+    async function processCSV() {
+      const fileInput = document.getElementById('csvFileInput');
+      const status = document.getElementById('status');
+
+      if (!fileInput.files.length) {
+        status.textContent = 'ファイルが選択されていません';
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = async function(e) {
+        status.textContent = '変換中...';
+
+        const lines = e.target.result.split(/\r?\n/);
+        await initKuroshiro();
+
+        const convertedLines = [];
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed) {
+            const hira = await kuroshiro.convert(trimmed, { to: "hiragana" });
+            convertedLines.push(hira);
+          } else {
+            convertedLines.push(""); // 空行も維持
+          }
+        }
+
+        const outputCSV = convertedLines.join("\r\n");
+        downloadCSV(outputCSV, "converted.csv");
+        status.textContent = '変換完了！ファイルをダウンロードしました';
+      };
+
+      reader.readAsText(file, 'utf-8');
+    }
+
+    function downloadCSV(content, filename) {
+      const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+  </script>
+</body>
+</html>
