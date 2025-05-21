@@ -236,13 +236,13 @@ function scrollToAndHighlight(cell) {
 
 
 function processVoiceCommand(text) {
-  const locationMatch = text.match(/(.+?)(ばしょ|バショ|場所)([いにさんよごろくななはちきゅう一二三四五六七八九123456789])(?:めも|メモ)([0-9０-９一二三四五六七八九〇]*)/);
+  const locationMatch = text.match(/(.+?)(ばしょ|バショ|場所)([いちにさんよごろくななはちきゅう一二三四五六七八九123456789])(?:めも|メモ)([0-9０-９一二三四五六七八九〇]*)/);
   if (locationMatch) {
     const parentKeyword = locationMatch[1].trim();
     const indexChar = locationMatch[3].trim();
     const numberText = locationMatch[4].trim();
     const amount = parseNumber(numberText);
-    const indexMap = { "い":41,"に":42,"さん":43,"よ":44,"ご":45,"ろく":46,"なな":47,"はち":48,"きゅう":49,
+    const indexMap = { "いち":41,"に":42,"さん":43,"よ":44,"ご":45,"ろく":46,"なな":47,"はち":48,"きゅう":49,
                        "一":41,"二":42,"三":43,"四":44,"五":45,"六":46,"七":47,"八":48,"九":49,
                        "1":41,"2":42,"3":43,"4":44,"5":45,"6":46,"7":47,"8":48,"9":49 };
     const childCode = indexMap[indexChar] || null;
