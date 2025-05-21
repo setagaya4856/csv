@@ -263,7 +263,7 @@ function processVoiceCommand(text) {
           if (!childRow) break;
           const childCode = parseInt(childRow.cells[6].textContent);
           if (childCode === childCode) {
-            const confirmResult = confirm(`"${childRow.cells[2].textContent}" に ${amount} を入力しますか？`);
+            const confirmResult = confirm(`${parentKeyword} ${childRow.cells[2].textContent} に ${amount} を入力しますか？`);
             if (confirmResult) {
               childRow.cells[4].textContent = amount;
               scrollToAndHighlight(childRow.cells[4]);
