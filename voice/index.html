@@ -178,18 +178,95 @@ footer {
 		</table>
 	</footer>
 
-<!-- ✅ voiceUI風 音声入力バー -->
-<div id="voiceBar" style="position: fixed; bottom: 15vh; width: 100vw; background: #e0ffff; padding: 16px; display: flex; align-items: center; font-size: 20px; z-index: 999;">
-  <button onclick="document.getElementById('voiceInputText').focus()" style="height: 48px; font-size: 20px;">🎙️</button>
-  <input id="voiceInputText" type="text" placeholder="ここに音声入力" style="flex: 1; margin: 0 12px; font-size: 20px; height: 48px;">
-  <button onclick="processVoiceInput()" style="height: 48px; font-size: 20px;">✅ 確定</button>
+<!-- ✅ 音声認識 UI -->
+<div style="position: fixed; bottom: 0; left: 0; width: 100vw; background: #ccffff; height: 15vh; display: flex; align-items: center; justify-content: space-around; font-size: 24px; z-index: 999;">
+  <button onclick="startVoice()" style="font-size: 24px;">🎙️ 開始</button>
+  <span id="voiceStatus">・</span>
+  <button onclick="stopVoice()" style="font-size: 24px;">⏹️ 停止</button>
 </div>
 
-<!-- 📝 音声ログパネル -->
-<div id="voiceLogPanel" style="position: fixed; left: 0; bottom: 0; width: 100vw; max-height: 15vh; overflow-y: auto; background: #f0f0f0; padding: 10px; font-size: 18px; z-index: 998;">
-  <h4>📝 入力ログ</h4>
-  <ul id="voiceLogList"></ul>
-</div>
+<script>
+let recognition;
+
+function startVoice() {
+  if (!('webkitSpeechRecognition' in window)) {
+    alert('このブラウザは音声認識に対応していません');
+    return;
+  }
+  recognition = new webkitSpeechRecognition();
+  recognition.lang = 'ja-JP';
+  recognition.interimResults = false;
+  recognition.continuous = false;
+
+  document.getElementById('voiceStatus').textContent = '音声入力中...';
+
+  recognition.onresult = function(event) {
+    const transcript = event.results[0][0].transcript;
+    document.getElementById('voiceStatus').textContent = '🎧 ' + transcript;
+    processVoiceCommand(transcript);
+  };
+
+  recognition.onerror = function(event) {
+    document.getElementById('voiceStatus').textContent = '⚠️ エラー: ' + event.error;
+  };
+
+  recognition.onend = function() {
+    document.getElementById('voiceStatus').textContent = '・';
+  };
+
+  recognition.start();
+}
+
+function stopVoice() {
+  if (recognition) {
+    recognition.stop();
+    document.getElementById('voiceStatus').textContent = '・';
+  }
+}
+
+function processVoiceCommand(text) {
+  const match = text.match(/(.+?)(めも|メモ)([0-9０-９一二三四五六七八九〇]*)/);
+  if (!match) {
+    alert('音声認識結果を解釈できませんでした');
+    return;
+  }
+
+  const keyword = match[1].trim();
+  const numberText = match[3];
+  const amount = parseNumber(numberText);
+
+  if (isNaN(amount)) {
+    alert('数量が認識できませんでした');
+    return;
+  }
+
+  const table = document.getElementById('csvTable');
+  for (let i = 1; i < table.rows.length; i++) {
+    const row = table.rows[i];
+    const content = row.cells[2].textContent;
+    if (content.includes(keyword)) {
+      const confirmResult = confirm(`"${content}" に ${amount} を入力しますか？`);
+      if (confirmResult) {
+        row.cells[4].textContent = amount;
+      }
+      break;
+    }
+  }
+}
+
+function parseNumber(text) {
+  const kanjiMap = {'〇':0,'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'０':0,'１':1,'２':2,'３':3,'４':4,'５':5,'６':6,'７':7,'８':8,'９':9};
+  let numStr = '';
+  for (const ch of text) {
+    if (!isNaN(ch)) {
+      numStr += ch;
+    } else if (kanjiMap.hasOwnProperty(ch)) {
+      numStr += kanjiMap[ch];
+    }
+  }
+  return parseInt(numStr, 10);
+}
+</script>
 
     	<script>
 	function long_press(el,nf,lf,sec){
@@ -850,131 +927,5 @@ footer {
 		document.body.removeChild(a);
 	}
     </script>
-
-<script src="https://unpkg.com/wanakana"></script>
-<script>
-function toHiragana(inputText) {
-  return wanakana.toHiragana(inputText, { passRomaji: true });
-}
-
-function processVoiceInput() {
-  const input = document.getElementById("voiceInputText").value;
-  if (!input.trim()) return;
-  addToVoiceLog(input);
-  const parsed = parseSpecialInput(input);
-  if (parsed) {
-    editFromParsed(parsed);
-  } else {
-    alert("認識できませんでした");
-  }
-  document.getElementById("voiceInputText").value = "";
-}
-
-function addToVoiceLog(text) {
-  const li = document.createElement("li");
-  li.textContent = text;
-  document.getElementById("voiceLogList").appendChild(li);
-}
-
-function parseSpecialInput(inputText) {
-  const hiragana = toHiragana(inputText);
-  const modeWords = {
-    "めも": "overwrite",
-    "メモ": "overwrite",
-    "こうしんご": "content_overwrite",
-    "ちぇんじ": "content_overwrite",
-    "チェンジ": "content_overwrite",
-    "くりあ": "clear",
-    "クリア": "clear"
-  };
-
-  const delimiters = ["ばしょ", "場所", "バショ"];
-  let delimiterUsed = null;
-  for (const d of delimiters) {
-    if (hiragana.includes(d)) {
-      delimiterUsed = d;
-      break;
-    }
-  }
-  if (!delimiterUsed) return null;
-
-  const [parentPart, rest] = hiragana.split(delimiterUsed);
-  const pattern = /(.*?)(めも|メモ|こうしんご|ちぇんじ|チェンジ|くりあ|クリア)([0-9一二三四五六七八九〇]*)$/;
-  const modeMatch = rest.match(pattern);
-  if (!modeMatch) return null;
-
-  const childText = modeMatch[1];
-  const modeRaw = modeMatch[2];
-  const numberRaw = modeMatch[3];
-
-  const mode = modeWords[modeRaw];
-  const amount = (mode === "clear" || mode === "content_overwrite") ? 0 : convertToNumber(numberRaw);
-
-  return { parent: parentPart, child: childText, mode: mode, amount: amount };
-}
-
-function convertToNumber(raw) {
-  const str = raw
-    .replace(/〇/g, "0")
-    .replace(/一/g, "1")
-    .replace(/二/g, "2")
-    .replace(/三/g, "3")
-    .replace(/四/g, "4")
-    .replace(/五/g, "5")
-    .replace(/六/g, "6")
-    .replace(/七/g, "7")
-    .replace(/八/g, "8")
-    .replace(/九/g, "9")
-    .replace(/[^\d.]/g, "");
-  const num = parseFloat(str);
-  return isNaN(num) ? 0 : num;
-}
-
-function editFromParsed(parsed) {
-  const table = document.getElementById("csvTable");
-  const rows = table.rows;
-  let success = false;
-
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
-    const code = Number(row.cells[6].textContent);
-    const content = row.cells[2].textContent;
-
-    if (code === 40 && content.includes(parsed.parent)) {
-      for (let j = 1; j <= 9; j++) {
-        const childRow = rows[i + j];
-        if (!childRow) continue;
-
-        const childCode = Number(childRow.cells[6].textContent);
-        const childContent = childRow.cells[2].textContent;
-
-        if (childCode >= 41 && childCode <= 49 && childContent.includes(parsed.child)) {
-          if (parsed.mode === "content_overwrite") {
-            childRow.cells[2].textContent = parsed.child;
-            success = true;
-            break;
-          }
-          const cell = childRow.cells[4];
-          switch (parsed.mode) {
-            case "overwrite":
-              cell.textContent = parsed.amount;
-              break;
-            case "clear":
-              if (confirm(`${parsed.child} を空白にしますか？`)) {
-                cell.textContent = "";
-              }
-              break;
-          }
-          success = true;
-          break;
-        }
-      }
-      break;
-    }
-  }
-  if (!success) alert("対象が見つかりませんでした");
-}
-</script>
-
 </body>
 </html>
