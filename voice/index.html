@@ -263,8 +263,9 @@ function processVoiceCommand(text) {
       keywordMatched = true;
       const confirmed = confirm(`"${content}" に ${amount} を入力しますか？`);
       if (confirmed) {
-        row.cells[4].textContent = amount;
-        scrollToAndHighlight(row.cells[4]);
+        row.cells[2].textContent = keyword;
+          row.cells[4].textContent = amount;
+          scrollToAndHighlight(row.cells[4]);
         return;
       }
       // No → 次へ continue
@@ -278,10 +279,12 @@ function processVoiceCommand(text) {
     const content = row.cells[2].textContent.trim();
 
     if (hidden === "98" && content === "") {
-      const confirmed = confirm(`隠しコード98の空欄に ${amount} を入力しますか？`);
+      const confirmed = confirm(`一致無し
+空欄に ${keyword} ${amount} を入力しますか？`);;
       if (confirmed) {
-        row.cells[4].textContent = amount;
-        scrollToAndHighlight(row.cells[4]);
+        row.cells[2].textContent = keyword;
+          row.cells[4].textContent = amount;
+          scrollToAndHighlight(row.cells[4]);
       }
       return;
     }
