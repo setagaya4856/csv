@@ -1,11 +1,12 @@
 
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
-	<meta charset="UTF-8" name="apple-mobile-web-app-capable" content="yes">
-    	<title>空家データ入力</title>
-    	<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
-    	<style>
+<meta charset="utf-8" content="yes" name="apple-mobile-web-app-capable"/>
+<title>空家データ入力</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
+<style>
 html, body {
     overflow-x: hidden;  /* 横スクロールを無効にする */
     width: 100vw;  /* 横幅を画面いっぱいに設定 */
@@ -131,60 +132,68 @@ footer {
 </style>
 </head>
 <body>
-  	<header>
-    		<p>　<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">　
-		<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> 
-		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button></p>
-    		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>　
-		<input type="text" id="searchInput" class="searchword" style="width:30vw;height:2.3vh;font-size:50px;"/> 
-		<select id="roomword" class="roomword" style="width:21vw;height:3vh;font-size:35px;">
-  			<option value=""></option>
-  			<option value="玄関">玄関</option>
-  			<option value="DK">DK</option>
-  			<option value="洗面">洗面</option>
-  			<option value="便所">便所</option>
-  			<option value="浴室">浴室</option>
-  			<option value="居室1">居室1</option>
-  			<option value="居室2">居室2</option>
-  			<option value="居室3">居室3</option>
-  			<option value="バルコニー">バルコニー</option>
-		</select> 
-		<button style="width:18vw;height:3vh;font-size:30px;" onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
-    		<button style="width:10vw;height:3vh;font-size:30px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button>　
-		</p>
-  	</header>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<table id="csvTable">
-	</table>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<footer id="footer">
-		<table id="btnTable">
-		</table>
-	</footer>
+<header>
+<p>　<input accept=".csv" class="filecsv" id="csvFileInput" style="width:20vw;height:3vh;font-size:30px;" type="file"/>　
+		<input class="filename" id="name" name="name" style="width:50vw;height:2.3vh;font-size:50px;" type="text"/>
+<button class="csvbtn" onclick="downloadCSV()" style="width:15vw;height:3vh;font-size:30px;">保存</button></p>
+<p>　<button class="changebtn" id="changebtn" onclick="changeColumn()" style="width:5vw;height:3vh;font-size:30px;">!</button>　
+		<input class="searchword" id="searchInput" style="width:30vw;height:2.3vh;font-size:50px;" type="text">
+<select class="roomword" id="roomword" style="width:21vw;height:3vh;font-size:35px;">
+<option value=""></option>
+<option value="玄関">玄関</option>
+<option value="DK">DK</option>
+<option value="洗面">洗面</option>
+<option value="便所">便所</option>
+<option value="浴室">浴室</option>
+<option value="居室1">居室1</option>
+<option value="居室2">居室2</option>
+<option value="居室3">居室3</option>
+<option value="バルコニー">バルコニー</option>
+</select>
+<button class="searchbtn" id="searchbtn" onclick="searchOnly()" style="width:18vw;height:3vh;font-size:30px;">切替</button>
+<button class="delbtn" id="delbtn" onclick="delColumn()" style="width:10vw;height:3vh;font-size:30px;">×</button>　
+		</input></p>
+</header>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<table id="csvTable">
+</table>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<footer id="footer">
+<table id="btnTable">
+</table>
 
+<div style="position: relative; width: 100%; background: #ccffff; height: 15vh; padding: 10px 20px; font-size: 20px; display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; z-index: 999; flex-wrap: nowrap;">
+<div style="display: flex; align-items: center;">
+<button onclick="startVoice()" style="font-size: 20px;">🎙️ 開始</button>
+<span id="voiceStatus" style="margin-left: 10px;">・</span>
+</div>
+<div>
+<button onclick="stopVoice()" style="font-size: 20px;">⏹️ 停止</button>
+</div>
+</div>
+</footer>
 <!-- ✅ 音声認識 UI -->
 <div style="position: fixed; bottom: 0; left: 0; width: 100vw; background: #ccffff; height: 15vh; display: flex; align-items: center; justify-content: space-around; font-size: 24px; z-index: 999;">
-  <button onclick="startVoice()" style="font-size: 24px;">🎙️ 開始</button>
-  <span id="voiceStatus">・</span>
-  <button onclick="stopVoice()" style="font-size: 24px;">⏹️ 停止</button>
+<button onclick="startVoice()" style="font-size: 24px;">🎙️ 開始</button>
+<span id="voiceStatus">・</span>
+<button onclick="stopVoice()" style="font-size: 24px;">⏹️ 停止</button>
 </div>
-
 <script>
 let recognition;
 
@@ -267,8 +276,7 @@ function parseNumber(text) {
   return parseInt(numStr, 10);
 }
 </script>
-
-    	<script>
+<script>
 	function long_press(el,nf,lf,sec){
 		let longclick = false;
 		let longtap = false;
