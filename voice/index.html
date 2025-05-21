@@ -241,7 +241,10 @@ function processVoiceCommand(text) {
     const parentKeyword = locationMatch[1].trim();
     const indexChar = locationMatch[3].trim();
     const numberText = locationMatch[4].trim();
-    const amount = parseNumber(numberText);
+    
+    let isClear = /くりあ|クリア/.test(text);
+    let amount = isClear ? "" : parseNumber(numberText);
+    
     const indexMap = { "いち":41,"に":42,"さん":43,"よ":44,"ご":45,"ろく":46,"なな":47,"はち":48,"きゅう":49,
                        "一":41,"二":42,"三":43,"四":44,"五":45,"六":46,"七":47,"八":48,"九":49,
                        "1":41,"2":42,"3":43,"4":44,"5":45,"6":46,"7":47,"8":48,"9":49 };
@@ -263,7 +266,9 @@ function processVoiceCommand(text) {
           if (!childRow) break;
           const childCode = parseInt(childRow.cells[6].textContent);
           if (childCode === childCode) {
-            const confirmResult = confirm(`${parentKeyword} ${childRow.cells[2].textContent} に ${amount} を入力しますか？`);
+            
+    const confirmResult = confirm(`${parentKeyword} ${childRow.cells[2].textContent} ${isClear ? "をクリアしますか？" : "に " + amount + " を入力しますか？"}`);
+    
             if (confirmResult) {
               childRow.cells[4].textContent = amount;
               scrollToAndHighlight(childRow.cells[4]);
@@ -286,7 +291,10 @@ function processVoiceCommand(text) {
 
   const keyword = match[1].trim();
   const numberText = match[3];
-  const amount = parseNumber(numberText);
+  
+    let isClear = /くりあ|クリア/.test(text);
+    let amount = isClear ? "" : parseNumber(numberText);
+    
   console.log("🔍 keyword:", keyword, "amount:", amount);
 
   if (isNaN(amount)) {
@@ -304,7 +312,7 @@ function processVoiceCommand(text) {
     const hiddenCode = row.cells[6].textContent.trim();
     if ((hiddenCode !== "99" && !(parseInt(hiddenCode) >= 20 && parseInt(hiddenCode) <= 29)) && content.includes(keyword)) {
       keywordMatched = true;
-      const confirmed = confirm(`"${content}" に ${amount} を入力しますか？`);
+      const confirmed = confirm(`"${content}" ${isClearNormal ? "をクリアしますか？" : "に " + amount + " を入力しますか？"}`);
       if (confirmed) {
         row.cells[2].textContent = keyword;
           row.cells[4].textContent = amount;
