@@ -217,7 +217,8 @@ function startVoice() {
 
 function stopVoice() {
   if (recognition) {
-    recognition.stop();
+    recognition.abort();
+    recognition = null;
     document.getElementById('voiceStatus').textContent = '・';
   }
 }
@@ -247,11 +248,23 @@ function processVoiceCommand(text) {
       const confirmResult = confirm(`"${content}" に ${amount} を入力しますか？`);
       if (confirmResult) {
         row.cells[4].textContent = amount;
+        scrollToAndHighlight(row.cells[4]);
       }
       break;
     }
   }
 }
+
+
+function scrollToAndHighlight(cell) {
+  const row = cell.parentElement;
+  row.scrollIntoView({ behavior: "smooth", block: "center" });
+  cell.style.backgroundColor = "#ffff66"; // ハイライト色
+  setTimeout(() => {
+    cell.style.backgroundColor = "";
+  }, 1500);
+}
+
 
 function parseNumber(text) {
   const kanjiMap = {'〇':0,'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'０':0,'１':1,'２':2,'３':3,'４':4,'５':5,'６':6,'７':7,'８':8,'９':9};
