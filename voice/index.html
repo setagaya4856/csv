@@ -320,6 +320,38 @@ function parseNumber(text) {
 		</table>
 	</footer>
     	<script>
+	function long_press(el,nf,lf,sec){
+		let longclick = false;
+		let longtap = false;
+		let touch = false;
+		let timer;
+		el.addEventListener('touchstart',()=>{
+		touch = true;
+		longtap = false;
+		timer = setTimeout(() => {
+			longtap = true;
+			lf();
+				}, sec);
+		})
+		el.addEventListener('touchend',()=>{
+		if(!longtap){
+			clearTimeout(timer);
+			nf();
+			}else{
+				touch = false;
+			}
+		})
+	}
+	
+	function long_func(){
+		window.alert('長押ししました');
+	}
+
+	function s_func(){
+		window.alert('短い');
+	}
+
+
 	{
 		let taptmr, tapcount = 0;
 		window.addEventListener( "touchstart", evt => {
