@@ -1,975 +1,118 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-	<meta charset="UTF-8" name="apple-mobile-web-app-capable" content="yes">
-    	<title>空家データ入力</title>
-    	<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
-    	<style>
-html, body {
-    overflow-x: hidden;  /* 横スクロールを無効にする */
-    width: 100vw;  /* 横幅を画面いっぱいに設定 */
-    margin: 0;
-    padding: 0;
-    touch-action: manipulation;  /* モバイルでのタッチ操作最適化 */
-}
-
-header {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 12vh;
-    width: 100vw;
-    background: #DDFFFF;
-    font-size: 30px;
-}
-
-body {
-    width: 100vw;
-    overflow-x: hidden;  /* bodyにも横スクロール無効 */
-}
-
-table {
-    table-layout: fixed;
-    width: 100vw;  /* テーブルの幅を100vwに設定 */
-    overflow: hidden;  /* テーブル内のコンテンツがはみ出さないように */
-    margin: auto;
-}
-
-table, th, td {
-    border: 1px solid black;
-    border-collapse: collapse;
-    overflow: hidden;
-}
-
-th, td {
-    padding: 8px;
-    word-break: break-word;  /* 長い文字列が折り返しされるようにする */
-    white-space: normal;  /* テーブル内で長いテキストが折り返されるように */
-}
-
-/* セルの幅設定 */
-.naiyo {
-    width: 66vw;
-    font-size: 45px;
-}
-
-.btn {
-    width: 8vw;
-    text-align: center;
-    font-size: 45px;
-}
-
-.count {
-    width: 10vw;
-    text-align: center;
-    font-size: 45px;
-}
-
-.unit {
-    width: 7vw;
-    text-align: left;
-    font-size: 25px;
-}
-
-.pbtn {
-    width: 7vw;
-    height: 4vh;
-    background: #DDFFDD;
-    font-size: 30px;
-    padding: 2px;
-    text-align: center;
-}
-
-footer {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    height: 15vh;
-    width: 100vw;
-    background: #FFFFCC;
-}
-
-.mbtn {
-    width: 10.5vw;
-    height: 6vh;
-    background: #FFCC99;
-    font-size: 40px;
-    padding: 2px;
-    text-align: center;
-}
-
-.mb {
-    padding: 10px;
-    text-align: center;
-}
-
-.searchword {
-    background: #FFFFCC;
-    border: 1px solid #333;
-}
-
-.searchbtn {
-    background: #FFFFCC;
-    border: 1px solid #333;
-}
-
-.changebtn {
-    background: #FFFFCC;
-    border: 1px solid #333;
-}
-
-.delbtn {
-    background: #F9F06F;
-    border: 1px solid #333;
-}
-
-.roomword {
-    background: #FFFFCC;
-    border: 1px solid #333;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>ネットワーク工程表</title>
+  <style>
+    canvas {
+      border: 1px solid #ccc;
+      background-color: #fff;
+    }
+  </style>
 </head>
 <body>
-  	<header>
-    		<p>　<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">　
-		<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> 
-		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button></p>
-    		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>　
-		<input type="text" id="searchInput" class="searchword" style="width:30vw;height:2.3vh;font-size:50px;"/> 
-		<select id="roomword" class="roomword" style="width:21vw;height:3vh;font-size:35px;">
-  			<option value=""></option>
-  			<option value="玄関">玄関</option>
-  			<option value="DK">DK</option>
-  			<option value="洗面">洗面</option>
-  			<option value="便所">便所</option>
-  			<option value="浴室">浴室</option>
-  			<option value="居室1">居室1</option>
-  			<option value="居室2">居室2</option>
-  			<option value="居室3">居室3</option>
-  			<option value="バルコニー">バルコニー</option>
-		</select> 
-		<button style="width:18vw;height:3vh;font-size:30px;" onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
-    		<button style="width:10vw;height:3vh;font-size:30px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button>　
-		</p>
-  	</header>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<table id="csvTable">
-	</table>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	
-<!-- ✅ 音声UIフッター -->
-<div style="position: fixed; bottom: 15vh; width: 100vw; background: #ccffff; height: 10vh; padding: 10px 20px; font-size: 24px; display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; z-index: 999;">
-  <div style="display: flex; align-items: center;">
-    <button onclick="startVoice()" style="font-size: 24px;">🎙️ 開始</button>
-    <span id="voiceStatus" style="margin-left: 15px;">・</span>
-  </div>
-  <button onclick="stopVoice()" style="font-size: 24px;">⏹️ 停止</button>
-</div>
+  <h2>ネットワーク工程表（サンプル）</h2>
+  <canvas id="networkCanvas" width="800" height="600"></canvas>
 
-<script>
-let recognition;
+  <script>
+    const canvas = document.getElementById("networkCanvas");
+    const ctx = canvas.getContext("2d");
 
-function startVoice() {
-  if (!('webkitSpeechRecognition' in window)) {
-    alert('このブラウザは音声認識に対応していません');
-    return;
-  }
-  recognition = new webkitSpeechRecognition();
-  recognition.lang = 'ja-JP';
-  recognition.interimResults = false;
-  recognition.continuous = false;
+    // ノード定義（名前, x, y）
+    const nodes = {
+      A: { x: 100, y: 100 },
+      B: { x: 300, y: 100 },
+      C: { x: 500, y: 200 },
+      D: { x: 300, y: 300 }
+    };
 
-  document.getElementById('voiceStatus').textContent = '音声入力中...';
+    // 接続定義（始点, 終点, 通過点(optional), 線スタイル, 色）
+    const connections = [
+      { from: "A", to: "B", via: null, style: "solid", color: "red" },
+      { from: "B", to: "C", via: { x: 400, y: 100 }, style: "dashed", color: "blue" },
+      { from: "A", to: "D", via: null, style: "dashed", color: "green" },
+      { from: "D", to: "C", via: { x: 400, y: 250 }, style: "solid", color: "orange" }
+    ];
 
-  recognition.onresult = function(event) {
-    const transcript = event.results[0][0].transcript;
-    document.getElementById('voiceStatus').textContent = '🎧 ' + transcript;
-    processVoiceCommand(transcript);
-  };
+    // ノードの描画
+    function drawNode(x, y, label) {
+      ctx.beginPath();
+      ctx.arc(x, y, 15, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffcc";
+      ctx.fill();
+      ctx.strokeStyle = "#333";
+      ctx.stroke();
+      ctx.fillStyle = "#000";
+      ctx.font = "12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(label, x, y + 4);
+    }
 
-  recognition.onerror = function(event) {
-    document.getElementById('voiceStatus').textContent = '⚠️ エラー: ' + event.error;
-  };
+    // 線の描画
+    function drawConnection(from, to, via, style, color) {
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash(style === "dashed" ? [5, 5] : []);
 
-  recognition.onend = function() {
-    document.getElementById('voiceStatus').textContent = '・';
-  };
-
-  recognition.start();
-}
-
-function stopVoice() {
-  if (recognition) {
-    recognition.abort();
-    recognition = null;
-    document.getElementById('voiceStatus').textContent = '・';
-  }
-}
-
-
-function scrollToAndHighlight(cell) {
-  const row = cell.parentElement;
-  row.scrollIntoView({ behavior: "smooth", block: "center" });
-  cell.style.backgroundColor = "#ffff66";
-  setTimeout(() => {
-    cell.style.backgroundColor = "";
-  }, 1500);
-}
-
-
-
-function processVoiceCommand(text) {
-  const match = text.match(/(.+?)(めも|メモ)([0-9０-９一二三四五六七八九〇]*)/);
-  if (!match) {
-    alert('音声認識結果を解釈できませんでした');
-    return;
-  }
-
-  const keyword = match[1].trim();
-  const numberText = match[3];
-  const amount = parseNumber(numberText);
-  console.log("🔍 keyword:", keyword, "amount:", amount);
-
-  if (isNaN(amount)) {
-    alert('数量が認識できませんでした');
-    return;
-  }
-
-  const table = document.getElementById('csvTable');
-  let keywordMatched = false;
-
-  for (let i = 1; i < table.rows.length; i++) {
-    const row = table.rows[i];
-    const content = row.cells[2].textContent;
-
-    if (content.includes(keyword)) {
-      keywordMatched = true;
-      const confirmed = confirm(`"${content}" に ${amount} を入力しますか？`);
-      if (confirmed) {
-        row.cells[2].textContent = keyword;
-          row.cells[4].textContent = amount;
-          scrollToAndHighlight(row.cells[4]);
-        return;
+      ctx.moveTo(from.x, from.y);
+      if (via) {
+        ctx.quadraticCurveTo(via.x, via.y, to.x, to.y);
+      } else {
+        ctx.lineTo(to.x, to.y);
       }
-      // No → 次へ continue
+
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 矢印の描画
+      drawArrowHead(from, to, via);
     }
-  }
 
-  // 一致候補が無い または 全てNoだった場合 → 隠98 + 内容空行
-  for (let i = 1; i < table.rows.length; i++) {
-    const row = table.rows[i];
-    const hidden = row.cells[6].textContent.trim();
-    const content = row.cells[2].textContent.trim();
+    // 矢印描画補助関数
+    function drawArrowHead(from, to, via) {
+      let angle;
+      let endX = to.x;
+      let endY = to.y;
 
-    if (hidden === "98" && content === "") {
-      const confirmed = confirm(`一致無し
-空欄に ${keyword} ${amount} を入力しますか？`);;
-      if (confirmed) {
-        row.cells[2].textContent = keyword;
-          row.cells[4].textContent = amount;
-          scrollToAndHighlight(row.cells[4]);
+      if (via) {
+        // 曲線の場合の接線方向を簡易計算
+        const dx = to.x - via.x;
+        const dy = to.y - via.y;
+        angle = Math.atan2(dy, dx);
+      } else {
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        angle = Math.atan2(dy, dx);
       }
-      return;
+
+      const headlen = 10;
+      ctx.beginPath();
+      ctx.moveTo(endX, endY);
+      ctx.lineTo(endX - headlen * Math.cos(angle - Math.PI / 6), endY - headlen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(endX - headlen * Math.cos(angle + Math.PI / 6), endY - headlen * Math.sin(angle + Math.PI / 6));
+      ctx.lineTo(endX, endY);
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.fill();
     }
-  }
 
-  alert("入力対象が見つかりませんでした");
-}
+    // 全体描画
+    function drawNetwork() {
+      // 線
+      connections.forEach(conn => {
+        const from = nodes[conn.from];
+        const to = nodes[conn.to];
+        drawConnection(from, to, conn.via, conn.style, conn.color);
+      });
 
-
-function parseNumber(text) {
-  const kanjiMap = {'〇':0,'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'０':0,'１':1,'２':2,'３':3,'４':4,'５':5,'６':6,'７':7,'８':8,'９':9};
-  let numStr = '';
-  for (const ch of text) {
-    if (!isNaN(ch)) {
-      numStr += ch;
-    } else if (kanjiMap.hasOwnProperty(ch)) {
-      numStr += kanjiMap[ch];
+      // ノード
+      for (const key in nodes) {
+        const { x, y } = nodes[key];
+        drawNode(x, y, key);
+      }
     }
-  }
-  return parseInt(numStr, 10);
-}
-</script>
 
-<footer id="footer">
-		<table id="btnTable">
-		</table>
-	</footer>
-    	<script>
-	function long_press(el,nf,lf,sec){
-		let longclick = false;
-		let longtap = false;
-		let touch = false;
-		let timer;
-		el.addEventListener('touchstart',()=>{
-		touch = true;
-		longtap = false;
-		timer = setTimeout(() => {
-			longtap = true;
-			lf();
-				}, sec);
-		})
-		el.addEventListener('touchend',()=>{
-		if(!longtap){
-			clearTimeout(timer);
-			nf();
-			}else{
-				touch = false;
-			}
-		})
-	}
-	
-	function long_func(){
-		window.alert('長押ししました');
-	}
-
-	function s_func(){
-		window.alert('短い');
-	}
-
-
-	{
-		let taptmr, tapcount = 0;
-		window.addEventListener( "touchstart", evt => {
-			if( tapcount ){ evt.preventDefault(); tapcount=0; console.log( "ダブルタップ" ) }
-			else{
-				tapcount++;
-				clearTimeout( taptmr );
-				taptmr = setTimeout( () => { tapcount = 0 }, 350 );
-			}
-		}, { passive: false } );
-	}
-		
-	document.getElementById('csvFileInput').addEventListener('change', function(event) {  
-		const file = event.target.files[0];
-		if (file) {
-			const reader = new FileReader();
-			reader.onload = function(e) {
-				const text = e.target.result;
-				displayCSV(text);
-				roomColumn();
-			};
-		reader.readAsText(file);
-		}
-		document.getElementById('searchInput').value = '';
-		document.getElementById('roomword').options[0].selected = true;
-  		document.body.style.zoom = "100%";
-		window.scrollTo({
-			top: 0,
-			behavior: 'auto'
-		  });
-	});
-
-	document.getElementById('searchInput').addEventListener('keyup', function() {
-		colChange();
-	});
-
-	document.getElementById('roomword').addEventListener('change', function() {
-		colChange();
-	});	
-
-	function searchOnly() {
-		var table = document.getElementById('csvTable');
-		var rows = table.rows;
-		if(rows[0].cells[3].textContent == "絞"){
-			rows[0].cells[3].textContent = "全";
-			document.getElementById('searchbtn').style.backgroundColor = "#FFFFCC";
-		}else{
-			rows[0].cells[3].textContent = "絞";
-			document.getElementById('searchbtn').style.backgroundColor = "#f07c78";
-		}
-		colChange();
-	}
-	
-	function colChange() {
-		var searchValueW = document.getElementById('searchInput').value;
-		var searchValueR = document.getElementById('roomword').selectedIndex;
-		var table = document.getElementById('csvTable');
-		var rows = table.rows;
-		var changef = rows[0].cells[3].textContent;
-		for (var i = 1; i < rows.length; i++) {
-			let rowText = rows[i].textContent.toLowerCase();
-			if (searchValueR == 0 && searchValueW == "" && changef == "全"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else{
-					rows[i].style.display = '';
-				}
-			}else if (searchValueR !== 0 && searchValueW == "" && changef == "全"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1) {
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0 ) {
-					rows[i].style.display = '';
-				} else {
-					rows[i].style.display = 'none';
-				}
-			}else if (searchValueR == 0 && searchValueW !== "" && changef == "全"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if ((rowText.indexOf(searchValueW) > -1 || rows[i].cells[3].textContent == "#" ) && Number(rows[i].cells[6].textContent) !== 40) {
-					rows[i].style.display = '';
-				}else if (Number(rows[i].cells[6].textContent) == 40) {
-					rows[i].style.display = 'none';
-					rows[i + 1].style.display = 'none';
-					rows[i + 2].style.display = 'none';
-					rows[i + 3].style.display = 'none';
-					rows[i + 4].style.display = 'none';
-					rows[i + 5].style.display = 'none';
-					rows[i + 6].style.display = 'none';
-					rows[i + 7].style.display = 'none';
-					rows[i + 8].style.display = 'none';
-					rows[i + 9].style.display = 'none';
-					if (rowText.indexOf(searchValueW) > -1){
-						rows[i].style.display = '';
-						rows[i + 1].style.display = '';
-						rows[i + 2].style.display = '';
-						rows[i + 3].style.display = '';
-						rows[i + 4].style.display = '';
-						rows[i + 5].style.display = '';
-						rows[i + 6].style.display = '';
-						rows[i + 7].style.display = '';
-						rows[i + 8].style.display = '';
-						rows[i + 9].style.display = '';
-						i = i + 9;
-					}
-					i = i + 9
-				} else {
-					rows[i].style.display = 'none';
-				}
-			}else if (searchValueR !== 0 && searchValueW !== "" && changef == "全"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1) {
-					rows[i].style.display = "none";
-				}else if ((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && (rowText.indexOf(searchValueW) > -1  || rows[i].cells[3].textContent == "#") && Number(rows[i].cells[6].textContent) !== 40) {
-					rows[i].style.display = '';
-				}else if (Number(rows[i].cells[6].textContent) == 40) {					
-					rows[i].style.display = 'none';
-					rows[i + 1].style.display = 'none';
-					rows[i + 2].style.display = 'none';
-					rows[i + 3].style.display = 'none';
-					rows[i + 4].style.display = 'none';
-					rows[i + 5].style.display = 'none';
-					rows[i + 6].style.display = 'none';
-					rows[i + 7].style.display = 'none';
-					rows[i + 8].style.display = 'none';
-					rows[i + 9].style.display = 'none';
-					if (rowText.indexOf(searchValueW) > -1){
-						rows[i].style.display = '';
-						rows[i + searchValueR].style.display = '';
-					}
-					i = i + 9;
-				} else {
-					rows[i].style.display = 'none';
-				}
-			}else if (searchValueR == 0 && searchValueW !== "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if ((rowText.indexOf(searchValueW) > -1 || rows[i].cells[3].textContent == "#") && rows[i].cells[4].textContent !== "" && Number(rows[i].cells[6].textContent) !== 40) {
-					rows[i].style.display = '';
-				}else if (Number(rows[i].cells[6].textContent) == 40) {
-					rows[i].style.display = 'none';
-					rows[i + 1].style.display = 'none';
-					rows[i + 2].style.display = 'none';
-					rows[i + 3].style.display = 'none';
-					rows[i + 4].style.display = 'none';
-					rows[i + 5].style.display = 'none';
-					rows[i + 6].style.display = 'none';
-					rows[i + 7].style.display = 'none';
-					rows[i + 8].style.display = 'none';
-					rows[i + 9].style.display = 'none';
-					if (rowText.indexOf(searchValueW) > -1 && rows[i+1].cells[4].textContent !== "" && rows[i+2].cells[4].textContent !== "" && rows[i+3].cells[4].textContent !== "" && rows[i+4].cells[4].textContent !== ""
-					&& rows[i+5].cells[4].textContent !== "" && rows[i+6].cells[4].textContent !== "" && rows[i+7].cells[4].textContent !== "" && rows[i+8].cells[4].textContent !== "" && rows[i+9].cells[4].textContent !== ""){
-						rows[i].style.display = '';
-						rows[i + 1].style.display = '';
-						rows[i + 2].style.display = '';
-						rows[i + 3].style.display = '';
-						rows[i + 4].style.display = '';
-						rows[i + 5].style.display = '';
-						rows[i + 6].style.display = '';
-						rows[i + 7].style.display = '';
-						rows[i + 8].style.display = '';
-						rows[i + 9].style.display = '';
-					}
-					i = i + 9;
-				}else{
-					rows[i].style.display = 'none';
-				}
-			}else if (searchValueR !== 0 && searchValueW == "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1) {
-					rows[i].style.display = "none";
-				}else if ((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0)  && rows[i].cells[4].textContent !== "" && Number(rows[i].cells[6].textContent) !== 40){
-					rows[i].style.display = '';
-				}else if (Number(rows[i].cells[6].textContent) == 40) {
-					rows[i].style.display = 'none';
-					rows[i + 1].style.display = 'none';
-					rows[i + 2].style.display = 'none';
-					rows[i + 3].style.display = 'none';
-					rows[i + 4].style.display = 'none';
-					rows[i + 5].style.display = 'none';
-					rows[i + 6].style.display = 'none';
-					rows[i + 7].style.display = 'none';
-					rows[i + 8].style.display = 'none';
-					rows[i + 9].style.display = 'none';
-					if (rows[i + searchValueR].cells[4].textContent !== ""){
-						rows[i].style.display = '';
-						rows[i + searchValueR].style.display = '';
-					}
-					i = i + 9;
-				} else {
-					rows[i].style.display = 'none';
-				}
-			}else if (searchValueR !== 0 && searchValueW !== "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (Number(rows[i].cells[6].textContent) == 1) {
-					rows[i].style.display = "none";
-				}else if ((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0) && (rowText.indexOf(searchValueW) > -1  || rows[i].cells[3].textContent == "#") 
-					  && rows[i].cells[4].textContent !== "" && Number(rows[i].cells[6].textContent) !== 40) {
-					rows[i].style.display = '';
-				}else if (Number(rows[i].cells[6].textContent) == 40) {
-					rows[i].style.display = 'none';
-					rows[i + 1].style.display = 'none';
-					rows[i + 2].style.display = 'none';
-					rows[i + 3].style.display = 'none';
-					rows[i + 4].style.display = 'none';
-					rows[i + 5].style.display = 'none';
-					rows[i + 6].style.display = 'none';
-					rows[i + 7].style.display = 'none';
-					rows[i + 8].style.display = 'none';
-					rows[i + 9].style.display = 'none';
-					if (rowText.indexOf(searchValueW) > -1 && rows[i + searchValueR].cells[4].textContent !== ""){
-						rows[i].style.display = '';
-						rows[i + searchValueR].style.display = '';
-					}
-					i = i + 9;
-				} else {
-					rows[i].style.display = 'none';
-				}
-			}else if (searchValueR == 0 && searchValueW == "" && changef == "絞"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else if (rows[i].cells[4].textContent !== "" && rows[i].cells[3].textContent !== "*" && Number(rows[i].cells[6].textContent) !== 40){
-					rows[i].style.display = "";
-				}else if (Number(rows[i].cells[6].textContent) == 40){
-					rows[i].style.display = 'none';
-					rows[i + 1].style.display = 'none';
-					rows[i + 2].style.display = 'none';
-					rows[i + 3].style.display = 'none';
-					rows[i + 4].style.display = 'none';
-					rows[i + 5].style.display = 'none';
-					rows[i + 6].style.display = 'none';
-					rows[i + 7].style.display = 'none';
-					rows[i + 8].style.display = 'none';
-					rows[i + 9].style.display = 'none';
-					if(rows[i + 1].cells[4].textContent == "" && rows[i + 2].cells[4].textContent == "" && rows[i + 3].cells[4].textContent == "" && rows[i + 4].cells[4].textContent == "" && rows[i + 5].cells[4].textContent == ""
-					&& rows[i + 6].cells[4].textContent == "" && rows[i + 7].cells[4].textContent == "" && rows[i + 8].cells[4].textContent == "" && rows[i + 9].cells[4].textContent == ""){
-					}else{
-						rows[i].style.display = '';
-						rows[i + 1].style.display = '';
-						rows[i + 2].style.display = '';
-						rows[i + 3].style.display = '';
-						rows[i + 4].style.display = '';
-						rows[i + 5].style.display = '';
-						rows[i + 6].style.display = '';
-						rows[i + 7].style.display = '';
-						rows[i + 8].style.display = '';
-						rows[i + 9].style.display = '';
-					}
-					i = i + 9;
-				}else{
-					rows[i].style.display = "none";
-				}
-			}
-		}
-		document.body.style.zoom = "100%";
-		window.scrollTo({
-			top: 0,
-			behavior: 'auto'
-		  });
-	}
-	
-	function displayCSV(text) {
-		const rows = text.split('\n');
-		const table = document.getElementById('csvTable');
-		const foot = document.getElementById('footer');
-		table.innerHTML = '';
-
-		const tableb = document.getElementById('btnTable');
-		tableb.innerHTML = '';
-		const trb = document.createElement('tr');
-		const trb2 = document.createElement('tr');
-		const trb3 = document.createElement('tr');
-
-		const selectRoomWord = document.getElementById('roomword');
-		for(var i=0 ; i < selectRoomWord.length ; i++){
-			selectRoomWord.remove(i--);
-		}
-		const trM = document.createElement('tr');
-		const tdMR = document.createElement('td');
-		tdMR.textContent = "Row";
-		trM.appendChild(tdMR);
-		const tdM0 = document.createElement('td');
-		tdM0.textContent = "No";
-		trM.appendChild(tdM0);
-		const tdM1 = document.createElement('td');
-		tdM1.contentEditable = false;
-		tdM1.textContent = "内容";
-		trM.appendChild(tdM1);
-		const tdM = document.createElement('td');
-		tdM.textContent = "全";
-		trM.appendChild(tdM);
-		const tdM2 = document.createElement('td');
-		tdM2.contentEditable = false;
-		tdM2.textContent = "数量";
-		trM.appendChild(tdM2);
-		const tdM3 = document.createElement('td');
-		tdM3.contentEditable = false;
-		tdM3.textContent = "単位";
-		trM.appendChild(tdM3);
-		const tdM4 = document.createElement('td');
-		tdM4.contentEditable = false;
-		tdM4.textContent = "隠";
-		trM.appendChild(tdM4);		
-		table.appendChild(trM);
-
-		rows.forEach((row) => {
-			const tr = document.createElement('tr');
-			const cells = row.split(',');
-			const tdR = document.createElement('td');
-			tdR.contentEditable = false;
-			tdR.textContent = cells[0];
-			tr.appendChild(tdR);
-			const td0 = document.createElement('td');
-			td0.contentEditable = false;
-			td0.textContent = cells[1];
-			tr.appendChild(td0);
-			const td1 = document.createElement('td');
-			if(Number(cells[5]) == 1 || (Number(cells[5]) >= 20 && Number(cells[5]) < 30 )){
-				td1.contentEditable = false;
-				td1.textContent = cells[2];
-			}else{
-				td1.contentEditable = true;
-				td1.textContent = cells[2];
-			}
-			tr.appendChild(td1);
-			const td = document.createElement('td');
-			if(Number(cells[5]) == 99 || (Number(cells[5]) > 20 && Number(cells[5]) < 30)){
-				td.contentEditable = false;
-				td.textContent = "#";
-			}else if(Number(cells[5]) == 20){
-				td.contentEditable = false;
-				td.textContent = "#";
-				td.setAttribute("id", cells[1]);
-				const tdb = document.createElement('td');
-				tdb.setAttribute("class", "mb");
-				const input_trb = document.createElement("input");
-				input_trb.setAttribute("type", "button");
-				input_trb.setAttribute("value", cells[4]);
-				input_trb.setAttribute("onclick", "movecell(" + cells[1].substr(1) + ")");
-				input_trb.setAttribute("class", "mbtn");
-				tdb.appendChild(input_trb);
-				if(Number(cells[1].substr(1)) > 14){
-					trb3.appendChild(tdb);
-					foot.style.height = "22vh";
-				}else if(Number(cells[1].substr(1)) > 7){
-					trb2.appendChild(tdb);
-				}else{
-					trb.appendChild(tdb);
-				}
-			}else if(Number(cells[5]) == 40){
-				td.contentEditable = false;
-				td.textContent = "*";
-			}else{
-				const input_tr = document.createElement("input");
-				input_tr.setAttribute("type", "button");
-				input_tr.setAttribute("value", "＋");
-				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
-				input_tr.setAttribute("class", "pbtn");
-				input_tr.setAttribute("id", "pbtn_" + String(cells[0]));
-				td.appendChild(input_tr);
-			}
-			tr.appendChild(td);
-			const td2 = document.createElement('td');
-			if(Number(cells[5]) == 1 || (Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 40 && Number(cells[5]) < 60)){
-				td2.contentEditable = true;
-				td2.textContent = cells[3];
-			}else{
-				td2.contentEditable = false;
-				td2.textContent = "*";
-			}
-			tr.appendChild(td2);
-			const td3 = document.createElement('td');
-			td3.contentEditable = false;
-			td3.textContent = cells[4];
-			tr.appendChild(td3);
-			const td4 = document.createElement('td');
-			td4.contentEditable = false;
-			td4.textContent = cells[5];
-			tr.appendChild(td4);
-
-			table.appendChild(tr);
-		});
-		tableb.appendChild(trb);
-		tableb.appendChild(trb2);
-		tableb.appendChild(trb3);
-		attachLongPressEvents();
-	}
-		
-	function hideColumn() {
-		const check_sec = 500; //ミリ秒
-		var table = document.getElementsByTagName("table")[0];
-		var rows = table.rows;
-		for (var i = 0; i < rows.length; i++) {
-			rows[i].style.backgroundColor = "#fff";
-			rows[i].cells[3].style.backgroundColor = "#fff";
-			if(Number(rows[i].cells[6].textContent) == 1){
-				rows[i].cells[2].style.backgroundColor = "#CACACA";
-			}else if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
-				rows[i].style.backgroundColor = "#CACACA";
-				rows[i].cells[3].style.backgroundColor = "#CACACA";
-			}else if(Number(rows[i].cells[6].textContent) == 40){
-				rows[i].cells[2].style.backgroundColor = "#c8e6c8";
-				rows[i].cells[3].style.backgroundColor = "#CACACA";
-				rows[i].cells[4].style.backgroundColor = "#CACACA";
-			}else if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
-				rows[i].cells[2].style.backgroundColor = "#DDFFDD";
-			}
-			if(Number(rows[i].cells[1].textContent) == 0){
-				rows[i].style.display = "none";
-			}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
-				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
-				rows[i].style.backgroundColor = "#FFCC99";
-				rows[i].cells[3].style.backgroundColor = "#FFCC99";
-			}else if(rows[i].cells[5].textContent !== ""){
-				if(rows[i].cells[5].textContent.substr(0,1) == "！"){
-					rows[i].style.backgroundColor = "#f07c78";
-				}
-			}
-		}
-	}
-		
-	function movecell(idName) {
-		const element = document.getElementById("m" + String(idName));
-		const targetDOMRect = element.getBoundingClientRect();
-		const targetTop = targetDOMRect.top + window.pageYOffset - 190;
-		window.scrollTo({
-			top: targetTop,
-			behavior: 'smooth'
-		});
-  		document.body.style.zoom = "100%";
-	}
-	
-	function roomColumn() {
-		var table = document.getElementsByTagName("table")[0];
-		var rows = table.rows;
-		rows[0].cells[5].textContent = "部屋";
-		document.getElementById('changebtn').style.backgroundColor = "#f07c78";
-		for (var i = 0; i < rows.length; i++) {
-			rows[i].style.backgroundColor = "#fff";
-			rows[i].cells[3].style.backgroundColor = "#fff";
-			rows[i].cells[0].style.display = "none";
-			rows[i].cells[1].style.display = "none";
-			rows[i].cells[2].className='naiyo';
-			rows[i].cells[3].className='btn';
-			rows[i].cells[4].className='count';
-			rows[i].cells[5].className='unit';
-			rows[i].cells[6].style.display = "none";
-			if( i < 10 ){
-				rows[i].style.display = "";
-			}else{
-				rows[i].style.display = "none";
-			}
-		}
-	}
-
-	function roomChange() {
-		const selectRoomWord = document.getElementById('roomword');
-		const optionb = document.createElement('option');
-		optionb.value = "";
-		optionb.textContent = "";
-		selectRoomWord.appendChild(optionb)
-		var table = document.getElementsByTagName("table")[0];
-		var rows = table.rows;
-		for (var i = 0; i < rows.length; i++) {
-			rows[i].style.display = "";
-			if(Number(rows[i].cells[6].textContent) == 99){
-				const option = document.createElement('option');
-				option.value = rows[i].cells[2].textContent;
-				option.textContent = rows[i].cells[2].textContent;
-				selectRoomWord.appendChild(option);
-			}
-			if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
-				rows[i].cells[2].textContent = rows[Number(rows[i].cells[6].textContent) - 40].cells[2].textContent;
-			}
-		}
-		hideColumn();
-	}
-
-	function cellplus(rowNo) {
-		const table = document.getElementById('csvTable');
-		var rows = table.rows;
-		if(rows[0].cells[5].textContent == "単位"){
-			for (let row of table.rows) {
-				if(Number(row.cells[0].textContent) == Number(rowNo)){
-					row.cells[4].innerText = Number(row.cells[4].innerText) + 1;
-				}
-			}
-		}else if(rows[0].cells[5].textContent == "強調"){
-			for (let row of table.rows) {
-				if(Number(row.cells[0].textContent) == Number(rowNo)){
-					if(row.cells[5].textContent.substr(0,1) == "！"){
-						row.cells[5].innerText = row.cells[5].textContent.substr(1);
-						row.style.backgroundColor = "#fff";
-						row.cells[3].style.backgroundColor = "#f07c78";
-					}else{
-						row.cells[5].innerText = "！" + row.cells[5].innerText;
-						row.style.backgroundColor = "#f07c78";
-					}
-				}
-			}
-		}
-	}
-		
-	function attachLongPressEvents() {
-		const buttons = document.querySelectorAll('.pbtn');
-	
-		buttons.forEach(btn => {
-			let pressTimer;
-			const rowNo = btn.id.replace('pbtn_', '');
-	
-			btn.addEventListener('touchstart', function(e) {
-				pressTimer = setTimeout(() => {
-					const table = document.getElementById('csvTable');
-					for (let row of table.rows) {
-						if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
-							if(row.cells[4].textContent　!=　""){
-								const confirmed = window.confirm(row.cells[2].textContent + " を空白にしますか？");
-								if (confirmed) {
-									row.cells[4].textContent = "";
-								}
-							}
-							break;
-						}
-					}
-				}, 600); // 600ms 長押しで発動
-			});
-	
-			btn.addEventListener('touchend', function(e) {
-				clearTimeout(pressTimer);
-			});
-	
-			btn.addEventListener('touchmove', function(e) {
-				clearTimeout(pressTimer); // スワイプでキャンセル
-			});
-		});
-	}
-
-	function changeColumn() {
-		var table = document.getElementsByTagName("table")[0];
-		var rows = table.rows;
-		if(rows[0].cells[5].textContent == "単位"){
-			rows[0].cells[5].textContent = "強調";
-			document.getElementById('changebtn').style.backgroundColor = "#f07c78";
-			for (var i = 0; i < rows.length; i++) {
-				rows[i].cells[3].style.backgroundColor = "#f07c78";
-				if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
-					rows[i].cells[3].style.backgroundColor = "#CACACA";
-				}else if(Number(rows[i].cells[6].textContent) == 40){
-					rows[i].cells[3].style.backgroundColor = "#CACACA";
-				}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
-					rows[i].cells[3].style.backgroundColor = "#FFCC99";
-				}
-			}
-		}else if(rows[0].cells[5].textContent == "強調"){
-			rows[0].cells[5].textContent = "単位";
-			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
-			for (var i = 0; i < rows.length; i++) {
-				rows[i].cells[3].style.backgroundColor = "#fff";
-				if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
-					rows[i].cells[3].style.backgroundColor = "#CACACA";
-				}else if(Number(rows[i].cells[6].textContent) == 40){
-					rows[i].cells[3].style.backgroundColor = "#CACACA";
-				}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
-					rows[i].cells[3].style.backgroundColor = "#FFCC99";
-				}
-			}
-		}else if(rows[0].cells[5].textContent == "部屋"){
-			rows[0].cells[5].textContent = "単位";
-			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
-			roomChange();
-		}
-	}
-
-	function delColumn() {
-		var table = document.getElementById('csvTable');
-		var rows = table.rows;
-		document.getElementById('searchInput').value = "";
-		document.getElementById('roomword').selectedIndex = 0;
-		rows[0].cells[3].textContent = "全";
-		document.getElementById('searchbtn').style.backgroundColor = "#FFFFCC";
-		rows[0].cells[5].textContent = "単位";
-		document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
-		colChange();
-	}
-	
-	function downloadCSV() {
-		const table = document.getElementById('csvTable');
-		let csvContent = '';
-		for (let row of table.rows) {
-			let rowData = [];
-			if (row.cells[0].textContent !== "Row"){
-				rowData.push(row.cells[0].textContent);
-				rowData.push(row.cells[1].textContent);
-				rowData.push(row.cells[2].textContent);
-				rowData.push(row.cells[4].textContent);
-				rowData.push(row.cells[5].textContent);
-				rowData.push(row.cells[6].textContent);
-				csvContent += rowData.join(',') + '\n';
-			}
-		}
-		const encoding = 'UTF8';
-		let bom = [];
-		let encodedData;
-
-		encodedData = Encoding.convert(Encoding.stringToCode(csvContent), encoding, 'UNICODE');
-		const blob = new Blob([new Uint8Array([...bom, ...encodedData])], { type: 'text/csv;charset=' + encoding.toLowerCase() + ';' });
-
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		var dt = new Date();
-		var y = dt.getFullYear();
-		var m = ("00" + (dt.getMonth()+1)).slice(-2);
-		var d = ("00" + (dt.getDate())).slice(-2);
-		var result = y  + m +  d;
-		const bname = document.getElementById('name').value;
-		a.download = bname + '_' + result + '.csv';
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-	}
-    </script>
+    drawNetwork();
+  </script>
 </body>
 </html>
