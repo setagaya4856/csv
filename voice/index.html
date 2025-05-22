@@ -286,7 +286,6 @@ function processVoiceCommand(text) {
 
       if (!isNaN(choiceIndex) && choiceIndex >= 1 && choiceIndex <= targets.length) {
         const targetRow = table.rows[targets[choiceIndex - 1].index];
-        targetRow.cells[2].textContent = keyword;
         targetRow.cells[4].textContent = amount;
         scrollToAndHighlight(targetRow.cells[4]);
         return;
@@ -299,7 +298,6 @@ function processVoiceCommand(text) {
       // 通常 confirm
       const confirmed = confirm(`"${content}" に ${amount} を入力しますか？`);
       if (confirmed) {
-        row.cells[2].textContent = keyword;
         row.cells[4].textContent = amount;
         scrollToAndHighlight(row.cells[4]);
         return;
