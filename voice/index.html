@@ -132,10 +132,10 @@ footer {
 </head>
 <body>
   	<header>
-    		<p> <input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv"> 
+    		<p>　<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">　
 		<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> 
 		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button></p>
-    		<p> <button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button> 
+    		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>　
 		<input type="text" id="searchInput" class="searchword" style="width:30vw;height:2.3vh;font-size:50px;"/> 
 		<select id="roomword" class="roomword" style="width:21vw;height:3vh;font-size:35px;">
   			<option value=""></option>
@@ -150,7 +150,7 @@ footer {
   			<option value="バルコニー">バルコニー</option>
 		</select> 
 		<button style="width:18vw;height:3vh;font-size:30px;" onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
-    		<button style="width:10vw;height:3vh;font-size:30px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button> 
+    		<button style="width:10vw;height:3vh;font-size:30px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button>　
 		</p>
   	</header>
 	<br>
@@ -208,12 +208,9 @@ function startVoice() {
     document.getElementById('voiceStatus').textContent = '⚠️ エラー: ' + event.error;
   };
 
-recognition.onend = function() {
-  const el = document.getElementById('voiceStatus');
-  if (!el.textContent.includes('（入力終了）')) {
-    el.textContent += '（入力終了）';
-  }
-};
+  recognition.onend = function() {
+    document.getElementById('voiceStatus').textContent = '・';
+  };
 
   recognition.start();
 }
@@ -262,49 +259,17 @@ function processVoiceCommand(text) {
     const row = table.rows[i];
     const content = row.cells[2].textContent;
 
-    const hiddenCode = row.cells[6].textContent.trim();
-    if ((hiddenCode !== "99" && !(parseInt(hiddenCode) >= 20 && parseInt(hiddenCode) <= 29)) && !(parseInt(hiddenCode) >= 41 && parseInt(hiddenCode) <= 49)) && content.includes(keyword)) {
-    keywordMatched = true;
-
-    if (parseInt(hiddenCode) === 40) {
-      // 隠40行 → その下の41〜49行を探して選ばせる
-      let options = "";
-      let targets = [];
-
-      for (let j = 1; j <= 9; j++) {
-        const subRow = table.rows[i + j];
-        if (!subRow) break;
-        const subCode = parseInt(subRow.cells[6].textContent.trim());
-        if (subCode >= 41 && subCode <= 49) {
-          targets.push({ index: i + j, label: subRow.cells[2].textContent });
-          options += `${targets.length}: ${subRow.cells[2].textContent}\n`;
-        }
-      }
-
-      const choice = prompt(`"${content}" に一致しました。\n以下から入力対象を選んでください：\n${options}`);
-      const choiceIndex = parseInt(choice);
-
-      if (!isNaN(choiceIndex) && choiceIndex >= 1 && choiceIndex <= targets.length) {
-        const targetRow = table.rows[targets[choiceIndex - 1].index];
-        targetRow.cells[2].textContent = keyword;
-        targetRow.cells[4].textContent = amount;
-        scrollToAndHighlight(targetRow.cells[4]);
-        return;
-      } else {
-        // 無効な選択 → スキップして次の行へ
-        continue;
-      }
-
-    } else {
-      // 通常 confirm
+    if (content.includes(keyword)) {
+      keywordMatched = true;
       const confirmed = confirm(`"${content}" に ${amount} を入力しますか？`);
       if (confirmed) {
         row.cells[2].textContent = keyword;
-        row.cells[4].textContent = amount;
-        scrollToAndHighlight(row.cells[4]);
+          row.cells[4].textContent = amount;
+          scrollToAndHighlight(row.cells[4]);
         return;
       }
-    }	
+      // No → 次へ continue
+    }
   }
 
   // 一致候補が無い または 全てNoだった場合 → 隠98 + 内容空行
@@ -348,6 +313,37 @@ function parseNumber(text) {
 		</table>
 	</footer>
     	<script>
+	function long_press(el,nf,lf,sec){
+		let longclick = false;
+		let longtap = false;
+		let touch = false;
+		let timer;
+		el.addEventListener('touchstart',()=>{
+		touch = true;
+		longtap = false;
+		timer = setTimeout(() => {
+			longtap = true;
+			lf();
+				}, sec);
+		})
+		el.addEventListener('touchend',()=>{
+		if(!longtap){
+			clearTimeout(timer);
+			nf();
+			}else{
+				touch = false;
+			}
+		})
+	}
+	
+	function long_func(){
+		window.alert('長押ししました');
+	}
+
+	function s_func(){
+		window.alert('短い');
+	}
+
 
 	{
 		let taptmr, tapcount = 0;
@@ -763,7 +759,7 @@ function parseNumber(text) {
 			if(Number(rows[i].cells[1].textContent) == 0){
 				rows[i].style.display = "none";
 			}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
-				rows[i].cells[1].className = rows[i].cells[1].textContent;
+				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
 				rows[i].style.backgroundColor = "#FFCC99";
 				rows[i].cells[3].style.backgroundColor = "#FFCC99";
 			}else if(rows[i].cells[5].textContent !== ""){
@@ -868,7 +864,7 @@ function parseNumber(text) {
 					const table = document.getElementById('csvTable');
 					for (let row of table.rows) {
 						if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
-							if(row.cells[4].textContent != ""){
+							if(row.cells[4].textContent　!=　""){
 								const confirmed = window.confirm(row.cells[2].textContent + " を空白にしますか？");
 								if (confirmed) {
 									row.cells[4].textContent = "";
