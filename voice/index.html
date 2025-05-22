@@ -264,7 +264,6 @@ for (let i = 1; i < table.rows.length; i++) {
   if ((hiddenCode !== "99" && !(parseInt(hiddenCode) >= 20 && parseInt(hiddenCode) <= 29) && !(parseInt(hiddenCode) >= 41 && parseInt(hiddenCode) <= 49)) && content.includes(keyword)) {
     const code = parseInt(hiddenCode);
 
-    
     if (code === 40) {
       let childOptions = [];
       for (let j = 1; j <= 9; j++) {
@@ -280,15 +279,13 @@ for (let i = 1; i < table.rows.length; i++) {
       }
 
       if (childOptions.length > 0) {
-        showChildSelect(row.cells[2].textContent, childOptions, function(selectedRow) {
+        showChildSelect(row.cells[2].textContent, amount, childOptions, function(selectedRow) {
           selectedRow.cells[2].textContent = keyword;
           selectedRow.cells[4].textContent = amount;
           scrollToAndHighlight(selectedRow.cells[4]);
         });
         return;
       }
-    }
-
     } else {
       const confirmed = confirm(`"${content}" に ${amount} を入力しますか？`);
       if (confirmed) {
@@ -301,62 +298,6 @@ for (let i = 1; i < table.rows.length; i++) {
   }
 }
 
-      }
-      // No → 次へ continue
-    }
-  }
-
-  // 一致候補が無い または 全てNoだった場合 → 隠98 + 内容空行
-  
-for (let i = 1; i < table.rows.length; i++) {
-  const row = table.rows[i];
-  const content = row.cells[2].textContent;
-  const hiddenCode = row.cells[6].textContent.trim();
-
-  if ((hiddenCode !== "99" && !(parseInt(hiddenCode) >= 20 && parseInt(hiddenCode) <= 29) && !(parseInt(hiddenCode) >= 41 && parseInt(hiddenCode) <= 49)) && content.includes(keyword)) {
-    const code = parseInt(hiddenCode);
-
-    
-    if (code === 40) {
-      let childOptions = [];
-      for (let j = 1; j <= 9; j++) {
-        const childRow = table.rows[i + j];
-        if (!childRow) break;
-        const childCode = parseInt(childRow.cells[6].textContent);
-        if (childCode >= 41 && childCode <= 49) {
-          childOptions.push({
-            label: childRow.cells[2].textContent,
-            row: childRow
-          });
-        }
-      }
-
-      if (childOptions.length > 0) {
-        showChildSelect(row.cells[2].textContent, childOptions, function(selectedRow) {
-          selectedRow.cells[2].textContent = keyword;
-          selectedRow.cells[4].textContent = amount;
-          scrollToAndHighlight(selectedRow.cells[4]);
-        });
-        return;
-      }
-    }
-
-    } else {
-      const confirmed = confirm(`"${content}" に ${amount} を入力しますか？`);
-      if (confirmed) {
-        row.cells[2].textContent = keyword;
-        row.cells[4].textContent = amount;
-        scrollToAndHighlight(row.cells[4]);
-        return;
-      }
-    }
-  }
-}
-
-    }
-  }
-
-  alert("入力対象が見つかりませんでした");
 }
 
 
@@ -1046,13 +987,11 @@ function parseNumber(text) {
     <button onclick="hideChildSelect()">キャンセル</button>
   </div>
 </div>
-</body>
 
-</html>
 <script>
 let modalCallback = null;
 
-function showChildSelect(parentLabel, children, callback) {
+function showChildSelect(parentLabel, amount, children, callback) {
   document.getElementById("childSelectTitle").textContent = `${parentLabel} ： ${amount} どれに入力しますか？`;
   const container = document.getElementById("childSelectButtons");
   container.innerHTML = "";
@@ -1076,3 +1015,6 @@ function hideChildSelect() {
   modalCallback = null;
 }
 </script>
+</body>
+
+</html>
