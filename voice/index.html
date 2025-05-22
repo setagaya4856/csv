@@ -260,7 +260,7 @@ function processVoiceCommand(text) {
     const content = row.cells[2].textContent;
 
     const hiddenCode = row.cells[6].textContent.trim();
-    if ((hiddenCode !== "99" && !(parseInt(hiddenCode) >= 20 && parseInt(hiddenCode) <= 29)) && content.includes(keyword)) {
+    if ((hiddenCode !== "99" && !(parseInt(hiddenCode) >= 20 && parseInt(hiddenCode) <= 29)) && !(parseInt(hiddenCode) >= 41 && parseInt(hiddenCode) <= 49))　&& content.includes(keyword)) {
       keywordMatched = true;
       const confirmed = confirm(`"${content}" に ${amount} を入力しますか？`);
       if (confirmed) {
