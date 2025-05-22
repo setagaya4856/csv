@@ -132,10 +132,10 @@ footer {
 </head>
 <body>
   	<header>
-    		<p>　<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">　
+    		<p> <input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv"> 
 		<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> 
 		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button></p>
-    		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>　
+    		<p> <button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button> 
 		<input type="text" id="searchInput" class="searchword" style="width:30vw;height:2.3vh;font-size:50px;"/> 
 		<select id="roomword" class="roomword" style="width:21vw;height:3vh;font-size:35px;">
   			<option value=""></option>
@@ -150,7 +150,7 @@ footer {
   			<option value="バルコニー">バルコニー</option>
 		</select> 
 		<button style="width:18vw;height:3vh;font-size:30px;" onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
-    		<button style="width:10vw;height:3vh;font-size:30px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button>　
+    		<button style="width:10vw;height:3vh;font-size:30px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button> 
 		</p>
   	</header>
 	<br>
@@ -763,7 +763,7 @@ function parseNumber(text) {
 			if(Number(rows[i].cells[1].textContent) == 0){
 				rows[i].style.display = "none";
 			}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
-				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
+				rows[i].cells[1].className = rows[i].cells[1].textContent;
 				rows[i].style.backgroundColor = "#FFCC99";
 				rows[i].cells[3].style.backgroundColor = "#FFCC99";
 			}else if(rows[i].cells[5].textContent !== ""){
@@ -868,7 +868,7 @@ function parseNumber(text) {
 					const table = document.getElementById('csvTable');
 					for (let row of table.rows) {
 						if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
-							if(row.cells[4].textContent　!=　""){
+							if(row.cells[4].textContent != ""){
 								const confirmed = window.confirm(row.cells[2].textContent + " を空白にしますか？");
 								if (confirmed) {
 									row.cells[4].textContent = "";
