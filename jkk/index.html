@@ -3,7 +3,6 @@
 <html lang="ja">
 <head>
 	<meta charset="UTF-8" name="apple-mobile-web-app-capable" content="yes">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     	<title>空家データ入力</title>
     	<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     	<style>
@@ -13,6 +12,7 @@ html, body {
     margin: 0;
     padding: 0;
     touch-action: manipulation;  /* モバイルでのタッチ操作最適化 */
+    -webkit-text-size-adjust: 100%; /* iOSの文字拡大防止 */
 }
 
 header {
@@ -129,33 +129,6 @@ footer {
     background: #FFFFCC;
     border: 1px solid #333;
 }
-
-html, body {
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
-    font-size: 16px; /* iOSのズーム防止に必要 */
-    -webkit-text-size-adjust: 100%;
-}
-
-input, select, button, textarea {
-    font-size: 16px !important;
-}
-
-button, .pbtn, .mbtn {
-    border-radius: 8px;
-    border: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: background 0.2s ease-in-out;
-}
-
-button:hover, .pbtn:hover, .mbtn:hover {
-    background-color: #ccc;
-    cursor: pointer;
-}
-
-.searchword, .roomword, .searchbtn, .changebtn, .delbtn {
-    border-radius: 6px;
-    padding: 4px;
-}
 </style>
 </head>
 <body>
@@ -206,38 +179,6 @@ button:hover, .pbtn:hover, .mbtn:hover {
 		</table>
 	</footer>
     	<script>
-	function long_press(el,nf,lf,sec){
-		let longclick = false;
-		let longtap = false;
-		let touch = false;
-		let timer;
-		el.addEventListener('touchstart',()=>{
-		touch = true;
-		longtap = false;
-		timer = setTimeout(() => {
-			longtap = true;
-			lf();
-				}, sec);
-		})
-		el.addEventListener('touchend',()=>{
-		if(!longtap){
-			clearTimeout(timer);
-			nf();
-			}else{
-				touch = false;
-			}
-		})
-	}
-	
-	function long_func(){
-		window.alert('長押ししました');
-	}
-
-	function s_func(){
-		window.alert('短い');
-	}
-
-
 	{
 		let taptmr, tapcount = 0;
 		window.addEventListener( "touchstart", evt => {
@@ -263,7 +204,6 @@ button:hover, .pbtn:hover, .mbtn:hover {
 		}
 		document.getElementById('searchInput').value = '';
 		document.getElementById('roomword').options[0].selected = true;
-  		document.body.style.zoom = "100%";
 		window.scrollTo({
 			top: 0,
 			behavior: 'auto'
@@ -496,7 +436,6 @@ button:hover, .pbtn:hover, .mbtn:hover {
 				}
 			}
 		}
-		document.body.style.zoom = "100%";
 		window.scrollTo({
 			top: 0,
 			behavior: 'auto'
@@ -671,7 +610,6 @@ button:hover, .pbtn:hover, .mbtn:hover {
 			top: targetTop,
 			behavior: 'smooth'
 		});
-  		document.body.style.zoom = "100%";
 	}
 	
 	function roomColumn() {
