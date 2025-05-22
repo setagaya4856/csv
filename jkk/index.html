@@ -3,6 +3,7 @@
 <html lang="ja">
 <head>
 	<meta charset="UTF-8" name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     	<title>空家データ入力</title>
     	<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     	<style>
@@ -127,6 +128,33 @@ footer {
 .roomword {
     background: #FFFFCC;
     border: 1px solid #333;
+}
+
+html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    font-size: 16px; /* iOSのズーム防止に必要 */
+    -webkit-text-size-adjust: 100%;
+}
+
+input, select, button, textarea {
+    font-size: 16px !important;
+}
+
+button, .pbtn, .mbtn {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: background 0.2s ease-in-out;
+}
+
+button:hover, .pbtn:hover, .mbtn:hover {
+    background-color: #ccc;
+    cursor: pointer;
+}
+
+.searchword, .roomword, .searchbtn, .changebtn, .delbtn {
+    border-radius: 6px;
+    padding: 4px;
 }
 </style>
 </head>
