@@ -21,7 +21,7 @@ header {
     top: 0;
     height: 12vh;
     width: 100vw;
-    background: #1E2A38;
+    background: #F5F5F5;
     font-size: 30px;
 }
 
@@ -76,7 +76,7 @@ th, td {
 .pbtn {
     width: 7vw;
     height: 4vh;
-    background: #3C4F5E;
+    background: #E6E6E6;
     font-size: 30px;
     padding: 2px;
     text-align: center;
@@ -88,13 +88,13 @@ footer {
     bottom: 0;
     height: 15vh;
     width: 100vw;
-    background: #2C3A4B;
+    background: #FFFFFF;
 }
 
 .mbtn {
     width: 10.5vw;
     height: 6vh;
-    background: #4E5D6C;
+    background: #DADADA;
     font-size: 40px;
     padding: 2px;
     text-align: center;
@@ -106,27 +106,27 @@ footer {
 }
 
 .searchword {
-    background: #2C3A4B;
+    background: #FFFFFF;
     border: 1px solid #333;
 }
 
 .searchbtn {
-    background: #2C3A4B;
+    background: #FFFFFF;
     border: 1px solid #333;
 }
 
 .changebtn {
-    background: #2C3A4B;
+    background: #FFFFFF;
     border: 1px solid #333;
 }
 
 .delbtn {
-    background: #586D7C;
+    background: #CCCCCC;
     border: 1px solid #333;
 }
 
 .roomword {
-    background: #2C3A4B;
+    background: #FFFFFF;
     border: 1px solid #333;
 }
 </style>
@@ -223,10 +223,10 @@ footer {
 		var rows = table.rows;
 		if(rows[0].cells[3].textContent == "絞"){
 			rows[0].cells[3].textContent = "全";
-			document.getElementById('searchbtn').style.backgroundColor = "#2C3A4B";
+			document.getElementById('searchbtn').style.backgroundColor = "#FFFFFF";
 		}else{
 			rows[0].cells[3].textContent = "絞";
-			document.getElementById('searchbtn').style.backgroundColor = "#7C8C9C";
+			document.getElementById('searchbtn').style.backgroundColor = "#BBBBBB";
 		}
 		colChange();
 	}
@@ -577,26 +577,26 @@ footer {
 			rows[i].style.backgroundColor = "#fff";
 			rows[i].cells[3].style.backgroundColor = "#fff";
 			if(Number(rows[i].cells[6].textContent) == 1){
-				rows[i].cells[2].style.backgroundColor = "#44515E";
+				rows[i].cells[2].style.backgroundColor = "#DDDDDD";
 			}else if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
-				rows[i].style.backgroundColor = "#44515E";
-				rows[i].cells[3].style.backgroundColor = "#44515E";
+				rows[i].style.backgroundColor = "#DDDDDD";
+				rows[i].cells[3].style.backgroundColor = "#DDDDDD";
 			}else if(Number(rows[i].cells[6].textContent) == 40){
-				rows[i].cells[2].style.backgroundColor = "#3E505E";
-				rows[i].cells[3].style.backgroundColor = "#44515E";
-				rows[i].cells[4].style.backgroundColor = "#44515E";
+				rows[i].cells[2].style.backgroundColor = "#EFEFEF";
+				rows[i].cells[3].style.backgroundColor = "#DDDDDD";
+				rows[i].cells[4].style.backgroundColor = "#DDDDDD";
 			}else if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
-				rows[i].cells[2].style.backgroundColor = "#3C4F5E";
+				rows[i].cells[2].style.backgroundColor = "#E6E6E6";
 			}
 			if(Number(rows[i].cells[1].textContent) == 0){
 				rows[i].style.display = "none";
 			}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
 				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
-				rows[i].style.backgroundColor = "#4E5D6C";
-				rows[i].cells[3].style.backgroundColor = "#4E5D6C";
+				rows[i].style.backgroundColor = "#DADADA";
+				rows[i].cells[3].style.backgroundColor = "#DADADA";
 			}else if(rows[i].cells[5].textContent !== ""){
 				if(rows[i].cells[5].textContent.substr(0,1) == "！"){
-					rows[i].style.backgroundColor = "#7C8C9C";
+					rows[i].style.backgroundColor = "#BBBBBB";
 				}
 			}
 		}
@@ -616,7 +616,7 @@ footer {
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
 		rows[0].cells[5].textContent = "部屋";
-		document.getElementById('changebtn').style.backgroundColor = "#7C8C9C";
+		document.getElementById('changebtn').style.backgroundColor = "#BBBBBB";
 		for (var i = 0; i < rows.length; i++) {
 			rows[i].style.backgroundColor = "#fff";
 			rows[i].cells[3].style.backgroundColor = "#fff";
@@ -673,10 +673,10 @@ footer {
 					if(row.cells[5].textContent.substr(0,1) == "！"){
 						row.cells[5].innerText = row.cells[5].textContent.substr(1);
 						row.style.backgroundColor = "#fff";
-						row.cells[3].style.backgroundColor = "#7C8C9C";
+						row.cells[3].style.backgroundColor = "#BBBBBB";
 					}else{
 						row.cells[5].innerText = "！" + row.cells[5].innerText;
-						row.style.backgroundColor = "#7C8C9C";
+						row.style.backgroundColor = "#BBBBBB";
 					}
 				}
 			}
@@ -722,33 +722,33 @@ footer {
 		var rows = table.rows;
 		if(rows[0].cells[5].textContent == "単位"){
 			rows[0].cells[5].textContent = "強調";
-			document.getElementById('changebtn').style.backgroundColor = "#7C8C9C";
+			document.getElementById('changebtn').style.backgroundColor = "#BBBBBB";
 			for (var i = 0; i < rows.length; i++) {
-				rows[i].cells[3].style.backgroundColor = "#7C8C9C";
+				rows[i].cells[3].style.backgroundColor = "#BBBBBB";
 				if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
-					rows[i].cells[3].style.backgroundColor = "#44515E";
+					rows[i].cells[3].style.backgroundColor = "#DDDDDD";
 				}else if(Number(rows[i].cells[6].textContent) == 40){
-					rows[i].cells[3].style.backgroundColor = "#44515E";
+					rows[i].cells[3].style.backgroundColor = "#DDDDDD";
 				}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
-					rows[i].cells[3].style.backgroundColor = "#4E5D6C";
+					rows[i].cells[3].style.backgroundColor = "#DADADA";
 				}
 			}
 		}else if(rows[0].cells[5].textContent == "強調"){
 			rows[0].cells[5].textContent = "単位";
-			document.getElementById('changebtn').style.backgroundColor = "#2C3A4B";
+			document.getElementById('changebtn').style.backgroundColor = "#FFFFFF";
 			for (var i = 0; i < rows.length; i++) {
 				rows[i].cells[3].style.backgroundColor = "#fff";
 				if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
-					rows[i].cells[3].style.backgroundColor = "#44515E";
+					rows[i].cells[3].style.backgroundColor = "#DDDDDD";
 				}else if(Number(rows[i].cells[6].textContent) == 40){
-					rows[i].cells[3].style.backgroundColor = "#44515E";
+					rows[i].cells[3].style.backgroundColor = "#DDDDDD";
 				}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
-					rows[i].cells[3].style.backgroundColor = "#4E5D6C";
+					rows[i].cells[3].style.backgroundColor = "#DADADA";
 				}
 			}
 		}else if(rows[0].cells[5].textContent == "部屋"){
 			rows[0].cells[5].textContent = "単位";
-			document.getElementById('changebtn').style.backgroundColor = "#2C3A4B";
+			document.getElementById('changebtn').style.backgroundColor = "#FFFFFF";
 			roomChange();
 		}
 	}
@@ -759,9 +759,9 @@ footer {
 		document.getElementById('searchInput').value = "";
 		document.getElementById('roomword').selectedIndex = 0;
 		rows[0].cells[3].textContent = "全";
-		document.getElementById('searchbtn').style.backgroundColor = "#2C3A4B";
+		document.getElementById('searchbtn').style.backgroundColor = "#FFFFFF";
 		rows[0].cells[5].textContent = "単位";
-		document.getElementById('changebtn').style.backgroundColor = "#2C3A4B";
+		document.getElementById('changebtn').style.backgroundColor = "#FFFFFF";
 		colChange();
 	}
 	
