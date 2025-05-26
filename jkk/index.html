@@ -671,7 +671,6 @@
 	let pressTimer;
 	let currentPressedBtn = null;
 	let pressStartTime = 0;
-	const PRESS_THRESHOLD = 500;
 	
 	document.body.addEventListener('touchstart', function(e) {
 		const btn = e.target.closest('.pbtn');
@@ -682,10 +681,10 @@
 		pressStartTime = Date.now();
 		
 		pressTimer = setTimeout(() => {
-			currentPressedBtn = null; // prevent short tap firing after
 			// 長押し処理
 			handleLongPress(btn);
-		}, RESS_THRESHOLD);
+			currentPressedBtn = null; // prevent short tap firing after
+		}, 400);
 	}, { passive: false });
 
 	['touchend', 'touchcancel', 'touchmove'].forEach(eventType => {
@@ -698,7 +697,7 @@
 			const duration = Date.now() - pressStartTime;
 			btn.style.backgroundColor = '#DDFFDD';
 		
-			if (duration < RESS_THRESHOLD) {
+			if (duration < 1000) {
 				// 短押し処理
 				handleTap(btn);
 			}
@@ -717,7 +716,6 @@
 		
 	// -------- 処理本体 --------
 	function handleTap(btn) {
-	console.log("[TAP] 呼び出し成功", btn.id);  // ←これ追加
 		const rowNo = btn.id.replace('pbtn_', '');
 		const table = document.getElementById('csvTable');
 		const rows = table.rows;
@@ -742,7 +740,6 @@
 	}
 
 	function handleLongPress(btn) {
-	console.log("[long] 呼び出し成功", btn.id);  // ←これ追加
 		const rowNo = btn.id.replace('pbtn_', '');
 		const table = document.getElementById('csvTable');
 		const rows = table.rows;
