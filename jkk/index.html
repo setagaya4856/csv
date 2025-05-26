@@ -724,10 +724,7 @@ function handleLongPress(btn) {
   for (let row of table.rows) {
     if (Number(row.cells[0].textContent) === Number(rowNo)) {
       if (row.cells[4].textContent !== "") {
-        const confirmed = window.confirm(row.cells[2].textContent + " を空白にしますか？");
-        if (confirmed) {
           row.cells[4].textContent = "";
-        }
       }
       break;
     }
