@@ -179,7 +179,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 24px;
+		font-size: 40px;
 		color: black;
 		transition: opacity 0.2s ease;
 	">
@@ -664,27 +664,50 @@
 		})
 		.catch(error => {
 			if (isSafari()) {
-				alert("エラーが発生しました");
+				const shouldSave = confirm("保存エラーが発生しました。\n手動で保存しますか？");	
+				if (shouldSave) {
+					// Safari のローカル保存処理
+					const blob = new Blob([csvContent], { type: 'text/csv' });
+					const a = document.createElement('a');
+					a.href = URL.createObjectURL(blob);
+					a.download = filename;
+					a.click();
+					URL.revokeObjectURL(a.href);
+				} else {
+					alert("保存されませんでした");
+				}
 				overlay.style.opacity = "0";
 				overlay.style.pointerEvents = "none";
 			} else {
-				showMessageOverlay("エラーが発生しました");
+				showMessageOverlay("エラーが発生しました", true);
 			}
 		});
 	}
 		
-	function showMessageOverlay(message) {
+	function showMessageOverlay(message, isError = false) {
 		const overlay = document.getElementById("whiteOverlay");
-		overlay.style.opacity = "1";
-		overlay.style.pointerEvents = "auto";
-		overlay.innerHTML = `
-			<div style="text-align:center;">
-				<p style="font-size:30px;">${message}</p>
-				<br>
-				<button id="overlayCloseBtn" style="font-size:30px;width:30vw;">OK</button>
-			</div>
+		
+		// 色とサイズの設定
+		const color = isError ? "red" : "black";
+		const fontSize = "40px";
+		const buttonStyle = `
+			font-size: 40px;
+			padding: 20px 40px;
+			width: 60vw;
+			border-radius: 20px;
+			background-color: #ffffff;
+			border: 2px solid #888;
 		`;
 	
+		overlay.innerHTML = `
+			<div style="text-align:center; padding: 2em;">
+				<p style="font-size:${fontSize}; color:${color}; margin-bottom: 2em;">${message}</p>
+				<button id="overlayCloseBtn" style="${buttonStyle}">OK</button>
+			</div>
+		`;
+		overlay.style.opacity = "1";
+		overlay.style.pointerEvents = "auto";
+		
 		document.getElementById("overlayCloseBtn").onclick = () => {
 			overlay.style.opacity = "0";
 			overlay.style.pointerEvents = "none";
