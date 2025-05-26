@@ -411,7 +411,7 @@ footer {
 			}
 			tr.appendChild(td);
 			const td2 = document.createElement('td');
-			if(Number(cells[5]) == 1 || (Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 40 && Number(cells[5]) < 60)){
+			if((Number(cells[5]) == 1 && Number(cells[1]) != 0) || (Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 40 && Number(cells[5]) < 60)){
 				td2.contentEditable = true;
 				td2.textContent = cells[3];
 			}else{
