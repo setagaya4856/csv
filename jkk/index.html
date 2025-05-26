@@ -717,6 +717,7 @@
 		
 	// -------- 処理本体 --------
 	function handleTap(btn) {
+	console.log("[TAP] 呼び出し成功", btn.id);  // ←これ追加
 		const rowNo = btn.id.replace('pbtn_', '');
 		const table = document.getElementById('csvTable');
 		const rows = table.rows;
@@ -741,6 +742,7 @@
 	}
 
 	function handleLongPress(btn) {
+	console.log("[long] 呼び出し成功", btn.id);  // ←これ追加
 		const rowNo = btn.id.replace('pbtn_', '');
 		const table = document.getElementById('csvTable');
 		const rows = table.rows;
