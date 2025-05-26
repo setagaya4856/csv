@@ -179,7 +179,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 40px;
+		font-size: 100px;
 		color: black;
 		transition: opacity 0.2s ease;
 	">
@@ -610,7 +610,7 @@
 	function downloadCSV() {
 		const overlay = document.getElementById("whiteOverlay");
 		// 表示する（保存開始）
-		overlay.innerHTML = `<p style="font-size:30px;">保存中...</p>`;
+		overlay.innerHTML = `<p style="font-size:100px;">保存中...</p>`;
 		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
 		const table = document.getElementById('csvTable');
@@ -689,11 +689,11 @@
 		
 		// 色とサイズの設定
 		const color = isError ? "red" : "black";
-		const fontSize = "40px";
+		const fontSize = "100px";
 		const buttonStyle = `
-			font-size: 40px;
+			font-size: 100px;
 			padding: 20px 40px;
-			width: 60vw;
+			width: 100vw;
 			border-radius: 20px;
 			background-color: #ffffff;
 			border: 2px solid #888;
