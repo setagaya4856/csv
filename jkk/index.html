@@ -709,7 +709,7 @@
 			// 長押し処理
 			handleLongPress(btn);
 			currentPressedBtn = null; // prevent short tap firing after
-		}, 500);
+		}, 1000);
 	}, { passive: false });
 
 	['touchend', 'touchcancel', 'touchmove'].forEach(eventType => {
@@ -722,7 +722,7 @@
 			const duration = Date.now() - pressStartTime;
 			btn.style.backgroundColor = '#DDFFDD';
 		
-			if (duration < 500) {
+			if (duration < 1000) {
 				// 短押し処理
 				handleTap(btn);
 			}
