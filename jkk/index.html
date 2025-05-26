@@ -653,19 +653,44 @@
 		})
 		.then(response => response.text())
 		.then(result => {
-			// 必要なら結果を表示してもOK
-			console.log("保存結果:", result);
-			alert("保存しました");
+			if (isSafari()) {
+				alert("保存しました");
+			} else {
+				showMessageOverlay("保存しました");
+			}
 		})
 		.catch(error => {
-			console.error("エラー:", error);
-			alert("エラーが発生しました");
+			if (isSafari()) {
+				alert("エラーが発生しました");
+			} else {
+				showMessageOverlay("エラーが発生しました");
+			}
 		})
 		.finally(() => {
-			// 画面復帰（白を非表示）
+			if (isSafari()) {
+				// 画面復帰（白を非表示）
+				overlay.style.opacity = "0";
+				overlay.style.pointerEvents = "none";
+			}
+		});
+	}
+		
+	function showMessageOverlay(message) {
+		const overlay = document.getElementById("whiteOverlay");
+		overlay.innerHTML = `
+			<div style="text-align:center;">
+				<p style="font-size:30px;">${message}</p>
+				<br>
+				<button id="overlayCloseBtn" style="font-size:30px;width:30vw;">OK</button>
+			</div>
+		`;
+		overlay.style.opacity = "1";
+		overlay.style.pointerEvents = "auto";
+	
+		document.getElementById("overlayCloseBtn").onclick = () => {
 			overlay.style.opacity = "0";
 			overlay.style.pointerEvents = "none";
-		});
+		};
 	}
 		
 	let pressTimer;
