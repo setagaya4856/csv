@@ -687,6 +687,16 @@ document.body.addEventListener('pointerdown', function(e) {
         }
     });
 });
+
+['pointerup', 'pointermove', 'pointercancel', 'pointerleave'].forEach(eventType => {
+    document.body.addEventListener(eventType, () => {
+        clearTimeout(pressTimer);
+        if (currentPressedBtn) {
+            currentPressedBtn.style.backgroundColor = '#DDFFDD';
+            currentPressedBtn = null;
+        }
+    });
+});
 		document.body.addEventListener('contextmenu', function(e) {
     const btn = e.target.closest('.pbtn');
     if (btn) {
