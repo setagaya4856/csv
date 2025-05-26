@@ -484,6 +484,7 @@ footer {
 	function roomColumn() {
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
+    		if (!rows[0] || rows[0].cells.length < 6) return; // ←これで安全に
 		document.getElementById('changebtn').style.backgroundColor = "#f07c78";
 		for (var i = 0; i < rows.length; i++) {
 			rows[i].style.backgroundColor = "#fff";
