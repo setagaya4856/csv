@@ -441,6 +441,8 @@ footer {
 		for (var i = 0; i < rows.length; i++) {
 			rows[i].style.backgroundColor = "#fff";
 			rows[i].cells[3].style.backgroundColor = "#fff";
+			if(Number(rows[i].cells[6].textContent) == 1 && Number(rows[i].cells[1].textContent) == 0){
+				rows[i].cells[2].style.backgroundColor = "#FFFFCC";
 			if(Number(rows[i].cells[6].textContent) == 1){
 				rows[i].cells[2].style.backgroundColor = "#CACACA";
 			}else if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
