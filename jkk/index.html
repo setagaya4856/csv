@@ -655,53 +655,84 @@ function downloadCSV() {
       alert("エラー発生: " + error);
     });
 }
-
+		
 let pressTimer;
 let currentPressedBtn = null;
+let pressStartTime = 0;
 
 document.body.addEventListener('touchstart', function(e) {
-    const btn = e.target.closest('.pbtn');
+  const btn = e.target.closest('.pbtn');
+  if (!btn) return;
+
+  currentPressedBtn = btn;
+  btn.style.backgroundColor = '#FF9999';
+  pressStartTime = Date.now();
+
+  pressTimer = setTimeout(() => {
+    // 長押し処理
+    handleLongPress(btn);
+    currentPressedBtn = null; // prevent short tap firing after
+  }, 400);
+}, { passive: false });
+
+['touchend', 'touchcancel', 'touchmove'].forEach(eventType => {
+  document.body.addEventListener(eventType, function(e) {
+    clearTimeout(pressTimer);
+
+    const btn = currentPressedBtn;
     if (!btn) return;
 
-    currentPressedBtn = btn;
-    btn.style.backgroundColor = '#FF9999';
+    const duration = Date.now() - pressStartTime;
+    btn.style.backgroundColor = '#DDFFDD';
 
-    const id = btn.getAttribute('id');
-    const rowNo = id ? id.replace('pbtn_', '') : null;
-    if (!rowNo) return;
+    if (duration < 400) {
+      // 短押し処理
+      handleTap(btn);
+    }
 
-    // 長押し判定（iOSでも安定）
-    pressTimer = setTimeout(() => {
-        const table = document.getElementById('csvTable');
-        for (let row of table.rows) {
-            if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
-                if (row.cells[4].textContent !== "") {
-                    const confirmed = window.confirm(row.cells[2].textContent + " を空白にしますか？");
-                    if (confirmed) {
-                        row.cells[4].textContent = "";
-                    }
-                }
-                break;
-            }
-        }
-        // 色戻し
-        if (currentPressedBtn) {
-            currentPressedBtn.style.backgroundColor = '#DDFFDD';
-            currentPressedBtn = null;
-        }
-    }, 400);
-}, { passive: true }); // ← これ大事：iOSのスクロール干渉を抑える
-
-// キャンセル処理
-['touchend', 'touchmove', 'touchcancel'].forEach(eventType => {
-    document.body.addEventListener(eventType, () => {
-        clearTimeout(pressTimer);
-        if (currentPressedBtn) {
-            currentPressedBtn.style.backgroundColor = '#DDFFDD';
-            currentPressedBtn = null;
-        }
-    });
+    currentPressedBtn = null;
+  });
 });
+
+// click防止（Scriptable対策）
+document.body.addEventListener('click', function(e) {
+  const btn = e.target.closest('.pbtn');
+  if (btn) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
+
+// -------- 処理本体 --------
+
+function handleTap(btn) {
+  const rowNo = btn.id.replace('pbtn_', '');
+  const table = document.getElementById('csvTable');
+
+  for (let row of table.rows) {
+    if (Number(row.cells[0].textContent) === Number(rowNo)) {
+      row.cells[4].textContent = Number(row.cells[4].textContent || 0) + 1;
+      break;
+    }
+  }
+}
+
+function handleLongPress(btn) {
+  const rowNo = btn.id.replace('pbtn_', '');
+  const table = document.getElementById('csvTable');
+
+  for (let row of table.rows) {
+    if (Number(row.cells[0].textContent) === Number(rowNo)) {
+      if (row.cells[4].textContent !== "") {
+        const confirmed = window.confirm(row.cells[2].textContent + " を空白にしますか？");
+        if (confirmed) {
+          row.cells[4].textContent = "";
+        }
+      }
+      break;
+    }
+  }
+}
 
 	document.body.addEventListener('contextmenu', function(e) {
 		const btn = e.target.closest('.pbtn');
