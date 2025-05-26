@@ -418,7 +418,7 @@
 				const input_trb = document.createElement("input");
 				input_trb.setAttribute("type", "button");
 				input_trb.setAttribute("value", cells[4]);
-				//input_trb.setAttribute("onclick", "movecell(" + cells[1].substr(1) + ")");
+				input_trb.setAttribute("onclick", "movecell(" + cells[1].substr(1) + ")");
 				input_trb.setAttribute("class", "mbtn");
 				tdb.appendChild(input_trb);
 				if(Number(cells[1].substr(1)) > 14){
@@ -436,7 +436,7 @@
 				const input_tr = document.createElement("input");
 				input_tr.setAttribute("type", "button");
 				input_tr.setAttribute("value", "＋");
-				input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
+				//input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
 				input_tr.setAttribute("class", "pbtn");
 				input_tr.setAttribute("id", "pbtn_" + String(cells[0]));
 				td.appendChild(input_tr);
