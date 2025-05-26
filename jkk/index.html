@@ -19,7 +19,7 @@ header {
     position: fixed;
     left: 0;
     top: 0;
-    height: 12vh;
+    height: 6vh;
     width: 100vw;
     background: #DDFFFF;
     font-size: 30px;
@@ -133,11 +133,9 @@ footer {
 </head>
 <body>
   	<header>
-    		<p>　<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">　
-		<input type="text" id="name" name="name"  style="width:50vw;height:2.3vh;font-size:50px;" class="filename"> 
-		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button></p>
     		<p>　<button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>　
-		<input type="text" id="searchInput" class="searchword" style="width:30vw;height:2.3vh;font-size:50px;"/> 
+		<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">
+		<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button>
 		<select id="roomword" class="roomword" style="width:21vw;height:3vh;font-size:35px;">
   			<option value=""></option>
   			<option value="玄関">玄関</option>
@@ -384,7 +382,7 @@ footer {
 			}
 			tr.appendChild(td1);
 			const td = document.createElement('td');
-			if(Number(cells[5]) == 98 || Number(cells[5]) == 99 || (Number(cells[5]) > 20 && Number(cells[5]) < 30)){
+			if(Number(cells[1]) == 0  || (Number(cells[5]) > 20 && Number(cells[5]) < 30)){
 				td.contentEditable = false;
 				td.textContent = "#";
 			}else if(Number(cells[5]) == 20){
@@ -464,7 +462,7 @@ footer {
 			}else if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
 				rows[i].cells[2].style.backgroundColor = "#DDFFDD";
 			}
-			if(Number(rows[i].cells[1].textContent) == 0 && Number(rows[i].cells[6].textContent) != 98){
+			if(Number(rows[i].cells[1].textContent) == 0 && Number(rows[i].cells[6].textContent) != 1){
 				rows[i].style.display = "none";
 			}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
 				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
