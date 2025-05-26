@@ -472,7 +472,7 @@ footer {
 	function movecell(idName) {
 		const element = document.getElementById("m" + String(idName));
 		const targetDOMRect = element.getBoundingClientRect();
-		const targetTop = targetDOMRect.top + window.pageYOffset - 90;
+		const targetTop = targetDOMRect.top + window.pageYOffset - 100;
 		window.scrollTo({
 			top: targetTop,
 			behavior: 'smooth'
@@ -574,7 +574,7 @@ footer {
 							break;
 						}
 					}
-				}, 600); // 600ms 長押しで発動
+				}, 400); // 400ms 長押しで発動
 			});
 	
 			btn.addEventListener('touchend', function(e) {
