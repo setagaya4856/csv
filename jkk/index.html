@@ -604,43 +604,59 @@ footer {
 		document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
 		colChange();
 	}
-	
+
 	function downloadCSV() {
 		const table = document.getElementById('csvTable');
 		let csvContent = '';
-		for (let row of table.rows) {
-			let rowData = [];
-			if (row.cells[0].textContent !== "Row"){
-				rowData.push(row.cells[1].textContent);
-				rowData.push(row.cells[2].textContent);
-				rowData.push(row.cells[3].textContent);
-				rowData.push(row.cells[4].textContent);
-				rowData.push(row.cells[5].textContent);
-				rowData.push(row.cells[6].textContent);
+		let filenameBase = '';
+		
+		for (let i = 0; i < table.rows.length; i++) {
+			const row = table.rows[i];
+			if (row.cells[0].textContent !== "Row") {
+				const rowData = [
+				row.cells[1].textContent,
+				row.cells[2].textContent,
+				row.cells[3].textContent,
+				row.cells[4].textContent,
+				row.cells[5].textContent,
+				row.cells[6].textContent
+				];
 				csvContent += rowData.join(',') + '\n';
+				
+				// row[1].cells[2] を使ってファイル名ベースを取得（1回目のみ）
+				if (i === 1) {
+					filenameBase = row.cells[2].textContent;
+				}
 			}
 		}
-		const encoding = 'UTF8';
-		let bom = [];
-		let encodedData;
-
-		encodedData = Encoding.convert(Encoding.stringToCode(csvContent), encoding, 'UNICODE');
-		const blob = new Blob([new Uint8Array([...bom, ...encodedData])], { type: 'text/csv;charset=' + encoding.toLowerCase() + ';' });
-
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		var dt = new Date();
-		var m = ("00" + (dt.getMonth()+1)).slice(-2);
-		var d = ("00" + (dt.getDate())).slice(-2);
-		var h = ("00" + (dt.getHours())).slice(-2);
-		var M = ("00" + (dt.getSeconds())).slice(-2);
-		var result = m + d + h + M;
-		const bname = table.rows[1].cells[2].textContent;
-		a.download = bname + '_' + result + '.csv';
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
+		
+		// GAS に送るデータを JSON に変更
+		const now = new Date();
+		const mmddhhMM =
+		("00" + (now.getMonth() + 1)).slice(-2) +
+		("00" + now.getDate()).slice(-2) +
+		("00" + now.getHours()).slice(-2) +
+		("00" + now.getMinutes()).slice(-2);
+		
+		const postData = {
+			filename: filenameBase + "_" + mmddhhMM + ".csv",
+			csv: csvContent
+		};
+	
+		fetch("https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec", {
+			method: "POST",
+			body: JSON.stringify(postData),
+			headers: {
+				"Content-Type": "application/json"
+			}
+		})
+		.then(response => response.text())
+		.then(result => {
+			alert("保存完了: " + result);
+		})
+		.catch(error => {
+			alert("エラー: " + error);
+		});
 	}
 
 let pressTimer;
