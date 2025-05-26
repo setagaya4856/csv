@@ -665,7 +665,7 @@ footer {
 		var h = ("00" + (dt.getHours())).slice(-2);
 		var M = ("00" + (dt.getSeconds())).slice(-2);
 		var result = m + d + h + M;
-		const bname = table.rows[1].cells[0].textContent;
+		const bname = table.rows[1].cells[2].textContent;
 		a.download = bname + '_' + result + '.csv';
 		document.body.appendChild(a);
 		a.click();
