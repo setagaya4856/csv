@@ -496,6 +496,7 @@ footer {
 			rows[i].cells[6].style.display = "none";
 			if( i == 1){
 				rows[i].cells[2].style.backgroundColor = "#FFFFCC";
+				rows[i].style.display = "";
 			}else if( i < 11 ){
 				rows[i].style.display = "";
 			}else{
@@ -663,8 +664,8 @@ footer {
 		var d = ("00" + (dt.getDate())).slice(-2);
 		var h = ("00" + (dt.getHours())).slice(-2);
 		var M = ("00" + (dt.getSeconds())).slice(-2);
-		var result = m +  d　+ h + M;
-		const bname = row.cells[0].textContent;
+		var result = m + d + h + M;
+		const bname = table.rows[1].cells[0].textContent;
 		a.download = bname + '_' + result + '.csv';
 		document.body.appendChild(a);
 		a.click();
