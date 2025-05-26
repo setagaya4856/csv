@@ -35,6 +35,11 @@ body {
 }
 
 table {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
+    -webkit-user-drag: none;
+    touch-action: manipulation;  /* モバイルでのタッチ操作最適化 */
     table-layout: fixed;
     width: 100vw;  /* テーブルの幅を100vwに設定 */
     overflow: hidden;  /* テーブル内のコンテンツがはみ出さないように */
@@ -60,6 +65,11 @@ th, td {
 }
 
 .btn {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
+    -webkit-user-drag: none;
+    touch-action: manipulation;  /* モバイルでのタッチ操作最適化 */
     width: 8vw;
     text-align: center;
     font-size: 45px;
@@ -78,6 +88,11 @@ th, td {
 }
 
 .pbtn {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
+    -webkit-user-drag: none;
+    touch-action: manipulation;  /* モバイルでのタッチ操作最適化 */
     width: 7vw;
     height: 4vh;
     background: #DDFFDD;
