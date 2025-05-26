@@ -192,7 +192,6 @@ footer {
 			};
 		reader.readAsText(file);
 		}
-		document.getElementById('searchInput').value = '';
 		document.getElementById('roomword').options[0].selected = true;
 		window.scrollTo({
 			top: 0,
@@ -434,7 +433,6 @@ footer {
 		tableb.appendChild(trb);
 		tableb.appendChild(trb2);
 		tableb.appendChild(trb3);
-		attachLongPressEvents();
 	}
 		
 	function hideColumn() {
