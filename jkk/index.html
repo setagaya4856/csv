@@ -605,59 +605,56 @@ footer {
 		colChange();
 	}
 
-	function downloadCSV() {
-		const table = document.getElementById('csvTable');
-		let csvContent = '';
-		let filenameBase = '';
-		
-		for (let i = 0; i < table.rows.length; i++) {
-			const row = table.rows[i];
-			if (row.cells[0].textContent !== "Row") {
-				const rowData = [
-				row.cells[1].textContent,
-				row.cells[2].textContent,
-				row.cells[3].textContent,
-				row.cells[4].textContent,
-				row.cells[5].textContent,
-				row.cells[6].textContent
-				];
-				csvContent += rowData.join(',') + '\n';
-				
-				// row[1].cells[2] を使ってファイル名ベースを取得（1回目のみ）
-				if (i === 1) {
-					filenameBase = row.cells[2].textContent;
-				}
-			}
-		}
-		
-		// GAS に送るデータを JSON に変更
-		const now = new Date();
-		const mmddhhMM =
-		("00" + (now.getMonth() + 1)).slice(-2) +
-		("00" + now.getDate()).slice(-2) +
-		("00" + now.getHours()).slice(-2) +
-		("00" + now.getMinutes()).slice(-2);
-		
-		const postData = {
-			filename: filenameBase + "_" + mmddhhMM + ".csv",
-			csv: csvContent
-		};
-	
-		fetch("https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec", {
-			method: "POST",
-			body: JSON.stringify(postData),
-			headers: {
-				"Content-Type": "application/json"
-			}
-		})
-		.then(response => response.text())
-		.then(result => {
-			alert("保存完了: " + result);
-		})
-		.catch(error => {
-			alert("エラー: " + error);
-		});
-	}
+
+function downloadCSV() {
+  const table = document.getElementById('csvTable');
+  let csvContent = '';
+  let filenameBase = '';
+
+  for (let i = 0; i < table.rows.length; i++) {
+    const row = table.rows[i];
+    if (row.cells[0].textContent !== "Row") {
+      const rowData = [
+        row.cells[1].textContent,
+        row.cells[2].textContent,
+        row.cells[3].textContent,
+        row.cells[4].textContent,
+        row.cells[5].textContent,
+        row.cells[6].textContent
+      ];
+      csvContent += rowData.join(',') + '\n';
+
+      if (i === 1) {
+        filenameBase = row.cells[2].textContent || "untitled";
+      }
+    }
+  }
+
+  const now = new Date();
+  const mmddhhMM =
+    ("00" + (now.getMonth() + 1)).slice(-2) +
+    ("00" + now.getDate()).slice(-2) +
+    ("00" + now.getHours()).slice(-2) +
+    ("00" + now.getMinutes()).slice(-2);
+  const filename = filenameBase + "_" + mmddhhMM + ".csv";
+
+  const postBody = filename + '\n' + csvContent;
+
+  fetch("https://script.google.com/macros/s/あなたのデプロイURL/exec", {
+    method: "POST",
+    body: postBody,
+    headers: {
+      "Content-Type": "text/plain"
+    }
+  })
+    .then(response => response.text())
+    .then(result => {
+      alert("保存結果: " + result);
+    })
+    .catch(error => {
+      alert("エラー発生: " + error);
+    });
+}
 
 let pressTimer;
 let currentPressedBtn = null;
