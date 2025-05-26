@@ -169,6 +169,20 @@ footer {
 	<br>
 	<br>
 	<br>
+	<div id="whiteOverlay" style="
+	  display: none;
+	  position: fixed;
+	  top: 0; left: 0; width: 100vw; height: 100vh;
+	  background: white;
+	  z-index: 9999;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  font-size: 24px;
+	  color: black;
+	">
+	  保存中...
+	</div>
 	<footer id="footer">
 		<table id="btnTable">
 		</table>
@@ -604,9 +618,10 @@ footer {
 		document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
 		colChange();
 	}
-
-
 function downloadCSV() {
+  const overlay = document.getElementById("whiteOverlay");
+  overlay.style.display = "block"; // ← 画面真っ白にする
+
   const table = document.getElementById('csvTable');
   let csvContent = '';
   let filenameBase = '';
@@ -637,7 +652,6 @@ function downloadCSV() {
     ("00" + now.getHours()).slice(-2) +
     ("00" + now.getMinutes()).slice(-2);
   const filename = filenameBase + "_" + mmddhhMM + ".csv";
-
   const postBody = filename + '\n' + csvContent;
 
   fetch("https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec", {
@@ -649,10 +663,17 @@ function downloadCSV() {
   })
     .then(response => response.text())
     .then(result => {
-      alert("保存結果: " + result);
+      // 必要なら結果を表示してもOK
+      console.log("保存結果:", result);
+      alert("保存しました");
     })
     .catch(error => {
-      alert("エラー発生: " + error);
+      console.error("エラー:", error);
+      alert("エラーが発生しました");
+    })
+    .finally(() => {
+      // 画面復帰（白を非表示）
+      overlay.style.display = "none";
     });
 }
 		
