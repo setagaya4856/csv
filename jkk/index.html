@@ -494,7 +494,9 @@ footer {
 			rows[i].cells[4].className='count';
 			rows[i].cells[5].className='unit';
 			rows[i].cells[6].style.display = "none";
-			if( i < 10 ){
+			if( i == 0){
+				rows[i].cells[2].style.backgroundColor = "#FFFFCC";
+			}else if( i < 11 ){
 				rows[i].style.display = "";
 			}else{
 				rows[i].style.display = "none";
