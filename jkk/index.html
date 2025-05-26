@@ -740,6 +740,8 @@
 	}
 
 	function handleLongPress(btn) {
+		btn.style.backgroundColor = '#DDFFDD';  // ← ここで明示的に戻す！
+		
 		const rowNo = btn.id.replace('pbtn_', '');
 		const table = document.getElementById('csvTable');
 		const rows = table.rows;
@@ -747,10 +749,20 @@
 		for (let row of rows) {
 			if (Number(row.cells[0].textContent) === Number(rowNo)) {
 				if(rows[0].cells[5].textContent == "単位"){
+					const content = row.cells[2].textContent.trim();
+					const count = row.cells[4].textContent.trim();
+					
 					if (row.cells[4].textContent !== "") {
-						row.cells[4].textContent = "";
+						if(isSafari()){
+							const confirmMessage = `"${content} ${count}" を空白にしますか？`;
+							if (confirm(confirmMessage)) {
+								row.cells[4].textContent = "";
+							}
+						}else{
+							row.cells[4].textContent = "";
+							btn.style.backgroundColor = '#FFFFCC';
+						}
 					}
-					break;
 				}else if(rows[0].cells[5].textContent == "強調"){
 					if(row.cells[5].textContent.substr(0,1) == "！"){
 						row.cells[5].innerText = row.cells[5].textContent.substr(1);
@@ -761,6 +773,7 @@
 						row.style.backgroundColor = "#f07c78";
 					}
 				}
+				break;
 			}
 		}
 	}
