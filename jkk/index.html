@@ -610,6 +610,7 @@
 	function downloadCSV() {
 		const overlay = document.getElementById("whiteOverlay");
 		// 表示する（保存開始）
+		overlay.innerHTML = `<p style="font-size:30px;">保存中...</p>`;
 		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
 		const table = document.getElementById('csvTable');
@@ -655,6 +656,8 @@
 		.then(result => {
 			if (isSafari()) {
 				alert("保存しました");
+				overlay.style.opacity = "0";
+				overlay.style.pointerEvents = "none";
 			} else {
 				showMessageOverlay("保存しました");
 			}
@@ -662,21 +665,18 @@
 		.catch(error => {
 			if (isSafari()) {
 				alert("エラーが発生しました");
-			} else {
-				showMessageOverlay("エラーが発生しました");
-			}
-		})
-		.finally(() => {
-			if (isSafari()) {
-				// 画面復帰（白を非表示）
 				overlay.style.opacity = "0";
 				overlay.style.pointerEvents = "none";
+			} else {
+				showMessageOverlay("エラーが発生しました");
 			}
 		});
 	}
 		
 	function showMessageOverlay(message) {
 		const overlay = document.getElementById("whiteOverlay");
+		overlay.style.opacity = "1";
+		overlay.style.pointerEvents = "auto";
 		overlay.innerHTML = `
 			<div style="text-align:center;">
 				<p style="font-size:30px;">${message}</p>
@@ -684,8 +684,6 @@
 				<button id="overlayCloseBtn" style="font-size:30px;width:30vw;">OK</button>
 			</div>
 		`;
-		overlay.style.opacity = "1";
-		overlay.style.pointerEvents = "auto";
 	
 		document.getElementById("overlayCloseBtn").onclick = () => {
 			overlay.style.opacity = "0";
