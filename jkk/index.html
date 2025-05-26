@@ -170,7 +170,7 @@ footer {
 	<br>
 	<br>
 	<div id="whiteOverlay" style="
-	  display: none;
+  		visibility: hidden;
 	  position: fixed;
 	  top: 0; left: 0; width: 100vw; height: 100vh;
 	  background: white;
@@ -619,7 +619,7 @@ footer {
 	}
 function downloadCSV() {
   const overlay = document.getElementById("whiteOverlay");
-  overlay.style.display = "block"; // ← 画面真っ白にする
+overlay.style.visibility = "visible";
 
   const table = document.getElementById('csvTable');
   let csvContent = '';
@@ -672,7 +672,7 @@ function downloadCSV() {
     })
     .finally(() => {
       // 画面復帰（白を非表示）
-      overlay.style.display = "none";
+overlay.style.visibility = "hidden";
     });
 }
 		
