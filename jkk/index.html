@@ -730,31 +730,53 @@ document.body.addEventListener('click', function(e) {
 
 // -------- 処理本体 --------
 
-function handleTap(btn) {
-  const rowNo = btn.id.replace('pbtn_', '');
-  const table = document.getElementById('csvTable');
+	function handleTap(btn) {
+		const rowNo = btn.id.replace('pbtn_', '');
+		const table = document.getElementById('csvTable');
+		
+		for (let row of table.rows) {
+			if (Number(row.cells[0].textContent) === Number(rowNo)) {
+				if(rows[0].cells[5].textContent == "単位"){
+					row.cells[4].textContent = Number(row.cells[4].textContent || 0) + 1;
+					break;
+				}else if(rows[0].cells[5].textContent == "強調"){
+					if(row.cells[5].textContent.substr(0,1) == "！"){
+						row.cells[5].innerText = row.cells[5].textContent.substr(1);
+						row.style.backgroundColor = "#fff";
+						row.cells[3].style.backgroundColor = "#f07c78";
+					}else{
+						row.cells[5].innerText = "！" + row.cells[5].innerText;
+						row.style.backgroundColor = "#f07c78";
+					}
+				}
+			}
+		}
+	}
 
-  for (let row of table.rows) {
-    if (Number(row.cells[0].textContent) === Number(rowNo)) {
-      row.cells[4].textContent = Number(row.cells[4].textContent || 0) + 1;
-      break;
-    }
-  }
-}
-
-function handleLongPress(btn) {
-  const rowNo = btn.id.replace('pbtn_', '');
-  const table = document.getElementById('csvTable');
-
-  for (let row of table.rows) {
-    if (Number(row.cells[0].textContent) === Number(rowNo)) {
-      if (row.cells[4].textContent !== "") {
-          row.cells[4].textContent = "";
-      }
-      break;
-    }
-  }
-}
+	function handleLongPress(btn) {
+		const rowNo = btn.id.replace('pbtn_', '');
+		const table = document.getElementById('csvTable');
+		
+		for (let row of table.rows) {
+			if (Number(row.cells[0].textContent) === Number(rowNo)) {
+				if(rows[0].cells[5].textContent == "単位"){
+					if (row.cells[4].textContent !== "") {
+						row.cells[4].textContent = "";
+					}
+					break;
+				}else if(rows[0].cells[5].textContent == "強調"){
+					if(row.cells[5].textContent.substr(0,1) == "！"){
+						row.cells[5].innerText = row.cells[5].textContent.substr(1);
+						row.style.backgroundColor = "#fff";
+						row.cells[3].style.backgroundColor = "#f07c78";
+					}else{
+						row.cells[5].innerText = "！" + row.cells[5].innerText;
+						row.style.backgroundColor = "#f07c78";
+					}
+				}
+			}
+		}
+	}
 
 	document.body.addEventListener('contextmenu', function(e) {
 		const btn = e.target.closest('.pbtn');
