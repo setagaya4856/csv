@@ -169,22 +169,22 @@ footer {
 	<br>
 	<br>
 	<br>
-<div id="whiteOverlay" style="
-  opacity: 0;
-  pointer-events: none;
-  position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
-  background: white;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  color: black;
-  transition: opacity 0.2s ease;
-">
-  保存中...
-</div>
+	<div id="whiteOverlay" style="
+		opacity: 0;
+		pointer-events: none;
+		position: fixed;
+		top: 0; left: 0; width: 100vw; height: 100vh;
+		background: white;
+		z-index: 9999;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 24px;
+		color: black;
+		transition: opacity 0.2s ease;
+	">
+	保存中...
+	</div>
 	<footer id="footer">
 		<table id="btnTable">
 		</table>
@@ -407,7 +407,7 @@ footer {
 				const input_trb = document.createElement("input");
 				input_trb.setAttribute("type", "button");
 				input_trb.setAttribute("value", cells[4]);
-				input_trb.setAttribute("onclick", "movecell(" + cells[1].substr(1) + ")");
+				//input_trb.setAttribute("onclick", "movecell(" + cells[1].substr(1) + ")");
 				input_trb.setAttribute("class", "mbtn");
 				tdb.appendChild(input_trb);
 				if(Number(cells[1].substr(1)) > 14){
@@ -549,31 +549,6 @@ footer {
 		hideColumn();
 	}
 
-	function cellplus(rowNo) {
-		const table = document.getElementById('csvTable');
-		var rows = table.rows;
-		if(rows[0].cells[5].textContent == "単位"){
-			for (let row of table.rows) {
-				if(Number(row.cells[0].textContent) == Number(rowNo)){
-					row.cells[4].innerText = Number(row.cells[4].innerText) + 1;
-				}
-			}
-		}else if(rows[0].cells[5].textContent == "強調"){
-			for (let row of table.rows) {
-				if(Number(row.cells[0].textContent) == Number(rowNo)){
-					if(row.cells[5].textContent.substr(0,1) == "！"){
-						row.cells[5].innerText = row.cells[5].textContent.substr(1);
-						row.style.backgroundColor = "#fff";
-						row.cells[3].style.backgroundColor = "#f07c78";
-					}else{
-						row.cells[5].innerText = "！" + row.cells[5].innerText;
-						row.style.backgroundColor = "#f07c78";
-					}
-				}
-			}
-		}
-	}
-
 	function changeColumn() {
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
@@ -620,116 +595,115 @@ footer {
 		document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
 		colChange();
 	}
-function downloadCSV() {
-  const overlay = document.getElementById("whiteOverlay");
-// 表示する（保存開始）
-overlay.style.opacity = "1";
-overlay.style.pointerEvents = "auto";
-  const table = document.getElementById('csvTable');
-  let csvContent = '';
-  let filenameBase = '';
-
-  for (let i = 0; i < table.rows.length; i++) {
-    const row = table.rows[i];
-    if (row.cells[0].textContent !== "Row") {
-      const rowData = [
-        row.cells[1].textContent,
-        row.cells[2].textContent,
-        row.cells[3].textContent,
-        row.cells[4].textContent,
-        row.cells[5].textContent,
-        row.cells[6].textContent
-      ];
-      csvContent += rowData.join(',') + '\n';
-
-      if (i === 1) {
-        filenameBase = row.cells[2].textContent || "untitled";
-      }
-    }
-  }
-
-  const now = new Date();
-  const mmddhhMM =
-    ("00" + (now.getMonth() + 1)).slice(-2) +
-    ("00" + now.getDate()).slice(-2) +
-    ("00" + now.getHours()).slice(-2) +
-    ("00" + now.getMinutes()).slice(-2);
-  const filename = filenameBase + "_" + mmddhhMM + ".csv";
-  const postBody = filename + '\n' + csvContent;
-
-  fetch("https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec", {
-    method: "POST",
-    body: postBody,
-    headers: {
-      "Content-Type": "text/plain"
-    }
-  })
-    .then(response => response.text())
-    .then(result => {
-      // 必要なら結果を表示してもOK
-      console.log("保存結果:", result);
-      alert("保存しました");
-    })
-    .catch(error => {
-      console.error("エラー:", error);
-      alert("エラーが発生しました");
-    })
-    .finally(() => {
-      // 画面復帰（白を非表示）
-overlay.style.opacity = "0";
-overlay.style.pointerEvents = "none";
-    });
-}
 		
-let pressTimer;
-let currentPressedBtn = null;
-let pressStartTime = 0;
+	function downloadCSV() {
+		const overlay = document.getElementById("whiteOverlay");
+		// 表示する（保存開始）
+		overlay.style.opacity = "1";
+		overlay.style.pointerEvents = "auto";
+		const table = document.getElementById('csvTable');
+		let csvContent = '';
+		let filenameBase = '';
+		
+		for (let i = 0; i < table.rows.length; i++) {
+			const row = table.rows[i];
+			if (row.cells[0].textContent !== "Row") {
+				const rowData = [
+				row.cells[1].textContent,
+				row.cells[2].textContent,
+				row.cells[3].textContent,
+				row.cells[4].textContent,
+				row.cells[5].textContent,
+				row.cells[6].textContent
+				];
+				csvContent += rowData.join(',') + '\n';
+				
+				if (i === 1) {
+					filenameBase = row.cells[2].textContent || "untitled";
+				}
+			}
+		}
+		
+		const now = new Date();
+		const mmddhhMM =
+		("00" + (now.getMonth() + 1)).slice(-2) +
+		("00" + now.getDate()).slice(-2) +
+		("00" + now.getHours()).slice(-2) +
+		("00" + now.getMinutes()).slice(-2);
+		const filename = filenameBase + "_" + mmddhhMM + ".csv";
+		const postBody = filename + '\n' + csvContent;
+		
+		fetch("https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec", {
+			method: "POST",
+			body: postBody,
+			headers: {
+				"Content-Type": "text/plain"
+			}
+		})
+		.then(response => response.text())
+		.then(result => {
+			// 必要なら結果を表示してもOK
+			console.log("保存結果:", result);
+			alert("保存しました");
+		})
+		.catch(error => {
+			console.error("エラー:", error);
+			alert("エラーが発生しました");
+		})
+		.finally(() => {
+			// 画面復帰（白を非表示）
+			overlay.style.opacity = "0";
+			overlay.style.pointerEvents = "none";
+		});
+	}
+		
+	let pressTimer;
+	let currentPressedBtn = null;
+	let pressStartTime = 0;
+	
+	document.body.addEventListener('touchstart', function(e) {
+		const btn = e.target.closest('.pbtn');
+		if (!btn) return;
+		
+		currentPressedBtn = btn;
+		btn.style.backgroundColor = '#FF9999';
+		pressStartTime = Date.now();
+		
+		pressTimer = setTimeout(() => {
+			// 長押し処理
+			handleLongPress(btn);
+			currentPressedBtn = null; // prevent short tap firing after
+		}, 400);
+	}, { passive: false });
 
-document.body.addEventListener('touchstart', function(e) {
-  const btn = e.target.closest('.pbtn');
-  if (!btn) return;
+	['touchend', 'touchcancel', 'touchmove'].forEach(eventType => {
+		document.body.addEventListener(eventType, function(e) {
+			clearTimeout(pressTimer);
+			
+			const btn = currentPressedBtn;
+			if (!btn) return;
+			
+			const duration = Date.now() - pressStartTime;
+			btn.style.backgroundColor = '#DDFFDD';
+		
+			if (duration < 1000) {
+				// 短押し処理
+				handleTap(btn);
+			}
+			currentPressedBtn = null;
+		});
+	});
 
-  currentPressedBtn = btn;
-  btn.style.backgroundColor = '#FF9999';
-  pressStartTime = Date.now();
-
-  pressTimer = setTimeout(() => {
-    // 長押し処理
-    handleLongPress(btn);
-    currentPressedBtn = null; // prevent short tap firing after
-  }, 400);
-}, { passive: false });
-
-['touchend', 'touchcancel', 'touchmove'].forEach(eventType => {
-  document.body.addEventListener(eventType, function(e) {
-    clearTimeout(pressTimer);
-
-    const btn = currentPressedBtn;
-    if (!btn) return;
-
-    const duration = Date.now() - pressStartTime;
-    btn.style.backgroundColor = '#DDFFDD';
-
-    if (duration < 1000) {
-      // 短押し処理
-      handleTap(btn);
-    }
-
-    currentPressedBtn = null;
-  });
-});
-
-// click防止（Scriptable対策）
-document.body.addEventListener('click', function(e) {
-  const btn = e.target.closest('.pbtn');
-  if (btn) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-}, true);
-
-// -------- 処理本体 --------
-
+	// click防止（Scriptable対策）
+	document.body.addEventListener('click', function(e) {
+		const btn = e.target.closest('.pbtn');
+		if (btn) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	}, true);
+		
+	// -------- 処理本体 --------
 	function handleTap(btn) {
 		const rowNo = btn.id.replace('pbtn_', '');
 		const table = document.getElementById('csvTable');
