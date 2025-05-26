@@ -690,12 +690,12 @@ document.body.addEventListener('touchstart', function(e) {
     });
 });
 
-document.body.addEventListener('contextmenu', function(e) {
-    const btn = e.target.closest('.pbtn');
-    if (btn) {
-        e.preventDefault(); // 長押し時のメニュー表示を阻止
-    }
-});
+	document.body.addEventListener('contextmenu', function(e) {
+		const btn = e.target.closest('.pbtn');
+		if (btn) {
+			e.preventDefault(); // 長押し時のメニュー表示を阻止
+		}
+	});
     </script>
 </body>
 </html>
