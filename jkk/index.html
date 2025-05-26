@@ -443,7 +443,7 @@ footer {
 			rows[i].cells[3].style.backgroundColor = "#fff";
 			if(Number(rows[i].cells[6].textContent) == 1 && Number(rows[i].cells[1].textContent) == 0){
 				rows[i].cells[2].style.backgroundColor = "#FFFFCC";
-			if(Number(rows[i].cells[6].textContent) == 1){
+			}else if(Number(rows[i].cells[6].textContent) == 1){
 				rows[i].cells[2].style.backgroundColor = "#CACACA";
 			}else if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
 				rows[i].style.backgroundColor = "#CACACA";
@@ -458,7 +458,7 @@ footer {
 			if(Number(rows[i].cells[1].textContent) == 0 && Number(rows[i].cells[6].textContent) != 1){
 				rows[i].style.display = "none";
 			}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
-				rows[i].cells[1].className　=　rows[i].cells[1].textContent;
+				rows[i].cells[1].className = rows[i].cells[1].textContent;
 				rows[i].style.backgroundColor = "#FFCC";
 				rows[i].cells[3].style.backgroundColor = "#FFCC";
 			}else if(rows[i].cells[5].textContent !== ""){
