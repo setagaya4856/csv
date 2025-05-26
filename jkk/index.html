@@ -353,6 +353,7 @@ footer {
 		table.appendChild(trM);
 
 		rows.forEach((row) => {
+    			if (!row.trim()) return; // 空行をスキップ
 			const tr = document.createElement('tr');
 			const cells = row.split(',');
 			if (cells.length < 6) return; // 不完全な行もスキップ
