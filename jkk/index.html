@@ -11,6 +11,10 @@ html, body {
     width: 100vw;  /* 横幅を画面いっぱいに設定 */
     margin: 0;
     padding: 0;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
+    -webkit-user-drag: none;
     touch-action: manipulation;  /* モバイルでのタッチ操作最適化 */
     -webkit-text-size-adjust: 100%; /* iOSの文字拡大防止 */
 }
@@ -74,10 +78,6 @@ th, td {
 }
 
 .pbtn {
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
-    -webkit-user-drag: none;
     width: 7vw;
     height: 4vh;
     background: #DDFFDD;
