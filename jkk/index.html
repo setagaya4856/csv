@@ -685,7 +685,7 @@ document.body.addEventListener('touchstart', function(e) {
     const duration = Date.now() - pressStartTime;
     btn.style.backgroundColor = '#DDFFDD';
 
-    if (duration < 400) {
+    if (duration < 1000) {
       // 短押し処理
       handleTap(btn);
     }
