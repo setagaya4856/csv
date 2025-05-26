@@ -637,36 +637,6 @@ footer {
 		a.click();
 		document.body.removeChild(a);
 	}
-		let pressTimer;
-
-	document.body.addEventListener('pointerdown', function(e) {
-	const btn = e.target.closest('.pbtn');
-	if (!btn) return;
-	
-	// idからrowNoを取得（例: id="pbtn_12" → 12）
-	const id = btn.getAttribute('id'); // "pbtn_12"
-	const rowNo = id ? id.replace('pbtn_', '') : null;
-	if (!rowNo) return;
-	
-	pressTimer = setTimeout(() => {
-	const table = document.getElementById('csvTable');
-	for (let row of table.rows) {
-	    if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
-		if (row.cells[4].textContent !== "") {
-		    const confirmed = window.confirm(row.cells[2].textContent + " を空白にしますか？");
-		    if (confirmed) {
-			row.cells[4].textContent = "";
-		    }
-		}
-		break;
-	    }
-	}
-	}, 400); // 長押し判定時間
-	});
-	
-	['pointerup', 'pointermove', 'pointercancel', 'pointerleave'].forEach(eventType => {
-	document.body.addEventListener(eventType, () => clearTimeout(pressTimer));
-	});
     </script>
 </body>
 </html>
