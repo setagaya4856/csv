@@ -355,6 +355,7 @@ footer {
 		rows.forEach((row) => {
 			const tr = document.createElement('tr');
 			const cells = row.split(',');
+			if (cells.length < 6) return; // 不完全な行もスキップ
 			const tdR = document.createElement('td');
 			tdR.contentEditable = false;
 			tdR.textContent = cells[0];
