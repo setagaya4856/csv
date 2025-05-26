@@ -719,7 +719,7 @@
 	function handleTap(btn) {
 		const rowNo = btn.id.replace('pbtn_', '');
 		const table = document.getElementById('csvTable');
-		const rows = table.rows
+		const rows = table.rows;
 		
 		for (let row of rows) {
 			if (Number(row.cells[0].textContent) === Number(rowNo)) {
@@ -743,7 +743,7 @@
 	function handleLongPress(btn) {
 		const rowNo = btn.id.replace('pbtn_', '');
 		const table = document.getElementById('csvTable');
-		const rows = table.rows
+		const rows = table.rows;
 		
 		for (let row of rows) {
 			if (Number(row.cells[0].textContent) === Number(rowNo)) {
