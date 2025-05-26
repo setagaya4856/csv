@@ -671,7 +671,6 @@
 	let pressTimer;
 	let currentPressedBtn = null;
 	let pressStartTime = 0;
-	const PRESS_THRESHOLD = 500;
 	
 	document.body.addEventListener('touchstart', function(e) {
 		const btn = e.target.closest('.pbtn');
@@ -685,7 +684,7 @@
 			currentPressedBtn = null; // prevent short tap firing after
 			// 長押し処理
 			handleLongPress(btn);
-		}, PRESS_THRESHOLD);
+		}, 500);
 	}, { passive: false });
 
 	['touchend', 'touchcancel', 'touchmove'].forEach(eventType => {
@@ -698,7 +697,7 @@
 			const duration = Date.now() - pressStartTime;
 			btn.style.backgroundColor = '#DDFFDD';
 		
-			if (duration < PRESS_THRESHOLD) {
+			if (duration < 500) {
 				// 短押し処理
 				handleTap(btn);
 			}
