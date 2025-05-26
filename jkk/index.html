@@ -482,7 +482,6 @@ footer {
 	function roomColumn() {
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
-		rows[0].cells[5].textContent = "部屋";
 		document.getElementById('changebtn').style.backgroundColor = "#f07c78";
 		for (var i = 0; i < rows.length; i++) {
 			rows[i].style.backgroundColor = "#fff";
@@ -637,6 +636,52 @@ footer {
 		a.click();
 		document.body.removeChild(a);
 	}
+
+let pressTimer;
+let currentPressedBtn = null;
+
+document.body.addEventListener('pointerdown', function(e) {
+    const btn = e.target.closest('.pbtn');
+    if (!btn) return;
+
+    currentPressedBtn = btn;
+    btn.style.backgroundColor = '#FF9999'; // 長押し中の色（赤系）
+
+    const id = btn.getAttribute('id'); // 例: "pbtn_12"
+    const rowNo = id ? id.replace('pbtn_', '') : null;
+    if (!rowNo) return;
+
+    pressTimer = setTimeout(() => {
+        const table = document.getElementById('csvTable');
+        for (let row of table.rows) {
+            if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
+                if (row.cells[4].textContent !== "") {
+                    const confirmed = window.confirm(row.cells[2].textContent + " を空白にしますか？");
+                    if (confirmed) {
+                        row.cells[4].textContent = "";
+                    }
+                }
+                break;
+            }
+        }
+        // 長押し完了後も色を戻す
+        if (currentPressedBtn) {
+            currentPressedBtn.style.backgroundColor = '#DDFFDD'; // 元の色に戻す
+            currentPressedBtn = null;
+        }
+    }, 400); // 長押し時間
+});
+
+// 長押しキャンセル時に色を戻す
+['pointerup', 'pointermove', 'pointercancel', 'pointerleave'].forEach(eventType => {
+    document.body.addEventListener(eventType, () => {
+        clearTimeout(pressTimer);
+        if (currentPressedBtn) {
+            currentPressedBtn.style.backgroundColor = '#DDFFDD'; // 元の色に戻す
+            currentPressedBtn = null;
+        }
+    });
+});
     </script>
 </body>
 </html>
