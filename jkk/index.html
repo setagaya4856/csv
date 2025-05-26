@@ -442,7 +442,7 @@ footer {
 			rows[i].style.backgroundColor = "#fff";
 			rows[i].cells[3].style.backgroundColor = "#fff";
 			if(Number(rows[i].cells[6].textContent) == 1 && Number(rows[i].cells[1].textContent) == 0){
-				rows[i].cells[2].style.backgroundColor = "#FFFFCC";
+				rows[i].cells[2].style.backgroundColor = "#FFCC99";
 			}else if(Number(rows[i].cells[6].textContent) == 1){
 				rows[i].cells[2].style.backgroundColor = "#CACACA";
 			}else if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
@@ -494,7 +494,7 @@ footer {
 			rows[i].cells[4].className='count';
 			rows[i].cells[5].className='unit';
 			rows[i].cells[6].style.display = "none";
-			if( i == 0){
+			if( i == 1){
 				rows[i].cells[2].style.backgroundColor = "#FFFFCC";
 			}else if( i < 11 ){
 				rows[i].style.display = "";
