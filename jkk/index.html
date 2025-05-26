@@ -189,7 +189,18 @@
 		<table id="btnTable">
 		</table>
 	</footer>
-    	<script>
+	<script>
+	function isSafari() {
+		const ua = navigator.userAgent;
+		const isSafari = ua.includes("Safari") &&
+			   !ua.includes("Chrome") &&
+			   !ua.includes("CriOS") &&  // iOS Chrome
+			   !ua.includes("FxiOS") &&  // iOS Firefox
+			   !ua.includes("OPiOS");    // iOS Opera
+		
+		return isSafari;
+	}
+	
 	{
 		let taptmr, tapcount = 0;
 		window.addEventListener( "touchstart", evt => {
@@ -660,6 +671,7 @@
 	let pressTimer;
 	let currentPressedBtn = null;
 	let pressStartTime = 0;
+	const PRESS_THRESHOLD = 500;
 	
 	document.body.addEventListener('touchstart', function(e) {
 		const btn = e.target.closest('.pbtn');
@@ -670,10 +682,10 @@
 		pressStartTime = Date.now();
 		
 		pressTimer = setTimeout(() => {
+			currentPressedBtn = null; // prevent short tap firing after
 			// 長押し処理
 			handleLongPress(btn);
-			currentPressedBtn = null; // prevent short tap firing after
-		}, 400);
+		}, PRESS_THRESHOLD);
 	}, { passive: false });
 
 	['touchend', 'touchcancel', 'touchmove'].forEach(eventType => {
@@ -686,7 +698,7 @@
 			const duration = Date.now() - pressStartTime;
 			btn.style.backgroundColor = '#DDFFDD';
 		
-			if (duration < 1000) {
+			if (duration < PRESS_THRESHOLD) {
 				// 短押し処理
 				handleTap(btn);
 			}
