@@ -553,39 +553,31 @@ footer {
 		}
 	}
 		
-	function attachLongPressEvents() {
-		const buttons = document.querySelectorAll('.pbtn');
-	
-		buttons.forEach(btn => {
-			let pressTimer;
-			const rowNo = btn.id.replace('pbtn_', '');
-	
-			btn.addEventListener('touchstart', function(e) {
-				pressTimer = setTimeout(() => {
-					const table = document.getElementById('csvTable');
-					for (let row of table.rows) {
-						if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
-							if(row.cells[4].textContent　!=　""){
-								const confirmed = window.confirm(row.cells[2].textContent + " を空白にしますか？");
-								if (confirmed) {
-									row.cells[4].textContent = "";
-								}
-							}
-							break;
-						}
-					}
-				}, 400); // 400ms 長押しで発動
-			});
-	
-			btn.addEventListener('touchend', function(e) {
-				clearTimeout(pressTimer);
-			});
-	
-			btn.addEventListener('touchmove', function(e) {
-				clearTimeout(pressTimer); // スワイプでキャンセル
-			});
-		});
-	}
+btn.addEventListener('pointerdown', function(e) {
+    pressTimer = setTimeout(() => {
+        const table = document.getElementById('csvTable');
+        for (let row of table.rows) {
+            if (row.cells[0] && Number(row.cells[0].textContent) === Number(rowNo)) {
+                if (row.cells[4].textContent !== "") {
+                    const confirmed = window.confirm(row.cells[2].textContent + " を空白にしますか？");
+                    if (confirmed) {
+                        row.cells[4].textContent = "";
+                    }
+                }
+                break;
+            }
+        }
+    }, 400);
+});
+
+btn.addEventListener('pointerup', function(e) {
+    clearTimeout(pressTimer);
+});
+
+btn.addEventListener('pointermove', function(e) {
+    clearTimeout(pressTimer);
+});
+
 
 	function changeColumn() {
 		var table = document.getElementsByTagName("table")[0];
