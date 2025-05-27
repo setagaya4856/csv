@@ -668,12 +668,15 @@
 		})
 		.then(response => response.text())
 		.then(result => {
+			const overlayMessage = (result.includes("overwrite"))
+				? "保存しました（上書き）"
+				: "保存しました";
 			if (isSafari()) {
-				alert("保存しました");
+				alert(overlayMessage);
 				overlay.style.opacity = "0";
 				overlay.style.pointerEvents = "none";
 			} else {
-				showMessageOverlay("保存しました");
+				showMessageOverlay(overlayMessage);
 			}
 		})
 		.catch(error => {
