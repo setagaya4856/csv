@@ -23,6 +23,19 @@
 		    width: 100vw;
 		    background: #DDFFFF;
 		    font-size: 30px;
+		
+		    display: flex;
+		    align-items: center;   /* 垂直中央揃え */
+		    justify-content: center;  /* 中央揃え（必要に応じてspace-betweenなどに） */
+		}
+		
+		.header-inner {
+		    display: flex;
+		    align-items: center;     /* 子要素を上下中央揃え */
+		    justify-content: space-evenly;  /* 子要素を均等配置 */
+		    width: 100%;
+		    padding: 0 1vw;  /* 左右に少し余白を追加 */
+		    gap: 1vw;  /* 各要素間に間隔を空ける */
 		}
 		
 		body {
@@ -133,7 +146,7 @@
 </head>
 <body>
   	<header>
-  		<div>
+  		<div class="header-inner">
 	  		 <button style="width:5vw;height:3vh;font-size:30px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>
 			<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">
 			<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button>
