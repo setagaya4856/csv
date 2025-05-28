@@ -635,7 +635,7 @@
 			const row = table.rows[i];
 			if (row.cells[0].textContent !== "Row") {
 				const rowData = [
-				i,
+				row.cells[0].textContent,
 				row.cells[1].textContent,
 				row.cells[2].textContent,
 				row.cells[3].textContent,
