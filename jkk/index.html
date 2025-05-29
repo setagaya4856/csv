@@ -869,40 +869,6 @@
 		btn.style.backgroundColor = '#DDFFDD';  // ← ここで明示的に戻す！
 		const overlay = document.getElementById("whiteOverlay");
 		const url = 'https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec';
-		if(isSafari()){
-			const confirmMessage = `原本の読み込みをしますか？`;
-			if (confirm(confirmMessage)) {
-				// 表示する
-				overlay.innerHTML = `<p style="font-size:100px;">読み込み中...</p>`;
-				overlay.style.opacity = "1";
-				overlay.style.pointerEvents = "auto";
-				
-				fetch(url)  // fetch の呼び出しが必要
-				.then(response => response.json())
-				.then(json => {   // ここは json とするのが一般的
-					const base64 = json.csvBase64;  // 変数名は json に合わせる
-					const binary = atob(base64); // base64をデコード
-					const bytes = new Uint8Array(binary.length);
-					for (let i = 0; i < binary.length; i++) {
-						bytes[i] = binary.charCodeAt(i);
-					}
-				
-					const decoder = new TextDecoder('utf-8');  // UTF-8前提
-					const text = decoder.decode(bytes);
-				
-					const cleanText = text.replace(/^\uFEFF/, ''); // BOMがあれば削除
-				
-					displayCSV(cleanText);
-					roomColumn();
-					window.scrollTo({ top: 0, behavior: 'auto' });
-					overlay.style.opacity = "0";
-					overlay.style.pointerEvents = "none";
-				})
-				.catch(error => {
-					showMessageOverlay("読み込みエラーが発生しました",null,null, true);
-				});
-			}
-		}else{
 			showMessageOverlay("原本の読み込みをしますか？", 
 				() => {
 					// 表示する
@@ -938,7 +904,6 @@
 				() => {
 				}
 			);
-		}
 	}
 
 	document.body.addEventListener('contextmenu', function(e) {
