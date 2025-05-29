@@ -129,11 +129,16 @@
 		}
 		
 		.changebtn {
-		    background: #FFFFCC;
+		    background: #DDFFDD;
 		    border: 1px solid #333;
 		}
 		
 		.delbtn {
+		    -webkit-user-select: none;
+		    user-select: none;
+		    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
+		    -webkit-user-drag: none;
+		　　touch-action: none;
 		    background: #F9F06F;
 		    border: 1px solid #333;
 		}
@@ -609,17 +614,6 @@
 			roomChange();
 		}
 	}
-
-	function delColumn() {
-		var table = document.getElementById('csvTable');
-		var rows = table.rows;
-		document.getElementById('roomword').selectedIndex = 0;
-		rows[0].cells[3].textContent = "全";
-		document.getElementById('searchbtn').style.backgroundColor = "#FFFFCC";
-		rows[0].cells[5].textContent = "単位";
-		document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
-		colChange();
-	}
 		
 	function downloadCSV() {
 		const overlay = document.getElementById("whiteOverlay");
@@ -730,47 +724,55 @@
 			overlay.style.pointerEvents = "none";
 		};
 	}
-		
 	let pressTimer;
 	let currentPressedBtn = null;
 	let pressStartTime = 0;
 	
 	document.body.addEventListener('touchstart', function(e) {
-		const btn = e.target.closest('.pbtn');
+		const btn = e.target.closest('.pbtn, .delbtn');
 		if (!btn) return;
 		
 		currentPressedBtn = btn;
-		btn.style.backgroundColor = '#FF9999';
 		pressStartTime = Date.now();
+		btn.style.backgroundColor = '#FF9999';
 		
 		pressTimer = setTimeout(() => {
-			// 長押し処理
+		// 長押し処理（ボタンの種類で分岐）
+		if (btn.classList.contains('pbtn')) {
 			handleLongPress(btn);
-			currentPressedBtn = null; // prevent short tap firing after
+		} else if (btn.classList.contains('delbtn')) {
+			handleLongPress2(btn);
+		}
+		currentPressedBtn = null; // prevent short tap firing after
 		}, 750);
 	}, { passive: false });
-
+	
 	['touchend', 'touchcancel', 'touchmove'].forEach(eventType => {
 		document.body.addEventListener(eventType, function(e) {
-			clearTimeout(pressTimer);
-			
-			const btn = currentPressedBtn;
-			if (!btn) return;
-			
-			const duration = Date.now() - pressStartTime;
-			btn.style.backgroundColor = '#DDFFDD';
+		clearTimeout(pressTimer);
 		
-			if (duration < 750) {
-				// 短押し処理
+		const btn = currentPressedBtn;
+		if (!btn) return;
+		
+		const duration = Date.now() - pressStartTime;
+		btn.style.backgroundColor = '#DDFFDD';
+		
+		if (duration < 750) {
+			// 短押し処理（ボタンの種類で分岐）
+			if (btn.classList.contains('pbtn')) {
 				handleTap(btn);
+			} else if (btn.classList.contains('delbtn')) {
+				handleTap2(btn);
 			}
-			currentPressedBtn = null;
+		}
+		
+		currentPressedBtn = null;
 		});
 	});
 
 	// click防止（Scriptable対策）
 	document.body.addEventListener('click', function(e) {
-		const btn = e.target.closest('.pbtn');
+		const btn = e.target.closest('.pbtn, .delbtn');
 		if (btn) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -841,8 +843,51 @@
 		}
 	}
 
+	
+	function handleTap2(btn) {
+		var table = document.getElementById('csvTable');
+		var rows = table.rows;
+		document.getElementById('roomword').selectedIndex = 0;
+		rows[0].cells[3].textContent = "全";
+		document.getElementById('searchbtn').style.backgroundColor = "#FFFFCC";
+		rows[0].cells[5].textContent = "単位";
+		document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+		colChange();
+	}
+
+	function handleLongPress2(btn) {
+		btn.style.backgroundColor = '#DDFFDD';  // ← ここで明示的に戻す！
+		
+		const confirmMessage = `原本の読み込みをしますか？`;
+		if (confirm(confirmMessage)) {
+			const overlay = document.getElementById("whiteOverlay");
+			// 表示する
+			overlay.innerHTML = `<p style="font-size:100px;">読み込み中...</p>`;
+			overlay.style.opacity = "1";
+			overlay.style.pointerEvents = "auto";
+
+			const url = 'https://drive.google.com/uc?export=download&id=1-kecqXiXQWaoIYKx9SABS10LX2CrX9Hs'
+			fetch(url)
+			.then(response => response.text())
+			.then(text => {
+				overlay.style.opacity = "1";
+				overlay.style.pointerEvents = "auto";
+				displayCSV(text);
+				roomColumn();
+				document.getElementById('roomword').options[0].selected = true;
+				window.scrollTo({
+					top: 0,
+					behavior: 'auto'
+				});
+			})
+			.catch(error => {
+				showMessageOverlay("エラーが発生しました", true);
+			});
+		}
+	}
+
 	document.body.addEventListener('contextmenu', function(e) {
-		const btn = e.target.closest('.pbtn');
+		const btn = e.target.closest('.pbtn, .delbtn');
 		if (btn) {
 			e.preventDefault(); // 長押し時のメニュー表示を阻止
 		}
