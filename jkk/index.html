@@ -889,6 +889,7 @@
 				window.scrollTo({ top: 0, behavior: 'auto' });
 			})
 			.catch(error => {
+    alert("エラーが発生しました: " + error.message);
 				showMessageOverlay("読み込みエラーが発生しました", true);
 				console.error(error);
 			});
