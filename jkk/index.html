@@ -651,7 +651,7 @@
 				overlay.style.opacity = "0";
 				overlay.style.pointerEvents = "none";
 			} else {
-				showMessageOverlay(overlayMessage);
+				showMessageOverlay(overlayMessage,null,null);
 			}
 		})
 		.catch(error => {
@@ -671,12 +671,12 @@
 				overlay.style.opacity = "0";
 				overlay.style.pointerEvents = "none";
 			} else {
-				showMessageOverlay("エラーが発生しました", true);
+				showMessageOverlay("エラーが発生しました",null,null, true);
 			}
 		});
 	}
-		
-	function showMessageOverlay(message, isError = false) {
+	
+	function showMessageOverlay(message, onConfirm, onCancel = null, isError = false) {
 		const overlay = document.getElementById("whiteOverlay");
 		
 		// 色とサイズの設定
@@ -689,22 +689,51 @@
 			border-radius: 20px;
 			background-color: #ffffff;
 			border: 2px solid #888;
+			margin: 0 1em;
 		`;
-	
+		
+		// OK専用モードか判定
+		const isOkOnly = !onCancel;
+		
+		let buttonHTML = "";
+		if (isOkOnly) {
+			buttonHTML = `<button id="confirmBtn" style="${buttonStyle}">OK</button>`;
+		} else {
+			buttonHTML = `
+				<button id="confirmBtn" style="${buttonStyle}">はい</button>
+				<button id="cancelBtn" style="${buttonStyle}">いいえ</button>
+			`;
+		}
+		
 		overlay.innerHTML = `
 			<div style="text-align:center; padding: 2em;">
 				<p style="font-size:${fontSize}; color:${color}; margin-bottom: 2em;">${message}</p>
-				<button id="overlayCloseBtn" style="${buttonStyle}">OK</button>
+				<div style="display: flex; justify-content: center; flex-wrap: wrap;">
+					${buttonHTML}
+				</div>
 			</div>
 		`;
+		
 		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
 		
-		document.getElementById("overlayCloseBtn").onclick = () => {
+		// イベント設定（OK または はい）
+		document.getElementById("confirmBtn").onclick = () => {
 			overlay.style.opacity = "0";
 			overlay.style.pointerEvents = "none";
+			if (onConfirm) onConfirm();
 		};
+		
+		// イベント設定（いいえ）
+		if (!isOkOnly) {
+			document.getElementById("cancelBtn").onclick = () => {
+				overlay.style.opacity = "0";
+				overlay.style.pointerEvents = "none";
+				if (onCancel) onCancel();
+			};
+		}
 	}
+		
 	let pressTimer;
 	let currentPressedBtn = null;
 	let pressStartTime = 0;
@@ -838,43 +867,81 @@
 
 	function handleLongPress2(btn) {
 		btn.style.backgroundColor = '#DDFFDD';  // ← ここで明示的に戻す！
-		
-		const confirmMessage = `原本の読み込みをしますか？`;
-		if (confirm(confirmMessage)) {
-			const overlay = document.getElementById("whiteOverlay");
-			// 表示する
-			overlay.innerHTML = `<p style="font-size:100px;">読み込み中...</p>`;
-			overlay.style.opacity = "1";
-			overlay.style.pointerEvents = "auto";
-			
-			const url = 'https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec';
-			
-			fetch(url)  // fetch の呼び出しが必要
-			.then(response => response.json())
-			.then(json => {   // ここは json とするのが一般的
-				const base64 = json.csvBase64;  // 変数名は json に合わせる
-				const binary = atob(base64); // base64をデコード
-				const bytes = new Uint8Array(binary.length);
-				for (let i = 0; i < binary.length; i++) {
-					bytes[i] = binary.charCodeAt(i);
+		const overlay = document.getElementById("whiteOverlay");
+		const url = 'https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec';
+		if(isSafari()){
+			const confirmMessage = `原本の読み込みをしますか？`;
+			if (confirm(confirmMessage)) {
+				// 表示する
+				overlay.innerHTML = `<p style="font-size:100px;">読み込み中...</p>`;
+				overlay.style.opacity = "1";
+				overlay.style.pointerEvents = "auto";
+				
+				fetch(url)  // fetch の呼び出しが必要
+				.then(response => response.json())
+				.then(json => {   // ここは json とするのが一般的
+					const base64 = json.csvBase64;  // 変数名は json に合わせる
+					const binary = atob(base64); // base64をデコード
+					const bytes = new Uint8Array(binary.length);
+					for (let i = 0; i < binary.length; i++) {
+						bytes[i] = binary.charCodeAt(i);
+					}
+				
+					const decoder = new TextDecoder('utf-8');  // UTF-8前提
+					const text = decoder.decode(bytes);
+				
+					const cleanText = text.replace(/^\uFEFF/, ''); // BOMがあれば削除
+				
+					displayCSV(cleanText);
+					roomColumn();
+					window.scrollTo({ top: 0, behavior: 'auto' });
+					overlay.style.opacity = "0";
+					overlay.style.pointerEvents = "none";
+				})
+				.catch(error => {
+					showMessageOverlay("読み込みエラーが発生しました",null,null, true);
+				});
+	
+			}
+		}else{
+			showMessageOverlay("原本の読み込みをしますか？", 
+				() => {
+					// 表示する
+					overlay.innerHTML = `<p style="font-size:100px;">読み込み中...</p>`;
+					overlay.style.opacity = "1";
+					overlay.style.pointerEvents = "auto";
+					
+					fetch(url)  // fetch の呼び出しが必要
+					.then(response => response.json())
+					.then(json => {   // ここは json とするのが一般的
+						const base64 = json.csvBase64;  // 変数名は json に合わせる
+						const binary = atob(base64); // base64をデコード
+						const bytes = new Uint8Array(binary.length);
+						for (let i = 0; i < binary.length; i++) {
+							bytes[i] = binary.charCodeAt(i);
+						}
+					
+						const decoder = new TextDecoder('utf-8');  // UTF-8前提
+						const text = decoder.decode(bytes);
+					
+						const cleanText = text.replace(/^\uFEFF/, ''); // BOMがあれば削除
+					
+						displayCSV(cleanText);
+						roomColumn();
+						window.scrollTo({ top: 0, behavior: 'auto' });
+						overlay.style.opacity = "0";
+						overlay.style.pointerEvents = "none";
+					})
+					.catch(error => {
+						showMessageOverlay("読み込みエラーが発生しました",null,null, true);
+					});
+				},
+				() => {
+					// キャンセル処理
+					showMessageOverlay("キャンセルしました", null,null);
 				}
-			
-				const decoder = new TextDecoder('utf-8');  // UTF-8前提
-				const text = decoder.decode(bytes);
-			
-				const cleanText = text.replace(/^\uFEFF/, ''); // BOMがあれば削除
-			
-				displayCSV(cleanText);
-				roomColumn();
-				window.scrollTo({ top: 0, behavior: 'auto' });
-				overlay.style.opacity = "0";
-				overlay.style.pointerEvents = "none";
-			})
-			.catch(error => {
-				showMessageOverlay("読み込みエラーが発生しました", true);
-				console.error(error);
-			});
-
+			);
+				
 		}
 	}
 
