@@ -865,22 +865,22 @@
 			overlay.innerHTML = `<p style="font-size:100px;">読み込み中...</p>`;
 			overlay.style.opacity = "1";
 			overlay.style.pointerEvents = "auto";
-			const url = 'https://drive.google.com/uc?export=download&id=1-kecqXiXQWaoIYKx9SABS10LX2CrX9Hs'
+			const url = 'https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec'
 			fetch(url)
-			.then(response => response.text())
-			.then(text => {
-				overlay.style.opacity = "1";
-				overlay.style.pointerEvents = "auto";
-				displayCSV(text);
+			.then(response => {
+				if (!response.ok) throw new Error("HTTPエラー");
+					return response.json();
+				})
+			.then(data => {
+				const csvText = atob(data.csvBase64);  // ← Base64デコード
+				displayCSV(csvText);
 				roomColumn();
 				document.getElementById('roomword').options[0].selected = true;
-				window.scrollTo({
-					top: 0,
-					behavior: 'auto'
-				});
+				window.scrollTo({ top: 0, behavior: 'auto' });
 			})
 			.catch(error => {
-				showMessageOverlay("エラーが発生しました", true);
+				showMessageOverlay("読み込みエラーが発生しました", true);
+				console.error(error);
 			});
 		}
 	}
