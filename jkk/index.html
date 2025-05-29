@@ -274,11 +274,7 @@
 		for (var i = 1; i < rows.length; i++) {
 			let rowText = rows[i].textContent.toLowerCase();
 			if (searchValueR == 0  && changef == "全"){
-				if(Number(rows[i].cells[1].textContent) == 0){
-					rows[i].style.display = "none";
-				}else{
-					rows[i].style.display = '';
-				}
+				rows[i].style.display = '';
 			}else if (searchValueR !== 0 && changef == "全"){
 				if(Number(rows[i].cells[1].textContent) == 0){
 					rows[i].style.display = "none";
