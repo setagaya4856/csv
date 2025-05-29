@@ -934,7 +934,9 @@
 					.catch(error => {
 						showMessageOverlay("読み込みエラーが発生しました",null,null, true);
 					});
-				},null,null
+				},
+				() => {
+				}
 			);
 		}
 	}
