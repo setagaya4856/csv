@@ -935,11 +935,7 @@
 					.catch(error => {
 						showMessageOverlay("読み込みエラーが発生しました",null,null, true);
 					});
-				},
-				() => {
-					// キャンセル処理
-					showMessageOverlay("キャンセルしました", null,null);
-				}
+				},null
 			);
 				
 		}
