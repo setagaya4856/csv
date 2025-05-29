@@ -886,6 +886,8 @@
 				displayCSV(cleanText);
 				roomColumn();
 				window.scrollTo({ top: 0, behavior: 'auto' });
+				overlay.style.opacity = "0";
+				overlay.style.pointerEvents = "none";
 			})
 			.catch(error => {
 				showMessageOverlay("読み込みエラーが発生しました", true);
