@@ -321,31 +321,12 @@
 				}else if (rows[i].cells[4].textContent !== "" && rows[i].cells[3].textContent !== "*" && Number(rows[i].cells[6].textContent) !== 40){
 					rows[i].style.display = "";
 				}else if (Number(rows[i].cells[6].textContent) == 40){
-					rows[i].style.display = 'none';
-					rows[i + 1].style.display = 'none';
-					rows[i + 2].style.display = 'none';
-					rows[i + 3].style.display = 'none';
-					rows[i + 4].style.display = 'none';
-					rows[i + 5].style.display = 'none';
-					rows[i + 6].style.display = 'none';
-					rows[i + 7].style.display = 'none';
-					rows[i + 8].style.display = 'none';
-					rows[i + 9].style.display = 'none';
 					if(rows[i + 1].cells[4].textContent == "" && rows[i + 2].cells[4].textContent == "" && rows[i + 3].cells[4].textContent == "" && rows[i + 4].cells[4].textContent == "" && rows[i + 5].cells[4].textContent == ""
 					&& rows[i + 6].cells[4].textContent == "" && rows[i + 7].cells[4].textContent == "" && rows[i + 8].cells[4].textContent == "" && rows[i + 9].cells[4].textContent == ""){
+						rows[i].style.display = 'none';
 					}else{
 						rows[i].style.display = '';
-						rows[i + 1].style.display = '';
-						rows[i + 2].style.display = '';
-						rows[i + 3].style.display = '';
-						rows[i + 4].style.display = '';
-						rows[i + 5].style.display = '';
-						rows[i + 6].style.display = '';
-						rows[i + 7].style.display = '';
-						rows[i + 8].style.display = '';
-						rows[i + 9].style.display = '';
 					}
-					i = i + 9;
 				}else{
 					rows[i].style.display = "none";
 				}
