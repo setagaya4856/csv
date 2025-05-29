@@ -575,6 +575,7 @@
 				rows[i].cells[2].textContent = rows[Number(rows[i].cells[6].textContent) - 40 + 1].cells[2].textContent;
 			}
 		}
+		document.getElementById('roomword').options[0].selected = true;
 		hideColumn();
 	}
 
@@ -611,7 +612,6 @@
 			rows[0].cells[5].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
 			roomChange();
-			document.getElementById('roomword').options[0].selected = true;
 		}
 	}
 		
