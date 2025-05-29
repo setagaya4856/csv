@@ -243,7 +243,6 @@
 			};
 		reader.readAsText(file);
 		}
-		document.getElementById('roomword').options[0].selected = true;
 		window.scrollTo({
 			top: 0,
 			behavior: 'auto'
@@ -612,6 +611,7 @@
 			rows[0].cells[5].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
 			roomChange();
+			document.getElementById('roomword').options[0].selected = true;
 		}
 	}
 		
@@ -885,11 +885,9 @@
 			
 				displayCSV(cleanText);
 				roomColumn();
-				document.getElementById('roomword').options[0].selected = true;
 				window.scrollTo({ top: 0, behavior: 'auto' });
 			})
 			.catch(error => {
-    alert("エラーが発生しました: " + error.message);
 				showMessageOverlay("読み込みエラーが発生しました", true);
 				console.error(error);
 			});
