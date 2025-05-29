@@ -129,7 +129,7 @@
 		}
 		
 		.changebtn {
-		    background: #DDFFDD;
+		    background: #FFFFCC;
 		    border: 1px solid #333;
 		}
 		
@@ -139,7 +139,7 @@
 		    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
 		    -webkit-user-drag: none;
 		　　touch-action: none;
-		    background: #F9F06F;
+		    background: #DDFFDD;
 		    border: 1px solid #333;
 		}
 		
@@ -865,7 +865,6 @@
 			overlay.innerHTML = `<p style="font-size:100px;">読み込み中...</p>`;
 			overlay.style.opacity = "1";
 			overlay.style.pointerEvents = "auto";
-
 			const url = 'https://drive.google.com/uc?export=download&id=1-kecqXiXQWaoIYKx9SABS10LX2CrX9Hs'
 			fetch(url)
 			.then(response => response.text())
