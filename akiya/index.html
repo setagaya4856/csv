@@ -608,7 +608,7 @@
 				rows[i].cells[0].style.backgroundColor = "#FFCC";
 				rows[i].cells[4].style.backgroundColor = "#FFCC";
 				rows[i].cells[5].style.backgroundColor = "#FFCC";
-			}else if(rows[i].cells[13].textContent !== ""){
+			}else if(rows[i].cells[13].textContent != ""){
 				if(rows[i].cells[13].textContent.substr(0,1) == "！"){
 					rows[i].style.backgroundColor = "#f07c78";
 					rows[i].cells[4].style.backgroundColor = "#f07c78";
@@ -647,27 +647,25 @@
 				}else{
 					rows[i].style.display = '';
 				}
-			}else if (searchValueR !== 0 && changef == "全"){
+			}else if (searchValueR != 0 && changef == "全"){
 				if(Number(rows[i].cells[0].textContent) == 1){
 					rows[i].style.display = "";
 				}else if(rows[i].cells[6].textContent == "@" || Number(rows[i].cells[3].textContent) == 10000){
 					rows[i].style.display = "none";
 				}else if (rows[i].cells[3].textContent > 10000){
 					rows[i].style.display = "";
-				}else if (Number(rows[i].cells[3].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0 ) {
+				}else if (Number(rows[i].cells[3].textContent) % 10 == searchValueR || Number(rows[i].cells[3].textContent) % 10 == 0 ) {
 					rows[i].style.display = '';
 				} else {
 					rows[i].style.display = 'none';
 				}
-			}else if (searchValueR !== 0 && changef == "絞"){
+			}else if (searchValueR != 0 && changef == "絞"){
 				if(Number(rows[i].cells[0].textContent) == 1){
 					rows[i].style.display = "";
 				}else if(rows[i].cells[6].textContent == "@" || Number(rows[i].cells[3].textContent) == 10000){
 					rows[i].style.display = "none";
 				}else if (rows[i].cells[3].textContent > 10000){
 					rows[i].style.display = "";
-				}else if ((Number(rows[i].cells[3].textContent) % 10 == searchValueR || Number(rows[i].cells[3].textContent) % 10 == 0)  && rows[i].cells[6].textContent !== "" && rows[i].cells[6].textContent !== "*"){
-					rows[i].style.display = '';
 				}else if (Number(rows[i].cells[3].textContent) == 60 || Number(rows[i].cells[3].textContent) == 70 || Number(rows[i].cells[3].textContent) == 80 || Number(rows[i].cells[3].textContent) == 90) {
 					rows[i].style.display = 'none';
 					rows[i + 1].style.display = 'none';
@@ -679,11 +677,13 @@
 					rows[i + 7].style.display = 'none';
 					rows[i + 8].style.display = 'none';
 					rows[i + 9].style.display = 'none';
-					if (rows[i + searchValueR].cells[6].textContent !== ""){
+					if (rows[i + searchValueR].cells[6].textContent != ""){
 						rows[i].style.display = '';
 						rows[i + searchValueR].style.display = '';
 					}
 					i = i + 9;
+				}else if ((Number(rows[i].cells[3].textContent) % 10 == searchValueR || Number(rows[i].cells[3].textContent) % 10 == 0)  && rows[i].cells[6].textContent != "" && rows[i].cells[6].textContent != "*"){
+					rows[i].style.display = '';
 				} else {
 					rows[i].style.display = 'none';
 				}
@@ -694,7 +694,7 @@
 					rows[i].style.display = "none";
 				}else if (rows[i].cells[3].textContent > 10000){
 					rows[i].style.display = "";
-				}else if (rows[i].cells[6].textContent !== "" && rows[i].cells[6].textContent !== "*" && rows[i].cells[6].textContent !== "#"){
+				}else if (rows[i].cells[6].textContent != "" && rows[i].cells[6].textContent != "*" && rows[i].cells[6].textContent != "#"){
 					rows[i].style.display = "";
 				}else if (Number(rows[i].cells[3].textContent) == 50 || Number(rows[i].cells[3].textContent) == 70 || Number(rows[i].cells[3].textContent) == 80 || Number(rows[i].cells[3].textContent) == 90){
 					if(rows[i + 1].cells[6].textContent == "" && rows[i + 2].cells[6].textContent == "" && rows[i + 3].cells[6].textContent == "" && rows[i + 4].cells[6].textContent == "" && rows[i + 5].cells[6].textContent == ""
@@ -724,9 +724,9 @@
 		let csvContent = '';
 		let filenameBase = '';
 		
-		for (let i = 0; i < table.rows.length; i++) {
+		for (let i = 1; i < table.rows.length; i++) {
 			const row = table.rows[i];
-			if (row.cells[0].textContent !== "Row") {
+			if (row.cells[0].textContent != "ID") {
 				const rowData = [
 				row.cells[0].textContent,
 				row.cells[2].textContent,
@@ -953,7 +953,7 @@
 					const content = row.cells[4].textContent.trim();
 					const count = row.cells[6].textContent.trim();
 					
-					if (row.cells[6].textContent !== "") {
+					if (row.cells[6].textContent != "") {
 						if(isSafari()){
 							const confirmMessage = `"${content} ${count}" を空白にしますか？`;
 							if (confirm(confirmMessage)) {
