@@ -570,13 +570,15 @@
 			rows[i].cells[0].style.backgroundColor = "#fff";
 			rows[i].cells[4].style.backgroundColor = "#fff";
 			rows[i].cells[5].style.backgroundColor = "#fff";
-			if(Number(rows[i].cells[3].textContent) < 10 || rows[i].cells[7].textContent == ""){
+			if(Number(rows[i].cells[3].textContent) < 10 && Number(rows[i].cells[3].textContent) != 0){
 				rows[i].cells[4].style.backgroundColor = "#e2e2e2";
 			}else if((Number(rows[i].cells[3].textContent) > 60 && Number(rows[i].cells[3].textContent) < 70) 
 			   || (Number(rows[i].cells[3].textContent) > 70 && Number(rows[i].cells[3].textContent) < 80)
 			   || (Number(rows[i].cells[3].textContent) > 80 && Number(rows[i].cells[3].textContent) < 90)
 			   || (Number(rows[i].cells[3].textContent) > 90 && Number(rows[i].cells[3].textContent) < 100)){
 				rows[i].cells[4].style.backgroundColor = "#FEFDBD";
+			}else if(rows[i].cells[7].textContent == ""){
+				rows[i].cells[4].style.backgroundColor = "#e2e2e2";
 			}
 			
 			if(rows[i].cells[11].textContent == ""){
@@ -586,7 +588,7 @@
 			if(rows[i].cells[6].textContent == "@"){
 				rows[i].style.display = "none";
 			}else if(Number(rows[i].cells[3].textContent) > 10000){
-				rows[i].cells[1].className = rows[i].cells[1].textContent;
+				rows[i].cells[0].className = rows[i].cells[0].textContent;
 				rows[i].style.backgroundColor = "#FFCC";
 				rows[i].cells[0].style.backgroundColor = "#FFCC";
 				rows[i].cells[4].style.backgroundColor = "#FFCC";
