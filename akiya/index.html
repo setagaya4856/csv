@@ -1089,16 +1089,18 @@
 		const overlay = document.getElementById('whiteOverlay');
 	
 		let editorHTML = `<div style="background:white; padding:2em; max-height:90vh; overflow:auto;">`;
-		editorHTML += `<p style="font-size:40px;">詳細編集 (Row ${rowId})</p>`;
+		editorHTML += `<p style="font-size:40px;">詳細編集 (Row ${targetRow.cells[4].textContent})</p>`;
 		editorHTML += `<table style="width:90vw; border-collapse: collapse; font-size: 30px;">`;
 	
 		for (let i = 0; i <= 14; i++) {
 			if (i >= targetRow.cells.length) break;
+			const value = targetRow.cells[i].textContent;
+			const isEditable = (i !== 1 && i !== 2 && i !== 5);  // Col 1とCol 2は編集不可
 			editorHTML += `
 				<tr>
-					<td style="border:1px solid #888; padding:5px; background:#eee;">Col ${i}</td>
+					<td style="border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
 					<td style="border:1px solid #888; padding:5px;">
-						<input type="text" style="width:70vw; font-size: 30px;" id="edit_col_${i}" value="${targetRow.cells[i].textContent}">
+					<input type="text" style="width:70vw; font-size: 30px;" id="edit_col_${i}" value="${value}" ${isEditable ? '' : 'readonly'}>
 					</td>
 				</tr>`;
 		}
@@ -1106,16 +1108,15 @@
 		editorHTML += `</table><br><div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">`;
 	
 		editorHTML += `
-			<button style="font-size:40px; padding:10px 20px;" onclick="saveDetail(${rowId})">保存</button>
+			<button style="font-size:40px; padding:10px 20px;" onclick="clearCols(${rowId})">一部クリア</button>
 			<button style="font-size:40px; padding:10px 20px;" onclick="cancelDetail()">キャンセル</button>
-			<button style="font-size:40px; padding:10px 20px;" onclick="clearCols(${rowId})">7〜14クリア</button>
+			<button style="font-size:40px; padding:10px 20px;" onclick="saveDetail(${rowId})">保存</button>
 		</div></div>`;
 	
 		overlay.innerHTML = editorHTML;
 		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
 	}
-
 	function saveDetail(rowId) {
 		const table = document.getElementById('csvTable');
 		for (let i = 0; i < table.rows.length; i++) {
@@ -1131,13 +1132,11 @@
 		}
 		cancelDetail();
 	}
-	
 	function cancelDetail() {
 		const overlay = document.getElementById("whiteOverlay");
 		overlay.style.opacity = "0";
 		overlay.style.pointerEvents = "none";
 	}
-	
 	function clearCols(rowId) {
 		for (let i = 7; i <= 14; i++) {
 			const input = document.getElementById(`edit_col_${i}`);
