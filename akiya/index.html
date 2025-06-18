@@ -1152,8 +1152,8 @@
 		const targets = [];
 		for (let i = 0; i < table.rows.length; i++) {
 			const row = table.rows[i];
-			if (Number(row.cells[2].textContent) === Number(no)) {
-				const gyosha = Number(row.cells[7].textContent);
+			if (Number(row.cells[2].textContent) === Number(no) && row.cells[6].textContent == "@") {
+				const inp = Number(row.cells[7].textContent);
 				const content = row.cells[4].textContent;
 				const rowIdx = Number(row.cells[10].textContent); // 行番号（1始まり）
 				const colIdx = Number(row.cells[11].textContent); // 列番号（1始まり）
@@ -1161,7 +1161,7 @@
 				const optionCount = Number(row.cells[9].textContent);
 				const options = optionsRaw.split("#").slice(0, optionCount);
 	
-				targets.push({ i, rowIdx, colIdx, content, gyosha, options });
+				targets.push({ i, rowIdx, colIdx, content, inp, options });
 			}
 		}
 	
@@ -1171,23 +1171,16 @@
 	
 		// テーブル構築
 		let html = `<div style="background:white; padding:1em; max-height:90vh; overflow:auto;">`;
-		html += `<p style="font-size:40px;">No: ${no} の内容マトリックス編集</p>`;
+		html += `<p style="font-size:40px;">No: ${no} の編集</p>`;
 		html += `<table style="border-collapse: collapse; font-size: 24px; width:100%;">`;
 	
-		// ヘッダー行
-		html += '<tr><th></th>';
-		for (let c = 1; c <= maxCol; c++) {
-			html += '<th style="border:1px solid #888;">列' + c + '</th>';
-		}
-		html += '</tr>';
-	
 		for (let r = 1; r <= maxRow; r++) {
-			html += `<tr><th style="border:1px solid #888;">行${r}</th>`;
+			html += '<tr>';
 			for (let c = 1; c <= maxCol; c++) {
 				const match = targets.find(t => t.rowIdx === r && t.colIdx === c);
 				if (!match) {
 					html += `<td style="border:1px solid #888; background:#eee;">-</td>`;
-				} else if (match.gyosha === 0) {
+				} else if (match.inp === 0) {
 					html += `<td style="border:1px solid #888; background:#ccc;">${match.content}</td>`;
 				} else {
 					const id = `edit_${match.i}`;
@@ -1221,8 +1214,8 @@
 			const row = table.rows[i];
 			if (Number(row.cells[2].textContent) !== Number(no)) continue;
 	
-			const gyosha = Number(row.cells[7].textContent);
-			if (gyosha === 0) continue;
+			const inp = Number(row.cells[7].textContent);
+			if (inp === 0) continue;
 	
 			const id = `edit_${i}`;
 			const sel = document.getElementById(`sel_${id}`);
