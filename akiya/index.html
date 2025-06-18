@@ -254,6 +254,10 @@
 			behavior: 'auto'
 		  });
 	});
+	
+	document.getElementById('roomword').addEventListener('change', function() {
+		colChange();
+	});
 
 	function displayCSV(text) {
 		const rows = text.split('\n');
@@ -551,16 +555,50 @@
 			   || (Number(rows[i].cells[3].textContent) > 80 && Number(rows[i].cells[3].textContent) < 90)
 			   || (Number(rows[i].cells[3].textContent) > 90 && Number(rows[i].cells[3].textContent) < 100)
 			   || (Number(rows[i].cells[3].textContent) > 100 && Number(rows[i].cells[3].textContent) < 110)){
-				rows[i].cells[4].textContent = rows[(Number(rows[i].cells[6].textContent) % 10) + 1].cells[4].textContent;
+				rows[i].cells[4].textContent = rows[(Number(rows[i].cells[3].textContent) % 10) + 1].cells[4].textContent;
 			}
 		}
 		document.getElementById('roomword').options[0].selected = true;
 		hideColumn();
 	}
-	
-	document.getElementById('roomword').addEventListener('change', function() {
-		colChange();
-	});	
+
+	function hideColumn() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].style.backgroundColor = "#fff";
+			rows[i].cells[0].style.backgroundColor = "#fff";
+			rows[i].cells[4].style.backgroundColor = "#fff";
+			rows[i].cells[5].style.backgroundColor = "#fff";
+			if(Number(rows[i].cells[3].textContent) < 10 || rows[i].cells[7].textContent == ""){
+				rows[i].cells[4].style.backgroundColor = "#e2e2e2";
+			}else if((Number(rows[i].cells[3].textContent) > 60 && Number(rows[i].cells[3].textContent) < 70) 
+			   || (Number(rows[i].cells[3].textContent) > 70 && Number(rows[i].cells[3].textContent) < 80)
+			   || (Number(rows[i].cells[3].textContent) > 80 && Number(rows[i].cells[3].textContent) < 90)
+			   || (Number(rows[i].cells[3].textContent) > 90 && Number(rows[i].cells[3].textContent) < 100)){
+				rows[i].cells[4].style.backgroundColor = "#FEFDBD";
+			}
+			
+			if(rows[i].cells[11].textContent == ""){
+				rows[i].cells[0].style.backgroundColor = "#DDFFDD";
+			}
+			
+			if(rows[i].cells[6].textContent == "@"){
+				rows[i].style.display = "none";
+			}else if(Number(rows[i].cells[3].textContent) > 10000){
+				rows[i].cells[1].className = rows[i].cells[1].textContent;
+				rows[i].style.backgroundColor = "#FFCC";
+				rows[i].cells[0].style.backgroundColor = "#FFCC";
+				rows[i].cells[4].style.backgroundColor = "#FFCC";
+				rows[i].cells[5].style.backgroundColor = "#FFCC";
+			}else if(rows[i].cells[13].textContent !== ""){
+				if(rows[i].cells[13].textContent.substr(0,1) == "！"){
+					rows[i].style.backgroundColor = "#f07c78";
+					rows[i].cells[4].style.backgroundColor = "#f07c78";
+				}
+			}
+		}
+	}
 
 	function searchOnly() {
 		var table = document.getElementById('csvTable');
@@ -645,40 +683,6 @@
 			top: 0,
 			behavior: 'auto'
 		  });
-	}
-		
-	function hideColumn() {
-		var table = document.getElementsByTagName("table")[0];
-		var rows = table.rows;
-		for (var i = 0; i < rows.length; i++) {
-			rows[i].style.backgroundColor = "#fff";
-			rows[i].cells[3].style.backgroundColor = "#fff";
-			if(Number(rows[i].cells[6].textContent) == 1 && Number(rows[i].cells[1].textContent) == 0){
-				rows[i].cells[2].style.backgroundColor = "#FFCC99";
-			}else if(Number(rows[i].cells[6].textContent) == 1){
-				rows[i].cells[2].style.backgroundColor = "#CACACA";
-			}else if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
-				rows[i].style.backgroundColor = "#CACACA";
-				rows[i].cells[3].style.backgroundColor = "#CACACA";
-			}else if(Number(rows[i].cells[6].textContent) == 40){
-				rows[i].cells[2].style.backgroundColor = "#c8e6c8";
-				rows[i].cells[3].style.backgroundColor = "#CACACA";
-				rows[i].cells[4].style.backgroundColor = "#CACACA";
-			}else if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
-				rows[i].cells[2].style.backgroundColor = "#DDFFDD";
-			}
-			if(Number(rows[i].cells[1].textContent) == 0 && Number(rows[i].cells[6].textContent) != 1){
-				rows[i].style.display = "none";
-			}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
-				rows[i].cells[1].className = rows[i].cells[1].textContent;
-				rows[i].style.backgroundColor = "#FFCC";
-				rows[i].cells[3].style.backgroundColor = "#FFCC";
-			}else if(rows[i].cells[5].textContent !== ""){
-				if(rows[i].cells[5].textContent.substr(0,1) == "！"){
-					rows[i].style.backgroundColor = "#f07c78";
-				}
-			}
-		}
 	}
 		
 	function downloadCSV() {
