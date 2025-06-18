@@ -366,7 +366,7 @@
 				const form_tr = document.createElement("input");
 				form_tr.setAttribute("type", "button");
 				form_tr.setAttribute("value", "!");
-				form_tr.setAttribute("onclick", "formcell(" + cells[2].textContent + "," + cells[0].textContent + ")");
+				form_tr.setAttribute("onclick", "formcell(" + cells[2] + ")");
 				form_tr.setAttribute("class", "fbtn");
 				form_tr.setAttribute("id", "fbtn_" + String(cells[2]));
 				tdRX.appendChild(form_tr);
@@ -1145,7 +1145,7 @@
 		}
 	}
 	
-	function formcell(no, rowN) {
+	function formcell(no) {
 		const table = document.getElementById('csvTable');
 		const overlay = document.getElementById('whiteOverlay');
 	
