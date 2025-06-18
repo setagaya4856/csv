@@ -1175,11 +1175,11 @@
 		html += `<table style="border-collapse: collapse; font-size: 24px; width:100%;">`;
 	
 		// ヘッダー行
-		html += `<tr><th></th>`;
+		html += '<tr><th></th>';
 		for (let c = 1; c <= maxCol; c++) {
-			html += `<th style="border:1px solid #888;">列${c}</th>`;
+			html += '<th style="border:1px solid #888;">列' + c + '</th>';
 		}
-		html += `</tr>`;
+		html += '</tr>';
 	
 		for (let r = 1; r <= maxRow; r++) {
 			html += `<tr><th style="border:1px solid #888;">行${r}</th>`;
