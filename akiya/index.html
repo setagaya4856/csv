@@ -314,6 +314,8 @@
 		const tdX7 = document.createElement('td');
 		tdX7.textContent = "単価";
 		trM.appendChild(tdX7);
+		
+		table.appendChild(trM);
 		rows.forEach((row) => {
     			if (!row.trim()) return; // 空行をスキップ
 			const tr = document.createElement('tr');
@@ -459,8 +461,11 @@
 			rows[i].cells[9].style.display = "none";
 			rows[i].cells[8].style.display = "none";
 			rows[i].cells[7].style.display = "none";
-			rows[i].style.backgroundColor = "#fff";
 			rows[i].cells[5].style.backgroundColor = "#fff";
+			rows[i].cells[3].style.display = "none";
+			rows[i].cells[2].style.display = "none";
+			rows[i].cells[1].style.display = "none";
+			rows[i].style.backgroundColor = "#fff";
 			if( i == 1){
 				rows[i].cells[4].style.backgroundColor = "#FFFFCC";
 				rows[i].style.display = "";
