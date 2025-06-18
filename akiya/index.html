@@ -324,7 +324,7 @@
 				detail_tr.setAttribute("onclick", "detailcell(" + (cells[0]) + ")");
 				detail_tr.setAttribute("class", "dbtn");
 				detail_tr.setAttribute("id", "dbtn_" + String(cells[0]));
-				td.appendChild(detail_tr);
+				tdRX.appendChild(detail_tr);
 			}else if(Number(cells[2]) > 99 && Number(cells[2]) < 10000){
 				const form_tr = document.createElement("input");
 				form_tr.setAttribute("type", "button");
@@ -332,7 +332,7 @@
 				form_tr.setAttribute("onclick", "formcell(" + (cells[0]) + ")");
 				form_tr.setAttribute("class", "fbtn");
 				form_tr.setAttribute("id", "fbtn_" + String(cells[0]));
-				td.appendChild(form_tr);
+				tdRX.appendChild(form_tr);
 			}
 			tr.appendChild(tdRX);
 			const tdR = document.createElement('td');
