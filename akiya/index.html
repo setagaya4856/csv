@@ -386,7 +386,7 @@
 			const td2 = document.createElement('td');
 			td2.contentEditable = false;
 			const tdX = document.createElement('td');
-			if(Number(cells[2]) < 100){
+			if(Number(cells[2]) < 100 || Number(cells[2]) == 10000){
 				tdX.contentEditable = true;
 			}else{
 				tdX.contentEditable = false;
