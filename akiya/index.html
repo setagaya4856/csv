@@ -581,8 +581,8 @@
 				rows[i].cells[4].style.backgroundColor = "#e2e2e2";
 			}
 			
-			if(rows[i].cells[11].textContent == ""){
-				rows[i].cells[0].style.backgroundColor = "#DDFFDD";
+			if(rows[i].cells[11].textContent == "" && Number(rows[i].cells[3].textContent) == 10000 && Number(rows[i].cells[0].textContent) != 1){
+				rows[i].cells[1].style.backgroundColor = "#DDFFDD";
 			}
 			
 			if(rows[i].cells[6].textContent == "@"){
