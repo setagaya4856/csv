@@ -1,1 +1,952 @@
 
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8" name="apple-mobile-web-app-capable" content="yes">
+    	<title>空家データ入力</title>
+    	<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
+	<style>
+		html, body {
+		    overflow-x: hidden;  /* 横スクロールを無効にする */
+		    width: 100vw;  /* 横幅を画面いっぱいに設定 */
+		    margin: 0;
+		    padding: 0;
+		    touch-action: manipulation;  /* モバイルでのタッチ操作最適化 */
+		    -webkit-text-size-adjust: 100%; /* iOSの文字拡大防止 */
+		}
+		
+		header {
+		    position: fixed;
+		    left: 0;
+		    top: 0;
+		    height: 6vh;
+		    width: 100vw;
+		    background: #DDFFFF;
+		    font-size: 30px;
+		
+		    display: flex;
+		    align-items: center;   /* 垂直中央揃え */
+		    justify-content: center;  /* 中央揃え（必要に応じてspace-betweenなどに） */
+		}
+		
+		.header-inner {
+		    display: flex;
+		    align-items: center;     /* 子要素を上下中央揃え */
+		    justify-content: space-evenly;  /* 子要素を均等配置 */
+		    width: 100%;
+		    padding: 0 8vw;  /* 左右に少し余白を追加 */
+		    gap: 1vw;  /* 各要素間に間隔を空ける */
+		}
+		
+		body {
+		    width: 100vw;
+		    overflow-x: hidden;  /* bodyにも横スクロール無効 */
+		}
+		
+		table {
+		    table-layout: fixed;
+		    width: 100vw;  /* テーブルの幅を100vwに設定 */
+		    overflow: hidden;  /* テーブル内のコンテンツがはみ出さないように */
+		    margin: auto;
+		}
+		
+		table, th, td {
+		    border: 1px solid black;
+		    border-collapse: collapse;
+		    overflow: hidden;
+		}
+		
+		th, td {
+		    padding: 8px;
+		    word-break: break-word;  /* 長い文字列が折り返しされるようにする */
+		    white-space: normal;  /* テーブル内で長いテキストが折り返されるように */
+		}
+		
+		/* セルの幅設定 */
+		.naiyo {
+		    width: 66vw;
+		    font-size: 45px;
+		}
+		
+		.btn {
+		    width: 8vw;
+		    text-align: center;
+		    font-size: 45px;
+		}
+		
+		.count {
+		    width: 10vw;
+		    text-align: center;
+		    font-size: 45px;
+		}
+		
+		.unit {
+		    width: 7vw;
+		    text-align: left;
+		    font-size: 25px;
+		}
+		
+		.pbtn {
+		    -webkit-user-select: none;
+		    user-select: none;
+		    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
+		    -webkit-user-drag: none;
+		　　touch-action: none;
+		    width: 7vw;
+		    height: 4vh;
+		    background: #DDFFDD;
+		    font-size: 30px;
+		    padding: 2px;
+		    text-align: center;
+		}
+		
+		footer {
+		    position: fixed;
+		    left: 0;
+		    bottom: 0;
+		    height: 15vh;
+		    width: 100vw;
+		    background: #FFFFCC;
+		}
+		
+		.mbtn {
+		    width: 10.5vw;
+		    height: 6vh;
+		    background: #FFCC99;
+		    font-size: 40px;
+		    padding: 2px;
+		    text-align: center;
+		}
+		
+		.mb {
+		    padding: 10px;
+		    text-align: center;
+		}
+				
+		.searchbtn {
+		    background: #FFFFCC;
+		    border: 1px solid #333;
+		}
+		
+		.changebtn {
+		    background: #FFFFCC;
+		    border: 1px solid #333;
+		}
+		
+		.delbtn {
+		    -webkit-user-select: none;
+		    user-select: none;
+		    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
+		    -webkit-user-drag: none;
+		　　touch-action: none;
+		    background: #DDFFDD;
+		    border: 1px solid #333;
+		}
+		
+		.roomword {
+		    background: #FFFFCC;
+		    border: 1px solid #333;
+		}
+	</style>
+</head>
+<body>
+  	<header>
+  		<div class="header-inner">
+	  		　<button style="width:15vw;height:4vh;font-size:30px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>
+			<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">
+			<button style="width:15vw;height:3vh;font-size:30px;" onclick="downloadCSV()" class="csvbtn">保存</button>
+			<select id="roomword" class="roomword" style="width:21vw;height:3vh;font-size:35px;">
+  			<option value=""></option>
+  			<option value="玄関">玄関</option>
+  			<option value="DK">DK</option>
+  			<option value="洗面">洗面</option>
+  			<option value="便所">便所</option>
+  			<option value="浴室">浴室</option>
+  			<option value="居室1">居室1</option>
+  			<option value="居室2">居室2</option>
+  			<option value="居室3">居室3</option>
+  			<option value="バルコニー">バルコニー</option>
+			</select> 
+			<button style="width:18vw;height:3vh;font-size:30px;" onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
+	    		<button style="width:15vw;height:4vh;font-size:30px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button>　
+		</div>
+  	</header>
+	<br>
+	<br>
+	<br>
+	<br>
+	<table id="csvTable">
+	</table>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<div id="whiteOverlay" style="
+		opacity: 0;
+		pointer-events: none;
+		position: fixed;
+		top: 0; left: 0; width: 100vw; height: 100vh;
+		background: white;
+		z-index: 9999;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 50px;
+		color: black;
+		transition: opacity 0.2s ease;
+	">
+	保存中...
+	</div>
+	<footer id="footer">
+		<table id="btnTable">
+		</table>
+	</footer>
+	<script>
+	function isSafari() {
+		const ua = navigator.userAgent;
+		const isSafari = ua.includes("Safari") &&
+			   !ua.includes("Chrome") &&
+			   !ua.includes("CriOS") &&  // iOS Chrome
+			   !ua.includes("FxiOS") &&  // iOS Firefox
+			   !ua.includes("OPiOS");    // iOS Opera
+		
+		return isSafari;
+	}
+	
+	{
+		let taptmr, tapcount = 0;
+		window.addEventListener( "touchstart", evt => {
+			if( tapcount ){ evt.preventDefault(); tapcount=0; console.log( "ダブルタップ" ) }
+			else{
+				tapcount++;
+				clearTimeout( taptmr );
+				taptmr = setTimeout( () => { tapcount = 0 }, 350 );
+			}
+		}, { passive: false } );
+	}
+		
+	document.getElementById('csvFileInput').addEventListener('change', function(event) {  
+		const file = event.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = function(e) {
+				const text = e.target.result;
+				displayCSV(text);
+				roomColumn();
+			};
+		reader.readAsText(file);
+		}
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
+	});
+
+	document.getElementById('roomword').addEventListener('change', function() {
+		colChange();
+	});	
+
+	function searchOnly() {
+		var table = document.getElementById('csvTable');
+		var rows = table.rows;
+		if(rows[0].cells[3].textContent == "絞"){
+			rows[0].cells[3].textContent = "全";
+			document.getElementById('searchbtn').style.backgroundColor = "#FFFFCC";
+		}else{
+			rows[0].cells[3].textContent = "絞";
+			document.getElementById('searchbtn').style.backgroundColor = "#f07c78";
+		}
+		colChange();
+	}
+	
+	function colChange() {
+		var searchValueR = document.getElementById('roomword').selectedIndex;
+		var table = document.getElementById('csvTable');
+		var rows = table.rows;
+		var changef = rows[0].cells[3].textContent;
+		for (var i = 1; i < rows.length; i++) {
+			let rowText = rows[i].textContent.toLowerCase();
+			if (searchValueR == 0  && changef == "全"){
+				if(Number(rows[i].cells[1].textContent) == 0 && Number(rows[i].cells[0].textContent) !== 1){
+					rows[i].style.display = 'none';
+				}else{
+					rows[i].style.display = '';
+				}
+			}else if (searchValueR !== 0 && changef == "全"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) == 1) {
+					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0 ) {
+					rows[i].style.display = '';
+				} else {
+					rows[i].style.display = 'none';
+				}
+			}else if (searchValueR !== 0 && changef == "絞"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (Number(rows[i].cells[6].textContent) == 1) {
+					rows[i].style.display = "none";
+				}else if ((Number(rows[i].cells[6].textContent) % 10 == searchValueR || Number(rows[i].cells[6].textContent) % 10 == 0)  && rows[i].cells[4].textContent !== "" && Number(rows[i].cells[6].textContent) !== 40){
+					rows[i].style.display = '';
+				}else if (Number(rows[i].cells[6].textContent) == 40) {
+					rows[i].style.display = 'none';
+					rows[i + 1].style.display = 'none';
+					rows[i + 2].style.display = 'none';
+					rows[i + 3].style.display = 'none';
+					rows[i + 4].style.display = 'none';
+					rows[i + 5].style.display = 'none';
+					rows[i + 6].style.display = 'none';
+					rows[i + 7].style.display = 'none';
+					rows[i + 8].style.display = 'none';
+					rows[i + 9].style.display = 'none';
+					if (rows[i + searchValueR].cells[4].textContent !== ""){
+						rows[i].style.display = '';
+						rows[i + searchValueR].style.display = '';
+					}
+					i = i + 9;
+				} else {
+					rows[i].style.display = 'none';
+				}
+			}else if (searchValueR == 0  && changef == "絞"){
+				if(Number(rows[i].cells[1].textContent) == 0){
+					rows[i].style.display = "none";
+				}else if (rows[i].cells[4].textContent !== "" && rows[i].cells[3].textContent !== "*" && Number(rows[i].cells[6].textContent) !== 40){
+					rows[i].style.display = "";
+				}else if (Number(rows[i].cells[6].textContent) == 40){
+					if(rows[i + 1].cells[4].textContent == "" && rows[i + 2].cells[4].textContent == "" && rows[i + 3].cells[4].textContent == "" && rows[i + 4].cells[4].textContent == "" && rows[i + 5].cells[4].textContent == ""
+					&& rows[i + 6].cells[4].textContent == "" && rows[i + 7].cells[4].textContent == "" && rows[i + 8].cells[4].textContent == "" && rows[i + 9].cells[4].textContent == ""){
+						rows[i].style.display = 'none';
+					}else{
+						rows[i].style.display = '';
+					}
+				}else{
+					rows[i].style.display = "none";
+				}
+			}
+		}
+		window.scrollTo({
+			top: 0,
+			behavior: 'auto'
+		  });
+	}
+	
+	function displayCSV(text) {
+		const rows = text.split('\n');
+		const table = document.getElementById('csvTable');
+		const foot = document.getElementById('footer');
+		table.innerHTML = '';
+
+		const tableb = document.getElementById('btnTable');
+		tableb.innerHTML = '';
+		const trb = document.createElement('tr');
+		const trb2 = document.createElement('tr');
+		const trb3 = document.createElement('tr');
+
+		const selectRoomWord = document.getElementById('roomword');
+		for(var i=0 ; i < selectRoomWord.length ; i++){
+			selectRoomWord.remove(i--);
+		}
+		const trM = document.createElement('tr');
+		const tdMR = document.createElement('td');
+		tdMR.textContent = "Row";
+		trM.appendChild(tdMR);
+		const tdM0 = document.createElement('td');
+		tdM0.textContent = "No";
+		trM.appendChild(tdM0);
+		const tdM1 = document.createElement('td');
+		tdM1.contentEditable = false;
+		tdM1.textContent = "内容";
+		trM.appendChild(tdM1);
+		const tdM = document.createElement('td');
+		tdM.textContent = "全";
+		trM.appendChild(tdM);
+		const tdM2 = document.createElement('td');
+		tdM2.contentEditable = false;
+		tdM2.textContent = "数量";
+		trM.appendChild(tdM2);
+		const tdM3 = document.createElement('td');
+		tdM3.contentEditable = false;
+		tdM3.textContent = "単位";
+		trM.appendChild(tdM3);
+		const tdM4 = document.createElement('td');
+		tdM4.contentEditable = false;
+		tdM4.textContent = "隠";
+		trM.appendChild(tdM4);		
+		table.appendChild(trM);
+
+		rows.forEach((row) => {
+    			if (!row.trim()) return; // 空行をスキップ
+			const tr = document.createElement('tr');
+			const cells = row.split(',');
+			if (cells.length < 6) return; // 不完全な行もスキップ
+			const tdR = document.createElement('td');
+			tdR.contentEditable = false;
+			tdR.textContent = cells[0];
+			tr.appendChild(tdR);
+			const td0 = document.createElement('td');
+			td0.contentEditable = false;
+			td0.textContent = cells[1];
+			tr.appendChild(td0);
+			const td1 = document.createElement('td');
+			if((Number(cells[5]) == 1 && Number(cells[1]) != 0 ) || (Number(cells[5]) >= 20 && Number(cells[5]) < 30 )){
+				td1.contentEditable = false;
+				td1.textContent = cells[2];
+			}else{
+				td1.contentEditable = true;
+				td1.textContent = cells[2];
+			}
+			tr.appendChild(td1);
+			const td = document.createElement('td');
+			if(Number(cells[1]) == 0 || (Number(cells[5]) > 20 && Number(cells[5]) < 30)){
+				td.contentEditable = false;
+				td.textContent = "#";
+			}else if(Number(cells[5]) == 20){
+				td.contentEditable = false;
+				td.textContent = "#";
+				td.setAttribute("id", cells[1]);
+				const tdb = document.createElement('td');
+				tdb.setAttribute("class", "mb");
+				const input_trb = document.createElement("input");
+				input_trb.setAttribute("type", "button");
+				input_trb.setAttribute("value", cells[4]);
+				input_trb.setAttribute("onclick", "movecell(" + cells[1].substr(1) + ")");
+				input_trb.setAttribute("class", "mbtn");
+				tdb.appendChild(input_trb);
+				if(Number(cells[1].substr(1)) > 14){
+					trb3.appendChild(tdb);
+					foot.style.height = "22vh";
+				}else if(Number(cells[1].substr(1)) > 7){
+					trb2.appendChild(tdb);
+				}else{
+					trb.appendChild(tdb);
+				}
+			}else if(Number(cells[5]) == 40){
+				td.contentEditable = false;
+				td.textContent = "*";
+			}else{
+				const input_tr = document.createElement("input");
+				input_tr.setAttribute("type", "button");
+				input_tr.setAttribute("value", "＋");
+				//input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
+				input_tr.setAttribute("class", "pbtn");
+				input_tr.setAttribute("id", "pbtn_" + String(cells[0]));
+				td.appendChild(input_tr);
+			}
+			tr.appendChild(td);
+			const td2 = document.createElement('td');
+			if((Number(cells[5]) == 1 && Number(cells[1]) != 0) || (Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 40 && Number(cells[5]) < 60)){
+				td2.contentEditable = true;
+				td2.textContent = cells[3];
+			}else{
+				td2.contentEditable = false;
+				td2.textContent = "*";
+			}
+			tr.appendChild(td2);
+			const td3 = document.createElement('td');
+			td3.contentEditable = false;
+			td3.textContent = cells[4];
+			tr.appendChild(td3);
+			const td4 = document.createElement('td');
+			td4.contentEditable = false;
+			td4.textContent = cells[5];
+			tr.appendChild(td4);
+
+			table.appendChild(tr);
+		});
+		tableb.appendChild(trb);
+		tableb.appendChild(trb2);
+		tableb.appendChild(trb3);
+	}
+		
+	function hideColumn() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].style.backgroundColor = "#fff";
+			rows[i].cells[3].style.backgroundColor = "#fff";
+			if(Number(rows[i].cells[6].textContent) == 1 && Number(rows[i].cells[1].textContent) == 0){
+				rows[i].cells[2].style.backgroundColor = "#FFCC99";
+			}else if(Number(rows[i].cells[6].textContent) == 1){
+				rows[i].cells[2].style.backgroundColor = "#CACACA";
+			}else if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
+				rows[i].style.backgroundColor = "#CACACA";
+				rows[i].cells[3].style.backgroundColor = "#CACACA";
+			}else if(Number(rows[i].cells[6].textContent) == 40){
+				rows[i].cells[2].style.backgroundColor = "#c8e6c8";
+				rows[i].cells[3].style.backgroundColor = "#CACACA";
+				rows[i].cells[4].style.backgroundColor = "#CACACA";
+			}else if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
+				rows[i].cells[2].style.backgroundColor = "#DDFFDD";
+			}
+			if(Number(rows[i].cells[1].textContent) == 0 && Number(rows[i].cells[6].textContent) != 1){
+				rows[i].style.display = "none";
+			}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
+				rows[i].cells[1].className = rows[i].cells[1].textContent;
+				rows[i].style.backgroundColor = "#FFCC";
+				rows[i].cells[3].style.backgroundColor = "#FFCC";
+			}else if(rows[i].cells[5].textContent !== ""){
+				if(rows[i].cells[5].textContent.substr(0,1) == "！"){
+					rows[i].style.backgroundColor = "#f07c78";
+				}
+			}
+		}
+	}
+		
+	function movecell(idName) {
+		const element = document.getElementById("m" + String(idName));
+		const targetDOMRect = element.getBoundingClientRect();
+		const targetTop = targetDOMRect.top + window.pageYOffset - 100;
+		window.scrollTo({
+			top: targetTop,
+			behavior: 'smooth'
+		});
+	}
+	
+	function roomColumn() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+    		rows[0].cells[5].textContent = "部屋";
+		document.getElementById('changebtn').style.backgroundColor = "#f07c78";
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].style.backgroundColor = "#fff";
+			rows[i].cells[3].style.backgroundColor = "#fff";
+			rows[i].cells[0].style.display = "none";
+			rows[i].cells[1].style.display = "none";
+			rows[i].cells[2].className='naiyo';
+			rows[i].cells[3].className='btn';
+			rows[i].cells[4].className='count';
+			rows[i].cells[5].className='unit';
+			rows[i].cells[6].style.display = "none";
+			if( i == 1){
+				rows[i].cells[2].style.backgroundColor = "#FFFFCC";
+				rows[i].style.display = "";
+			}else if( i < 11 ){
+				rows[i].style.display = "";
+			}else{
+				rows[i].style.display = "none";
+			}
+		}
+	}
+
+	function roomChange() {
+		const selectRoomWord = document.getElementById('roomword');
+		const optionb = document.createElement('option');
+		optionb.value = "";
+		optionb.textContent = "";
+		selectRoomWord.appendChild(optionb)
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].style.display = "";
+			if(Number(rows[i].cells[6].textContent) == 99){
+				const option = document.createElement('option');
+				option.value = rows[i].cells[2].textContent;
+				option.textContent = rows[i].cells[2].textContent;
+				selectRoomWord.appendChild(option);
+			}
+			if(Number(rows[i].cells[6].textContent) > 40 && Number(rows[i].cells[6].textContent) < 50){
+				rows[i].cells[2].textContent = rows[Number(rows[i].cells[6].textContent) - 40 + 1].cells[2].textContent;
+			}
+		}
+		document.getElementById('roomword').options[0].selected = true;
+		hideColumn();
+	}
+
+	function changeColumn() {
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		if(rows[0].cells[5].textContent == "単位"){
+			rows[0].cells[5].textContent = "強調";
+			document.getElementById('changebtn').style.backgroundColor = "#f07c78";
+			for (var i = 0; i < rows.length; i++) {
+				rows[i].cells[3].style.backgroundColor = "#f07c78";
+				if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
+					rows[i].cells[3].style.backgroundColor = "#CACACA";
+				}else if(Number(rows[i].cells[6].textContent) == 40){
+					rows[i].cells[3].style.backgroundColor = "#CACACA";
+				}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
+					rows[i].cells[3].style.backgroundColor = "#FFCC";
+				}
+			}
+		}else if(rows[0].cells[5].textContent == "強調"){
+			rows[0].cells[5].textContent = "単位";
+			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			for (var i = 0; i < rows.length; i++) {
+				rows[i].cells[3].style.backgroundColor = "#fff";
+				if(Number(rows[i].cells[6].textContent) > 20 && Number(rows[i].cells[6].textContent) < 30){
+					rows[i].cells[3].style.backgroundColor = "#CACACA";
+				}else if(Number(rows[i].cells[6].textContent) == 40){
+					rows[i].cells[3].style.backgroundColor = "#CACACA";
+				}else if(rows[i].cells[3].textContent == "#" && Number(rows[i].cells[6].textContent) == 20){
+					rows[i].cells[3].style.backgroundColor = "#FFCC";
+				}
+			}
+		}else if(rows[0].cells[5].textContent == "部屋"){
+			rows[0].cells[5].textContent = "単位";
+			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			roomChange();
+		}
+	}
+		
+	function downloadCSV() {
+		const overlay = document.getElementById("whiteOverlay");
+		// 表示する（保存開始）
+		overlay.innerHTML = `<p style="font-size:100px;">保存中...</p>`;
+		overlay.style.opacity = "1";
+		overlay.style.pointerEvents = "auto";
+		const table = document.getElementById('csvTable');
+		let csvContent = '';
+		let filenameBase = '';
+		
+		for (let i = 0; i < table.rows.length; i++) {
+			const row = table.rows[i];
+			if (row.cells[0].textContent !== "Row") {
+				const rowData = [
+				row.cells[0].textContent,
+				row.cells[1].textContent,
+				row.cells[2].textContent,
+				row.cells[4].textContent,
+				row.cells[5].textContent,
+				row.cells[6].textContent
+				];
+				csvContent += rowData.join(',') + '\n';
+				
+				if (i === 1) {
+					filenameBase = row.cells[2].textContent || "untitled";
+				}
+			}
+		}
+		
+		const now = new Date();
+		const mmddhhMM =
+		("00" + (now.getMonth() + 1)).slice(-2) +
+		("00" + now.getDate()).slice(-2) +
+		("00" + now.getHours()).slice(-2) +
+		("00" + now.getMinutes()).slice(-2);
+		const filename = filenameBase + "_" + mmddhhMM + ".csv";
+		const postBody = filename + '\n' + csvContent;
+		
+		fetch("https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec", {
+			method: "POST",
+			body: postBody,
+			headers: {
+				"Content-Type": "text/plain"
+			}
+		})
+		.then(response => response.text())
+		.then(result => {
+			const overlayMessage = (result.includes("overwrite"))
+				? "保存しました（上書き）"
+				: "保存しました";
+			if (isSafari()) {
+				alert(overlayMessage);
+				overlay.style.opacity = "0";
+				overlay.style.pointerEvents = "none";
+			} else {
+				showMessageOverlay(overlayMessage,null,null);
+			}
+		})
+		.catch(error => {
+			if (isSafari()) {
+				const shouldSave = confirm("保存エラーが発生しました。\n手動で保存しますか？");	
+				if (shouldSave) {
+					// Safari のローカル保存処理
+					const blob = new Blob([csvContent], { type: 'text/csv' });
+					const a = document.createElement('a');
+					a.href = URL.createObjectURL(blob);
+					a.download = filename;
+					a.click();
+					URL.revokeObjectURL(a.href);
+				} else {
+					alert("保存されませんでした");
+				}
+				overlay.style.opacity = "0";
+				overlay.style.pointerEvents = "none";
+			} else {
+				showMessageOverlay("エラーが発生しました",null,null, true);
+			}
+		});
+	}
+	
+	function showMessageOverlay(message, onConfirm, onCancel = null, isError = false) {
+		const overlay = document.getElementById("whiteOverlay");
+		
+		// 色とサイズの設定
+		const color = isError ? "red" : "black";
+		const fontSize = "50px";
+		const buttonStyle = `
+			font-size: 40px;
+			padding: 20px 40px;
+			width: 30vw;
+			border-radius: 20px;
+			background-color: #ffffff;
+			border: 2px solid #888;
+			margin: 0 1em;
+		`;
+		
+		// OK専用モードか判定
+		const isOkOnly = !onCancel;
+		
+		let buttonHTML = "";
+		if (isOkOnly) {
+			buttonHTML = `<button id="confirmBtn" style="${buttonStyle}">OK</button>`;
+		} else {
+			buttonHTML = `
+				<button id="cancelBtn" style="${buttonStyle}">いいえ</button>
+				<button id="confirmBtn" style="${buttonStyle}">はい</button>
+			`;
+		}
+		
+		overlay.innerHTML = `
+			<div style="text-align:center; padding: 2em;">
+				<p style="font-size:${fontSize}; color:${color}; margin-bottom: 2em;">${message}</p>
+				<div style="display: flex; justify-content: center; flex-wrap: wrap;">
+					${buttonHTML}
+				</div>
+			</div>
+		`;
+		
+		overlay.style.opacity = "1";
+		overlay.style.pointerEvents = "auto";
+		
+		// イベント設定（OK または はい）
+		document.getElementById("confirmBtn").onclick = () => {
+			overlay.style.opacity = "0";
+			overlay.style.pointerEvents = "none";
+			if (onConfirm) onConfirm();
+		};
+		
+		// イベント設定（いいえ）
+		if (!isOkOnly) {
+			document.getElementById("cancelBtn").onclick = () => {
+				overlay.style.opacity = "0";
+				overlay.style.pointerEvents = "none";
+				if (onCancel) onCancel();
+			};
+		}
+	}
+		
+	let pressTimer;
+	let currentPressedBtn = null;
+	let pressStartTime = 0;
+	
+	document.body.addEventListener('touchstart', function(e) {
+		const btn = e.target.closest('.pbtn, .delbtn');
+		if (!btn) return;
+		
+		currentPressedBtn = btn;
+		pressStartTime = Date.now();
+		btn.style.backgroundColor = '#FF9999';
+		
+		pressTimer = setTimeout(() => {
+		// 長押し処理（ボタンの種類で分岐）
+		if (btn.classList.contains('pbtn')) {
+			handleLongPress(btn);
+		} else if (btn.classList.contains('delbtn')) {
+			handleLongPress2(btn);
+		}
+		currentPressedBtn = null; // prevent short tap firing after
+		}, 750);
+	}, { passive: false });
+	
+	['touchend', 'touchcancel', 'touchmove'].forEach(eventType => {
+		document.body.addEventListener(eventType, function(e) {
+		clearTimeout(pressTimer);
+		
+		const btn = currentPressedBtn;
+		if (!btn) return;
+		
+		const duration = Date.now() - pressStartTime;
+		btn.style.backgroundColor = '#DDFFDD';
+		
+		if (duration < 750) {
+			// 短押し処理（ボタンの種類で分岐）
+			if (btn.classList.contains('pbtn')) {
+				handleTap(btn);
+			} else if (btn.classList.contains('delbtn')) {
+				handleTap2(btn);
+			}
+		}
+		
+		currentPressedBtn = null;
+		});
+	});
+
+	// click防止（Scriptable対策）
+	document.body.addEventListener('click', function(e) {
+		const btn = e.target.closest('.pbtn, .delbtn');
+		if (btn) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	}, true);
+		
+	// -------- 処理本体 --------
+	function handleTap(btn) {
+		const rowNo = btn.id.replace('pbtn_', '');
+		const table = document.getElementById('csvTable');
+		const rows = table.rows;
+		
+		for (let row of rows) {
+			if (Number(row.cells[0].textContent) === Number(rowNo)) {
+				if(rows[0].cells[5].textContent == "単位"){
+					row.cells[4].textContent = Number(row.cells[4].textContent || 0) + 1;
+					break;
+				}else if(rows[0].cells[5].textContent == "強調"){
+					if(row.cells[5].textContent.substr(0,1) == "！"){
+						row.cells[5].innerText = row.cells[5].textContent.substr(1);
+						row.style.backgroundColor = "#fff";
+						row.cells[3].style.backgroundColor = "#f07c78";
+					}else{
+						row.cells[5].innerText = "！" + row.cells[5].innerText;
+						row.style.backgroundColor = "#f07c78";
+					}
+				}
+			}
+		}
+	}
+
+	function handleLongPress(btn) {
+		btn.style.backgroundColor = '#DDFFDD';  // ← ここで明示的に戻す！
+		
+		const rowNo = btn.id.replace('pbtn_', '');
+		const table = document.getElementById('csvTable');
+		const rows = table.rows;
+		
+		for (let row of rows) {
+			if (Number(row.cells[0].textContent) === Number(rowNo)) {
+				if(rows[0].cells[5].textContent == "単位"){
+					const content = row.cells[2].textContent.trim();
+					const count = row.cells[4].textContent.trim();
+					
+					if (row.cells[4].textContent !== "") {
+						if(isSafari()){
+							const confirmMessage = `"${content} ${count}" を空白にしますか？`;
+							if (confirm(confirmMessage)) {
+								row.cells[4].textContent = "";
+							}
+						}else{
+							row.cells[4].textContent = "";
+							btn.style.backgroundColor = '#FFCC99';
+						}
+					}
+				}else if(rows[0].cells[5].textContent == "強調"){
+					if(row.cells[5].textContent.substr(0,1) == "！"){
+						row.cells[5].innerText = row.cells[5].textContent.substr(1);
+						row.style.backgroundColor = "#fff";
+						row.cells[3].style.backgroundColor = "#f07c78";
+					}else{
+						row.cells[5].innerText = "！" + row.cells[5].innerText;
+						row.style.backgroundColor = "#f07c78";
+					}
+				}
+				break;
+			}
+		}
+	}
+
+	
+	function handleTap2(btn) {
+		var table = document.getElementById('csvTable');
+		var rows = table.rows;
+		document.getElementById('roomword').selectedIndex = 0;
+		rows[0].cells[3].textContent = "全";
+		document.getElementById('searchbtn').style.backgroundColor = "#FFFFCC";
+		rows[0].cells[5].textContent = "単位";
+		document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+		colChange();
+	}
+
+	function handleLongPress2(btn) {
+		btn.style.backgroundColor = '#DDFFDD';  // ← ここで明示的に戻す！
+		const overlay = document.getElementById("whiteOverlay");
+		const url = 'https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec';
+		if(isSafari()){
+			const confirmMessage = `原本の読み込みをしますか？`;
+			if (confirm(confirmMessage)) {
+				// 表示する
+				overlay.innerHTML = `<p style="font-size:100px;">読み込み中...</p>`;
+				overlay.style.opacity = "1";
+				overlay.style.pointerEvents = "auto";
+				
+				fetch(url)  // fetch の呼び出しが必要
+				.then(response => response.json())
+				.then(json => {   // ここは json とするのが一般的
+					const base64 = json.csvBase64;  // 変数名は json に合わせる
+					const binary = atob(base64); // base64をデコード
+					const bytes = new Uint8Array(binary.length);
+					for (let i = 0; i < binary.length; i++) {
+						bytes[i] = binary.charCodeAt(i);
+					}
+				
+					const decoder = new TextDecoder('utf-8');  // UTF-8前提
+					const text = decoder.decode(bytes);
+				
+					const cleanText = text.replace(/^\uFEFF/, ''); // BOMがあれば削除
+				
+					displayCSV(cleanText);
+					roomColumn();
+					window.scrollTo({ top: 0, behavior: 'auto' });
+					overlay.style.opacity = "0";
+					overlay.style.pointerEvents = "none";
+				})
+				.catch(error => {
+					showMessageOverlay("読み込みエラーが発生しました",null,null, true);
+				});
+			}
+		}else{
+			showMessageOverlay("原本の読み込みをしますか？", 
+				() => {
+					// 表示する
+					overlay.innerHTML = `<p style="font-size:100px;">読み込み中...</p>`;
+					overlay.style.opacity = "1";
+					overlay.style.pointerEvents = "auto";
+					
+					fetch(url)  // fetch の呼び出しが必要
+					.then(response => response.json())
+					.then(json => {   // ここは json とするのが一般的
+						const base64 = json.csvBase64;  // 変数名は json に合わせる
+						const binary = atob(base64); // base64をデコード
+						const bytes = new Uint8Array(binary.length);
+						for (let i = 0; i < binary.length; i++) {
+							bytes[i] = binary.charCodeAt(i);
+						}
+					
+						const decoder = new TextDecoder('utf-8');  // UTF-8前提
+						const text = decoder.decode(bytes);
+					
+						const cleanText = text.replace(/^\uFEFF/, ''); // BOMがあれば削除
+					
+						displayCSV(cleanText);
+						roomColumn();
+						window.scrollTo({ top: 0, behavior: 'auto' });
+						overlay.style.opacity = "0";
+						overlay.style.pointerEvents = "none";
+					})
+					.catch(error => {
+						showMessageOverlay("読み込みエラーが発生しました",null,null, true);
+					});
+				},
+				() => {
+				}
+			);
+		}
+	}
+
+	document.body.addEventListener('contextmenu', function(e) {
+		const btn = e.target.closest('.pbtn, .delbtn');
+		if (btn) {
+			e.preventDefault(); // 長押し時のメニュー表示を阻止
+		}
+	});
+    </script>
+</body>
+</html>
