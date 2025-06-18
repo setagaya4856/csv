@@ -570,7 +570,7 @@
 			}
 		}
 		document.getElementById('roomword').options[0].selected = true;
-		//hideColumn();
+		hideColumn();
 	}
 
 	function hideColumn() {
@@ -582,7 +582,7 @@
 			rows[i].cells[0].style.backgroundColor = "#fff";
 			rows[i].cells[4].style.backgroundColor = "#fff";
 			rows[i].cells[5].style.backgroundColor = "#fff";
-			if( i = 1){
+			if( i == 1){
 				rows[i].cells[4].style.backgroundColor = "#FFFFCC";
 			}else if(Number(rows[i].cells[3].textContent) < 10 && Number(rows[i].cells[3].textContent) != 0){
 				rows[i].cells[4].style.backgroundColor = "#e2e2e2";
