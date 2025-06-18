@@ -249,6 +249,194 @@
 		  });
 	});
 
+	function displayCSV(text) {
+		const rows = text.split('\n');
+		const table = document.getElementById('csvTable');
+		const foot = document.getElementById('footer');
+		table.innerHTML = '';
+
+		const tableb = document.getElementById('btnTable');
+		tableb.innerHTML = '';
+		const trb = document.createElement('tr');
+		const trb2 = document.createElement('tr');
+		const trb3 = document.createElement('tr');
+
+		const selectRoomWord = document.getElementById('roomword');
+		for(var i=0 ; i < selectRoomWord.length ; i++){
+			selectRoomWord.remove(i--);
+		}
+		const trM = document.createElement('tr');
+		const tdRX = document.createElement('td');
+		tdRX.textContent = "詳";
+		trM.appendChild(tdRX);
+		const tdMR = document.createElement('td');
+		tdMR.textContent = "Row";
+		trM.appendChild(tdMR);
+		const tdM0 = document.createElement('td');
+		tdM0.textContent = "No";
+		trM.appendChild(tdM0);
+		const tdM1 = document.createElement('td');
+		tdM1.textContent = "内容";
+		trM.appendChild(tdM1);
+		const tdM = document.createElement('td');
+		tdM.textContent = "全";
+		trM.appendChild(tdM);
+		const tdM2 = document.createElement('td');
+		tdM2.textContent = "数量";
+		trM.appendChild(tdM2);
+		const tdX1 = document.createElement('td');
+		tdX1.textContent = "業者";
+		trM.appendChild(tdX1);
+		const tdX2 = document.createElement('td');
+		tdX2.textContent = "掛率";
+		trM.appendChild(tdX2);
+		const tdX3 = document.createElement('td');
+		tdX3.textContent = "産廃式";
+		trM.appendChild(tdX3);
+		const tdX4 = document.createElement('td');
+		tdX4.textContent = "産廃種";
+		trM.appendChild(tdX4);
+		const tdX5 = document.createElement('td');
+		tdX5.textContent = "コード";
+		trM.appendChild(tdX5);
+		const tdX6 = document.createElement('td');
+		tdX6.textContent = "公社内容";
+		trM.appendChild(tdX6);
+		const tdM3 = document.createElement('td');
+		tdM3.textContent = "単位";
+		trM.appendChild(tdM3);
+		const tdX7 = document.createElement('td');
+		tdX7.textContent = "単価";
+		trM.appendChild(tdX7);
+
+		rows.forEach((row) => {
+    			if (!row.trim()) return; // 空行をスキップ
+			const tr = document.createElement('tr');
+			const cells = row.split(',');
+			if (cells.length < 13) return; // 不完全な行もスキップ
+			const tdRX = document.createElement('td');
+			tdRX.contentEditable = false;
+			if((Number(cells[2]) == 60 || Number(cells[2]) == 70 || Number(cells[2]) == 80 || Number(cells[2]) == 90 || Number(cells[2]) < 50 ) 
+			   && Number(cells[2]) != 0){
+				const detail_tr = document.createElement("input");
+				detail_tr.setAttribute("type", "button");
+				detail_tr.setAttribute("value", "←");
+				detail_tr.setAttribute("onclick", "detailcell(" + (cells[0]) + ")");
+				detail_tr.setAttribute("class", "dbtn");
+				detail_tr.setAttribute("id", "dbtn_" + String(cells[0]));
+				td.appendChild(detail_tr);
+			}else if(Number(cells[2]) > 99 && Number(cells[2]) < 10000){
+				const form_tr = document.createElement("input");
+				form_tr.setAttribute("type", "button");
+				form_tr.setAttribute("value", "!");
+				form_tr.setAttribute("onclick", "formcell(" + (cells[0]) + ")");
+				form_tr.setAttribute("class", "fbtn");
+				form_tr.setAttribute("id", "fbtn_" + String(cells[0]));
+				td.appendChild(form_tr);
+			}
+			tr.appendChild(tdRX);
+			const tdR = document.createElement('td');
+			tdR.contentEditable = false;
+			tdR.textContent = cells[0];
+			tr.appendChild(tdR);
+			const td0 = document.createElement('td');
+			td0.contentEditable = false;
+			td0.textContent = cells[1];
+			tr.appendChild(td0);
+			const td1 = document.createElement('td');
+			if((Number(cells[2]) > 10000)){
+				td1.contentEditable = false;
+			}else{
+				td1.contentEditable = true;
+			}
+			td1.textContent = cells[2];
+			tr.appendChild(td1);
+			const td2 = document.createElement('td');
+			td2.contentEditable = false;
+			if(cells[3] == "#" || cells[3] == "*" || cells[3] == "@")){
+				td2.textContent = cells[3];
+				if(Number(cells[2]) > 10000){
+					td2.contentEditable = false;
+					td2.setAttribute("id", "m" + String(Number(cells[2]) - 10000));
+					const tdb = document.createElement('td');
+					tdb.setAttribute("class", "mb");
+					const input_trb = document.createElement("input");
+					input_trb.setAttribute("type", "button");
+					input_trb.setAttribute("value", cells[11]);
+					input_trb.setAttribute("onclick", "movecell(" + String(Number(cells[2]) - 10000) + ")");
+					input_trb.setAttribute("class", "mbtn");
+					tdb.appendChild(input_trb);
+					if((Number(cells[2]) - 10000) > 14){
+						trb3.appendChild(tdb);
+						foot.style.height = "22vh";
+					}else if((Number(cells[2]) - 10000) > 7){
+						trb2.appendChild(tdb);
+					}else{
+						trb.appendChild(tdb);
+					}
+				}
+			}else{
+				const input_tr = document.createElement("input");
+				input_tr.setAttribute("type", "button");
+				input_tr.setAttribute("value", "＋");
+				input_tr.setAttribute("class", "pbtn");
+				input_tr.setAttribute("id", "pbtn_" + String(cells[0]));
+				td.appendChild(input_tr);
+			}
+			tr.appendChild(td2);
+			const td3 = document.createElement('td');
+			if(cells[3] == "#" || cells[3] == "*" || cells[3] == "@")){
+				td3.contentEditable = false;
+			}else{
+				td3.contentEditable = true;
+			}
+			td3.textContent = cells[3];
+			tr.appendChild(td3);
+		
+			const td4 = document.createElement('td');
+			td4.contentEditable = false;
+			td4.textContent = cells[4];
+			tr.appendChild(td4);
+			const td5 = document.createElement('td');
+			td5.contentEditable = false;
+			td5.textContent = cells[5];
+			tr.appendChild(td5);
+			const td6 = document.createElement('td');
+			td6.contentEditable = false;
+			td6.textContent = cells[6];
+			tr.appendChild(td6);
+			const td7 = document.createElement('td');
+			td7.contentEditable = false;
+			td7.textContent = cells[7];
+			tr.appendChild(td7);
+			const td8 = document.createElement('td');
+			td8.contentEditable = false;
+			td8.textContent = cells[8];
+			tr.appendChild(td8);
+			const td9 = document.createElement('td');
+			td9.contentEditable = false;
+			td9.textContent = cells[9];
+			tr.appendChild(td9);
+			const td10 = document.createElement('td');
+			td10.contentEditable = false;
+			td10.textContent = cells[10];
+			tr.appendChild(td10);
+			const td11 = document.createElement('td');
+			td11.contentEditable = false;
+			td11.textContent = cells[11];
+			tr.appendChild(td11);
+			const td12 = document.createElement('td');
+			td12.contentEditable = false;
+			td12.textContent = cells[12];
+			tr.appendChild(td12);
+
+			table.appendChild(tr);
+		});
+		tableb.appendChild(trb);
+		tableb.appendChild(trb2);
+		tableb.appendChild(trb3);
+	}
+	
 	document.getElementById('roomword').addEventListener('change', function() {
 		colChange();
 	});	
@@ -336,134 +524,6 @@
 			top: 0,
 			behavior: 'auto'
 		  });
-	}
-	
-	function displayCSV(text) {
-		const rows = text.split('\n');
-		const table = document.getElementById('csvTable');
-		const foot = document.getElementById('footer');
-		table.innerHTML = '';
-
-		const tableb = document.getElementById('btnTable');
-		tableb.innerHTML = '';
-		const trb = document.createElement('tr');
-		const trb2 = document.createElement('tr');
-		const trb3 = document.createElement('tr');
-
-		const selectRoomWord = document.getElementById('roomword');
-		for(var i=0 ; i < selectRoomWord.length ; i++){
-			selectRoomWord.remove(i--);
-		}
-		const trM = document.createElement('tr');
-		const tdMR = document.createElement('td');
-		tdMR.textContent = "Row";
-		trM.appendChild(tdMR);
-		const tdM0 = document.createElement('td');
-		tdM0.textContent = "No";
-		trM.appendChild(tdM0);
-		const tdM1 = document.createElement('td');
-		tdM1.contentEditable = false;
-		tdM1.textContent = "内容";
-		trM.appendChild(tdM1);
-		const tdM = document.createElement('td');
-		tdM.textContent = "全";
-		trM.appendChild(tdM);
-		const tdM2 = document.createElement('td');
-		tdM2.contentEditable = false;
-		tdM2.textContent = "数量";
-		trM.appendChild(tdM2);
-		const tdM3 = document.createElement('td');
-		tdM3.contentEditable = false;
-		tdM3.textContent = "単位";
-		trM.appendChild(tdM3);
-		const tdM4 = document.createElement('td');
-		tdM4.contentEditable = false;
-		tdM4.textContent = "隠";
-		trM.appendChild(tdM4);		
-		table.appendChild(trM);
-
-		rows.forEach((row) => {
-    			if (!row.trim()) return; // 空行をスキップ
-			const tr = document.createElement('tr');
-			const cells = row.split(',');
-			if (cells.length < 6) return; // 不完全な行もスキップ
-			const tdR = document.createElement('td');
-			tdR.contentEditable = false;
-			tdR.textContent = cells[0];
-			tr.appendChild(tdR);
-			const td0 = document.createElement('td');
-			td0.contentEditable = false;
-			td0.textContent = cells[1];
-			tr.appendChild(td0);
-			const td1 = document.createElement('td');
-			if((Number(cells[5]) == 1 && Number(cells[1]) != 0 ) || (Number(cells[5]) >= 20 && Number(cells[5]) < 30 )){
-				td1.contentEditable = false;
-				td1.textContent = cells[2];
-			}else{
-				td1.contentEditable = true;
-				td1.textContent = cells[2];
-			}
-			tr.appendChild(td1);
-			const td = document.createElement('td');
-			if(Number(cells[1]) == 0 || (Number(cells[5]) > 20 && Number(cells[5]) < 30)){
-				td.contentEditable = false;
-				td.textContent = "#";
-			}else if(Number(cells[5]) == 20){
-				td.contentEditable = false;
-				td.textContent = "#";
-				td.setAttribute("id", cells[1]);
-				const tdb = document.createElement('td');
-				tdb.setAttribute("class", "mb");
-				const input_trb = document.createElement("input");
-				input_trb.setAttribute("type", "button");
-				input_trb.setAttribute("value", cells[4]);
-				input_trb.setAttribute("onclick", "movecell(" + cells[1].substr(1) + ")");
-				input_trb.setAttribute("class", "mbtn");
-				tdb.appendChild(input_trb);
-				if(Number(cells[1].substr(1)) > 14){
-					trb3.appendChild(tdb);
-					foot.style.height = "22vh";
-				}else if(Number(cells[1].substr(1)) > 7){
-					trb2.appendChild(tdb);
-				}else{
-					trb.appendChild(tdb);
-				}
-			}else if(Number(cells[5]) == 40){
-				td.contentEditable = false;
-				td.textContent = "*";
-			}else{
-				const input_tr = document.createElement("input");
-				input_tr.setAttribute("type", "button");
-				input_tr.setAttribute("value", "＋");
-				//input_tr.setAttribute("onclick", "cellplus(" + (cells[0]) + ")");
-				input_tr.setAttribute("class", "pbtn");
-				input_tr.setAttribute("id", "pbtn_" + String(cells[0]));
-				td.appendChild(input_tr);
-			}
-			tr.appendChild(td);
-			const td2 = document.createElement('td');
-			if((Number(cells[5]) == 1 && Number(cells[1]) != 0) || (Number(cells[5]) >= 30 && Number(cells[5]) < 40) || (Number(cells[5]) > 40 && Number(cells[5]) < 60)){
-				td2.contentEditable = true;
-				td2.textContent = cells[3];
-			}else{
-				td2.contentEditable = false;
-				td2.textContent = "*";
-			}
-			tr.appendChild(td2);
-			const td3 = document.createElement('td');
-			td3.contentEditable = false;
-			td3.textContent = cells[4];
-			tr.appendChild(td3);
-			const td4 = document.createElement('td');
-			td4.contentEditable = false;
-			td4.textContent = cells[5];
-			tr.appendChild(td4);
-
-			table.appendChild(tr);
-		});
-		tableb.appendChild(trb);
-		tableb.appendChild(trb2);
-		tableb.appendChild(trb3);
 	}
 		
 	function hideColumn() {
