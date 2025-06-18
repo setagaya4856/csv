@@ -384,8 +384,6 @@
 			}
 			td1.textContent = cells[2];
 			tr.appendChild(td1);
-			const td2 = document.createElement('td');
-			td2.contentEditable = false;
 			const tdX = document.createElement('td');
 			if(Number(cells[2]) < 100 || Number(cells[2]) == 10000){
 				tdX.contentEditable = true;
@@ -394,8 +392,10 @@
 			}
 			tdX.textContent = cells[3];
 			tr.appendChild(tdX);
+			const td2 = document.createElement('td');
+			td2.contentEditable = false;
 			if(cells[4] == "#" || cells[4] == "*" || cells[4] == "@" || cells[0] == 1){
-				td2.textContent = cells[3];
+				td2.textContent = cells[4];
 				if(Number(cells[2]) > 10000){
 					td2.contentEditable = false;
 					td2.setAttribute("id", "m" + String(Number(cells[2]) - 10000));
@@ -565,7 +565,7 @@
 			   || (Number(rows[i].cells[3].textContent) > 70 && Number(rows[i].cells[3].textContent) < 80)
 			   || (Number(rows[i].cells[3].textContent) > 80 && Number(rows[i].cells[3].textContent) < 90)
 			   || (Number(rows[i].cells[3].textContent) > 90 && Number(rows[i].cells[3].textContent) < 100)
-			   || (Number(rows[i].cells[3].textContent) > 100 && Number(rows[i].cells[3].textContent) < 110)){
+			   || (Number(rows[i].cells[3].textContent) > 100 && Number(rows[i].cells[3].textContent) < 110 && Number(rows[i].cells[6].textContent) != "@")){
 				rows[i].cells[4].textContent = rows[(Number(rows[i].cells[3].textContent) % 10) + 1].cells[4].textContent;
 			}
 		}
