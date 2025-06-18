@@ -541,7 +541,7 @@
 		}else if(rows[0].cells[13].textContent == "部屋"){
 			rows[0].cells[13].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
-			//roomChange();
+			roomChange();
 		}
 	}
 	
@@ -555,7 +555,7 @@
 		var rows = table.rows;
 		for (var i = 0; i < rows.length; i++) {
 			rows[i].style.display = "";
-			if(Number(rows[i].cells[3].textContent) > 10000 && Number(rows[i].cells[0].textContent) > 1){
+			if(Number(rows[i].cells[3].textContent) == 10000 && Number(rows[i].cells[0].textContent) > 1){
 				const option = document.createElement('option');
 				option.value = rows[i].cells[4].textContent;
 				option.textContent = rows[i].cells[4].textContent;
@@ -569,7 +569,7 @@
 			}
 		}
 		document.getElementById('roomword').options[0].selected = true;
-		//hideColumn();
+		hideColumn();
 	}
 
 	function hideColumn() {
