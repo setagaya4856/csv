@@ -461,6 +461,14 @@
 			rows[i].cells[7].style.display = "none";
 			rows[i].style.backgroundColor = "#fff";
 			rows[i].cells[5].style.backgroundColor = "#fff";
+			if( i == 1){
+				rows[i].cells[4].style.backgroundColor = "#FFFFCC";
+				rows[i].style.display = "";
+			}else if( i < 11 ){
+				rows[i].style.display = "";
+			}else{
+				rows[i].style.display = "none";
+			}
 		}
 	}
 	
@@ -595,32 +603,6 @@
 			top: targetTop,
 			behavior: 'smooth'
 		});
-	}
-	
-	function roomColumn() {
-		var table = document.getElementsByTagName("table")[0];
-		var rows = table.rows;
-    		rows[0].cells[5].textContent = "部屋";
-		document.getElementById('changebtn').style.backgroundColor = "#f07c78";
-		for (var i = 0; i < rows.length; i++) {
-			rows[i].style.backgroundColor = "#fff";
-			rows[i].cells[3].style.backgroundColor = "#fff";
-			rows[i].cells[0].style.display = "none";
-			rows[i].cells[1].style.display = "none";
-			rows[i].cells[2].className='naiyo';
-			rows[i].cells[3].className='btn';
-			rows[i].cells[4].className='count';
-			rows[i].cells[5].className='unit';
-			rows[i].cells[6].style.display = "none";
-			if( i == 1){
-				rows[i].cells[2].style.backgroundColor = "#FFFFCC";
-				rows[i].style.display = "";
-			}else if( i < 11 ){
-				rows[i].style.display = "";
-			}else{
-				rows[i].style.display = "none";
-			}
-		}
 	}
 
 	function roomChange() {
