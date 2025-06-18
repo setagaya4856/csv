@@ -541,6 +541,7 @@
 		}else if(rows[0].cells[13].textContent == "部屋"){
 			rows[0].cells[13].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			//roomChange();
 		}
 	}
 	
@@ -568,7 +569,7 @@
 			}
 		}
 		document.getElementById('roomword').options[0].selected = true;
-		hideColumn();
+		//hideColumn();
 	}
 
 	function hideColumn() {
