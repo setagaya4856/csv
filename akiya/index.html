@@ -395,7 +395,7 @@
 			tdX.textContent = cells[3];
 			tr.appendChild(tdX);
 			if(cells[4] == "#" || cells[4] == "*" || cells[4] == "@" || cells[0] == 1){
-				td2.textContent = cells[4];
+				td2.textContent = cells[3];
 				if(Number(cells[2]) > 10000){
 					td2.contentEditable = false;
 					td2.setAttribute("id", "m" + String(Number(cells[2]) - 10000));
@@ -1193,7 +1193,7 @@
 					html += `<td style="border:1px solid #888; background:#ccc;">${cell.content}</td>`;
 				} else {
 					html += `<td style="border:1px solid #888;">`;
-					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}" style="font-size:20px; width:100%;">`;
+					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:20px; width:100%;">`;
 					html += `<datalist id="list_${id}">`;
 					for (const opt of cell.options) {
 						html += `<option value="${opt}">`;
