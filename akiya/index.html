@@ -1149,56 +1149,62 @@
 		const table = document.getElementById('csvTable');
 		const overlay = document.getElementById('whiteOverlay');
 	
-		// 対象行をまとめて取得
-		const targets = [];
+		// 配置マップを構築（key: `${r}_${c}` → 値：行情報）
+		const matrix = {};
+		let maxRow = 0;
+		let maxCol = 0;
+	
 		for (let i = 0; i < table.rows.length; i++) {
 			const row = table.rows[i];
-			if (Number(row.cells[3].textContent) == Number(no) && row.cells[6].textContent == "@") {
-				const inp = Number(row.cells[7].textContent);
-				const content = row.cells[4].textContent;
-				const rowIdx = Number(row.cells[10].textContent); // 行番号（1始まり）
-				const colIdx = Number(row.cells[11].textContent); // 列番号（1始まり）
-				const optionsRaw = row.cells[8].textContent || "";
-				const optionCount = Number(row.cells[9].textContent);
-				const options = optionsRaw.split("#").slice(0, optionCount);
+			if (Number(row.cells[3].textContent) !== Number(no)) continue;
 	
-				targets.push({ i, rowIdx, colIdx, content, inp, options });
-			}
+			const able = Number(row.cells[7].textContent);
+			const content = row.cells[4].textContent;
+			const rowIdx = Number(row.cells[10].textContent); // 行番号（1始まり）
+			const colIdx = Number(row.cells[11].textContent); // 列番号（1始まり）
+			const optionsRaw = row.cells[8].textContent || "";
+			const optionCount = Number(row.cells[9].textContent);
+			const options = optionsRaw.split("#").slice(0, optionCount);
+	
+			if (!rowIdx || !colIdx) continue;
+	
+			const key = `${rowIdx}_${colIdx}`;
+			matrix[key] = { i, able, content, options };
+			if (rowIdx > maxRow) maxRow = rowIdx;
+			if (colIdx > maxCol) maxCol = colIdx;
 		}
 	
-		// 行数・列数を取得
-		const maxRow = Math.max(...targets.map(t => t.rowIdx));
-		const maxCol = Math.max(...targets.map(t => t.colIdx));
-	
-		// オーバーレイ生成
+		// 表示開始
 		let html = `<div style="background:white; padding:1em; max-height:90vh; overflow:auto;">`;
 		html += `<p style="font-size:40px;">${table.rows[no].cells[4].textContent}</p>`;
 		html += `<table style="border-collapse: collapse; font-size: 24px; width:100%;">`;
 	
-		for (let r = 0; r < targets.length; r += 3) {
-			html += '<tr>';
-			for (let k = 0; k < 3; k++) {
-				const t = targets[r + k];
-				if (!t) {
-					html += `<td style="border:1px solid #ccc;"></td>`;
+		for (let r = 1; r <= maxRow; r++) {
+			html += `<tr>`;
+			for (let c = 1; c <= maxCol; c++) {
+				const key = `${r}_${c}`;
+				if (!matrix[key]) {
+					html += `<td style="border:1px solid #ccc; background:#f8f8f8;">-</td>`;
 					continue;
 				}
-				if (t.inp=== 0) {
-					html += `<td style="border:1px solid #888; background:#ccc;">${t.content}</td>`;
+	
+				const cell = matrix[key];
+				if (cell.able === 0) {
+					html += `<td style="border:1px solid #888; background:#ccc;">${cell.content}</td>`;
 				} else {
-					const id = `edit_${t.i}`;
+					const id = `edit_${cell.i}`;
 					html += `<td style="border:1px solid #888;">`;
 					html += `<select id="sel_${id}" style="font-size:20px; width:100%;">`;
-					for (const opt of t.options) {
-						const selected = (opt === t.content) ? "selected" : "";
+					for (const opt of cell.options) {
+						const selected = (opt === cell.content) ? "selected" : "";
 						html += `<option value="${opt}" ${selected}>${opt}</option>`;
 					}
 					html += `</select>`;
-					html += `<input type="text" id="input_${id}" value="${t.content}" style="font-size:20px; width:100%;">`;
+					html += `<input type="text" id="input_${id}" value="${cell.content}" style="font-size:20px; width:100%;">`;
 					html += `</td>`;
 				}
 			}
-			html += '</tr>';
+			html += `</tr>`;
 		}
 	
 		html += `</table><br><div style="text-align:center;">`;
