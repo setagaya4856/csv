@@ -654,8 +654,8 @@
 					rows[i].style.display = "none";
 				}else if (rows[i].cells[3].textContent > 10000){
 					rows[i].style.display = "";
-				}else if (Number(rows[i].cells[3].textContent) % 10 == searchValueR || Number(rows[i].cells[3].textContent) % 10 == 0 ) {
-					rows[i].style.display = '';
+				}else if ((Number(rows[i].cells[3].textContent) % 10) == searchValueR || (Number(rows[i].cells[3].textContent) % 10) == 0 ) {
+					rows[i].style.display = "";
 				} else {
 					rows[i].style.display = 'none';
 				}
@@ -682,7 +682,7 @@
 						rows[i + searchValueR].style.display = '';
 					}
 					i = i + 9;
-				}else if ((Number(rows[i].cells[3].textContent) % 10 == searchValueR || Number(rows[i].cells[3].textContent) % 10 == 0)  && rows[i].cells[6].textContent != "" && rows[i].cells[6].textContent != "*"){
+				}else if (((Number(rows[i].cells[3].textContent) % 10) == searchValueR || (Number(rows[i].cells[3].textContent) % 10) == 0)  && rows[i].cells[6].textContent != "" && rows[i].cells[6].textContent != "*"){
 					rows[i].style.display = '';
 				} else {
 					rows[i].style.display = 'none';
