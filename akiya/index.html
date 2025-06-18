@@ -545,7 +545,7 @@
 		var rows = table.rows;
 		for (var i = 0; i < rows.length; i++) {
 			rows[i].style.display = "";
-			if(Number(rows[i].cells[3].textContent) == 10000 && Number(rows[i].cells[0].textContent) > 1){
+			if(Number(rows[i].cells[3].textContent) > 10000 && Number(rows[i].cells[0].textContent) > 1){
 				const option = document.createElement('option');
 				option.value = rows[i].cells[4].textContent;
 				option.textContent = rows[i].cells[4].textContent;
