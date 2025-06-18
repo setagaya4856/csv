@@ -565,7 +565,8 @@
 			   || (Number(rows[i].cells[3].textContent) > 70 && Number(rows[i].cells[3].textContent) < 80)
 			   || (Number(rows[i].cells[3].textContent) > 80 && Number(rows[i].cells[3].textContent) < 90)
 			   || (Number(rows[i].cells[3].textContent) > 90 && Number(rows[i].cells[3].textContent) < 100)
-			   || (Number(rows[i].cells[3].textContent) > 100 && Number(rows[i].cells[3].textContent) < 110 && Number(rows[i].cells[6].textContent) != "@")){
+			   || (Number(rows[i].cells[3].textContent) > 100 && Number(rows[i].cells[3].textContent) < 110 && 
+			       (rows[i].cells[6].textContent != "@" || (Number(rows[i].cells[10].textContent) == 1 && Number(rows[i].cells[11].textContent) == 1)))){
 				rows[i].cells[4].textContent = rows[(Number(rows[i].cells[3].textContent) % 10) + 1].cells[4].textContent;
 			}
 		}
