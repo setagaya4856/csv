@@ -256,7 +256,8 @@
 		}, { passive: false } );
 	}
 		
-	document.getElementById('csvFileInput').addEventListener('change', function(event) {  
+	document.getElementById('csvFileInput').addEventListener('change', function(event) {
+		document.getElementById('delbtn').style.backgroundColor = '#DDFFDD'
 		const file = event.target.files[0];
 		if (file) {
 			const reader = new FileReader();
