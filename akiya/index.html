@@ -1217,24 +1217,30 @@
 		
 	function saveFormcell(no) {
 		const table = document.getElementById('csvTable');
+		const overlay = document.getElementById('whiteOverlay');
+	
 		for (let i = 0; i < table.rows.length; i++) {
 			const row = table.rows[i];
 			if (Number(row.cells[3].textContent) !== Number(no)) continue;
 	
-			const inp = Number(row.cells[7].textContent);
-			if (inp === 0) continue;
+			const rowIdx = Number(row.cells[10].textContent); // 行番号（1始まり）
+			const colIdx = Number(row.cells[11].textContent); // 列番号（1始まり）
+			const able = Number(row.cells[7].textContent);
 	
-			const id = `edit_${i}`;
-			const sel = document.getElementById(`sel_${id}`);
-			const input = document.getElementById(`input_${id}`);
-			if (!input) continue;
+			if (!rowIdx || !colIdx || isNaN(rowIdx) || isNaN(colIdx)) continue;
+			if (able === 0) continue;
 	
-			const newVal = input.value.trim() || sel.value;
-			if (row.cells[4].textContent !== newVal) {
-				row.cells[4].textContent = newVal;
+			const id = `input_cell_${no}_${rowIdx}_${colIdx}`;
+			const inputElem = document.getElementById(id);
+			if (inputElem) {
+				row.cells[4].textContent = inputElem.value;
 			}
 		}
-		cancelDetail();
+	
+		// 非表示に戻す
+		overlay.innerHTML = '';
+		overlay.style.opacity = '0';
+		overlay.style.pointerEvents = 'none';
 	}
     </script>
 </body>
