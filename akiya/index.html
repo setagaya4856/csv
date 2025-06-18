@@ -527,7 +527,7 @@
 			for (var i = 0; i < rows.length; i++) {
 				rows[i].cells[5].style.backgroundColor = "#f07c78";
 				if(Number(rows[i].cells[3].textContent) > 10000){
-					rows[i].cells[5].style.backgroundColor = "#FFCC";
+					rows[i].cells[5].style.backgroundColor = "#FFCC99";
 				}
 			}
 		}else if(rows[0].cells[13].textContent == "強調"){
@@ -536,7 +536,7 @@
 			for (var i = 0; i < rows.length; i++) {
 				rows[i].cells[5].style.backgroundColor = "#fff";
 				if(Number(rows[i].cells[3].textContent) > 10000){
-					rows[i].cells[5].style.backgroundColor = "#FFCC";
+					rows[i].cells[5].style.backgroundColor = "#FFCC99";
 				}
 			}
 		}else if(rows[0].cells[13].textContent == "部屋"){
@@ -604,10 +604,10 @@
 				rows[i].style.display = "none";
 			}else if(Number(rows[i].cells[3].textContent) > 10000){
 				rows[i].cells[0].className = rows[i].cells[0].textContent;
-				rows[i].style.backgroundColor = "#FFCC";
-				rows[i].cells[0].style.backgroundColor = "#FFCC";
-				rows[i].cells[4].style.backgroundColor = "#FFCC";
-				rows[i].cells[5].style.backgroundColor = "#FFCC";
+				rows[i].style.backgroundColor = "#FFCC99";
+				rows[i].cells[0].style.backgroundColor = "#FFCC99";
+				rows[i].cells[4].style.backgroundColor = "#FFCC99";
+				rows[i].cells[5].style.backgroundColor = "#FFCC99";
 			}else if(rows[i].cells[13].textContent != ""){
 				if(rows[i].cells[13].textContent.substr(0,1) == "！"){
 					rows[i].style.backgroundColor = "#f07c78";
