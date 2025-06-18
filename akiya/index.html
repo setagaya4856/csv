@@ -1144,6 +1144,7 @@
 			if (input) input.value = '';
 		}
 	}
+	
 	function formcell(no) {
 		const table = document.getElementById('csvTable');
 		const overlay = document.getElementById('whiteOverlay');
@@ -1169,33 +1170,35 @@
 		const maxRow = Math.max(...targets.map(t => t.rowIdx));
 		const maxCol = Math.max(...targets.map(t => t.colIdx));
 	
-		// テーブル構築
+		// オーバーレイ生成
 		let html = `<div style="background:white; padding:1em; max-height:90vh; overflow:auto;">`;
-		html += `<p style="font-size:40px;">No: ${no} の編集</p>`;
+		html += `<p style="font-size:40px;">No: ${no} の内容編集</p>`;
 		html += `<table style="border-collapse: collapse; font-size: 24px; width:100%;">`;
 	
-		for (let r = 1; r <= maxRow; r++) {
+		for (let r = 0; r < targets.length; r += 3) {
 			html += '<tr>';
-			for (let c = 1; c <= maxCol; c++) {
-				const match = targets.find(t => t.rowIdx === r && t.colIdx === c);
-				if (!match) {
-					html += `<td style="border:1px solid #888; background:#eee;">-</td>`;
-				} else if (match.inp === 0) {
-					html += `<td style="border:1px solid #888; background:#ccc;">${match.content}</td>`;
+			for (let k = 0; k < 3; k++) {
+				const t = targets[r + k];
+				if (!t) {
+					html += `<td style="border:1px solid #ccc;"></td>`;
+					continue;
+				}
+				if (t.inp=== 0) {
+					html += `<td style="border:1px solid #888; background:#ccc;">${t.content}</td>`;
 				} else {
-					const id = `edit_${match.i}`;
+					const id = `edit_${t.i}`;
 					html += `<td style="border:1px solid #888;">`;
 					html += `<select id="sel_${id}" style="font-size:20px; width:100%;">`;
-					for (const opt of match.options) {
-						const selected = (opt === match.content) ? "selected" : "";
+					for (const opt of t.options) {
+						const selected = (opt === t.content) ? "selected" : "";
 						html += `<option value="${opt}" ${selected}>${opt}</option>`;
 					}
 					html += `</select>`;
-					html += `<input type="text" id="input_${id}" value="${match.content}" style="font-size:20px; width:100%;">`;
+					html += `<input type="text" id="input_${id}" value="${t.content}" style="font-size:20px; width:100%;">`;
 					html += `</td>`;
 				}
 			}
-			html += `</tr>`;
+			html += '</tr>';
 		}
 	
 		html += `</table><br><div style="text-align:center;">`;
