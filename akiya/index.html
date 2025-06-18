@@ -353,7 +353,7 @@
 			tr.appendChild(td1);
 			const td2 = document.createElement('td');
 			td2.contentEditable = false;
-			if(cells[3] == "#" || cells[3] == "*" || cells[3] == "@")){
+			if(cells[3] == "#" || cells[3] == "*" || cells[3] == "@"){
 				td2.textContent = cells[3];
 				if(Number(cells[2]) > 10000){
 					td2.contentEditable = false;
