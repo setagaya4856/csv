@@ -272,6 +272,9 @@
 			selectRoomWord.remove(i--);
 		}
 		const trM = document.createElement('tr');
+		const tdRX2 = document.createElement('td');
+		tdRX2.textContent = "ID";
+		trM.appendChild(tdRX2);
 		const tdRX = document.createElement('td');
 		tdRX.textContent = "詳";
 		trM.appendChild(tdRX);
@@ -321,6 +324,10 @@
 			const tr = document.createElement('tr');
 			const cells = row.split(',');
 			if (cells.length < 13) return; // 不完全な行もスキップ
+			const tdR = document.createElement('td');
+			tdR.contentEditable = false;
+			tdR.textContent = cells[0];
+			tr.appendChild(tdR);
 			const tdRX = document.createElement('td');
 			tdRX.contentEditable = false;
 			if((Number(cells[2]) == 60 || Number(cells[2]) == 70 || Number(cells[2]) == 80 || Number(cells[2]) == 90 || Number(cells[2]) < 50 ) 
@@ -342,10 +349,6 @@
 				tdRX.appendChild(form_tr);
 			}
 			tr.appendChild(tdRX);
-			const tdR = document.createElement('td');
-			tdR.contentEditable = false;
-			tdR.textContent = cells[0];
-			tr.appendChild(tdR);
 			const td0 = document.createElement('td');
 			td0.contentEditable = false;
 			td0.textContent = cells[1];
