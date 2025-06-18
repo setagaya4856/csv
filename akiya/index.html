@@ -387,9 +387,9 @@
 			td2.contentEditable = false;
 			const tdX = document.createElement('td');
 			if(Number(cells[2]) < 100 && Number(cells[2]) != 0){
-				tdX.contentEditable = false;
-			}else{
 				tdX.contentEditable = true;
+			}else{
+				tdX.contentEditable = false;
 			}
 			tdX.textContent = cells[3];
 			tr.appendChild(tdX);
