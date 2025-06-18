@@ -1187,19 +1187,18 @@
 				}
 	
 				const cell = matrix[key];
-				const id = `r${r}_c${c}`;
+				const id = `cell_${r}_${c}`;
 	
 				if (cell.able === 0) {
 					html += `<td style="border:1px solid #888; background:#ccc;">${cell.content}</td>`;
 				} else {
 					html += `<td style="border:1px solid #888;">`;
-					html += `<select id="sel_${id}" style="font-size:20px; width:100%;">`;
+					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}" style="font-size:20px; width:100%;">`;
+					html += `<datalist id="list_${id}">`;
 					for (const opt of cell.options) {
-						const selected = (opt === cell.content) ? "selected" : "";
-						html += `<option value="${opt}" ${selected}>${opt}</option>`;
+						html += `<option value="${opt}">`;
 					}
-					html += `</select>`;
-					html += `<input type="text" id="input_${id}" value="${cell.content}" style="font-size:20px; width:100%;">`;
+					html += `</datalist>`;
 					html += `</td>`;
 				}
 			}
@@ -1215,6 +1214,7 @@
 		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
 	}
+		
 	function saveFormcell(no) {
 		const table = document.getElementById('csvTable');
 		for (let i = 0; i < table.rows.length; i++) {
