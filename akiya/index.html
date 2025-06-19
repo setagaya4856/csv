@@ -580,7 +580,7 @@
 		for (var i = 0; i < rows.length; i++) {
 			rows[i].style.display = "";
 			rows[i].style.backgroundColor = "#fff";
-			rows[i].cells[0].style.backgroundColor = "#fff";
+			rows[i].cells[1].style.backgroundColor = "#fff";
 			rows[i].cells[4].style.backgroundColor = "#fff";
 			rows[i].cells[5].style.backgroundColor = "#fff";
 			if( i == 1){
@@ -598,7 +598,7 @@
 			}
 			
 			if(rows[i].cells[11].textContent == ""){
-				rows[i].cells[1].style.backgroundColor = "#DDFFDD";
+				rows[i].cells[1].style.backgroundColor = "#e2e2e2";
 			}
 			
 			if(rows[i].cells[6].textContent == "@" ||(Number(rows[i].cells[3].textContent) == 10000 && Number(rows[i].cells[0].textContent) != 1)){
@@ -606,7 +606,7 @@
 			}else if(Number(rows[i].cells[3].textContent) > 10000){
 				rows[i].cells[0].className = rows[i].cells[0].textContent;
 				rows[i].style.backgroundColor = "#FFCC99";
-				rows[i].cells[0].style.backgroundColor = "#FFCC99";
+				rows[i].cells[1].style.backgroundColor = "#FFCC99";
 				rows[i].cells[4].style.backgroundColor = "#FFCC99";
 				rows[i].cells[5].style.backgroundColor = "#FFCC99";
 			}else if(rows[i].cells[13].textContent != ""){
@@ -969,11 +969,11 @@
 					if(row.cells[13].textContent.substr(0,1) == "！"){
 						row.cells[13].innerText = row.cells[13].textContent.substr(1);
 						row.style.backgroundColor = "#fff";
-						rows[i].cells[5].style.backgroundColor = "#fff";
+						rows[i].cells[4].style.backgroundColor = "#fff";
 					}else{
 						row.cells[13].innerText = "！" + row.cells[13].innerText;
 						row.style.backgroundColor = "#f07c78";
-						rows[i].cells[5].style.backgroundColor = "#f07c78";
+						rows[i].cells[4].style.backgroundColor = "#f07c78";
 					}
 				}
 				break;
@@ -1090,7 +1090,7 @@
 		const overlay = document.getElementById('whiteOverlay');
 	
 		let editorHTML = `<div style="background:white; padding:2em; max-height:90vh; overflow:auto;">`;
-		editorHTML += `<p style="font-size:40px;">詳細(${targetRow.cells[4].textContent})</p>`;
+		editorHTML += `<p style="font-size:40px;">詳細:${targetRow.cells[4].textContent}</p>`;
 		editorHTML += `<table style="width:90vw; border-collapse: collapse; font-size: 30px;">`;
 	
 		for (let i = 0; i <= 14; i++) {
@@ -1100,9 +1100,13 @@
 			const value = targetRow.cells[i].textContent;
 			editorHTML += `
 				<tr>
-					<td style="border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
+					<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
 					<td style="border:1px solid #888; padding:5px;">
-					<input type="text" style="width:70vw; font-size: 30px;" id="edit_col_${i}" value="${value}"}>
+						<input type="text"
+							   style="width:70vw; font-size: 30px; ${grayscaleStyle}"
+							   id="edit_col_${i}"
+							   value="${value}"
+							   ${isEditable ? '' : 'disabled'}>
 					</td>
 				</tr>`;
 		}
@@ -1175,14 +1179,14 @@
 		}
 	
 		let html = `<div style="background:white; padding:1em; max-height:90vh; overflow:auto;">`;
-		html += `<table style="border-collapse: collapse; font-size: 24px; width:100%;">`;
+		html += `<table style="border-collapse: collapse; font-size: 24px; width:90vw; ;">`;
 	
 		for (let r = 1; r <= maxRow; r++) {
 			html += `<tr>`;
 			for (let c = 1; c <= maxCol; c++) {
 				const key = `${r}_${c}`;
 				if (!matrix[key]) {
-					html += `<td style="border:1px solid #ccc; background:#f8f8f8;">-</td>`;
+					html += `<td style="width:28vw; border:1px solid #ccc; background:#f8f8f8;">-</td>`;
 					continue;
 				}
 	
@@ -1190,10 +1194,10 @@
 				const id = `cell_${no}_${r}_${c}`;
 	
 				if (cell.able === 0) {
-					html += `<td style="border:1px solid #888; background:#ccc;">${cell.content}</td>`;
+					html += `<td style="width:28vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
 				} else {
-					html += `<td style="border:1px solid #888;">`;
-					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:20px; width:100%;">`;
+					html += `<td style="width:28vw; border:1px solid #888;">`;
+					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:20px; width:90%;">`;
 					html += `<datalist id="list_${id}">`;
 					for (const opt of cell.options) {
 						html += `<option value="${opt}">`;
