@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<meta charset="UTF-8" name="apple-mobile-web-app-capable" content="yes">
     	<title>空家データ入力</title>
     	<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
@@ -1107,10 +1108,10 @@
 			const grayscaleStyle = isEditable ? '' : 'filter: grayscale(100%);';
 			editorHTML += `
 				<tr>
-					<td style="width:9vw; border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
-					<td style="width:30vw; border:1px solid #888; padding:5px;">
+					<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
+					<td style="width:60vw; border:1px solid #888; padding:5px;">
 						<input type="text"
-							   style="width:28vw; font-size: 40px; ${grayscaleStyle}"
+							   style="width:60vw; font-size: 40px; ${grayscaleStyle}"
 							   id="edit_col_${i}"
 							   value="${value}"
 							   ${isEditable ? '' : 'disabled'}>
@@ -1203,14 +1204,14 @@
 		}
 	
 		let html = `<div style="background:white; padding:0; max-height:100vh; overflow:auto;">`;
-		html += `<table style="border-collapse: collapse; font-size: 40px; max-width:98vw;  margin: auto;">`;
+		html += `<table style="border-collapse: collapse; font-size: 40px; max-width:95vw;  margin: auto;">`;
 	
 		for (let r = 1; r <= maxRow; r++) {
 			html += `<tr>`;
 			for (let c = 1; c <= maxCol; c++) {
 				const key = `${r}_${c}`;
 				if (!matrix[key]) {
-					html += `<td style="width:20vw; border:1px solid #ccc; background:#f8f8f8;">-</td>`;
+					html += `<td style="width:23vw; border:1px solid #ccc; background:#f8f8f8;">-</td>`;
 					continue;
 				}
 	
@@ -1218,10 +1219,10 @@
 				const id = `cell_${no}_${r}_${c}`;
 	
 				if (cell.able === 0) {
-					html += `<td style="width:20vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
+					html += `<td style="width:23vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
 				} else {
-					html += `<td style="width:20vw; border:1px solid #888;">`;
-					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:40px; width:70%;">`;
+					html += `<td style="width:23vw; border:1px solid #888;">`;
+					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:40px; width:80%;">`;
 					html += `<datalist id="list_${id}">`;
 					for (const opt of cell.options) {
 						html += `<option value="${opt}">`;
