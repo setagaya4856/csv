@@ -359,8 +359,7 @@
 			tr.appendChild(tdR);
 			const tdRX = document.createElement('td');
 			tdRX.contentEditable = false;
-			if((Number(cells[2]) == 60 || Number(cells[2]) == 70 || Number(cells[2]) == 80 || Number(cells[2]) == 90 || Number(cells[2]) < 50 ) 
-			   && Number(cells[2]) != 0){
+			if((Number(cells[2]) == 60 || Number(cells[2]) == 70 || Number(cells[2]) == 80 || Number(cells[2]) == 90 || Number(cells[2]) < 50)){
 				const detail_tr = document.createElement("input");
 				detail_tr.setAttribute("type", "button");
 				detail_tr.setAttribute("value", "←");
@@ -507,7 +506,6 @@
 			rows[i].cells[7].style.display = "none";
 			rows[i].cells[6].className = "count";
 			rows[i].cells[5].className = "btn";
-			rows[i].cells[5].style.backgroundColor = "#fff";
 			rows[i].cells[4].className = "naiyo";
 			rows[i].cells[3].style.display = "none";
 			rows[i].cells[2].style.display = "none";
@@ -530,21 +528,9 @@
 		if(rows[0].cells[13].textContent == "単位"){
 			rows[0].cells[13].textContent = "強調";
 			document.getElementById('changebtn').style.backgroundColor = "#f07c78";
-			for (var i = 0; i < rows.length; i++) {
-				rows[i].cells[5].style.backgroundColor = "#f07c78";
-				if(Number(rows[i].cells[3].textContent) > 10000){
-					rows[i].cells[5].style.backgroundColor = "#FFCC99";
-				}
-			}
 		}else if(rows[0].cells[13].textContent == "強調"){
 			rows[0].cells[13].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
-			for (var i = 0; i < rows.length; i++) {
-				rows[i].cells[5].style.backgroundColor = "#fff";
-				if(Number(rows[i].cells[3].textContent) > 10000){
-					rows[i].cells[5].style.backgroundColor = "#FFCC99";
-				}
-			}
 		}else if(rows[0].cells[13].textContent == "部屋"){
 			rows[0].cells[13].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
@@ -588,7 +574,6 @@
 			rows[i].style.backgroundColor = "#fff";
 			rows[i].cells[1].style.backgroundColor = "#fff";
 			rows[i].cells[4].style.backgroundColor = "#fff";
-			rows[i].cells[5].style.backgroundColor = "#fff";
 			if( i == 1){
 				rows[i].cells[4].style.backgroundColor = "#f07c78";
 			}else if(Number(rows[i].cells[3].textContent) < 10 && Number(rows[i].cells[3].textContent) != 10000){
@@ -614,11 +599,9 @@
 				rows[i].style.backgroundColor = "#FFCC99";
 				rows[i].cells[1].style.backgroundColor = "#FFCC99";
 				rows[i].cells[4].style.backgroundColor = "#FFCC99";
-				rows[i].cells[5].style.backgroundColor = "#FFCC99";
 			}else if(rows[i].cells[13].textContent != ""){
 				if(rows[i].cells[13].textContent.substr(0,1) == "！"){
 					rows[i].style.backgroundColor = "#f07c78";
-					rows[i].cells[4].style.backgroundColor = "#f07c78";
 				}
 			}
 		}
@@ -929,20 +912,8 @@
 		
 		for (let row of rows) {
 			if (Number(row.cells[0].textContent) === Number(rowNo)) {
-				if(rows[0].cells[13].textContent == "単位"){
-					row.cells[6].textContent = Number(row.cells[6].textContent || 0) + 1;
-					break;
-				}else if(rows[0].cells[13].textContent == "強調"){
-					if(row.cells[13].textContent.substr(0,1) == "！"){
-						row.cells[13].innerText = row.cells[13].textContent.substr(1);
-						row.style.backgroundColor = "#fff";
-						rows[i].cells[4].style.backgroundColor = "#fff";
-					}else{
-						row.cells[13].innerText = "！" + row.cells[13].innerText;
-						row.style.backgroundColor = "#f07c78";
-						rows[i].cells[4].style.backgroundColor = "#f07c78";
-					}
-				}
+				row.cells[6].textContent = Number(row.cells[6].textContent || 0) + 1;
+				break;
 			}
 		}
 	}
@@ -956,30 +927,18 @@
 		
 		for (let row of rows) {
 			if (Number(row.cells[0].textContent) === Number(rowNo)) {
-				if(rows[0].cells[13].textContent == "単位"){
-					const content = row.cells[4].textContent.trim();
-					const count = row.cells[6].textContent.trim();
-					
-					if (row.cells[6].textContent != "") {
-						if(isSafari()){
-							const confirmMessage = `"${content} ${count}" を空白にしますか？`;
-							if (confirm(confirmMessage)) {
-								row.cells[6].textContent = "";
-							}
-						}else{
+				const content = row.cells[4].textContent.trim();
+				const count = row.cells[6].textContent.trim();
+				
+				if (row.cells[6].textContent != "") {
+					if(isSafari()){
+						const confirmMessage = `"${content} ${count}" を空白にしますか？`;
+						if (confirm(confirmMessage)) {
 							row.cells[6].textContent = "";
-							btn.style.backgroundColor = '#FFCC99';
 						}
-					}
-				}else if(rows[0].cells[13].textContent == "強調"){
-					if(row.cells[13].textContent.substr(0,1) == "！"){
-						row.cells[13].innerText = row.cells[13].textContent.substr(1);
-						row.style.backgroundColor = "#fff";
-						rows[i].cells[4].style.backgroundColor = "#fff";
 					}else{
-						row.cells[13].innerText = "！" + row.cells[13].innerText;
-						row.style.backgroundColor = "#f07c78";
-						rows[i].cells[4].style.backgroundColor = "#f07c78";
+						row.cells[6].textContent = "";
+						btn.style.backgroundColor = '#FFCC99';
 					}
 				}
 				break;
@@ -1083,12 +1042,24 @@
 	});
 
 	function detailcell(rowId) {
-		const table = document.getElementById('csvTable');
+		var table = document.getElementById('csvTable');
+		var rows = table.rows;
 		let targetRow = null;
 		for (let i = 0; i < table.rows.length; i++) {
 			if (Number(table.rows[i].cells[0].textContent) === Number(rowId)) {
-				targetRow = table.rows[i];
-				break;
+				if(rows[0].cells[13].textContent == "強調"){
+					if(table.rows[i].cells[13].textContent.substr(0,1) == "！"){
+						table.rows[i].cells[13].innerText = table.rows[i].cells[13].textContent.substr(1);
+						table.rows[i].style.backgroundColor = "#fff";
+					}else{
+						table.rows[i].cells[13].innerText = "！" + table.rows[i].cells[13].innerText;
+						table.rows[i].style.backgroundColor = "#f07c78";
+					}
+					return;
+				}else{
+					targetRow = table.rows[i];
+					break;
+				}
 			}
 		}
 		if (!targetRow) return;
