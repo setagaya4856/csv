@@ -1094,7 +1094,7 @@
 	
 		const overlay = document.getElementById('whiteOverlay');
 	
-		let editorHTML = `<div style="background:white; padding:2em; max-height:90vh; overflow:auto;">`;
+		let editorHTML = `<div style="background:white; padding:0; max-height:90vh; overflow:auto;">`;
 		editorHTML += `<p style="font-size:40px;">詳細:${targetRow.cells[4].textContent}</p>`;
 		editorHTML += `<table style="width:85vw; border-collapse: collapse; font-size: 40px;  margin: auto;">`;
 	
@@ -1121,9 +1121,9 @@
 		editorHTML += `</table><br><div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">`;
 	
 		editorHTML += `
-			<button style="font-size:40px; padding:10px 20px;" onclick="clearCols(${rowId})">一部クリア</button>
-			<button style="font-size:40px; padding:10px 20px;" onclick="cancelDetail()">キャンセル</button>
-			<button style="font-size:40px; padding:10px 20px;" onclick="saveDetail(${rowId})">保存</button>
+			<button style="font-size:40px; padding:10px 5px;" onclick="clearCols(${rowId})">一部クリア</button>
+			<button style="font-size:40px; padding:10px 5px;" onclick="cancelDetail()">キャンセル</button>
+			<button style="font-size:40px; padding:10px 5px;" onclick="saveDetail(${rowId})">保存</button>
 		</div></div>`;
 	
 		overlay.innerHTML = editorHTML;
@@ -1185,7 +1185,7 @@
 			if (colIdx > maxCol) maxCol = colIdx;
 		}
 	
-		let html = `<div style="background:white; padding:1em; max-height:90vh; overflow:auto;">`;
+		let html = `<div style="background:white; padding:0; max-height:90vh; overflow:auto;">`;
 		html += `<table style="border-collapse: collapse; font-size: 40px; width:85vw;  margin: auto;">`;
 	
 		for (let r = 1; r <= maxRow; r++) {
