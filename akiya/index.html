@@ -1096,7 +1096,7 @@
 	
 		let editorHTML = `<div style="background:white; padding:0; max-height:90vh; overflow:auto;">`;
 		editorHTML += `<p style="font-size:40px;">詳細:${targetRow.cells[4].textContent}</p>`;
-		editorHTML += `<table style="width:85vw; border-collapse: collapse; font-size: 40px;  margin: auto;">`;
+		editorHTML += `<table style="width:98vw; border-collapse: collapse; font-size: 40px;  margin: auto;">`;
 	
 		for (let i = 0; i <= 14; i++) {
 			if (i >= targetRow.cells.length) break;
@@ -1210,7 +1210,7 @@
 			for (let c = 1; c <= maxCol; c++) {
 				const key = `${r}_${c}`;
 				if (!matrix[key]) {
-					html += `<td style="width:24vw; border:1px solid #ccc; background:#f8f8f8;">-</td>`;
+					html += `<td style="width:23vw; border:1px solid #ccc; background:#f8f8f8;">-</td>`;
 					continue;
 				}
 	
