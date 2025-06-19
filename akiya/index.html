@@ -1096,7 +1096,7 @@
 	
 		let editorHTML = `<div style="background:white; padding:2em; max-height:90vh; overflow:auto;">`;
 		editorHTML += `<p style="font-size:40px;">詳細:${targetRow.cells[4].textContent}</p>`;
-		editorHTML += `<table style="width:90vw; border-collapse: collapse; font-size: 40px;  margin: auto;">`;
+		editorHTML += `<table style="width:85vw; border-collapse: collapse; font-size: 40px;  margin: auto;">`;
 	
 		for (let i = 0; i <= 14; i++) {
 			if (i >= targetRow.cells.length) break;
@@ -1110,7 +1110,7 @@
 					<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
 					<td style="border:1px solid #888; padding:5px;">
 						<input type="text"
-							   style="width:70vw; font-size: 40px; ${grayscaleStyle}"
+							   style="width:60vw; font-size: 40px; ${grayscaleStyle}"
 							   id="edit_col_${i}"
 							   value="${value}"
 							   ${isEditable ? '' : 'disabled'}>
@@ -1186,7 +1186,7 @@
 		}
 	
 		let html = `<div style="background:white; padding:1em; max-height:90vh; overflow:auto;">`;
-		html += `<table style="border-collapse: collapse; font-size: 40px; width:90vw;  margin: auto;">`;
+		html += `<table style="border-collapse: collapse; font-size: 40px; width:85vw;  margin: auto;">`;
 	
 		for (let r = 1; r <= maxRow; r++) {
 			html += `<tr>`;
@@ -1201,10 +1201,10 @@
 				const id = `cell_${no}_${r}_${c}`;
 	
 				if (cell.able === 0) {
-					html += `<td style="width:28vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
+					html += `<td style="width:25vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
 				} else {
-					html += `<td style="width:28vw; border:1px solid #888;">`;
-					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:40px; width:90%;">`;
+					html += `<td style="width:25vw; border:1px solid #888;">`;
+					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:40px; width:70%;">`;
 					html += `<datalist id="list_${id}">`;
 					for (const opt of cell.options) {
 						html += `<option value="${opt}">`;
