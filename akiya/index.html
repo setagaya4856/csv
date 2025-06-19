@@ -1097,7 +1097,7 @@
 	
 		let editorHTML = `<div style="background:white; padding:0; max-height:90vh; overflow:auto;">`;
 		editorHTML += `<p style="font-size:40px;">詳細:${targetRow.cells[4].textContent}</p>`;
-		editorHTML += `<table style="width:98vw; border-collapse: collapse; font-size: 40px;  margin: auto;">`;
+		editorHTML += `<table style="max-width:95vw; border-collapse: collapse; font-size: 40px;  margin: auto;">`;
 	
 		for (let i = 0; i <= 14; i++) {
 			if (i >= targetRow.cells.length) break;
@@ -1109,9 +1109,9 @@
 			editorHTML += `
 				<tr>
 					<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
-					<td style="width:60vw; border:1px solid #888; padding:5px;">
+					<td style="width:70vw; border:1px solid #888; padding:5px;">
 						<input type="text"
-							   style="width:60vw; font-size: 40px; ${grayscaleStyle}"
+							   style="width:70vw; font-size: 40px; ${grayscaleStyle}"
 							   id="edit_col_${i}"
 							   value="${value}"
 							   ${isEditable ? '' : 'disabled'}>
