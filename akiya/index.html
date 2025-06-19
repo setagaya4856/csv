@@ -1186,7 +1186,7 @@
 		}
 	
 		let html = `<div style="background:white; padding:1em; max-height:90vh; overflow:auto;">`;
-		html += `<table style="border-collapse: collapse; font-size: 24px; width:90vw; ;">`;
+		html += `<table style="border-collapse: collapse; font-size: 30px; width:90vw; ;">`;
 	
 		for (let r = 1; r <= maxRow; r++) {
 			html += `<tr>`;
@@ -1204,7 +1204,7 @@
 					html += `<td style="width:28vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
 				} else {
 					html += `<td style="width:28vw; border:1px solid #888;">`;
-					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:20px; width:90%;">`;
+					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:30px; width:90%;">`;
 					html += `<datalist id="list_${id}">`;
 					for (const opt of cell.options) {
 						html += `<option value="${opt}">`;
