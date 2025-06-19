@@ -1218,9 +1218,9 @@
 				const id = `cell_${no}_${r}_${c}`;
 	
 				if (cell.able === 0) {
-					html += `<td style="width:24vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
+					html += `<td style="width:23vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
 				} else {
-					html += `<td style="width:24vw; border:1px solid #888;">`;
+					html += `<td style="width:23vw; border:1px solid #888;">`;
 					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:40px; width:70%;">`;
 					html += `<datalist id="list_${id}">`;
 					for (const opt of cell.options) {
@@ -1233,7 +1233,7 @@
 			html += `</tr>`;
 		}
 	
-		html += `</table><br><div style="text-align:center;">`;
+		html += `</table><br><div style="text-align:center; margin-top: 0;">`;
 		html += `<button style="font-size:40px;" onclick="saveFormcell(${no})">保存</button>`;
 		html += `<button style="font-size:40px; margin-left:1em;" onclick="cancelDetail()">キャンセル</button>`;
 		html += `</div></div>`;
