@@ -1129,6 +1129,15 @@
 		overlay.innerHTML = editorHTML;
 		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
+		
+		// 背景スクロール禁止
+		const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+		document.body.dataset.scrollY = scrollTop;
+		document.body.style.position = 'fixed';
+		document.body.style.top = `-${scrollTop}px`;
+		document.body.style.left = '0';
+		document.body.style.right = '0';
+		document.body.style.overflow = 'hidden';
 	}
 	function saveDetail(rowId) {
 		const table = document.getElementById('csvTable');
@@ -1149,6 +1158,14 @@
 		const overlay = document.getElementById("whiteOverlay");
 		overlay.style.opacity = "0";
 		overlay.style.pointerEvents = "none";
+
+		const scrollY = document.body.dataset.scrollY || '0';
+		document.body.style.position = '';
+		document.body.style.top = '';
+		document.body.style.left = '';
+		document.body.style.right = '';
+		document.body.style.overflow = '';
+		window.scrollTo(0, parseInt(scrollY));
 	}
 	function clearCols(rowId) {
 		for (let i = 7; i <= 14; i++) {
@@ -1224,6 +1241,15 @@
 		overlay.innerHTML = html;
 		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
+
+		// 背景スクロール禁止
+		const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+		document.body.dataset.scrollY = scrollTop;
+		document.body.style.position = 'fixed';
+		document.body.style.top = `-${scrollTop}px`;
+		document.body.style.left = '0';
+		document.body.style.right = '0';
+		document.body.style.overflow = 'hidden';
 	}
 		
 	function saveFormcell(no) {
@@ -1252,6 +1278,14 @@
 		overlay.innerHTML = '';
 		overlay.style.opacity = '0';
 		overlay.style.pointerEvents = 'none';
+		
+		const scrollY = document.body.dataset.scrollY || '0';
+		document.body.style.position = '';
+		document.body.style.top = '';
+		document.body.style.left = '';
+		document.body.style.right = '';
+		document.body.style.overflow = '';
+		window.scrollTo(0, parseInt(scrollY));
 	}
     </script>
 </body>
