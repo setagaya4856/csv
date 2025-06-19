@@ -1093,9 +1093,9 @@
 		editorHTML += `</table><br><div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">`;
 	
 		editorHTML += `
-			<button style="font-size:40px; padding:10px 5px;" onclick="clearCols(${rowId})">一部クリア</button>
-			<button style="font-size:40px; padding:10px 5px;" onclick="cancelDetail()">キャンセル</button>
 			<button style="font-size:40px; padding:10px 5px;" onclick="saveDetail(${rowId})">保存</button>
+			<button style="font-size:40px; padding:10px 5px;" onclick="cancelDetail()">キャンセル</button>
+			<button style="font-size:40px; padding:10px 5px;" onclick="clearCols(${rowId})">クリア</button>
 		</div></div>`;
 	
 		overlay.innerHTML = editorHTML;
@@ -1140,7 +1140,7 @@
 		window.scrollTo(0, parseInt(scrollY));
 	}
 	function clearCols(rowId) {
-		for (let i = 7; i <= 14; i++) {
+		for (let i = 8; i <= 14; i++) {
 			const input = document.getElementById(`edit_col_${i}`);
 			if (input) input.value = '';
 		}
