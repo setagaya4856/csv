@@ -1203,7 +1203,7 @@
 		}
 	
 		let html = `<div style="background:white; padding:0; max-height:100vh; overflow:auto;">`;
-		html += `<table style="border-collapse: collapse; font-size: 40px; width:98vw;  margin: auto;">`;
+		html += `<table style="border-collapse: collapse; font-size: 40px; max-width:98vw;  margin: auto;">`;
 	
 		for (let r = 1; r <= maxRow; r++) {
 			html += `<tr>`;
@@ -1233,7 +1233,7 @@
 			html += `</tr>`;
 		}
 	
-		html += `</table><br><div style="text-align:center; margin-top: 0;">`;
+		html += `</table><div style="text-align:center; margin-top: 0;">`;
 		html += `<button style="font-size:40px;" onclick="saveFormcell(${no})">保存</button>`;
 		html += `<button style="font-size:40px; margin-left:1em;" onclick="cancelDetail()">キャンセル</button>`;
 		html += `</div></div>`;
