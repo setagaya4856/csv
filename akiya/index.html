@@ -1210,7 +1210,7 @@
 			for (let c = 1; c <= maxCol; c++) {
 				const key = `${r}_${c}`;
 				if (!matrix[key]) {
-					html += `<td style="width:25vw; border:1px solid #ccc; background:#f8f8f8;">-</td>`;
+					html += `<td style="width:24vw; border:1px solid #ccc; background:#f8f8f8;">-</td>`;
 					continue;
 				}
 	
@@ -1218,9 +1218,9 @@
 				const id = `cell_${no}_${r}_${c}`;
 	
 				if (cell.able === 0) {
-					html += `<td style="width:25vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
+					html += `<td style="width:24vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
 				} else {
-					html += `<td style="width:25vw; border:1px solid #888;">`;
+					html += `<td style="width:24vw; border:1px solid #888;">`;
 					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:40px; width:70%;">`;
 					html += `<datalist id="list_${id}">`;
 					for (const opt of cell.options) {
