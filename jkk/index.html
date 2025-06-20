@@ -196,6 +196,11 @@
 		    color: black;
 		    transition: opacity 0.2s ease;
 		    touch-action: none; /* ←追加 */
+		    -webkit-text-size-adjust: 100%; /* iOSの文字拡大防止 */
+		    -webkit-touch-callout: none;
+		    -webkit-user-select: none;
+	            -ms-user-select: none;
+		    user-select: none;
 		}
 	</style>
 </head>
