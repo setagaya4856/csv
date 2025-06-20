@@ -1201,11 +1201,13 @@
 				} else {
 					html += `<td style="width:23vw; border:1px solid #888;">`;
 					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:40px; width:80%;">`;
-					html += `<datalist id="list_${id}">`;
-					for (const opt of cell.options) {
-						html += `<option value="${opt}">`;
+					if(cell.options != 0){
+						html += `<datalist id="list_${id}">`;
+						for (const opt of cell.options) {
+							html += `<option value="${opt}">`;
+						}
+						html += `</datalist>`;
 					}
-					html += `</datalist>`;
 					html += `</td>`;
 				}
 			}
