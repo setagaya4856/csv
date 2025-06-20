@@ -1094,9 +1094,9 @@
 		editorHTML += `</table><br><div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">`;
 	
 		editorHTML += `
-			<button style="width:30vw;height:5vh;font-size:40px;" onclick="saveDetail(${rowId})">保存</button>
 			<button style="width:30vw;height:5vh;font-size:40px;" onclick="cancelDetail()">キャンセル</button>
 			<button style="width:30vw;height:5vh;font-size:40px;" onclick="clearCols(${rowId})">クリア</button>
+			<button style="width:30vw;height:5vh;font-size:40px;" onclick="saveDetail(${rowId})">保存</button>
 		</div></div>`;
 	
 		overlay.innerHTML = editorHTML;
@@ -1207,8 +1207,8 @@
 		}
 	
 		html += `</table><div style="text-align:center; margin-top: 0;">`;
-		html += `<button style="width:30vw;height:5vh;font-size:40px;" onclick="saveFormcell(${no})">保存</button>`;
 		html += `<button style="width:30vw;height:5vh;font-size:40px; margin-left:1em;" onclick="cancelDetail()">キャンセル</button>`;
+		html += `<button style="width:30vw;height:5vh;font-size:40px;" onclick="saveFormcell(${no})">保存</button>`;
 		html += `</div></div>`;
 	
 		overlay.innerHTML = html;
