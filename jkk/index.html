@@ -196,11 +196,6 @@
 		    color: black;
 		    transition: opacity 0.2s ease;
 		    touch-action: none; /* ←追加 */
-		    -webkit-text-size-adjust: 100%; /* iOSの文字拡大防止 */
-		    -webkit-touch-callout: none;
-		    -webkit-user-select: none;
-	            -ms-user-select: none;
-		    user-select: none;
 		}
 	</style>
 </head>
@@ -1078,7 +1073,7 @@
 	
 		const overlay = document.getElementById('whiteOverlay');
 	
-		let editorHTML = `<div style="background:white; padding:0; max-height:90vh; overflow:auto;">`;
+		let editorHTML = `<div style="background:white; padding:0; max-height:90vh;">`;
 		editorHTML += `<p style="font-size:40px;">詳細:${targetRow.cells[4].textContent}</p>`;
 		editorHTML += `<table style="max-width:95vw; border-collapse: collapse; font-size: 40px;  margin: auto;">`;
 	
@@ -1186,7 +1181,7 @@
 			if (colIdx > maxCol) maxCol = colIdx;
 		}
 	
-		let html = `<div style="background:white; padding:0; max-height:100vh; overflow:auto;">`;
+		let html = `<div style="background:white; padding:0; max-height:100vh;">`;
 		html += `<table style="border-collapse: collapse; font-size: 40px; max-width:95vw;  margin: auto;">`;
 	
 		for (let r = 1; r <= maxRow; r++) {
