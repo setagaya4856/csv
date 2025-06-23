@@ -30,7 +30,7 @@
 		    height: 6vh;
 		    width: 100vw;
 		    background: #DDFFFF;
-		    font-size: 30px;
+		    font-size: 16px;
 		
 		    display: flex;
 		    align-items: center;   /* 垂直中央揃え */
@@ -74,30 +74,30 @@
 		.dateil {
 		    width: 8vw;
 		    text-align: center;
-		    font-size: 45px;
+		    font-size: 16px;
 		}
 		
 		.naiyo {
 		    width: 56vw;
-		    font-size: 45px;
+		    font-size: 16px;
 		}
 		
 		.btn {
 		    width: 8vw;
 		    text-align: center;
-		    font-size: 45px;
+		    font-size: 16px;
 		}
 		
 		.count {
 		    width: 10vw;
 		    text-align: center;
-		    font-size: 45px;
+		    font-size: 16px;
 		}
 		
 		.unit {
 		    width: 7vw;
 		    text-align: left;
-		    font-size: 25px;
+		    font-size: 16px;
 		}
 		
 		.pbtn {
@@ -109,7 +109,7 @@
 		    width: 7vw;
 		    height: 4vh;
 		    background: #DDFFDD;
-		    font-size: 30px;
+		    font-size: 16px;
 		    padding: 2px;
 		    text-align: center;
 		}
@@ -118,7 +118,7 @@
 		    width: 7vw;
 		    height: 4vh;
 		    background: #FFFFCC;
-		    font-size: 30px;
+		    font-size: 16px;
 		    padding: 2px;
 		    text-align: center;
 		}
@@ -127,7 +127,7 @@
 		    width: 7vw;
 		    height: 4vh;
 		    background: #FFCC99;
-		    font-size: 30px;
+		    font-size: 16px;
 		    padding: 2px;
 		    text-align: center;
 		}
@@ -145,7 +145,7 @@
 		    width: 10.5vw;
 		    height: 6vh;
 		    background: #FFCC99;
-		    font-size: 40px;
+		    font-size: 16px;
 		    padding: 2px;
 		    text-align: center;
 		}
@@ -192,7 +192,7 @@
 		    display: flex;
 		    align-items: center;
 		    justify-content: center;
-		    font-size: 50px;
+		    font-size: 16px;
 		    color: black;
 		    transition: opacity 0.2s ease;
 		    touch-action: none; /* ←追加 */
@@ -203,7 +203,7 @@
   	<header>
   		<div class="header-inner">
 	  		　<button style="width:15vw;height:4vh;font-size:16px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>
-			<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:30px;" class="filecsv">
+			<input type="file" id="csvFileInput" accept=".csv" style="width:20vw;height:3vh;font-size:16px;" class="filecsv">
 			<button style="width:15vw;height:3vh;font-size:16px;" onclick="downloadCSV()" class="csvbtn">保存</button>
 			<select id="roomword" class="roomword" style="width:21vw;height:3vh;font-size:16px;">
   			<option value=""></option>
@@ -217,8 +217,8 @@
   			<option value="居室3">居室3</option>
   			<option value="バルコニー">バルコニー</option>
 			</select> 
-			<button style="width:18vw;height:3vh;font-size:30px;" onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
-	    		<button style="width:15vw;height:4vh;font-size:30px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button>　
+			<button style="width:18vw;height:3vh;font-size:16px;" onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
+	    		<button style="width:15vw;height:4vh;font-size:16px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button>　
 		</div>
   	</header>
 	<br>
@@ -714,7 +714,7 @@
 	function downloadCSV() {
 		const overlay = document.getElementById("whiteOverlay");
 		// 表示する（保存開始）
-		overlay.innerHTML = `<p style="font-size:100px;">保存中...</p>`;
+		overlay.innerHTML = `<p style="font-size:32px;">保存中...</p>`;
 		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
 		const table = document.getElementById('csvTable');
@@ -805,7 +805,7 @@
 		const color = isError ? "red" : "black";
 		const fontSize = "50px";
 		const buttonStyle = `
-			font-size: 40px;
+			font-size: 16px;
 			padding: 20px 40px;
 			width: 30vw;
 			border-radius: 20px;
@@ -973,7 +973,7 @@
 			const confirmMessage = `原本の読み込みをしますか？`;
 			if (confirm(confirmMessage)) {
 				// 表示する
-				overlay.innerHTML = `<p style="font-size:100px;">読み込み中...</p>`;
+				overlay.innerHTML = `<p style="font-size:32px;">読み込み中...</p>`;
 				overlay.style.opacity = "1";
 				overlay.style.pointerEvents = "auto";
 				
@@ -1006,7 +1006,7 @@
 			showMessageOverlay("原本の読み込みをしますか？", 
 				() => {
 					// 表示する
-					overlay.innerHTML = `<p style="font-size:100px;">読み込み中...</p>`;
+					overlay.innerHTML = `<p style="font-size:32px;">読み込み中...</p>`;
 					overlay.style.opacity = "1";
 					overlay.style.pointerEvents = "auto";
 					
@@ -1074,8 +1074,8 @@
 		const overlay = document.getElementById('whiteOverlay');
 	
 		let editorHTML = `<div style="background:white; padding:0; max-height:90vh;">`;
-		editorHTML += `<p style="font-size:40px;">詳細:${targetRow.cells[4].textContent}</p>`;
-		editorHTML += `<table style="max-width:95vw; border-collapse: collapse; font-size: 40px;  margin: auto;">`;
+		editorHTML += `<p style="font-size:16px;">詳細:${targetRow.cells[4].textContent}</p>`;
+		editorHTML += `<table style="max-width:95vw; border-collapse: collapse; font-size: 16px;  margin: auto;">`;
 	
 		for (let i = 0; i <= 14; i++) {
 			if (i >= targetRow.cells.length) break;
@@ -1089,7 +1089,7 @@
 					<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
 					<td style="width:70vw; border:1px solid #888; padding:5px;">
 						<input type="text"
-							   style="width:70vw; font-size: 40px; ${grayscaleStyle}"
+							   style="width:70vw; font-size: 16px; ${grayscaleStyle}"
 							   id="edit_col_${i}"
 							   value="${value}"
 							   ${isEditable ? '' : 'disabled'}>
@@ -1100,9 +1100,9 @@
 		editorHTML += `</table><br><div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">`;
 	
 		editorHTML += `
-			<button style="width:28vw;height:5vh;font-size:40px;" onclick="cancelDetail()">キャンセル</button>
-			<button style="width:28vw;height:5vh;font-size:40px;" onclick="clearCols(${rowId})">クリア</button>
-			<button style="width:28vw;height:5vh;font-size:40px;" onclick="saveDetail(${rowId})">保存</button>
+			<button style="width:28vw;height:5vh;font-size:16px;" onclick="cancelDetail()">キャンセル</button>
+			<button style="width:28vw;height:5vh;font-size:16px;" onclick="clearCols(${rowId})">クリア</button>
+			<button style="width:28vw;height:5vh;font-size:16px;" onclick="saveDetail(${rowId})">保存</button>
 		</div></div>`;
 	
 		overlay.innerHTML = editorHTML;
@@ -1182,7 +1182,7 @@
 		}
 	
 		let html = `<div style="background:white; padding:0; max-height:100vh;">`;
-		html += `<table style="border-collapse: collapse; font-size: 40px; max-width:95vw;  margin: auto;">`;
+		html += `<table style="border-collapse: collapse; font-size: 16px; max-width:95vw;  margin: auto;">`;
 	
 		for (let r = 1; r <= maxRow; r++) {
 			html += `<tr>`;
@@ -1200,7 +1200,7 @@
 					html += `<td style="width:23vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
 				} else {
 					html += `<td style="width:23vw; border:1px solid #888;">`;
-					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:40px; width:80%;">`;
+					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:16px; width:80%;">`;
 					if(cell.options != 0){
 						html += `<datalist id="list_${id}">`;
 						for (const opt of cell.options) {
@@ -1215,8 +1215,8 @@
 		}
 	
 		html += `</table><div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap; margin-top: 0; ">`;
-		html += `<button style="width:30vw;height:5vh;font-size:40px; margin-left:1em;" onclick="cancelDetail()">キャンセル</button>`;
-		html += `<button style="width:30vw;height:5vh;font-size:40px;" onclick="saveFormcell(${no})">保存</button>`;
+		html += `<button style="width:30vw;height:5vh;font-size:16px; margin-left:1em;" onclick="cancelDetail()">キャンセル</button>`;
+		html += `<button style="width:30vw;height:5vh;font-size:16px;" onclick="saveFormcell(${no})">保存</button>`;
 		html += `</div></div>`;
 	
 		overlay.innerHTML = html;
