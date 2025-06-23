@@ -175,9 +175,9 @@
 		
 		#whiteOverlay {
 		    opacity: 0;
-		    pointer-events: none;
-		    position: fixed;
-		    top: 0; left: 0;
+		    pointer-events: none;		 
+		    position: absolute;
+  		    top: 0; left: 0;
 		    width: 100vw;
 		    height: 100vh;
 		    background: white;
@@ -189,6 +189,8 @@
 		    color: black;
 		    transition: opacity 0.2s ease;
 		    touch-action: none; /* ←追加 */
+		    will-change: transform;
+		    transform: translateZ(0);
 		}
 	</style>
 </head>
