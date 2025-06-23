@@ -175,9 +175,9 @@
 		
 		#whiteOverlay {
 		    opacity: 0;
-		    pointer-events: none;		 
+		    pointer-events: none;
 		    position: fixed;
-  		    top: 0; left: 0;
+		    top: 0; left: 0;
 		    width: 100vw;
 		    height: 100vh;
 		    background: white;
@@ -189,8 +189,6 @@
 		    color: black;
 		    transition: opacity 0.2s ease;
 		    touch-action: none; /* ←追加 */
-		    will-change: transform;
-		    transform: translateZ(0);
 		}
 	</style>
 </head>
@@ -1105,14 +1103,13 @@
 		overlay.style.pointerEvents = "auto";
 		
 		// 背景スクロール禁止
-		//const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-		//document.body.dataset.scrollY = scrollTop;
-		//document.body.style.position = 'fixed';
-		//document.body.style.top = `-${scrollTop}px`;
-		//document.body.style.left = '0';
-		//document.body.style.right = '0';
-		document.body.style.overflowY = 'hidden';
-		document.documentElement.style.overflowY = 'hidden';
+		const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+		document.body.dataset.scrollY = scrollTop;
+		document.body.style.position = 'fixed';
+		document.body.style.top = `-${scrollTop}px`;
+		document.body.style.left = '0';
+		document.body.style.right = '0';
+		document.body.style.overflow = 'hidden';
 	}
 	function saveDetail(rowId) {
 		const table = document.getElementById('csvTable');
@@ -1135,14 +1132,12 @@
 		overlay.style.pointerEvents = "none";
 		document.body.style.zoom = "1.0";
 
-		//const scrollY = document.body.dataset.scrollY || '0';
-		//document.body.style.position = '';
-		//document.body.style.top = '';
-		//document.body.style.left = '';
-		//document.body.style.right = '';
-		//window.scrollTo(0, parseInt(scrollY));
-		document.body.style.overflowY = '';
-		document.documentElement.style.overflowY = '';
+		const scrollY = document.body.dataset.scrollY || '0';
+		document.body.style.position = '';
+		document.body.style.top = '';
+		document.body.style.left = '';
+		document.body.style.right = '';
+		window.scrollTo(0, parseInt(scrollY));
 	}
 	function clearCols(rowId) {
 		for (let i = 8; i <= 14; i++) {
@@ -1222,14 +1217,13 @@
 		overlay.style.pointerEvents = "auto";
 
 		// 背景スクロール禁止
-		// const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-		// document.body.dataset.scrollY = scrollTop;
-		// document.body.style.position = 'fixed';
-		// document.body.style.top = `-${scrollTop}px`;
-		// document.body.style.left = '0';
-		// document.body.style.right = '0';
-		document.body.style.overflowY = 'hidden';
-		document.documentElement.style.overflowY = 'hidden';
+		const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+		document.body.dataset.scrollY = scrollTop;
+		document.body.style.position = 'fixed';
+		document.body.style.top = `-${scrollTop}px`;
+		document.body.style.left = '0';
+		document.body.style.right = '0';
+		document.body.style.overflow = 'hidden';
 	}
 		
 	function saveFormcell(no) {
@@ -1260,14 +1254,12 @@
 		overlay.style.pointerEvents = 'none';
 		document.body.style.zoom = "1.0";  
 
-		// const scrollY = document.body.dataset.scrollY || '0';
-		// document.body.style.position = '';
-		// document.body.style.top = '';
-		// document.body.style.left = '';
-		// document.body.style.right = '';
-		// window.scrollTo(0, parseInt(scrollY));
-		document.body.style.overflowY = '';
-		document.documentElement.style.overflowY = '';
+		const scrollY = document.body.dataset.scrollY || '0';
+		document.body.style.position = '';
+		document.body.style.top = '';
+		document.body.style.left = '';
+		document.body.style.right = '';
+		window.scrollTo(0, parseInt(scrollY));
 	}
     </script>
 </body>
