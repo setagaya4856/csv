@@ -2,18 +2,25 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-	<meta name="viewport" content="user-scalable=no">
+	<meta name="viewport" content="maximum-scale=1, user-scalable=no">
 	<meta charset="UTF-8" name="apple-mobile-web-app-capable" content="yes">
     	<title>空家データ入力</title>
     	<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
 	<style>
+		html, body, input, select, textarea, button {
+  		     touch-action: manipulation; /* モバイルでのタッチ操作最適化 */
+		    -webkit-text-size-adjust: 100%; /* iOSの文字拡大防止 */
+		    -webkit-touch-callout: none;
+		    -webkit-user-select: none;
+	            -ms-user-select: none;
+		    user-select: none;
+		}
+		
 		html, body {
 		    overflow-x: hidden;  /* 横スクロールを無効にする */
 		    width: 100vw;  /* 横幅を画面いっぱいに設定 */
 		    margin: 0;
 		    padding: 0;
-		    touch-action: manipulation;  /* モバイルでのタッチ操作最適化 */
-		    -webkit-text-size-adjust: 100%; /* iOSの文字拡大防止 */
 		}
 		
 		header {
@@ -359,8 +366,7 @@
 			tr.appendChild(tdR);
 			const tdRX = document.createElement('td');
 			tdRX.contentEditable = false;
-			if((Number(cells[2]) == 60 || Number(cells[2]) == 70 || Number(cells[2]) == 80 || Number(cells[2]) == 90 || Number(cells[2]) < 50 ) 
-			   && Number(cells[2]) != 0){
+			if((Number(cells[2]) == 60 || Number(cells[2]) == 70 || Number(cells[2]) == 80 || Number(cells[2]) == 90 || Number(cells[2]) < 50)){
 				const detail_tr = document.createElement("input");
 				detail_tr.setAttribute("type", "button");
 				detail_tr.setAttribute("value", "←");
@@ -507,7 +513,6 @@
 			rows[i].cells[7].style.display = "none";
 			rows[i].cells[6].className = "count";
 			rows[i].cells[5].className = "btn";
-			rows[i].cells[5].style.backgroundColor = "#fff";
 			rows[i].cells[4].className = "naiyo";
 			rows[i].cells[3].style.display = "none";
 			rows[i].cells[2].style.display = "none";
@@ -530,21 +535,9 @@
 		if(rows[0].cells[13].textContent == "単位"){
 			rows[0].cells[13].textContent = "強調";
 			document.getElementById('changebtn').style.backgroundColor = "#f07c78";
-			for (var i = 0; i < rows.length; i++) {
-				rows[i].cells[5].style.backgroundColor = "#f07c78";
-				if(Number(rows[i].cells[3].textContent) > 10000){
-					rows[i].cells[5].style.backgroundColor = "#FFCC99";
-				}
-			}
 		}else if(rows[0].cells[13].textContent == "強調"){
 			rows[0].cells[13].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
-			for (var i = 0; i < rows.length; i++) {
-				rows[i].cells[5].style.backgroundColor = "#fff";
-				if(Number(rows[i].cells[3].textContent) > 10000){
-					rows[i].cells[5].style.backgroundColor = "#FFCC99";
-				}
-			}
 		}else if(rows[0].cells[13].textContent == "部屋"){
 			rows[0].cells[13].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
@@ -588,7 +581,6 @@
 			rows[i].style.backgroundColor = "#fff";
 			rows[i].cells[1].style.backgroundColor = "#fff";
 			rows[i].cells[4].style.backgroundColor = "#fff";
-			rows[i].cells[5].style.backgroundColor = "#fff";
 			if( i == 1){
 				rows[i].cells[4].style.backgroundColor = "#f07c78";
 			}else if(Number(rows[i].cells[3].textContent) < 10 && Number(rows[i].cells[3].textContent) != 10000){
@@ -614,11 +606,9 @@
 				rows[i].style.backgroundColor = "#FFCC99";
 				rows[i].cells[1].style.backgroundColor = "#FFCC99";
 				rows[i].cells[4].style.backgroundColor = "#FFCC99";
-				rows[i].cells[5].style.backgroundColor = "#FFCC99";
 			}else if(rows[i].cells[13].textContent != ""){
 				if(rows[i].cells[13].textContent.substr(0,1) == "！"){
 					rows[i].style.backgroundColor = "#f07c78";
-					rows[i].cells[4].style.backgroundColor = "#f07c78";
 				}
 			}
 		}
@@ -929,20 +919,8 @@
 		
 		for (let row of rows) {
 			if (Number(row.cells[0].textContent) === Number(rowNo)) {
-				if(rows[0].cells[13].textContent == "単位"){
-					row.cells[6].textContent = Number(row.cells[6].textContent || 0) + 1;
-					break;
-				}else if(rows[0].cells[13].textContent == "強調"){
-					if(row.cells[13].textContent.substr(0,1) == "！"){
-						row.cells[13].innerText = row.cells[13].textContent.substr(1);
-						row.style.backgroundColor = "#fff";
-						rows[i].cells[4].style.backgroundColor = "#fff";
-					}else{
-						row.cells[13].innerText = "！" + row.cells[13].innerText;
-						row.style.backgroundColor = "#f07c78";
-						rows[i].cells[4].style.backgroundColor = "#f07c78";
-					}
-				}
+				row.cells[6].textContent = Number(row.cells[6].textContent || 0) + 1;
+				break;
 			}
 		}
 	}
@@ -956,30 +934,18 @@
 		
 		for (let row of rows) {
 			if (Number(row.cells[0].textContent) === Number(rowNo)) {
-				if(rows[0].cells[13].textContent == "単位"){
-					const content = row.cells[4].textContent.trim();
-					const count = row.cells[6].textContent.trim();
-					
-					if (row.cells[6].textContent != "") {
-						if(isSafari()){
-							const confirmMessage = `"${content} ${count}" を空白にしますか？`;
-							if (confirm(confirmMessage)) {
-								row.cells[6].textContent = "";
-							}
-						}else{
+				const content = row.cells[4].textContent.trim();
+				const count = row.cells[6].textContent.trim();
+				
+				if (row.cells[6].textContent != "") {
+					if(isSafari()){
+						const confirmMessage = `"${content} ${count}" を空白にしますか？`;
+						if (confirm(confirmMessage)) {
 							row.cells[6].textContent = "";
-							btn.style.backgroundColor = '#FFCC99';
 						}
-					}
-				}else if(rows[0].cells[13].textContent == "強調"){
-					if(row.cells[13].textContent.substr(0,1) == "！"){
-						row.cells[13].innerText = row.cells[13].textContent.substr(1);
-						row.style.backgroundColor = "#fff";
-						rows[i].cells[4].style.backgroundColor = "#fff";
 					}else{
-						row.cells[13].innerText = "！" + row.cells[13].innerText;
-						row.style.backgroundColor = "#f07c78";
-						rows[i].cells[4].style.backgroundColor = "#f07c78";
+						row.cells[6].textContent = "";
+						btn.style.backgroundColor = '#FFCC99';
 					}
 				}
 				break;
@@ -1083,19 +1049,31 @@
 	});
 
 	function detailcell(rowId) {
-		const table = document.getElementById('csvTable');
+		var table = document.getElementById('csvTable');
+		var rows = table.rows;
 		let targetRow = null;
 		for (let i = 0; i < table.rows.length; i++) {
 			if (Number(table.rows[i].cells[0].textContent) === Number(rowId)) {
-				targetRow = table.rows[i];
-				break;
+				if(rows[0].cells[13].textContent == "強調"){
+					if(table.rows[i].cells[13].textContent.substr(0,1) == "！"){
+						table.rows[i].cells[13].innerText = table.rows[i].cells[13].textContent.substr(1);
+						table.rows[i].style.backgroundColor = "#fff";
+					}else{
+						table.rows[i].cells[13].innerText = "！" + table.rows[i].cells[13].innerText;
+						table.rows[i].style.backgroundColor = "#f07c78";
+					}
+					return;
+				}else{
+					targetRow = table.rows[i];
+					break;
+				}
 			}
 		}
 		if (!targetRow) return;
 	
 		const overlay = document.getElementById('whiteOverlay');
 	
-		let editorHTML = `<div style="background:white; padding:0; max-height:90vh; overflow:auto;">`;
+		let editorHTML = `<div style="background:white; padding:0; max-height:90vh;">`;
 		editorHTML += `<p style="font-size:40px;">詳細:${targetRow.cells[4].textContent}</p>`;
 		editorHTML += `<table style="max-width:95vw; border-collapse: collapse; font-size: 40px;  margin: auto;">`;
 	
@@ -1122,9 +1100,9 @@
 		editorHTML += `</table><br><div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">`;
 	
 		editorHTML += `
-			<button style="font-size:40px; padding:10px 5px;" onclick="clearCols(${rowId})">一部クリア</button>
-			<button style="font-size:40px; padding:10px 5px;" onclick="cancelDetail()">キャンセル</button>
-			<button style="font-size:40px; padding:10px 5px;" onclick="saveDetail(${rowId})">保存</button>
+			<button style="width:28vw;height:5vh;font-size:40px;" onclick="cancelDetail()">キャンセル</button>
+			<button style="width:28vw;height:5vh;font-size:40px;" onclick="clearCols(${rowId})">クリア</button>
+			<button style="width:28vw;height:5vh;font-size:40px;" onclick="saveDetail(${rowId})">保存</button>
 		</div></div>`;
 	
 		overlay.innerHTML = editorHTML;
@@ -1159,17 +1137,17 @@
 		const overlay = document.getElementById("whiteOverlay");
 		overlay.style.opacity = "0";
 		overlay.style.pointerEvents = "none";
+		document.body.style.zoom = "1.0";
 
 		const scrollY = document.body.dataset.scrollY || '0';
 		document.body.style.position = '';
 		document.body.style.top = '';
 		document.body.style.left = '';
 		document.body.style.right = '';
-		document.body.style.overflow = '';
 		window.scrollTo(0, parseInt(scrollY));
 	}
 	function clearCols(rowId) {
-		for (let i = 7; i <= 14; i++) {
+		for (let i = 8; i <= 14; i++) {
 			const input = document.getElementById(`edit_col_${i}`);
 			if (input) input.value = '';
 		}
@@ -1203,7 +1181,7 @@
 			if (colIdx > maxCol) maxCol = colIdx;
 		}
 	
-		let html = `<div style="background:white; padding:0; max-height:100vh; overflow:auto;">`;
+		let html = `<div style="background:white; padding:0; max-height:100vh;">`;
 		html += `<table style="border-collapse: collapse; font-size: 40px; max-width:95vw;  margin: auto;">`;
 	
 		for (let r = 1; r <= maxRow; r++) {
@@ -1223,20 +1201,22 @@
 				} else {
 					html += `<td style="width:23vw; border:1px solid #888;">`;
 					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:40px; width:80%;">`;
-					html += `<datalist id="list_${id}">`;
-					for (const opt of cell.options) {
-						html += `<option value="${opt}">`;
+					if(cell.options != 0){
+						html += `<datalist id="list_${id}">`;
+						for (const opt of cell.options) {
+							html += `<option value="${opt}">`;
+						}
+						html += `</datalist>`;
 					}
-					html += `</datalist>`;
 					html += `</td>`;
 				}
 			}
 			html += `</tr>`;
 		}
 	
-		html += `</table><div style="text-align:center; margin-top: 0;">`;
-		html += `<button style="font-size:40px;" onclick="saveFormcell(${no})">保存</button>`;
-		html += `<button style="font-size:40px; margin-left:1em;" onclick="cancelDetail()">キャンセル</button>`;
+		html += `</table><div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap; margin-top: 0; ">`;
+		html += `<button style="width:30vw;height:5vh;font-size:40px; margin-left:1em;" onclick="cancelDetail()">キャンセル</button>`;
+		html += `<button style="width:30vw;height:5vh;font-size:40px;" onclick="saveFormcell(${no})">保存</button>`;
 		html += `</div></div>`;
 	
 		overlay.innerHTML = html;
@@ -1279,13 +1259,13 @@
 		overlay.innerHTML = '';
 		overlay.style.opacity = '0';
 		overlay.style.pointerEvents = 'none';
-		
+		document.body.style.zoom = "1.0";  
+
 		const scrollY = document.body.dataset.scrollY || '0';
 		document.body.style.position = '';
 		document.body.style.top = '';
 		document.body.style.left = '';
 		document.body.style.right = '';
-		document.body.style.overflow = '';
 		window.scrollTo(0, parseInt(scrollY));
 	}
     </script>
