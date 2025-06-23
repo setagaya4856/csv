@@ -22,6 +22,31 @@
 		    padding: 0;
 		}
 		
+		body {
+		    width: 100vw;
+		    overflow-x: hidden;  /* bodyにも横スクロール無効 */
+		}
+		
+		table {
+		    table-layout: fixed;
+		    width: 100vw;  /* テーブルの幅を100vwに設定 */
+		    overflow: hidden;  /* テーブル内のコンテンツがはみ出さないように */
+		    margin: auto;
+		}
+		
+		table, th, td {
+		    border: 1px solid black;
+		    border-collapse: collapse;
+		    overflow: hidden;
+		}
+		
+		th, td {
+		    padding: 2px;
+		    word-break: break-word;  /* 長い文字列が折り返しされるようにする */
+		    white-space: normal;  /* テーブル内で長いテキストが折り返されるように */
+		}
+
+		/* ヘッダー */
 		header {
 		    position: fixed;
 		    left: 0;
@@ -45,28 +70,47 @@
 		    gap: 1vw;  /* 各要素間に間隔を空ける */
 		}
 		
-		body {
-		    width: 100vw;
-		    overflow-x: hidden;  /* bodyにも横スクロール無効 */
+		.searchbtn {
+		    background: #FFFFCC;
+		    border: 1px solid #333;
+		　　width:18vw;
+		　　height:4vh;
+		　　font-size:16px;
 		}
 		
-		table {
-		    table-layout: fixed;
-		    width: 100vw;  /* テーブルの幅を100vwに設定 */
-		    overflow: hidden;  /* テーブル内のコンテンツがはみ出さないように */
-		    margin: auto;
+		.changebtn {
+		    background: #FFFFCC;
+		    border: 1px solid #333;
+		    width:13vw;
+		    height:4vh;
+		    font-size:16px;
 		}
 		
-		table, th, td {
-		    border: 1px solid black;
-		    border-collapse: collapse;
-		    overflow: hidden;
+		.filebtn {
+		    width:18vw;
+		　　height:4vh;
+		　　font-size:16px;
 		}
 		
-		th, td {
-		    padding: 2px;
-		    word-break: break-word;  /* 長い文字列が折り返しされるようにする */
-		    white-space: normal;  /* テーブル内で長いテキストが折り返されるように */
+		.delbtn {
+		    -webkit-user-select: none;
+		    user-select: none;
+		    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
+		    -webkit-user-drag: none;
+		　　touch-action: none;
+		    background: #f07c78;
+		    border: 1px solid #333;
+		　　width: 13vw;
+		　　height: 4vh;
+		　　font-size: 16px;
+		}
+		
+		.roomword {
+		    background: #FFFFCC;
+		    border: 1px solid #333;
+		    width:18vw;
+		    height:4vh;
+		    font-size:16px;
 		}
 		
 		/* セルの幅設定 */
@@ -92,7 +136,8 @@
 		    text-align: center;
 		    font-size: 18px;
 		}
-		
+
+		/* セル内ボタン設定 */
 		.pbtn {
 		    -webkit-user-select: none;
 		    user-select: none;
@@ -124,7 +169,8 @@
 		    2px;
 		    text-align: center;
 		}
-		
+
+		/* フッター */
 		footer {
 		    position: fixed;
 		    left: 0;
@@ -147,34 +193,10 @@
 		    10px;
 		    text-align: center;
 		}
-				
-		.searchbtn {
-		    background: #FFFFCC;
-		    border: 1px solid #333;
-		}
-		
-		.changebtn {
-		    background: #FFFFCC;
-		    border: 1px solid #333;
-		}
-		
-		.delbtn {
-		    -webkit-user-select: none;
-		    user-select: none;
-		    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
-		    -webkit-user-drag: none;
-		　　touch-action: none;
-		    background: #f07c78;
-		    border: 1px solid #333;
-		}
-		
-		.roomword {
-		    background: #FFFFCC;
-		    border: 1px solid #333;
-		}
-		
+
+		/*　背景レイヤー */
 		#whiteOverlay {
-		    opacity: 0;
+		    visibility : hidden;
 		    pointer-events: none;
 		    position: fixed;
 		    top: 0; left: 0;
@@ -188,18 +210,48 @@
 		    font-size: 16px;
 		    color: black;
 		    transition: opacity 0.2s ease;
-		    touch-action: none; /* ←追加 */
+		    touch-action: none;
+		}
+		
+		.confbtn {
+			font-size: 25px;
+			width: 25vw;
+			border-radius: 20px;
+			background-color: #ffffff;
+			border: 2px solid #888;
+			margin: 0 1em;
+		}
+		.detailtable {
+			max-width:95vw;
+			border-collapse: collapse;
+			font-size: 16px;
+			margin: auto;
+		}
+		.dcancelbtn {
+			width:30vw;
+			height:5vh;
+			font-size:16px;
+		}
+		.dclearbtn {
+			width:28vw;
+			height:5vh;
+			font-size:16px;
+		}
+		.dsavebtn {
+			width:28vw;
+			height:5vh;
+			font-size:16px;
 		}
 	</style>
 </head>
 <body>
   	<header>
   		<div class="header-inner">
-	  		<button style="width:13vw;height:4vh;font-size:16px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>
+	  		<button onclick="changeColumn()" id="changebtn" class="changebtn">!</button>
 			<input type="file" id="csvFileInput" accept=".csv" style="display:none" class="filecsv">
-			<button style="width:18vw;height:4vh;font-size:16px;" id="fileSelect" type="button">CSV</button>
-			<button style="width:18vw;height:4vh;font-size:16px;" onclick="downloadCSV()" class="csvbtn">保存</button>
-			<select id="roomword" class="roomword" style="width:18vw;height:4vh;font-size:16px;">
+			<button id="fileSelect" type="button" class="filebtn">CSV</button>
+			<button onclick="downloadCSV()" class="csvbtn">保存</button>
+			<select id="roomword" class="roomword">
   			<option value=""></option>
   			<option value="玄関">玄関</option>
   			<option value="DK">DK</option>
@@ -211,8 +263,8 @@
   			<option value="居室3">居室3</option>
   			<option value="バルコニー">バルコニー</option>
 			</select>
-			<button style="width:18vw;height:4vh;font-size:16px;" onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
-	    		<button style="width:13vw;height:4vh;font-size:16px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button>
+			<button onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
+	    		<button onclick="delColumn()" id="delbtn" class="delbtn">×</button>
 		</div>
   	</header>
 	<br>
@@ -709,7 +761,7 @@
 		const overlay = document.getElementById("whiteOverlay");
 		// 表示する（保存開始）
 		overlay.innerHTML = `<p style="font-size:32px;">保存中...</p>`;
-		overlay.style.opacity = "1";
+		overlay.style.visibility = "visible";
 		overlay.style.pointerEvents = "auto";
 		const table = document.getElementById('csvTable');
 		let csvContent = '';
@@ -764,7 +816,7 @@
 				: "保存しました";
 			if (isSafari()) {
 				alert(overlayMessage);
-				overlay.style.opacity = "0";
+				overlay.style.visibility = "hidden";
 				overlay.style.pointerEvents = "none";
 			} else {
 				showMessageOverlay(overlayMessage,null,null);
@@ -784,7 +836,7 @@
 				} else {
 					alert("保存されませんでした");
 				}
-				overlay.style.opacity = "0";
+				overlay.style.visibility = "hidden";
 				overlay.style.pointerEvents = "none";
 			} else {
 				showMessageOverlay("エラーが発生しました",null,null, true);
@@ -798,25 +850,17 @@
 		// 色とサイズの設定
 		const color = isError ? "red" : "black";
 		const fontSize = "32px";
-		const buttonStyle = `
-			font-size: 25px;
-			width: 25vw;
-			border-radius: 20px;
-			background-color: #ffffff;
-			border: 2px solid #888;
-			margin: 0 1em;
-		`;
 		
 		// OK専用モードか判定
 		const isOkOnly = !onCancel;
 		
 		let buttonHTML = "";
 		if (isOkOnly) {
-			buttonHTML = `<button id="confirmBtn" style="${buttonStyle}">OK</button>`;
+			buttonHTML = `<button id="confirmBtn" class="confbtn">OK</button>`;
 		} else {
 			buttonHTML = `
-				<button id="cancelBtn" style="${buttonStyle}">いいえ</button>
-				<button id="confirmBtn" style="${buttonStyle}">はい</button>
+				<button id="cancelBtn" class="confbtn">いいえ</button>
+				<button id="confirmBtn" class="confbtn">はい</button>
 			`;
 		}
 		
@@ -829,12 +873,12 @@
 			</div>
 		`;
 		
-		overlay.style.opacity = "1";
+		overlay.style.visibility = "visible";
 		overlay.style.pointerEvents = "auto";
 		
 		// イベント設定（OK または はい）
 		document.getElementById("confirmBtn").onclick = () => {
-			overlay.style.opacity = "0";
+			overlay.style.visibility = "hidden";
 			overlay.style.pointerEvents = "none";
 			if (onConfirm) onConfirm();
 		};
@@ -842,7 +886,7 @@
 		// イベント設定（いいえ）
 		if (!isOkOnly) {
 			document.getElementById("cancelBtn").onclick = () => {
-				overlay.style.opacity = "0";
+				overlay.style.visibility = "hidden";
 				overlay.style.pointerEvents = "none";
 				if (onCancel) onCancel();
 			};
@@ -967,7 +1011,7 @@
 			if (confirm(confirmMessage)) {
 				// 表示する
 				overlay.innerHTML = `<p style="font-size:32px;">読み込み中...</p>`;
-				overlay.style.opacity = "1";
+				overlay.style.visibility = "visible";
 				overlay.style.pointerEvents = "auto";
 				
 				fetch(url)  // fetch の呼び出しが必要
@@ -988,7 +1032,7 @@
 					displayCSV(cleanText);
 					roomColumn();
 					window.scrollTo({ top: 0, behavior: 'auto' });
-					overlay.style.opacity = "0";
+					overlay.style.visibility = "hidden";
 					overlay.style.pointerEvents = "none";
 				})
 				.catch(error => {
@@ -1000,7 +1044,7 @@
 				() => {
 					// 表示する
 					overlay.innerHTML = `<p style="font-size:32px;">読み込み中...</p>`;
-					overlay.style.opacity = "1";
+					overlay.style.visibility = "visible";
 					overlay.style.pointerEvents = "auto";
 					
 					fetch(url)  // fetch の呼び出しが必要
@@ -1021,7 +1065,7 @@
 						displayCSV(cleanText);
 						roomColumn();
 						window.scrollTo({ top: 0, behavior: 'auto' });
-						overlay.style.opacity = "0";
+						overlay.style.visibility = "hidden";
 						overlay.style.pointerEvents = "none";
 					})
 					.catch(error => {
@@ -1067,8 +1111,8 @@
 		const overlay = document.getElementById('whiteOverlay');
 	
 		let editorHTML = `<div style="background:white; padding:0; max-height:90vh;">`;
-		editorHTML += `<p style="font-size:16px;">詳細:${targetRow.cells[4].textContent}</p>`;
-		editorHTML += `<table style="max-width:95vw; border-collapse: collapse; font-size: 16px;  margin: auto;">`;
+		editorHTML += `<p style="font-size:16px;"> 詳細:${targetRow.cells[4].textContent}</p>`;
+		editorHTML += `<table class="detailtable">`;
 	
 		for (let i = 0; i <= 14; i++) {
 			if (i >= targetRow.cells.length) break;
@@ -1093,13 +1137,13 @@
 		editorHTML += `</table><br><div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">`;
 	
 		editorHTML += `
-			<button style="width:30vw;height:5vh;font-size:16px;" onclick="cancelDetail()">キャンセル</button>
-			<button style="width:28vw;height:5vh;font-size:16px;" onclick="clearCols(${rowId})">クリア</button>
-			<button style="width:28vw;height:5vh;font-size:16px;" onclick="saveDetail(${rowId})">保存</button>
+			<button onclick="cancelDetail()" class="dcancelbtn">キャンセル</button>
+			<button onclick="clearCols(${rowId})" class="dclearbtn">クリア</button>
+			<button onclick="saveDetail(${rowId})" class="dsavelbtn">保存</button>
 		</div></div>`;
 	
 		overlay.innerHTML = editorHTML;
-		overlay.style.opacity = "1";
+		overlay.style.visibility = "visible";
 		overlay.style.pointerEvents = "auto";
 		
 		// 背景スクロール禁止
@@ -1111,6 +1155,7 @@
 		document.body.style.right = '0';
 		document.body.style.overflow = 'hidden';
 	}
+		
 	function saveDetail(rowId) {
 		const table = document.getElementById('csvTable');
 		for (let i = 0; i < table.rows.length; i++) {
@@ -1128,7 +1173,7 @@
 	}
 	function cancelDetail() {
 		const overlay = document.getElementById("whiteOverlay");
-		overlay.style.opacity = "0";
+		overlay.style.visibility = "hidden";
 		overlay.style.pointerEvents = "none";
 		document.body.style.zoom = "1.0";
 
@@ -1193,7 +1238,7 @@
 					html += `<td style="width:23vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
 				} else {
 					html += `<td style="width:23vw; border:1px solid #888;">`;
-					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="font-size:16px; width:80%;">`;
+					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="width:23vw; font-size:16px;">`;
 					if(cell.options != 0){
 						html += `<datalist id="list_${id}">`;
 						for (const opt of cell.options) {
@@ -1213,7 +1258,7 @@
 		html += `</div></div>`;
 	
 		overlay.innerHTML = html;
-		overlay.style.opacity = "1";
+		overlay.style.visibility = "visible";
 		overlay.style.pointerEvents = "auto";
 
 		// 背景スクロール禁止
@@ -1250,7 +1295,7 @@
 	
 		// 非表示に戻す
 		overlay.innerHTML = '';
-		overlay.style.opacity = '0';
+		overlay.style.visibility = "hidden";
 		overlay.style.pointerEvents = 'none';
 		document.body.style.zoom = "1.0";  
 
