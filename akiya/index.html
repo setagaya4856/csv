@@ -760,7 +760,7 @@
 		.then(response => response.text())
 		.then(result => {
 			const overlayMessage = (result.includes("overwrite"))
-				? "保存しました（上書き）"
+				? "保存しました\n（上書き）"
 				: "保存しました";
 			if (isSafari()) {
 				alert(overlayMessage);
@@ -772,7 +772,7 @@
 		})
 		.catch(error => {
 			if (isSafari()) {
-				const shouldSave = confirm("保存エラーが発生しました。\n手動で保存しますか？");	
+				const shouldSave = confirm("保存エラーが\n発生しました。\n手動で保存\nしますか？");	
 				if (shouldSave) {
 					// Safari のローカル保存処理
 					const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -963,7 +963,7 @@
 		const overlay = document.getElementById("whiteOverlay");
 		const url = 'https://script.google.com/macros/s/AKfycbyogn8oF834OO_1xDBHpdXh_m-E2YqqjTSgvdVZkJVdUfPD_gIxTpOFDPpdd991obciFg/exec';
 		if(isSafari()){
-			const confirmMessage = `原本の読み込みをしますか？`;
+			const confirmMessage = `原本の読み込み\nをしますか？`;
 			if (confirm(confirmMessage)) {
 				// 表示する
 				overlay.innerHTML = `<p style="font-size:32px;">読み込み中...</p>`;
@@ -996,7 +996,7 @@
 				});
 			}
 		}else{
-			showMessageOverlay("原本の読み込みをしますか？", 
+			showMessageOverlay("原本の読み込み\nをしますか？", 
 				() => {
 					// 表示する
 					overlay.innerHTML = `<p style="font-size:32px;">読み込み中...</p>`;
