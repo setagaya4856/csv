@@ -176,9 +176,8 @@
 		#whiteOverlay {
 		    opacity: 0;
 		    pointer-events: none;
-		    position: absolute;
-		    top: 0;
-		    left: 0;
+		    position: fixed;
+		    top: 0; left: 0;
 		    width: 100vw;
 		    height: 100vh;
 		    background: white;
@@ -1134,7 +1133,7 @@
 		document.body.style.zoom = "1.0";
 
 		const scrollY = document.body.dataset.scrollY || '0';
-		document.body.style. = '';
+		document.body.style.position = '';
 		document.body.style.top = '';
 		document.body.style.left = '';
 		document.body.style.right = '';
@@ -1220,7 +1219,7 @@
 		// 背景スクロール禁止
 		const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 		document.body.dataset.scrollY = scrollTop;
-		document.body.style. = 'fixed';
+		document.body.style.position = 'fixed';
 		document.body.style.top = `-${scrollTop}px`;
 		document.body.style.left = '0';
 		document.body.style.right = '0';
