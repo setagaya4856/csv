@@ -1153,16 +1153,35 @@
 		const matrix = {};
 		let maxRow = 0;
 		let maxCol = 0;
-		if(Number(no) > 199 && Number(no) <　200){
-			const td1style = "width:23vw; border:1px solid #ccc; background:#f8f8f8;";
-			const td2style = "width:23vw; border:1px solid #ccc; background:#ccc;";
-			const td3style = "width:23vw; border:1px solid #ccc; background:#ccc;";
-			const inputstyle = "width:23vw; border:1px solid #ccc; background:#f8f8f8;";
-		}else{
-			const td1style = "width:23vw; border:1px solid #ccc; background:#f8f8f8;";
-			const td2style = "width:23vw; border:1px solid #ccc; background:#f8f8f8;";
-			const td3style = "width:23vw; border:1px solid #ccc; background:#f8f8f8;";
-			const inputstyle = "width:23vw; border:1px solid #ccc; background:#f8f8f8;";
+		const td10style = "";
+		const td20style = "";
+		const td30style = "";
+		const td11style = "";
+		const td21style = "";
+		const td31style = "";
+		const input1style = "";
+		const input2style = "";
+		const input3style = "";
+		if(Number(no) > 99 && Number(no) <　200){
+			td10style = "width:23vw; border:1px solid #888; background:#ccc;";
+			td20style = "width:23vw; border:1px solid #888; background:#ccc;";
+			td30style = "width:23vw; border:1px solid #888; background:#ccc;";
+			td11style = "width:23vw; border:1px solid #ccc;";
+			td21style = "width:23vw; border:1px solid #ccc;";
+			td31style = "width:23vw; border:1px solid #ccc;";
+			input1style = "width:23vw; font-size:16px;";
+			input2style = "width:23vw; font-size:16px;";
+			input3style = "width:23vw; font-size:16px;";
+		}else if(Number(no) > 199 && Number(no) <　300){
+			td10style = "width:18vw; border:1px solid #888; background:#ccc;";
+			td20style = "width:70vw; border:1px solid #888; background:#ccc;";
+			td30style = "display:none";
+			td11style = "width:18vw; border:1px solid #ccc;";
+			td21style = "width:70vw; border:1px solid #ccc;";
+			td31style = "display:none";
+			input1style = "width:18vw; font-size:16px;";
+			input2style = "width:70vw; font-size:16px;";
+			input3style = "display:none";
 		}
 		const rowstyle1 = "";
 		const rowstyle1 = "";
@@ -1195,9 +1214,11 @@
 				const key = `${r}_${c}`;
 				if (!matrix[key]) {
 					if(r == 1){
-						html += `<td style=${td1style}>-</td>`;
-					}else{
-						html += `<td style=${td2style}>-</td>`;
+						html += `<td style=${td10style}>-</td>`;
+					}else if(r == 2){
+						html += `<td style=${td20style}>-</td>`;
+					}else if(r == 3){
+						html += `<td style=${td30style}>-</td>`;
 					}
 					continue;
 				}
@@ -1206,10 +1227,24 @@
 				const id = `cell_${no}_${r}_${c}`;
 				
 				if (cell.able === 0) {
-					html += `<td style=${td2style}>${cell.content}</td>`;
+					if(r == 1){
+						html += `<td style=${td10style}>${cell.content}</td>`;
+					}else if(r == 2){
+						html += `<td style=${td20style}>${cell.content}</td>`;
+					}else if(r == 3){
+						html += `<td style=${td30style}>${cell.content}</td>`;
+					}
 				} else {
-					html += `<td style=${td3style}>`;
-					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style=${inputstyle}>`;
+					if(r == 1){
+						html += `<td style=${td11style}>`;
+						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style=${input1style}>`;
+					}else if(r == 2){
+						html += `<td style=${td21style}>`;
+						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style=${input2style}>`;
+					}else if(r == 3){
+						html += `<td style=${td31style}>`;
+						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style=${input3style}>`;
+					}
 					if(cell.options != 0){
 						html += `<datalist id="list_${id}">`;
 						for (const opt of cell.options) {
