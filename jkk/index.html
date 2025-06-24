@@ -1183,7 +1183,8 @@
 			input2style = "width:70vw; font-size:16px;";
 			input3style = "display:none";
 		}
-		const rowstyle1 = "";
+		
+		console.log(td10style, td30style);
 		for (let i = 0; i < table.rows.length; i++) {
 			const row = table.rows[i];
 			if (Number(row.cells[3].textContent) !== Number(no)) continue;
@@ -1253,8 +1254,6 @@
 					}
 					html += `</td>`;
 				}
-				console.log("maxRow", maxRow, "maxCol", maxCol);
-console.log("matrix", matrix);
 			}
 			html += `</tr>`;
 		}
