@@ -1214,11 +1214,11 @@
 				const key = `${r}_${c}`;
 				if (!matrix[key]) {
 					if(c == 1){
-						html += `<td style=${td10style}>-</td>`;
+						html += `<td style="${td10style}">-</td>`;
 					}else if(c == 2){
-						html += `<td style=${td20style}>-</td>`;
+						html += `<td style="${td20style}">-</td>`;
 					}else if(c == 3){
-						html += `<td style=${td30style}>-</td>`;
+						html += `<td style="${td30style}">-</td>`;
 					}
 					continue;
 				}
@@ -1228,22 +1228,22 @@
 				
 				if (cell.able === 0) {
 					if(c == 1){
-						html += `<td style=${td10style}>${cell.content}</td>`;
+						html += `<td style="${td10style}">${cell.content}</td>`;
 					}else if(c == 2){
-						html += `<td style=${td20style}>${cell.content}</td>`;
+						html += `<td style="${td20style}">${cell.content}</td>`;
 					}else if(c == 3){
-						html += `<td style=${td30style}>${cell.content}</td>`;
+						html += `<td style="${td30style}">${cell.content}</td>`;
 					}
 				} else {
 					if(c == 1){
-						html += `<td style=${td11style}>`;
-						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style=${input1style}>`;
+						html += `<td style="${td11style}">`;
+						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="${input1style}">`;
 					}else if(c == 2){
-						html += `<td style=${td21style}>`;
-						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style=${input2style}>`;
+						html += `<td style="${td21style}">`;
+						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="${input2style}">`;
 					}else if(c == 3){
-						html += `<td style=${td31style}>`;
-						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style=${input3style}>`;
+						html += `<td style="${td31style}">`;
+						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="${input3style}">`;
 					}
 					if(cell.options != 0){
 						html += `<datalist id="list_${id}">`;
