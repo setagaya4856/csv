@@ -1163,9 +1163,9 @@
 		let input2style = "";
 		let input3style = "";
 		if(Number(no) > 99 && Number(no) < 200){
-			td10style = "width:23vw; border:1px solid #888; background:#ccc;";
-			td20style = "width:23vw; border:1px solid #888; background:#ccc;";
-			td30style = "width:23vw; border:1px solid #888; background:#ccc;";
+			td10style = "width:23vw; border:1px solid #ccc; background:#C8C8C8;";
+			td20style = "width:23vw; border:1px solid #ccc; background:#C8C8C8;";
+			td30style = "width:23vw; border:1px solid #ccc; background:#C8C8C8;";
 			td11style = "width:23vw; border:1px solid #ccc;";
 			td21style = "width:23vw; border:1px solid #ccc;";
 			td31style = "width:23vw; border:1px solid #ccc;";
@@ -1173,8 +1173,8 @@
 			input2style = "width:23vw; font-size:16px;";
 			input3style = "width:23vw; font-size:16px;";
 		}else if(Number(no) > 199 && Number(no) < 300){
-			td10style = "width:18vw; border:1px solid #888; background:#ccc;";
-			td20style = "width:70vw; border:1px solid #888; background:#ccc;";
+			td10style = "width:18vw; border:1px solid #ccc; background:#C8C8C8;";
+			td20style = "width:70vw; border:1px solid #ccc; background:#C8C8C8;";
 			td30style = "display:none";
 			td11style = "width:18vw; border:1px solid #ccc;";
 			td21style = "width:70vw; border:1px solid #ccc;";
@@ -1212,11 +1212,11 @@
 			for (let c = 1; c <= maxCol; c++) {
 				const key = `${r}_${c}`;
 				if (!matrix[key]) {
-					if(r == 1){
+					if(c == 1){
 						html += `<td style=${td10style}>-</td>`;
-					}else if(r == 2){
+					}else if(c == 2){
 						html += `<td style=${td20style}>-</td>`;
-					}else if(r == 3){
+					}else if(c == 3){
 						html += `<td style=${td30style}>-</td>`;
 					}
 					continue;
@@ -1226,21 +1226,21 @@
 				const id = `cell_${no}_${r}_${c}`;
 				
 				if (cell.able === 0) {
-					if(r == 1){
+					if(c == 1){
 						html += `<td style=${td10style}>${cell.content}</td>`;
-					}else if(r == 2){
+					}else if(c == 2){
 						html += `<td style=${td20style}>${cell.content}</td>`;
-					}else if(r == 3){
+					}else if(c == 3){
 						html += `<td style=${td30style}>${cell.content}</td>`;
 					}
 				} else {
-					if(r == 1){
+					if(c == 1){
 						html += `<td style=${td11style}>`;
 						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style=${input1style}>`;
-					}else if(r == 2){
+					}else if(c == 2){
 						html += `<td style=${td21style}>`;
 						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style=${input2style}>`;
-					}else if(r == 3){
+					}else if(c == 3){
 						html += `<td style=${td31style}>`;
 						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style=${input3style}>`;
 					}
