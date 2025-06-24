@@ -1153,16 +1153,16 @@
 		const matrix = {};
 		let maxRow = 0;
 		let maxCol = 0;
-		const td10style = "";
-		const td20style = "";
-		const td30style = "";
-		const td11style = "";
-		const td21style = "";
-		const td31style = "";
-		const input1style = "";
-		const input2style = "";
-		const input3style = "";
-		if(Number(no) > 99 && Number(no) <　200){
+		let td10style = "";
+		let td20style = "";
+		let td30style = "";
+		let td11style = "";
+		let td21style = "";
+		let td31style = "";
+		let input1style = "";
+		let input2style = "";
+		let input3style = "";
+		if(Number(no) > 99 && Number(no) < 200){
 			td10style = "width:23vw; border:1px solid #888; background:#ccc;";
 			td20style = "width:23vw; border:1px solid #888; background:#ccc;";
 			td30style = "width:23vw; border:1px solid #888; background:#ccc;";
@@ -1183,7 +1183,6 @@
 			input2style = "width:70vw; font-size:16px;";
 			input3style = "display:none";
 		}
-		const rowstyle1 = "";
 		const rowstyle1 = "";
 		for (let i = 0; i < table.rows.length; i++) {
 			const row = table.rows[i];
