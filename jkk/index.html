@@ -15,14 +15,34 @@
 	            -ms-user-select: none;
 		    user-select: none;
 		}
-		
 		html, body {
 		    overflow-x: hidden;  /* 横スクロールを無効にする */
 		    width: 100vw;  /* 横幅を画面いっぱいに設定 */
 		    margin: 0;
 		    padding: 0;
 		}
-		
+		body {
+		    width: 100vw;
+		    overflow-x: hidden;  /* bodyにも横スクロール無効 */
+		}
+		table {
+		    table-layout: fixed;
+		    width: 100vw;  /* テーブルの幅を100vwに設定 */
+		    overflow: hidden;  /* テーブル内のコンテンツがはみ出さないように */
+		    margin: auto;
+		}
+		table, th, td {
+		    border: 1px solid black;
+		    border-collapse: collapse;
+		    overflow: hidden;
+		}
+		th, td {
+		    padding: 2px;
+		    word-break: break-word;  /* 長い文字列が折り返しされるようにする */
+		    white-space: normal;  /* テーブル内で長いテキストが折り返されるように */
+		}
+
+		/*ヘッダー*/
 		header {
 		    position: fixed;
 		    left: 0;
@@ -36,7 +56,6 @@
 		    align-items: center;   /* 垂直中央揃え */
 		    justify-content: center;  /* 中央揃え（必要に応じてspace-betweenなどに） */
 		}
-		
 		.header-inner {
 		    display: flex;
 		    align-items: center;     /* 子要素を上下中央揃え */
@@ -45,55 +64,70 @@
 		    padding: 0 0vw;  /* 左右に少し余白を追加 */
 		    gap: 1vw;  /* 各要素間に間隔を空ける */
 		}
-		
-		body {
-		    width: 100vw;
-		    overflow-x: hidden;  /* bodyにも横スクロール無効 */
+		.changebtn {
+		    background: #FFFFCC;
+		    border: 1px solid #333;
+		    width:13vw;
+		    height:4vh;
+		    font-size:16px;
+		}
+		.filebtn {
+		   width:18vw;
+		   height:4vh;
+		   font-size:16px;"
+		}
+		.savebtn {
+		   width:18vw;
+		   height:4vh;
+		   font-size:16px;"
+		}
+		.roomword {
+		   background: #FFFFCC;
+		   border: 1px solid #333;
+		   width:18vw;
+		   height:4vh;
+		   font-size:16px;"
+		}
+		.searchbtn {
+		    background: #FFFFCC;
+		    border: 1px solid #333;
+		   width:18vw;
+		   height:4vh;
+		   font-size:16px;"
+		}
+		.delbtn {
+		    -webkit-user-select: none;
+		    user-select: none;
+		    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
+		    -webkit-user-drag: none;
+		　　touch-action: none;
+		    background: #f07c78;
+		    border: 1px solid #333;
+		   width:13vw;
+		   height:4vh;
+		   font-size:16px;"
 		}
 		
-		table {
-		    table-layout: fixed;
-		    width: 100vw;  /* テーブルの幅を100vwに設定 */
-		    overflow: hidden;  /* テーブル内のコンテンツがはみ出さないように */
-		    margin: auto;
-		}
-		
-		table, th, td {
-		    border: 1px solid black;
-		    border-collapse: collapse;
-		    overflow: hidden;
-		}
-		
-		th, td {
-		    padding: 2px;
-		    word-break: break-word;  /* 長い文字列が折り返しされるようにする */
-		    white-space: normal;  /* テーブル内で長いテキストが折り返されるように */
-		}
-		
-		/* セルの幅設定 */
+		/* セル設定 */
 		.dateil {
 		    width: 10vw;
 		    text-align: center;
 		    font-size: 16px;
 		}
-		
 		.naiyo {
 		    width: 57vw;
 		    font-size: 18px;
 		}
-		
 		.btn {
 		    width: 10vw;
 		    text-align: center;
 		    font-size: 16px;
 		}
-		
 		.count {
 		    width: 12vw;
 		    text-align: center;
 		    font-size: 18px;
 		}
-		
 		.pbtn {
 		    -webkit-user-select: none;
 		    user-select: none;
@@ -107,7 +141,6 @@
 		    2px;
 		    text-align: center;
 		}
-		
 		.dbtn {
 		    width: 10vw;
 		    height: 5vh;
@@ -116,7 +149,6 @@
 		    2px;
 		    text-align: center;
 		}
-
 		.fbtn {
 		    width: 10vw;
 		    height: 5vh;
@@ -125,7 +157,8 @@
 		    2px;
 		    text-align: center;
 		}
-		
+
+		/*フッター*/
 		footer {
 		    position: fixed;
 		    left: 0;
@@ -147,31 +180,6 @@
 		.mb {
 		    10px;
 		    text-align: center;
-		}
-				
-		.searchbtn {
-		    background: #FFFFCC;
-		    border: 1px solid #333;
-		}
-		
-		.changebtn {
-		    background: #FFFFCC;
-		    border: 1px solid #333;
-		}
-		
-		.delbtn {
-		    -webkit-user-select: none;
-		    user-select: none;
-		    -webkit-touch-callout: none; /* iOSの長押しメニュー無効 */
-		    -webkit-user-drag: none;
-		　　touch-action: none;
-		    background: #f07c78;
-		    border: 1px solid #333;
-		}
-		
-		.roomword {
-		    background: #FFFFCC;
-		    border: 1px solid #333;
 		}
 		
 		#whiteOverlay {
@@ -196,11 +204,11 @@
 <body>
   	<header>
   		<div class="header-inner">
-	  		<button style="width:13vw;height:4vh;font-size:16px;" onclick="changeColumn()" id="changebtn" class="changebtn">!</button>
+	  		<button onclick="changeColumn()" id="changebtn" class="changebtn">!</button>
 			<input type="file" id="csvFileInput" accept=".csv" style="display:none" class="filecsv">
-			<button style="width:18vw;height:4vh;font-size:16px;" id="fileSelect" type="button">CSV</button>
-			<button style="width:18vw;height:4vh;font-size:16px;" onclick="downloadCSV()" class="csvbtn">保存</button>
-			<select id="roomword" class="roomword" style="width:18vw;height:4vh;font-size:16px;">
+			<button id="fileSelect" type="button" class="filebtn">CSV</button>
+			<button onclick="downloadCSV()" class="savebtn">保存</button>
+			<select id="roomword" class="roomword">
   			<option value=""></option>
   			<option value="玄関">玄関</option>
   			<option value="DK">DK</option>
@@ -212,8 +220,8 @@
   			<option value="居室3">居室3</option>
   			<option value="バルコニー">バルコニー</option>
 			</select>
-			<button style="width:18vw;height:4vh;font-size:16px;" onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
-	    		<button style="width:13vw;height:4vh;font-size:16px;" onclick="delColumn()" id="delbtn" class="delbtn">×</button>
+			<button onclick="searchOnly()" id="searchbtn" class="searchbtn">切替</button>
+	    		<button onclick="delColumn()" id="delbtn" class="delbtn">×</button>
 		</div>
   	</header>
 	<br>
