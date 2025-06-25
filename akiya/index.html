@@ -631,7 +631,7 @@
 	}
 	
 	function colChange() {
-  		const savedId = getRowClosestToOffset(100); // ← 上から100px地点を基準に
+  		const savedId = getRowClosestToOffset(6); // ← 上から100px地点を基準に
 		console.log(savedId);
 		var searchValueR = document.getElementById('roomword').selectedIndex;
 		var table = document.getElementById('csvTable');
@@ -711,11 +711,12 @@
 			}
 		}
 		setTimeout(() => {
-			scrollToRowById(savedId, 100);
+			scrollToRowById(savedId, 6);
 		}, 50);
 	}
 		
-	function getRowClosestToOffset(offsetPx) {
+	function getRowClosestToOffset(offsetVh) {
+		const offsetPx = window.innerHeight * (offsetVh / 100);
 		const table = document.getElementById('csvTable');
 		const rows = table.querySelectorAll('tr');
 		const targetY = window.scrollY + offsetPx;
@@ -738,7 +739,8 @@
 		return closestRow?.cells[0]?.textContent ?? null;
 	}
 		
-	function scrollToRowById(rowId, offsetPx) {
+	function scrollToRowById(rowId, offsetVh) {
+		const offsetPx = window.innerHeight * (offsetVh / 100);
 		const savedId = Number(rowId);
 		if (isNaN(savedId)) return;
 		
