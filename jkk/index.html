@@ -109,17 +109,6 @@
 		}
 		
 		/* セル設定 */
-		#csvTable {
-			transition: opacity 0.3s ease;
-		}
-		.fade-out {
-			opacity: 0;
-			pointer-events: none;
-		}
-		.fade-in {
-			opacity: 1;
-			pointer-events: auto;
-		}
 		.dateil {
 		    width: 10vw;
 		    text-align: center;
@@ -636,7 +625,6 @@
 		var searchValueR = document.getElementById('roomword').selectedIndex;
 		var table = document.getElementById('csvTable');
 		var rows = table.rows;
-  		table.classList.add('fade-out');
 		var changef = rows[0].cells[5].textContent;
 		for (var i = 1; i < rows.length; i++) {
 			let rowText = rows[i].textContent.toLowerCase();
@@ -711,15 +699,10 @@
 				}
 			}
 		}
+
 		setTimeout(() => {
-			scrollToRowById(savedId, 11);
-		
-			// スクロール後にフェードイン
-			requestAnimationFrame(() => {
-				table.classList.remove('fade-out');
-				table.classList.add('fade-in');
-			});
-		}, 200); // フェードアウトの時間に応じて調整
+		  if (savedId) scrollToNextVisibleRowAfter(savedId, 11);
+		}, 50);
 	}
 		
 	function getRowClosestToOffset(offsetVh) {
@@ -747,9 +730,9 @@
 	}
 		
 	function scrollToRowById(rowId, offsetVh) {
-		const offsetPx = window.innerHeight * (offsetVh / 100);
 		const savedId = Number(rowId);
 		if (isNaN(savedId)) return;
+		const offsetPx = window.innerHeight * (offsetVh / 100);
 		
 		const table = document.getElementById('csvTable');
 		const rows = table.querySelectorAll('tr');
@@ -760,8 +743,11 @@
 			const rowId = Number(idText);
 			if (!isNaN(rowId) && rowId > savedId) {
 				const rect = row.getBoundingClientRect();
-				const scrollTarget = rect.top + window.scrollY - offsetPx;
-				window.scrollTo({ top: scrollTarget, behavior: 'auto' });
+				const scrollTarget = rect.top + window.scrollY - offsetPx;      
+				window.scrollTo({
+			        	top: scrollTarget,
+			        	behavior: 'smooth' // ← ここがアニメーション指定
+				});
 				break; // 最初の該当行で終了
 			}
 		}
