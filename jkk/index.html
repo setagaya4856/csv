@@ -631,6 +631,8 @@
 	}
 	
 	function colChange() {
+  		const savedId = getRowClosestToOffset(6); // ← 上から100px地点を基準に
+		console.log(savedId);
 		var searchValueR = document.getElementById('roomword').selectedIndex;
 		var table = document.getElementById('csvTable');
 		var rows = table.rows;
@@ -708,10 +710,54 @@
 				}
 			}
 		}
-		window.scrollTo({
-			top: 0,
-			behavior: 'auto'
-		  });
+		setTimeout(() => {
+			scrollToRowById(savedId, 6);
+		}, 50);
+	}
+		
+	function getRowClosestToOffset(offsetVh) {
+		const offsetPx = window.innerHeight * (offsetVh / 100);
+		const table = document.getElementById('csvTable');
+		const rows = table.querySelectorAll('tr');
+		const targetY = window.scrollY + offsetPx;
+		
+		let closestRow = null;
+		let minDistance = Infinity;
+		
+		for (const row of rows) {
+			if (row.style.display === 'none') continue;
+		
+			const rect = row.getBoundingClientRect();
+			const absoluteTop = rect.top + window.scrollY;
+			const distance = Math.abs(absoluteTop - targetY);
+		
+			if (distance < minDistance) {
+				minDistance = distance;
+				closestRow = row;
+			}
+		}
+		return closestRow?.cells[0]?.textContent ?? null;
+	}
+		
+	function scrollToRowById(rowId, offsetVh) {
+		const offsetPx = window.innerHeight * (offsetVh / 100);
+		const savedId = Number(rowId);
+		if (isNaN(savedId)) return;
+		
+		const table = document.getElementById('csvTable');
+		const rows = table.querySelectorAll('tr');
+		for (const row of rows) {
+			if (row.style.display === 'none') continue;
+			
+			const idText = row.cells[0]?.textContent;
+			const rowId = Number(idText);
+			if (!isNaN(rowId) && rowId > savedId) {
+				const rect = row.getBoundingClientRect();
+				const scrollTarget = rect.top + window.scrollY - offsetPx;
+				window.scrollTo({ top: scrollTarget, behavior: 'auto' });
+				break; // 最初の該当行で終了
+			}
+		}
 	}
 		
 	function downloadCSV() {
