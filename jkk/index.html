@@ -157,6 +157,16 @@
 		    2px;
 		    text-align: center;
 		}
+
+		/*フッター*/
+		footer {
+		    position: fixed;
+		    left: 0;
+		    bottom: 0;
+		    height: 15vh;
+		    width: 100vw;
+		    background: #FFFFCC;
+		}
 		
 		.mbtn {
 		    width: 10.5vw;
@@ -699,9 +709,8 @@
 				}
 			}
 		}
-
 		setTimeout(() => {
-		  if (savedId) scrollToNextVisibleRowAfter(savedId, 11);
+			scrollToRowById(savedId, 11);
 		}, 50);
 	}
 		
@@ -732,8 +741,8 @@
 	function scrollToRowById(rowId, offsetVh) {
 		const savedId = Number(rowId);
 		if (isNaN(savedId)) return;
-		const offsetPx = window.innerHeight * (offsetVh / 100);
 		
+		const offsetPx = window.innerHeight * (offsetVh / 100);
 		const table = document.getElementById('csvTable');
 		const rows = table.querySelectorAll('tr');
 		for (const row of rows) {
@@ -743,11 +752,8 @@
 			const rowId = Number(idText);
 			if (!isNaN(rowId) && rowId > savedId) {
 				const rect = row.getBoundingClientRect();
-				const scrollTarget = rect.top + window.scrollY - offsetPx;      
-				window.scrollTo({
-			        	top: scrollTarget,
-			        	behavior: 'smooth' // ← ここがアニメーション指定
-				});
+				const scrollTarget = rect.top + window.scrollY - offsetPx;
+				window.scrollTo({ top: scrollTarget, behavior: 'smooth' });
 				break; // 最初の該当行で終了
 			}
 		}
