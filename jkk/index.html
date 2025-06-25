@@ -1140,8 +1140,21 @@
 							   id="edit_col_${i}"
 							   value="${value}"
 							   ${isEditable ? '' : 'disabled'}>
-					</td>
+					</td>';
 				</tr>`;
+			if(　i　==　0　){
+				editorHTML += `
+					<tr>
+						<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">""</td>
+						<td style="width:70vw; border:1px solid #888; padding:5px;">
+							<input type="text"
+								   style="width:70vw; font-size: 16px; ${grayscaleStyle}"
+								   id="edit_col_${i}"
+								   value="${value}"
+								   ${isEditable ? '' : 'disabled'}>
+						</td>';
+					</tr>`;
+			}
 		}
 	
 		editorHTML += `</table><br><div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">`;
