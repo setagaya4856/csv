@@ -1120,8 +1120,8 @@
 		
 		let gyosyaName = "";
 		for (let i = 0; i < table.rows.length; i++) {
-			if(Number(table.rows[i].cells[2].textContent) > 1000 && Number(table.rows[i].cells[2].textContent) < 10000){
-				if ((Number(table.rows[i].cells[2].textContent) - 1000) === Number(targetRow.cells[7].textContent)) {
+			if(Number(table.rows[i].cells[3].textContent) > 1000 && Number(table.rows[i].cells[3].textContent) < 10000){
+				if ((Number(table.rows[i].cells[3].textContent) - 1000) === Number(targetRow.cells[7].textContent)) {
 					gyosyaName = table.rows[i].cells[4].textContent;
 					break;
 				}
@@ -1203,11 +1203,12 @@
 	
 	function handleInputChange(event) {
   		const newValue = event.target.value;
+		const table = document.getElementById('csvTable');
 		if (newValue == "") return;
 		let gyosyaName = "";
 		for (let i = 0; i < table.rows.length; i++) {
-			if(Number(table.rows[i].cells[2].textContent) > 1000 && Number(table.rows[i].cells[2].textContent) < 10000){
-				if ((Number(table.rows[i].cells[2].textContent) - 1000) === Number(newValue)) {
+			if(Number(table.rows[i].cells[3].textContent) > 1000 && Number(table.rows[i].cells[3].textContent) < 10000){
+				if ((Number(table.rows[i].cells[3].textContent) - 1000) === Number(newValue)) {
 					gyosyaName = table.rows[i].cells[4].textContent;
 					break;
 				}
