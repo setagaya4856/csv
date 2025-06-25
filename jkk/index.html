@@ -109,6 +109,17 @@
 		}
 		
 		/* セル設定 */
+		#csvTable {
+			transition: opacity 0.3s ease;
+		}
+		.fade-out {
+			opacity: 0;
+			pointer-events: none;
+		}
+		.fade-in {
+			opacity: 1;
+			pointer-events: auto;
+		}
 		.dateil {
 		    width: 10vw;
 		    text-align: center;
@@ -156,16 +167,6 @@
 		    font-size: 16px;
 		    2px;
 		    text-align: center;
-		}
-
-		/*フッター*/
-		footer {
-		    position: fixed;
-		    left: 0;
-		    bottom: 0;
-		    height: 15vh;
-		    width: 100vw;
-		    background: #FFFFCC;
 		}
 		
 		.mbtn {
@@ -632,10 +633,10 @@
 	
 	function colChange() {
   		const savedId = getRowClosestToOffset(6); // ← 上から100px地点を基準に
-		console.log(savedId);
 		var searchValueR = document.getElementById('roomword').selectedIndex;
 		var table = document.getElementById('csvTable');
 		var rows = table.rows;
+  		table.classList.add('fade-out');
 		var changef = rows[0].cells[5].textContent;
 		for (var i = 1; i < rows.length; i++) {
 			let rowText = rows[i].textContent.toLowerCase();
@@ -711,8 +712,14 @@
 			}
 		}
 		setTimeout(() => {
-			scrollToRowById(savedId, 11);
-		}, 50);
+			scrollToRowById(savedId, offsetPx);
+		
+			// スクロール後にフェードイン
+			requestAnimationFrame(() => {
+			container.classList.remove('fade-out');
+			container.classList.add('fade-in');
+			});
+		}, 200); // フェードアウトの時間に応じて調整
 	}
 		
 	function getRowClosestToOffset(offsetVh) {
