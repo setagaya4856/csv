@@ -631,7 +631,7 @@
 	}
 	
 	function colChange() {
-  		const savedId = getRowClosestToOffset(7); // ← 上から100px地点を基準に
+  		const savedId = getRowClosestToOffset(10); // ← 上から100px地点を基準に
 		console.log(savedId);
 		var searchValueR = document.getElementById('roomword').selectedIndex;
 		var table = document.getElementById('csvTable');
@@ -711,7 +711,7 @@
 			}
 		}
 		setTimeout(() => {
-			scrollToRowById(savedId, 7);
+			scrollToRowById(savedId, 10);
 		}, 50);
 	}
 		
