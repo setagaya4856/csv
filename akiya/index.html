@@ -3,6 +3,7 @@
 <head>
 	<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
 	<meta charset="UTF-8" name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
     	<title>空家データ入力</title>
     	<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
 	<style>
@@ -14,39 +15,34 @@
 	            -ms-user-select: none;
 		    user-select: none;
 		}
-		
 		html, body {
 		    overflow-x: hidden;  /* 横スクロールを無効にする */
 		    width: 100vw;  /* 横幅を画面いっぱいに設定 */
 		    margin: 0;
 		    padding: 0;
 		}
-		
 		body {
 		    width: 100vw;
 		    overflow-x: hidden;  /* bodyにも横スクロール無効 */
 		}
-		
 		table {
 		    table-layout: fixed;
 		    width: 100vw;  /* テーブルの幅を100vwに設定 */
 		    overflow: hidden;  /* テーブル内のコンテンツがはみ出さないように */
 		    margin: auto;
 		}
-		
 		table, th, td {
 		    border: 1px solid black;
 		    border-collapse: collapse;
 		    overflow: hidden;
 		}
-		
 		th, td {
 		    padding: 2px;
 		    word-break: break-word;  /* 長い文字列が折り返しされるようにする */
 		    white-space: normal;  /* テーブル内で長いテキストが折り返されるように */
 		}
 
-		/* ヘッダー */
+		/*ヘッダー*/
 		header {
 		    position: fixed;
 		    left: 0;
@@ -60,7 +56,6 @@
 		    align-items: center;   /* 垂直中央揃え */
 		    justify-content: center;  /* 中央揃え（必要に応じてspace-betweenなどに） */
 		}
-		
 		.header-inner {
 		    display: flex;
 		    align-items: center;     /* 子要素を上下中央揃え */
@@ -69,15 +64,6 @@
 		    padding: 0 0vw;  /* 左右に少し余白を追加 */
 		    gap: 1vw;  /* 各要素間に間隔を空ける */
 		}
-		
-		.searchbtn {
-		    background: #FFFFCC;
-		    border: 1px solid #333;
-		　　width:18vw;
-		　　height:4vh;
-		　　font-size:16px;
-		}
-		
 		.changebtn {
 		    background: #FFFFCC;
 		    border: 1px solid #333;
@@ -85,13 +71,30 @@
 		    height:4vh;
 		    font-size:16px;
 		}
-		
 		.filebtn {
-		    width:18vw;
-		　　height:4vh;
-		　　font-size:16px;
+		   width:18vw;
+		   height:4vh;
+		   font-size:16px;"
 		}
-		
+		.savebtn {
+		   width:18vw;
+		   height:4vh;
+		   font-size:16px;"
+		}
+		.roomword {
+		   background: #FFFFCC;
+		   border: 1px solid #333;
+		   width:18vw;
+		   height:4vh;
+		   font-size:16px;"
+		}
+		.searchbtn {
+		    background: #FFFFCC;
+		    border: 1px solid #333;
+		   width:18vw;
+		   height:4vh;
+		   font-size:16px;"
+		}
 		.delbtn {
 		    -webkit-user-select: none;
 		    user-select: none;
@@ -100,44 +103,31 @@
 		　　touch-action: none;
 		    background: #f07c78;
 		    border: 1px solid #333;
-		　　width: 13vw;
-		　　height: 4vh;
-		　　font-size: 16px;
+		   width:13vw;
+		   height:4vh;
+		   font-size:16px;"
 		}
 		
-		.roomword {
-		    background: #FFFFCC;
-		    border: 1px solid #333;
-		    width:18vw;
-		    height:4vh;
-		    font-size:16px;
-		}
-		
-		/* セルの幅設定 */
+		/* セル設定 */
 		.dateil {
 		    width: 10vw;
 		    text-align: center;
 		    font-size: 16px;
 		}
-		
 		.naiyo {
 		    width: 57vw;
 		    font-size: 18px;
 		}
-		
 		.btn {
 		    width: 10vw;
 		    text-align: center;
 		    font-size: 16px;
 		}
-		
 		.count {
 		    width: 12vw;
 		    text-align: center;
 		    font-size: 18px;
 		}
-
-		/* セル内ボタン設定 */
 		.pbtn {
 		    -webkit-user-select: none;
 		    user-select: none;
@@ -151,7 +141,6 @@
 		    2px;
 		    text-align: center;
 		}
-		
 		.dbtn {
 		    width: 10vw;
 		    height: 5vh;
@@ -160,7 +149,6 @@
 		    2px;
 		    text-align: center;
 		}
-
 		.fbtn {
 		    width: 10vw;
 		    height: 5vh;
@@ -170,7 +158,7 @@
 		    text-align: center;
 		}
 
-		/* フッター */
+		/*フッター*/
 		footer {
 		    position: fixed;
 		    left: 0;
@@ -193,10 +181,9 @@
 		    10px;
 		    text-align: center;
 		}
-
-		/*　背景レイヤー */
+		
 		#whiteOverlay {
-		    visibility : hidden;
+		    opacity: 0;
 		    pointer-events: none;
 		    position: fixed;
 		    top: 0; left: 0;
@@ -210,37 +197,7 @@
 		    font-size: 16px;
 		    color: black;
 		    transition: opacity 0.2s ease;
-		    touch-action: none;
-		}
-		
-		.confbtn {
-			font-size: 25px;
-			width: 25vw;
-			border-radius: 20px;
-			background-color: #ffffff;
-			border: 2px solid #888;
-			margin: 0 1em;
-		}
-		.detailtable {
-			max-width:95vw;
-			border-collapse: collapse;
-			font-size: 16px;
-			margin: auto;
-		}
-		.dcancelbtn {
-			width:30vw;
-			height:5vh;
-			font-size:16px;
-		}
-		.dclearbtn {
-			width:28vw;
-			height:5vh;
-			font-size:16px;
-		}
-		.dsavebtn {
-			width:28vw;
-			height:5vh;
-			font-size:16px;
+		    touch-action: none; /* ←追加 */
 		}
 	</style>
 </head>
@@ -250,7 +207,7 @@
 	  		<button onclick="changeColumn()" id="changebtn" class="changebtn">!</button>
 			<input type="file" id="csvFileInput" accept=".csv" style="display:none" class="filecsv">
 			<button id="fileSelect" type="button" class="filebtn">CSV</button>
-			<button onclick="downloadCSV()" class="csvbtn">保存</button>
+			<button onclick="downloadCSV()" class="savebtn">保存</button>
 			<select id="roomword" class="roomword">
   			<option value=""></option>
   			<option value="玄関">玄関</option>
@@ -761,7 +718,7 @@
 		const overlay = document.getElementById("whiteOverlay");
 		// 表示する（保存開始）
 		overlay.innerHTML = `<p style="font-size:32px;">保存中...</p>`;
-		overlay.style.visibility = "visible";
+		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
 		const table = document.getElementById('csvTable');
 		let csvContent = '';
@@ -816,7 +773,7 @@
 				: "保存しました";
 			if (isSafari()) {
 				alert(overlayMessage);
-				overlay.style.visibility = "hidden";
+				overlay.style.opacity = "0";
 				overlay.style.pointerEvents = "none";
 			} else {
 				showMessageOverlay(overlayMessage,null,null);
@@ -836,7 +793,7 @@
 				} else {
 					alert("保存されませんでした");
 				}
-				overlay.style.visibility = "hidden";
+				overlay.style.opacity = "0";
 				overlay.style.pointerEvents = "none";
 			} else {
 				showMessageOverlay("エラーが発生しました",null,null, true);
@@ -850,17 +807,25 @@
 		// 色とサイズの設定
 		const color = isError ? "red" : "black";
 		const fontSize = "32px";
+		const buttonStyle = `
+			font-size: 25px;
+			width: 25vw;
+			border-radius: 20px;
+			background-color: #ffffff;
+			border: 2px solid #888;
+			margin: 0 1em;
+		`;
 		
 		// OK専用モードか判定
 		const isOkOnly = !onCancel;
 		
 		let buttonHTML = "";
 		if (isOkOnly) {
-			buttonHTML = `<button id="confirmBtn" class="confbtn">OK</button>`;
+			buttonHTML = `<button id="confirmBtn" style="${buttonStyle}">OK</button>`;
 		} else {
 			buttonHTML = `
-				<button id="cancelBtn" class="confbtn">いいえ</button>
-				<button id="confirmBtn" class="confbtn">はい</button>
+				<button id="cancelBtn" style="${buttonStyle}">いいえ</button>
+				<button id="confirmBtn" style="${buttonStyle}">はい</button>
 			`;
 		}
 		
@@ -873,12 +838,12 @@
 			</div>
 		`;
 		
-		overlay.style.visibility = "visible";
+		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
 		
 		// イベント設定（OK または はい）
 		document.getElementById("confirmBtn").onclick = () => {
-			overlay.style.visibility = "hidden";
+			overlay.style.opacity = "0";
 			overlay.style.pointerEvents = "none";
 			if (onConfirm) onConfirm();
 		};
@@ -886,7 +851,7 @@
 		// イベント設定（いいえ）
 		if (!isOkOnly) {
 			document.getElementById("cancelBtn").onclick = () => {
-				overlay.style.visibility = "hidden";
+				overlay.style.opacity = "0";
 				overlay.style.pointerEvents = "none";
 				if (onCancel) onCancel();
 			};
@@ -1011,7 +976,7 @@
 			if (confirm(confirmMessage)) {
 				// 表示する
 				overlay.innerHTML = `<p style="font-size:32px;">読み込み中...</p>`;
-				overlay.style.visibility = "visible";
+				overlay.style.opacity = "1";
 				overlay.style.pointerEvents = "auto";
 				
 				fetch(url)  // fetch の呼び出しが必要
@@ -1032,7 +997,7 @@
 					displayCSV(cleanText);
 					roomColumn();
 					window.scrollTo({ top: 0, behavior: 'auto' });
-					overlay.style.visibility = "hidden";
+					overlay.style.opacity = "0";
 					overlay.style.pointerEvents = "none";
 				})
 				.catch(error => {
@@ -1044,7 +1009,7 @@
 				() => {
 					// 表示する
 					overlay.innerHTML = `<p style="font-size:32px;">読み込み中...</p>`;
-					overlay.style.visibility = "visible";
+					overlay.style.opacity = "1";
 					overlay.style.pointerEvents = "auto";
 					
 					fetch(url)  // fetch の呼び出しが必要
@@ -1065,7 +1030,7 @@
 						displayCSV(cleanText);
 						roomColumn();
 						window.scrollTo({ top: 0, behavior: 'auto' });
-						overlay.style.visibility = "hidden";
+						overlay.style.opacity = "0";
 						overlay.style.pointerEvents = "none";
 					})
 					.catch(error => {
@@ -1112,7 +1077,7 @@
 	
 		let editorHTML = `<div style="background:white; padding:0; max-height:90vh;">`;
 		editorHTML += `<p style="font-size:16px;"> 詳細:${targetRow.cells[4].textContent}</p>`;
-		editorHTML += `<table class="detailtable">`;
+		editorHTML += `<table style="max-width:95vw; border-collapse: collapse; font-size: 16px;  margin: auto;">`;
 	
 		for (let i = 0; i <= 14; i++) {
 			if (i >= targetRow.cells.length) break;
@@ -1137,13 +1102,13 @@
 		editorHTML += `</table><br><div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">`;
 	
 		editorHTML += `
-			<button onclick="cancelDetail()" class="dcancelbtn">キャンセル</button>
-			<button onclick="clearCols(${rowId})" class="dclearbtn">クリア</button>
-			<button onclick="saveDetail(${rowId})" class="dsavelbtn">保存</button>
+			<button style="width:30vw;height:5vh;font-size:16px;" onclick="cancelDetail()">キャンセル</button>
+			<button style="width:28vw;height:5vh;font-size:16px;" onclick="clearCols(${rowId})">クリア</button>
+			<button style="width:28vw;height:5vh;font-size:16px;" onclick="saveDetail(${rowId})">保存</button>
 		</div></div>`;
 	
 		overlay.innerHTML = editorHTML;
-		overlay.style.visibility = "visible";
+		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
 		
 		// 背景スクロール禁止
@@ -1155,7 +1120,6 @@
 		document.body.style.right = '0';
 		document.body.style.overflow = 'hidden';
 	}
-		
 	function saveDetail(rowId) {
 		const table = document.getElementById('csvTable');
 		for (let i = 0; i < table.rows.length; i++) {
@@ -1173,7 +1137,7 @@
 	}
 	function cancelDetail() {
 		const overlay = document.getElementById("whiteOverlay");
-		overlay.style.visibility = "hidden";
+		overlay.style.opacity = "0";
 		overlay.style.pointerEvents = "none";
 		document.body.style.zoom = "1.0";
 
@@ -1198,7 +1162,47 @@
 		const matrix = {};
 		let maxRow = 0;
 		let maxCol = 0;
-	
+		let td10style = "";
+		let td20style = "";
+		let td30style = "";
+		let td11style = "";
+		let td21style = "";
+		let td31style = "";
+		let input1style = "";
+		let input2style = "";
+		let input3style = "";
+		if(Number(no) > 99 && Number(no) < 200){
+			td10style = "width:28vw; border:1px solid #ccc; background:#C8C8C8;";
+			td20style = "width:28vw; border:1px solid #ccc; background:#C8C8C8;";
+			td30style = "width:28vw; border:1px solid #ccc; background:#C8C8C8;";
+			td11style = "width:28vw; border:1px solid #ccc;";
+			td21style = "width:28vw; border:1px solid #ccc;";
+			td31style = "width:28vw; border:1px solid #ccc;";
+			input1style = "width:26vw; font-size:16px;";
+			input2style = "width:26vw; font-size:16px;";
+			input3style = "width:26vw; font-size:16px;";
+		}else if(Number(no) > 199 && Number(no) < 300){
+			td10style = "width:20vw; border:1px solid #ccc; background:#C8C8C8;";
+			td20style = "width:70vw; border:1px solid #ccc; background:#C8C8C8;";
+			td30style = "display:none;";
+			td11style = "width:20vw; border:1px solid #ccc;";
+			td21style = "width:70vw; border:1px solid #ccc;";
+			td31style =  "display:none;";
+			input1style = "width:16vw; font-size:16px;";
+			input2style = "width:70vw; font-size:16px;";
+			input3style = "display:none;";
+		}else if(Number(no) > 299 && Number(no) < 400){
+			td10style = "width:70vw; border:1px solid #ccc; background:#C8C8C8;";
+			td20style = "width:20vw; border:1px solid #ccc; background:#C8C8C8;";
+			td30style = "display:none;";
+			td11style = "width:70vw; border:1px solid #ccc;";
+			td21style = "width:20vw; border:1px solid #ccc;";
+			td31style =  "display:none;";
+			input1style = "width:70vw; font-size:16px;";
+			input2style = "width:16vw; font-size:16px;";
+			input3style = "display:none;";
+		}
+		
 		for (let i = 0; i < table.rows.length; i++) {
 			const row = table.rows[i];
 			if (Number(row.cells[3].textContent) !== Number(no)) continue;
@@ -1227,18 +1231,37 @@
 			for (let c = 1; c <= maxCol; c++) {
 				const key = `${r}_${c}`;
 				if (!matrix[key]) {
-					html += `<td style="width:23vw; border:1px solid #ccc; background:#f8f8f8;">-</td>`;
+					if(c == 1){
+						html += `<td style="${td10style}">-</td>`;
+					}else if(c == 2){
+						html += `<td style="${td20style}">-</td>`;
+					}else if(c == 3){
+						html += `<td style="${td30style}">-</td>`;
+					}
 					continue;
 				}
 	
 				const cell = matrix[key];
 				const id = `cell_${no}_${r}_${c}`;
-	
 				if (cell.able === 0) {
-					html += `<td style="width:23vw; border:1px solid #888; background:#ccc;">${cell.content}</td>`;
+					if(c == 1){
+						html += `<td style="${td10style}">${cell.content}</td>`;
+					}else if(c == 2){
+						html += `<td style="${td20style}">${cell.content}</td>`;
+					}else if(c == 3){
+						html += `<td style="${td30style}">${cell.content}</td>`;
+					}
 				} else {
-					html += `<td style="width:23vw; border:1px solid #888;">`;
-					html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="width:23vw; font-size:16px;">`;
+					if(c == 1){
+						html += `<td style="${td11style}">`;
+						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="${input1style}">`;
+					}else if(c == 2){
+						html += `<td style="${td21style}">`;
+						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="${input2style}">`;
+					}else if(c == 3){
+						html += `<td style="${td31style}">`;
+						html += `<input type="text" list="list_${id}" id="input_${id}" value="${cell.content}"  style="${input3style}">`;
+					}
 					if(cell.options != 0){
 						html += `<datalist id="list_${id}">`;
 						for (const opt of cell.options) {
@@ -1258,7 +1281,7 @@
 		html += `</div></div>`;
 	
 		overlay.innerHTML = html;
-		overlay.style.visibility = "visible";
+		overlay.style.opacity = "1";
 		overlay.style.pointerEvents = "auto";
 
 		// 背景スクロール禁止
@@ -1295,7 +1318,7 @@
 	
 		// 非表示に戻す
 		overlay.innerHTML = '';
-		overlay.style.visibility = "hidden";
+		overlay.style.opacity = '0';
 		overlay.style.pointerEvents = 'none';
 		document.body.style.zoom = "1.0";  
 
