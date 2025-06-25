@@ -1117,7 +1117,17 @@
 			}
 		}
 		if (!targetRow) return;
-	
+		
+		let gyosyaName = "";
+		for (let i = 0; i < table.rows.length; i++) {
+			if(Number(table.rows[i].cells[2].textContent) > 1000 && Number(table.rows[i].cells[2].textContent) < 10000){
+				if ((Number(table.rows[i].cells[2].textContent) - 1000) === Number(targetRow.rows[i].cells[6].textContent)) {
+						gyosyaName = table.rows[i].cells[4].textContent;
+						break;
+					}
+				}
+			}
+		}
 		const overlay = document.getElementById('whiteOverlay');
 	
 		let editorHTML = `<div style="background:white; padding:0; max-height:90vh;">`;
@@ -1131,21 +1141,34 @@
 			const value = targetRow.cells[i].textContent;
 			const isEditable = targetRow.cells[i].isContentEditable;
 			const grayscaleStyle = isEditable ? '' : 'filter: grayscale(100%);';
-			editorHTML += `
-				<tr>
-					<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
-					<td style="width:70vw; border:1px solid #888; padding:5px;">
-						<input type="text"
-							   style="width:70vw; font-size: 16px; ${grayscaleStyle}"
-							   id="edit_col_${i}"
-							   value="${value}"
-							   ${isEditable ? '' : 'disabled'}>
-					</td>';
-				</tr>`;
-			if(　i　==　0　){
+			if(　i　==　6　){
 				editorHTML += `
 					<tr>
-						<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">""</td>
+						<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
+						<td style="width:70vw; border:1px solid #888; padding:5px;">
+							<input type="text"
+								   style="width:70vw; font-size: 16px; ${grayscaleStyle}"
+								   id="edit_col_${i}"
+								   value="${value}"
+								   ${isEditable ? '' : 'disabled'}
+	   							   onchange="handleInputChange(event)">
+						</td>';
+					</tr>`;
+				editorHTML += `
+					<tr>
+						<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">"業者名"</td>
+						<td style="width:70vw; border:1px solid #888; padding:5px;">
+							<input type="text"
+								   style="width:70vw; font-size: 16px; filter: grayscale(100%);"
+								   id="edit_col_x"
+								   value="${gyosyaName}"
+								   disabled>
+						</td>';
+					</tr>`;
+			}else{
+				editorHTML += `
+					<tr>
+						<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
 						<td style="width:70vw; border:1px solid #888; padding:5px;">
 							<input type="text"
 								   style="width:70vw; font-size: 16px; ${grayscaleStyle}"
@@ -1177,6 +1200,22 @@
 		document.body.style.left = '0';
 		document.body.style.right = '0';
 		document.body.style.overflow = 'hidden';
+	}
+	function handleInputChange(event) {
+  		const newValue = event.target.value;
+		if (newValue == "") return;
+		let gyosyaName = "";
+		for (let i = 0; i < table.rows.length; i++) {
+			if(Number(table.rows[i].cells[2].textContent) > 1000 && Number(table.rows[i].cells[2].textContent) < 10000){
+				if ((Number(table.rows[i].cells[2].textContent) - 1000) === Number(newValue)) {
+						gyosyaName = table.rows[i].cells[4].textContent;
+						break;
+					}
+				}
+			}
+		}
+		const input = document.getElementById('edit_col_x');
+		input.value = gyosyaName;
 	}
 	function saveDetail(rowId) {
 		const table = document.getElementById('csvTable');
