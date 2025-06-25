@@ -632,6 +632,7 @@
 	
 	function colChange() {
   		const savedId = getRowClosestToOffset(100); // ← 上から100px地点を基準に
+		console.log(savedId);
 		var searchValueR = document.getElementById('roomword').selectedIndex;
 		var table = document.getElementById('csvTable');
 		var rows = table.rows;
