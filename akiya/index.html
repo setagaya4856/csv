@@ -716,7 +716,7 @@
 	}
 		
 	function getRowClosestToOffset(offsetPx) {
-		const table = document.getElementById('myTable');
+		const table = document.getElementById('csvTable');
 		const rows = table.querySelectorAll('tr');
 		const targetY = window.scrollY + offsetPx;
 		
@@ -742,7 +742,8 @@
 		const savedId = Number(rowId);
 		if (isNaN(savedId)) return;
 		
-		const rows = document.querySelectorAll('#csvTable tr');
+		const table = document.getElementById('csvTable');
+		const rows = table.querySelectorAll('tr');
 		for (const row of rows) {
 			if (row.style.display === 'none') continue;
 			
