@@ -1121,7 +1121,7 @@
 		let gyosyaName = "";
 		for (let i = 0; i < table.rows.length; i++) {
 			if(Number(table.rows[i].cells[2].textContent) > 1000 && Number(table.rows[i].cells[2].textContent) < 10000){
-				if ((Number(table.rows[i].cells[2].textContent) - 1000) === Number(targetRow.rows[i].cells[6].textContent)) {
+				if ((Number(table.rows[i].cells[2].textContent) - 1000) === Number(targetRow.cells[6].textContent)) {
 					gyosyaName = table.rows[i].cells[4].textContent;
 					break;
 				}
