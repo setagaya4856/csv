@@ -1122,9 +1122,8 @@
 		for (let i = 0; i < table.rows.length; i++) {
 			if(Number(table.rows[i].cells[2].textContent) > 1000 && Number(table.rows[i].cells[2].textContent) < 10000){
 				if ((Number(table.rows[i].cells[2].textContent) - 1000) === Number(targetRow.rows[i].cells[6].textContent)) {
-						gyosyaName = table.rows[i].cells[4].textContent;
-						break;
-					}
+					gyosyaName = table.rows[i].cells[4].textContent;
+					break;
 				}
 			}
 		}
@@ -1201,6 +1200,7 @@
 		document.body.style.right = '0';
 		document.body.style.overflow = 'hidden';
 	}
+	
 	function handleInputChange(event) {
   		const newValue = event.target.value;
 		if (newValue == "") return;
@@ -1208,15 +1208,15 @@
 		for (let i = 0; i < table.rows.length; i++) {
 			if(Number(table.rows[i].cells[2].textContent) > 1000 && Number(table.rows[i].cells[2].textContent) < 10000){
 				if ((Number(table.rows[i].cells[2].textContent) - 1000) === Number(newValue)) {
-						gyosyaName = table.rows[i].cells[4].textContent;
-						break;
-					}
+					gyosyaName = table.rows[i].cells[4].textContent;
+					break;
 				}
 			}
 		}
 		const input = document.getElementById('edit_col_x');
 		input.value = gyosyaName;
 	}
+	
 	function saveDetail(rowId) {
 		const table = document.getElementById('csvTable');
 		for (let i = 0; i < table.rows.length; i++) {
