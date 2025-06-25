@@ -1121,7 +1121,7 @@
 		let gyosyaName = "";
 		for (let i = 0; i < table.rows.length; i++) {
 			if(Number(table.rows[i].cells[2].textContent) > 1000 && Number(table.rows[i].cells[2].textContent) < 10000){
-				if ((Number(table.rows[i].cells[2].textContent) - 1000) === Number(targetRow.cells[6].textContent)) {
+				if ((Number(table.rows[i].cells[2].textContent) - 1000) === Number(targetRow.cells[7].textContent)) {
 					gyosyaName = table.rows[i].cells[4].textContent;
 					break;
 				}
@@ -1140,7 +1140,7 @@
 			const value = targetRow.cells[i].textContent;
 			const isEditable = targetRow.cells[i].isContentEditable;
 			const grayscaleStyle = isEditable ? '' : 'filter: grayscale(100%);';
-			if(　i　==　6　){
+			if(　i　==　7　){
 				editorHTML += `
 					<tr>
 						<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">${table.rows[0].cells[i].textContent}</td>
@@ -1155,7 +1155,7 @@
 					</tr>`;
 				editorHTML += `
 					<tr>
-						<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">"業者名"</td>
+						<td style="width:18vw; border:1px solid #888; padding:5px; background:#eee;">業者名</td>
 						<td style="width:70vw; border:1px solid #888; padding:5px;">
 							<input type="text"
 								   style="width:70vw; font-size: 16px; filter: grayscale(100%);"
