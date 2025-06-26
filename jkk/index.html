@@ -1126,8 +1126,8 @@
 					hType = table.rows[i].cells[4].textContent;
 				}
 			}else if(Number(table.rows[i].cells[3].textContent) == 900){
-				if (Number(table.rows[i].cells[10].textContent) === Number(targetRow.cells[7].textContent)) {
-					hType = table.rows[i].cells[4].textContent;
+				if (Number(table.rows[i].cells[10].textContent) === Number(targetRow.cells[7].textContent) && Number(table.rows[i].cells[11].textContent) === 2 {
+					gyosyaName = table.rows[i].cells[4].textContent;
 				}
 			}
 		}
@@ -1243,7 +1243,7 @@
 					break;
 				}
 			}else if((Number(table.rows[i].cells[3].textContent) == 900) && Number(rowN) == 7){
-				if (Number(table.rows[i].cells[10].textContent) === Number(newValue)) {
+				if (Number(table.rows[i].cells[10].textContent) === Number(newValue) && Number(table.rows[i].cells[11].textContent) === 2) {
 					inputValue = table.rows[i].cells[4].textContent;
 					const input = document.getElementById('edit_col_x');
 					input.value = inputValue;
