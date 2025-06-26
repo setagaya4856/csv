@@ -1132,10 +1132,10 @@
 			}
 		}
 		const overlay = document.getElementById('whiteOverlay');
-	
+		
 		let editorHTML = `<div style="background:white; padding:0; max-height:90vh;">`;
-		editorHTML += `<p style="font-size:16px;"> 詳細:${targetRow.cells[4].textContent}</p>`;
-		editorHTML += `<table style="max-width:95vw; border-collapse: collapse; font-size: 16px;  margin: auto;">`;
+		editorHTML += `<p style="font-size:16px; margin: 0; padding: 0;">詳細:${targetRow.cells[4].textContent}</p>`;
+		editorHTML += `<table style="max-width:95vw; border-collapse: collapse; font-size: 16px; margin: 0 auto;">`;
 	
 		for (let i = 0; i <= 14; i++) {
 			if (i >= targetRow.cells.length) break;
