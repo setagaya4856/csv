@@ -1131,6 +1131,16 @@
 				}
 			}
 		}
+		if(hType == ""){
+			if(Number(targetRow.cells[3].textContent) == 9999){
+				hType = "空欄処理用No(変更してください)";
+			}else{
+				hType = "入力エラー";
+			}
+		}
+		if(gyosyaName == ""){
+			gyosyaName = "入力エラー";
+		}
 		const overlay = document.getElementById('whiteOverlay');
 		
 		let editorHTML = `<div style="background:white; padding:0; max-height:90vh;">`;
@@ -1250,12 +1260,12 @@
 				}
 			}
 		}
-		if( Number(rowN) == 3){
+		if(Number(rowN) == 3){
 			const input = document.getElementById('edit_col_y');
-			input.value = inputValue;
+			input.value = "入力エラー";
 		}else if(Number(rowN) == 7){
 			const input = document.getElementById('edit_col_y');
-			input.value = inputValue;
+			input.value = "入力エラー";
 		}
 	}
 	
