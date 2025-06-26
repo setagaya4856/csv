@@ -1239,16 +1239,23 @@
 					inputValue = table.rows[i].cells[4].textContent;
 					const input = document.getElementById('edit_col_y');
 					input.value = inputValue;
-					break;
+					return;
 				}else if((Number(table.rows[i].cells[3].textContent) == 900) && Number(rowN) == 7){
 					if (Number(table.rows[i].cells[10].textContent) === Number(newValue) && Number(table.rows[i].cells[11].textContent) === 2) {
 						inputValue = table.rows[i].cells[4].textContent;
 						const input = document.getElementById('edit_col_x');
 						input.value = inputValue;
-						break;
+						return;
 					}
 				}
 			}
+		}
+		if( Number(rowN) == 3){
+			const input = document.getElementById('edit_col_y');
+			input.value = inputValue;
+		}else if(Number(rowN) == 7){
+			const input = document.getElementById('edit_col_y');
+			input.value = inputValue;
 		}
 	}
 	
