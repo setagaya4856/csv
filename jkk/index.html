@@ -1263,6 +1263,24 @@
 						table.rows[i].cells[j].textContent = input.value;
 					}
 				}
+				table.rows[i].style.backgroundColor = "#fff";
+				table.rows[i].cells[1].style.backgroundColor = "#fff";
+				table.rows[i].cells[4].style.backgroundColor = "#fff";
+				if(Number(table.rows[i].cells[3].textContent) < 10 && Number(table.rows[i].cells[3].textContent) != 10000){
+					table.rows[i].cells[4].style.backgroundColor = "#e2e2e2";
+				}else if(rows[i].cells[7].textContent == ""){
+					rows[i].cells[4].style.backgroundColor = "#e2e2e2";
+				}
+				
+				if(rows[i].cells[11].textContent == ""){
+					rows[i].cells[1].style.backgroundColor = "#e2e2e2";
+				}
+				
+				if(rows[i].cells[13].textContent != ""){
+					if(rows[i].cells[13].textContent.substr(0,1) == "！"){
+						rows[i].style.backgroundColor = "#f07c78";
+					}
+				}
 				break;
 			}
 		}
