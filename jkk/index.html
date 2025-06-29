@@ -512,18 +512,33 @@
 		});
 	}
 
-	function opencell(rowNo) {
+	function opencell(rowS) {
+		let rowNo = Number(rowS);
 		var table = document.getElementsByTagName("table")[0];
 		var rows = table.rows;
-		rows[rowNo+1].style.display = '';
-		rows[rowNo+2].style.display = '';
-		rows[rowNo+3].style.display = '';
-		rows[rowNo+4].style.display = '';
-		rows[rowNo+5].style.display = '';
-		rows[rowNo+6].style.display = '';
-		rows[rowNo+7].style.display = '';
-		rows[rowNo+8].style.display = '';
-		rows[rowNo+9].style.display = '';
+		if(rows[rowNo+1].style.display == '' && rows[rowNo+2].style.display == '' && rows[rowNo+3].style.display == ''
+			&& rows[rowNo+4].style.display == '' && rows[rowNo+5].style.display = '' && rows[rowNo+6].style.display == ''
+			&& rows[rowNo+7].style.display == '' && rows[rowNo+8].style.display == '' && rows[rowNo+9].style.display = ''){
+			rows[rowNo+1].style.display = 'none';
+			rows[rowNo+2].style.display = 'none';
+			rows[rowNo+3].style.display = 'none';
+			rows[rowNo+4].style.display = 'none';
+			rows[rowNo+5].style.display = 'none';
+			rows[rowNo+6].style.display = 'none';
+			rows[rowNo+7].style.display = 'none';
+			rows[rowNo+8].style.display = 'none';
+			rows[rowNo+9].style.display = 'none';
+		}else{
+			rows[rowNo+1].style.display = '';
+			rows[rowNo+2].style.display = '';
+			rows[rowNo+3].style.display = '';
+			rows[rowNo+4].style.display = '';
+			rows[rowNo+5].style.display = '';
+			rows[rowNo+6].style.display = '';
+			rows[rowNo+7].style.display = '';
+			rows[rowNo+8].style.display = '';
+			rows[rowNo+9].style.display = '';
+		}
 	}
 		
 	function roomColumn() {
