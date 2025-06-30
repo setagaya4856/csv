@@ -298,6 +298,10 @@
 	});
 	
 	document.getElementById('roomword').addEventListener('change', function() {
+		var table = document.getElementById('csvTable');
+		var rows = table.rows;
+		rows[0].cells[1].textContent = "閉";
+		document.getElementById('delbtn').style.backgroundColor = "#FFFFCC";
 		colChange();
 	});
 
@@ -636,8 +640,10 @@
 			}else if((Number(rows[i].cells[3].textContent) > 60 && Number(rows[i].cells[3].textContent) < 70) 
 			   || (Number(rows[i].cells[3].textContent) > 70 && Number(rows[i].cells[3].textContent) < 80)
 			   || (Number(rows[i].cells[3].textContent) > 80 && Number(rows[i].cells[3].textContent) < 90)
-			   || (Number(rows[i].cells[3].textContent) > 90 && Number(rows[i].cells[3].textContent) < 100)
-			   || (Number(rows[i].cells[3].textContent) > 99 && Number(rows[i].cells[3].textContent) < 999)){
+			   || (Number(rows[i].cells[3].textContent) > 90 && Number(rows[i].cells[3].textContent) < 100)){
+				rows[i].style.display = "none";
+				rows[i].cells[4].style.backgroundColor = "#FEFDBD";
+			}else if(Number(rows[i].cells[3].textContent) > 99 && Number(rows[i].cells[3].textContent) < 999){
 				rows[i].cells[4].style.backgroundColor = "#FEFDBD";
 			}else if(rows[i].cells[7].textContent == ""){
 				rows[i].cells[4].style.backgroundColor = "#e2e2e2";
@@ -685,12 +691,19 @@
 		var table = document.getElementById('csvTable');
 		var rows = table.rows;
 		var changef = rows[0].cells[5].textContent;
+		var openf = rows[0].cells[1].textContent;
 		for (var i = 1; i < rows.length; i++) {
 			let rowText = rows[i].textContent.toLowerCase();
-			if (searchValueR == 0  && changef == "全"){
+			if (searchValueR == 0  && changef == "全" ){
 				if(Number(rows[i].cells[0].textContent) == 1){
 					rows[i].style.display = "";
 				}else if(rows[i].cells[6].textContent == "@" || Number(rows[i].cells[3].textContent) == 10000){
+					rows[i].style.display = "none";
+				}else if(((Number(rows[i].cells[3].textContent) > 60 && Number(rows[i].cells[3].textContent) < 70) 
+				   || (Number(rows[i].cells[3].textContent) > 70 && Number(rows[i].cells[3].textContent) < 80)
+				   || (Number(rows[i].cells[3].textContent) > 80 && Number(rows[i].cells[3].textContent) < 90)
+				   || (Number(rows[i].cells[3].textContent) > 90 && Number(rows[i].cells[3].textContent) < 100))
+				　　&& openf == "閉"){
 					rows[i].style.display = "none";
 				}else if (rows[i].cells[3].textContent > 10000){
 					rows[i].style.display = "";
