@@ -612,10 +612,7 @@
 				option.value = rows[i].cells[4].textContent;
 				option.textContent = rows[i].cells[4].textContent;
 				selectRoomWord.appendChild(option);
-			}else if((Number(rows[i].cells[3].textContent) > 40 && Number(rows[i].cells[3].textContent) < 50) 
-			   || (Number(rows[i].cells[3].textContent) > 50 && Number(rows[i].cells[3].textContent) < 60)
-			   || (Number(rows[i].cells[3].textContent) > 60 && Number(rows[i].cells[3].textContent) < 70)
-			   || (Number(rows[i].cells[3].textContent) > 70 && Number(rows[i].cells[3].textContent) < 80)
+			}else if((Number(rows[i].cells[3].textContent) > 70 && Number(rows[i].cells[3].textContent) < 80)
 			   || (Number(rows[i].cells[3].textContent) > 80 && Number(rows[i].cells[3].textContent) < 90)
 			   || (Number(rows[i].cells[3].textContent) > 90 && Number(rows[i].cells[3].textContent) < 100)
 			   || (Number(rows[i].cells[3].textContent) > 100 && Number(rows[i].cells[3].textContent) < 110 && 
@@ -639,14 +636,15 @@
 				rows[i].cells[4].style.backgroundColor = "#f07c78";
 			}else if(Number(rows[i].cells[3].textContent) < 10 && Number(rows[i].cells[3].textContent) != 10000){
 				rows[i].cells[4].style.backgroundColor = "#e2e2e2";
-			}else if((Number(rows[i].cells[3].textContent) > 40 && Number(rows[i].cells[3].textContent) < 50) 
-			   || (Number(rows[i].cells[3].textContent) > 50 && Number(rows[i].cells[3].textContent) < 60)
-			   || (Number(rows[i].cells[3].textContent) > 60 && Number(rows[i].cells[3].textContent) < 70)
-			   || (Number(rows[i].cells[3].textContent) > 70 && Number(rows[i].cells[3].textContent) < 80)
+			}else if((Number(rows[i].cells[3].textContent) > 70 && Number(rows[i].cells[3].textContent) < 80)
 			   || (Number(rows[i].cells[3].textContent) > 80 && Number(rows[i].cells[3].textContent) < 90)
 			   || (Number(rows[i].cells[3].textContent) > 90 && Number(rows[i].cells[3].textContent) < 100)){
 				rows[i].style.display = "none";
 				rows[i].cells[4].style.backgroundColor = "#FEFDBD";
+			}else if((Number(rows[i].cells[3].textContent) > 40 && Number(rows[i].cells[3].textContent) < 50)
+			   || (Number(rows[i].cells[3].textContent) > 50 && Number(rows[i].cells[3].textContent) < 60)
+			   || (Number(rows[i].cells[3].textContent) > 60 && Number(rows[i].cells[3].textContent) < 70)){
+				rows[i].style.display = "none";
 			}else if(Number(rows[i].cells[3].textContent) > 99 && Number(rows[i].cells[3].textContent) < 999){
 				rows[i].cells[4].style.backgroundColor = "#FEFDBD";
 			}else if(rows[i].cells[7].textContent == ""){
@@ -724,7 +722,8 @@
 				}else if (rows[i].cells[3].textContent > 10000){
 					rows[i].style.display = "";
 				}else if ((((Number(rows[i].cells[3].textContent) % 10) == searchValueR || (Number(rows[i].cells[3].textContent) % 10) == 0)) &&
-				   ((Number(rows[i].cells[3].textContent) >= 10 && Number(rows[i].cells[3].textContent) < 40)
+				   (Number(rows[i].cells[3].textContent) < 40  
+				   || (Number(rows[i].cells[3].textContent) >= 10 && Number(rows[i].cells[3].textContent) < 40)
 				   || (Number(rows[i].cells[3].textContent) >= 70 && Number(rows[i].cells[3].textContent) < 100))) {
 					rows[i].style.display = "";
 				}else if (Number(rows[i].cells[3].textContent) == 40 || Number(rows[i].cells[3].textContent) == 50 || Number(rows[i].cells[3].textContent) == 60){
@@ -767,7 +766,7 @@
 					rows[i + 8].style.display = 'none';
 					rows[i + 9].style.display = 'none';
 					for(var x = 1; x < 10; x++){
-						if(rows[i + x].cells[6].textContent == ""){
+						if(rows[i + x].cells[6].textContent != ""){
 							rows[i + x].style.display = '';
 							rows[i].style.display = '';
 						}
