@@ -645,6 +645,11 @@
 			   || (Number(rows[i].cells[3].textContent) > 50 && Number(rows[i].cells[3].textContent) < 60)
 			   || (Number(rows[i].cells[3].textContent) > 60 && Number(rows[i].cells[3].textContent) < 70)){
 				rows[i].style.display = "none";
+				if(rows[i].cells[7].textContent == ""){
+					rows[i].cells[4].style.backgroundColor = "#e2e2e2";
+				}else{
+					rows[i].cells[4].style.backgroundColor = "#DDFFDD";
+				}
 			}else if(Number(rows[i].cells[3].textContent) > 99 && Number(rows[i].cells[3].textContent) < 999){
 				rows[i].cells[4].style.backgroundColor = "#FEFDBD";
 			}else if(rows[i].cells[7].textContent == ""){
@@ -1331,31 +1336,36 @@
 	
 	function saveDetail(rowId) {
 		const table = document.getElementById('csvTable');
-		for (let i = 0; i < table.rows.length; i++) {
-			if (Number(table.rows[i].cells[0].textContent) === Number(rowId)) {
+		const rows = table.rows;
+		for (let i = 0; i < rows.length; i++) {
+			if (Number(rows[i].cells[0].textContent) === Number(rowId)) {
 				for (let j = 0; j <= 14; j++) {
 					const input = document.getElementById(`edit_col_${j}`);
-					if (input && table.rows[i].cells[j]) {
-						table.rows[i].cells[j].textContent = input.value;
+					if (input && rows[i].cells[j]) {
+						rows[i].cells[j].textContent = input.value;
 					}
 				}
-				table.rows[i].style.backgroundColor = "#fff";
-				table.rows[i].cells[1].style.backgroundColor = "#fff";
-				table.rows[i].cells[4].style.backgroundColor = "#fff";
-				if(Number(table.rows[i].cells[3].textContent) < 10 && Number(table.rows[i].cells[3].textContent) != 10000){
-					table.rows[i].cells[4].style.backgroundColor = "#e2e2e2";
-				}else if(table.rows[i].cells[7].textContent == ""){
-					table.rows[i].cells[4].style.backgroundColor = "#e2e2e2";
-				}
-				
-				if(table.rows[i].cells[11].textContent == ""){
-					table.rows[i].cells[1].style.backgroundColor = "#e2e2e2";
-				}
-				
-				if(table.rows[i].cells[13].textContent != ""){
-					if(table.rows[i].cells[13].textContent.substr(0,1) == "！"){
-						table.rows[i].style.backgroundColor = "#f07c78";
+				rows[i].cells[1].style.backgroundColor = "#fff";
+				rows[i].cells[4].style.backgroundColor = "#fff";
+				if(Number(rows[i].cells[3].textContent) < 10){
+					rows[i].cells[4].style.backgroundColor = "#e2e2e2";
+				}else if((Number(rows[i].cells[3].textContent) > 70 && Number(rows[i].cells[3].textContent) < 80)
+				   || (Number(rows[i].cells[3].textContent) > 80 && Number(rows[i].cells[3].textContent) < 90)
+				   || (Number(rows[i].cells[3].textContent) > 90 && Number(rows[i].cells[3].textContent) < 100)){
+					rows[i].cells[4].style.backgroundColor = "#FEFDBD";
+				}else if((Number(rows[i].cells[3].textContent) > 40 && Number(rows[i].cells[3].textContent) < 50)
+				   || (Number(rows[i].cells[3].textContent) > 50 && Number(rows[i].cells[3].textContent) < 60)
+				   || (Number(rows[i].cells[3].textContent) > 60 && Number(rows[i].cells[3].textContent) < 70)){
+					if(rows[i].cells[7].textContent == ""){
+						rows[i].cells[4].style.backgroundColor = "#e2e2e2";
+					}else{
+						rows[i].cells[4].style.backgroundColor = "#DDFFDD";
 					}
+				}else if(rows[i].cells[7].textContent == ""){
+					rows[i].cells[4].style.backgroundColor = "#e2e2e2";
+				}
+				if(rows[i].cells[11].textContent == ""){
+					rows[i].cells[1].style.backgroundColor = "#e2e2e2";
 				}
 				break;
 			}
