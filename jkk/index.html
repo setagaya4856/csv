@@ -6,7 +6,10 @@
 	<meta name="mobile-web-app-capable" content="yes">
     	<title>空家データ入力</title>
     	<script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
-	<style>
+	<style>/* 全要素のbox-sizingをborder-boxに */
+		*, *::before, *::after {
+		  box-sizing: border-box;
+		}
 		html, body, input, select, textarea, button {
   		     touch-action: manipulation; /* モバイルでのタッチ操作最適化 */
 		    -webkit-text-size-adjust: 100%; /* iOSの文字拡大防止 */
@@ -17,17 +20,17 @@
 		}
 		html, body {
 		    overflow-x: hidden;  /* 横スクロールを無効にする */
-		    width: 100vw;  /* 横幅を画面いっぱいに設定 */
+  		　　width: 100%;
 		    margin: 0;
 		    padding: 0;
 		}
 		body {
-		    width: 100vw;
+		    width: 100%;
 		    overflow-x: hidden;  /* bodyにも横スクロール無効 */
 		}
 		table {
 		    table-layout: fixed;
-		    width: 100vw;  /* テーブルの幅を100vwに設定 */
+		    width: 100%;  /* テーブルの幅を100vwに設定 */
 		    overflow: hidden;  /* テーブル内のコンテンツがはみ出さないように */
 		    margin: auto;
 		}
