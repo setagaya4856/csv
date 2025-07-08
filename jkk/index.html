@@ -388,7 +388,7 @@
 			tr.appendChild(tdR);
 			const tdRX = document.createElement('td');
 			tdRX.contentEditable = false;
-			if((Number(cells[2]) ==  || Number(cells[2]) == 9998 || Number(cells[2]) < 99)){
+			if(Number(cells[2]) ==  9999 || Number(cells[2]) == 9998 || Number(cells[2]) < 99){
 				const detail_tr = document.createElement("input");
 				detail_tr.setAttribute("type", "button");
 				detail_tr.setAttribute("value", "←");
