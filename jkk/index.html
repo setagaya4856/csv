@@ -388,7 +388,7 @@
 			tr.appendChild(tdR);
 			const tdRX = document.createElement('td');
 			tdRX.contentEditable = false;
-			if((Number(cells[2]) == 9999 || Number(cells[2]) < 99)){
+			if((Number(cells[2]) ==  || Number(cells[2]) == 9998 || Number(cells[2]) < 99)){
 				const detail_tr = document.createElement("input");
 				detail_tr.setAttribute("type", "button");
 				detail_tr.setAttribute("value", "←");
@@ -396,7 +396,7 @@
 				detail_tr.setAttribute("class", "dbtn");
 				detail_tr.setAttribute("id", "dbtn_" + String(cells[0]));
 				tdRX.appendChild(detail_tr);
-			}else if(Number(cells[2]) > 99 && Number(cells[2]) < 9999){
+			}else if(Number(cells[2]) > 99 && Number(cells[2]) < 9998){
 				const form_tr = document.createElement("input");
 				form_tr.setAttribute("type", "button");
 				form_tr.setAttribute("value", "!");
@@ -1207,6 +1207,8 @@
 		if(hType == ""){
 			if(Number(targetRow.cells[3].textContent) == 9999){
 				hType = "空欄処理用No(変更してください)";
+			}else if(Number(targetRow.cells[3].textContent) == 9998){
+				hType = "反映用単価コード";
 			}else{
 				hType = "入力エラー";
 			}
