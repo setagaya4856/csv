@@ -631,6 +631,27 @@
 		document.getElementById('roomword').options[0].selected = true;
 		hideColumn();
 	}
+		
+	function roomNoChange() {
+		const selectRoomWord = document.getElementById('roomword');
+		const optionb = document.createElement('option');
+		optionb.value = "";
+		optionb.textContent = "";
+		selectRoomWord.appendChild(optionb);
+		var table = document.getElementsByTagName("table")[0];
+		var rows = table.rows;
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].style.display = "";
+			if(Number(rows[i].cells[3].textContent) == 10000 && Number(rows[i].cells[0].textContent) > 1){
+				const option = document.createElement('option');
+				option.value = rows[i].cells[4].textContent;
+				option.textContent = rows[i].cells[4].textContent;
+				selectRoomWord.appendChild(option);
+			}
+		}
+		document.getElementById('roomword').options[0].selected = true;
+		hideColumn();
+	}
 
 	function hideColumn() {
 		var table = document.getElementsByTagName("table")[0];
@@ -1105,19 +1126,25 @@
 	function handleTap2(btn) {
 		var table = document.getElementById('csvTable');
 		var rows = table.rows;
-		document.getElementById('roomword').selectedIndex = 0;
-		rows[0].cells[5].textContent = "全";
-		document.getElementById('searchbtn').style.backgroundColor = "#FFFFCC";
-		rows[0].cells[13].textContent = "単位";
-		document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
-		if(rows[0].cells[1].textContent == "開"){
-			rows[0].cells[1].textContent = "閉";
-			document.getElementById('delbtn').style.backgroundColor = "#FFFFCC";
+		if(rows[0].cells[13].textContent == "部屋"){
+			rows[0].cells[13].textContent = "単位";
+			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			roomNoChange();
 		}else{
-			rows[0].cells[1].textContent = "開";
-			document.getElementById('delbtn').style.backgroundColor = "#f07c78";
+			document.getElementById('roomword').selectedIndex = 0;
+			rows[0].cells[5].textContent = "全";
+			document.getElementById('searchbtn').style.backgroundColor = "#FFFFCC";
+			rows[0].cells[13].textContent = "単位";
+			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			if(rows[0].cells[1].textContent == "開"){
+				rows[0].cells[1].textContent = "閉";
+				document.getElementById('delbtn').style.backgroundColor = "#FFFFCC";
+			}else{
+				rows[0].cells[1].textContent = "開";
+				document.getElementById('delbtn').style.backgroundColor = "#f07c78";
+			}
+			colChange();
 		}
-		colChange();
 	}
 
 	function handleLongPress2(btn) {
