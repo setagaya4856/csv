@@ -560,6 +560,7 @@
 		var rows = table.rows;
     		rows[0].cells[13].textContent = "部屋";
 		document.getElementById('changebtn').style.backgroundColor = "#f07c78";
+		document.getElementById('delbtn').style.backgroundColor = "#6495ED";
 		for (var i = 0; i < rows.length; i++) {
 			rows[i].style.backgroundColor = "#fff";
 			rows[i].cells[14].style.display = "none";
@@ -601,6 +602,7 @@
 		}else if(rows[0].cells[13].textContent == "部屋"){
 			rows[0].cells[13].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			document.getElementById('delbtn').style.backgroundColor = "#FFFFCC";
 			roomChange();
 		}
 	}
@@ -1129,6 +1131,7 @@
 		if(rows[0].cells[13].textContent == "部屋"){
 			rows[0].cells[13].textContent = "単位";
 			document.getElementById('changebtn').style.backgroundColor = "#FFFFCC";
+			document.getElementById('delbtn').style.backgroundColor = "#FFFFCC";
 			roomNoChange();
 		}else{
 			document.getElementById('roomword').selectedIndex = 0;
