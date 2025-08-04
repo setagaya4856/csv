@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CSVエディタ</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 6px; }
+    input[type="text"] { width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>CSVファイル一覧</h1>
+  <div id="fileList">読み込み中...</div>
+
+  <script>
+    window.addEventListener('message', (event) => {
+      const { files } = event.data;
+      if (!files || !Array.isArray(files)) return;
+
+      const container = document.getElementById('fileList');
+      container.innerHTML = '';
+
+      files.forEach(file => {
+        const section = document.createElement('section');
+        section.innerHTML = `
+          <h3>${file.name}</h3>
+          <textarea rows="8" style="width:100%;">${file.text}</textarea>
+        `;
+        container.appendChild(section);
+      });
+    });
+  </script>
+</body>
+</html>
