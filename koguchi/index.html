@@ -8,6 +8,9 @@
     .detail-row {
       display: none;
     }
+.detail-row.show {
+  display: table-row;
+}
     .search-group {
       margin-bottom: 1rem;
     }
@@ -73,36 +76,32 @@
       data.forEach((f, idx) => {
         const p = f.parsed;
 
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${p['住宅名']}</td>
-          <td>${p['号棟']}</td>
-          <td>${p['号室']}</td>
-          <td>${p['修繕発注事項']}</td>
-          <td>
-            <button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">▶ 詳細</button>
-            <button class="btn btn-sm btn-success ms-1" onclick="editCSV(${idx})">編集</button>
-          </td>
-        `;
+const row = document.createElement('tr');
+row.innerHTML = `
+  <td>${p['住宅名']}</td>
+  <td>${p['号棟']}</td>
+  <td>${p['号室']}</td>
+  <td>${p['修繕発注事項']}</td>
+  <td>
+    <button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">▶ 詳細</button>
+  </td>
+`;
 
-        const detail = document.createElement('tr');
-        detail.className = 'detail-row';
-        detail.id = `detail-${idx}`;
-        detail.innerHTML = `
-          <td colspan="5">
-            <strong>実施事項:</strong> ${p['実施事項'] ?? ''}<br>
-            <strong>明細行数:</strong> ${f.details?.length ?? 0}<br>
-            <button class="btn btn-sm btn-secondary mt-2" onclick="reflectCSV(${idx})">このCSVで反映</button>
-          </td>
-        `;
+const detail = document.createElement('tr');
+detail.className = 'detail-row';
+detail.id = `detail-${idx}`;
+detail.innerHTML = `
+  <td colspan="5">
+    <strong>実施事項:</strong> ${p['実施事項'] ?? ''}<br>
+    <strong>明細行数:</strong> ${f.details?.length ?? 0}<br>
+    <button class="btn btn-sm btn-secondary mt-2" onclick="reflectCSV(${idx})">このCSVで反映</button>
+    <button class="btn btn-sm btn-success mt-2 ms-2" onclick="editCSV(${idx})">このCSVを編集</button>
+  </td>
+`;
 
-        body.appendChild(row);
-        body.appendChild(detail);
-
-        row.querySelector('.btn-toggle').onclick = () => {
-          const target = document.getElementById(`detail-${idx}`);
-          target.style.display = target.style.display === 'none' ? 'table-row' : 'none';
-        };
+row.querySelector('.btn-toggle').onclick = () => {
+  detail.classList.toggle('show');
+};
       });
     }
 
