@@ -1,36 +1,48 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <title>CSVエディタ</title>
-  <style>
-    body { font-family: sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 6px; }
-    input[type="text"] { width: 100%; }
-  </style>
-</head>
+<script>
+window.addEventListener('message', (event) => {
+  const fileList = event.data?.fileList;
+  if (!Array.isArray(fileList)) return;
+
+  console.log('📦 受信したCSV一覧:', fileList);
+
+  const list = document.getElementById('csvList');
+  list.innerHTML = '';
+
+  fileList.forEach((f, idx) => {
+    const item = document.createElement('div');
+    item.style.marginBottom = '10px';
+    item.innerHTML = `
+      <strong>${f.parsed['住宅名']} ${f.parsed['号棟']}-${f.parsed['号室']}</strong><br>
+      ${f.parsed['修繕発注事項']}<br>
+      <button data-index="${idx}">このCSVを読み込み</button>
+    `;
+    item.querySelector('button').onclick = () => {
+      window.opener.postMessage({ csv: parseCSV(f.text) }, '*'); // openerに返す
+      window.close(); // 閉じてもよい
+    };
+    list.appendChild(item);
+  });
+
+  // CSV文字列 → 2次元配列
+  function parseCSV(text) {
+    const rows = [];
+    let currentRow = [], currentCell = '', insideQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i], next = text[i + 1];
+      if (char === '"' && insideQuotes && next === '"') { currentCell += '"'; i++; }
+      else if (char === '"') { insideQuotes = !insideQuotes; }
+      else if (char === ',' && !insideQuotes) { currentRow.push(currentCell); currentCell = ''; }
+      else if ((char === '\n' || (char === '\r' && next !== '\n')) && !insideQuotes) {
+        currentRow.push(currentCell); rows.push(currentRow); currentCell = ''; currentRow = [];
+      } else { currentCell += char; }
+    }
+    if (currentCell || currentRow.length) { currentRow.push(currentCell); rows.push(currentRow); }
+    return rows;
+  }
+});
+</script>
+
 <body>
-  <h1>CSVファイル一覧</h1>
-  <div id="fileList">読み込み中...</div>
-
-  <script>
-    window.addEventListener('message', (event) => {
-      const { files } = event.data;
-      if (!files || !Array.isArray(files)) return;
-
-      const container = document.getElementById('fileList');
-      container.innerHTML = '';
-
-      files.forEach(file => {
-        const section = document.createElement('section');
-        section.innerHTML = `
-          <h3>${file.name}</h3>
-          <textarea rows="8" style="width:100%;">${file.text}</textarea>
-        `;
-        container.appendChild(section);
-      });
-    });
-  </script>
+  <h2>CSV一覧</h2>
+  <div id="csvList"></div>
 </body>
-</html>
