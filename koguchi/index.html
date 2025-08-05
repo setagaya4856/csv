@@ -12,9 +12,9 @@ window.addEventListener('message', (event) => {
     const item = document.createElement('div');
     item.style.marginBottom = '10px';
     item.innerHTML = `
+      <button data-index="${idx}">反映</button>
       <strong>${f.parsed['住宅名']} ${f.parsed['号棟']}-${f.parsed['号室']}</strong><br>
       ${f.parsed['修繕発注事項']}<br>
-      <button data-index="${idx}">反映</button>
     `;
     item.querySelector('button').onclick = () => {
       window.opener.postMessage({ csv: parseCSV(f.text) }, '*'); // openerに返す
