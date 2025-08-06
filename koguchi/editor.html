@@ -77,18 +77,62 @@
   <script>
     let receivedData;
     
-    window.addEventListener('message', e => {
-      receivedData = e.data;
-      const map = receivedData.parsed;
-      document.getElementById('txJisshiJiko').value = map['実施事項'] || '';
-      document.getElementById('kbSanpaitoJokyo').value = map['産廃等処分状況'] || '';
-      setRadio('fgShashinUmu', map['写真']);
-      setRadio('fgZumenUmu', map['図面']);
-      setRadio('fgKonkyoshiryoUmu', map['単価根拠資料']);
-      setRadio('fgSonotatenpuUmu', map['その他資料']);
-      populateDetailRows(receivedData.details || []);
-    });
+window.addEventListener('message', e => {
+  const file = e.data;
+  const rows = parseCSV(file.text); // CSV文字列 → 配列
+  const { headers, values, details } = splitCsvSections(rows); // 共通関数で分解
 
+  receivedData = {
+    fileName: file.fileName,
+    parsed: Object.fromEntries(headers.map((h, i) => [h, values[i]])),
+    details
+  };
+
+  // 画面へ反映
+  const map = receivedData.parsed;
+  document.getElementById('txJisshiJiko').value = map['実施事項'] || '';
+  document.getElementById('kbSanpaitoJokyo').value = map['産廃等処分状況'] || '';
+  setRadio('fgShashinUmu', map['写真']);
+  setRadio('fgZumenUmu', map['図面']);
+  setRadio('fgKonkyoshiryoUmu', map['単価根拠資料']);
+  setRadio('fgSonotatenpuUmu', map['その他資料']);
+  populateDetailRows(receivedData.details || []);
+});
+
+function splitCsvSections(rows) {
+  const clean = r => r.map(c => c?.replace(/^"(.*)"$/, '$1')?.trim() ?? '');
+
+  const headers = clean(rows[0] || []);
+  const values = clean(rows[1] || []);
+  const detailStart = rows.findIndex(r => r[0]?.includes('単価コード'));
+  const details = detailStart >= 0 ? rows.slice(detailStart + 1).map(clean) : [];
+
+  return { headers, values, details };
+}
+function parseCSV(text) {
+  const rows = [];
+  let currentRow = [], currentCell = '', inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i], nextChar = text[i + 1];
+    if (char === '"' && inQuotes && nextChar === '"') {
+      currentCell += '"'; i++;
+    } else if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      currentRow.push(currentCell); currentCell = '';
+    } else if ((char === '\n' || (char === '\r' && nextChar !== '\n')) && !inQuotes) {
+      currentRow.push(currentCell); rows.push(currentRow);
+      currentCell = ''; currentRow = [];
+    } else {
+      currentCell += char;
+    }
+  }
+  if (currentCell || currentRow.length) {
+    currentRow.push(currentCell); rows.push(currentRow);
+  }
+  return rows;
+}
     function setRadio(name, value) {
       const v = value === '有' ? '1' : '0';
       const radios = document.querySelectorAll(`input[name="${name}"]`);
