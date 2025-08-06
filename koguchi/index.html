@@ -92,7 +92,10 @@ detail.className = 'detail-row';
 detail.id = `detail-${idx}`;
 detail.innerHTML = `
   <td colspan="5">
+    <strong>MC:</strong> ${p['MC'] ?? ''}<strong>　発注日:</strong> ${p['発注日'] ?? ''}<br>
+    <strong>備考:</strong> ${p['備考'] ?? ''}<br>
     <strong>実施事項:</strong> ${p['実施事項'] ?? ''}<br>
+    <strong>産廃等処分状況:</strong> ${p['産廃等処分状況'] ?? ''}<strong>　写真:</strong> ${p['写真'] ?? ''}<strong>　図面:</strong> ${p['図面'] ?? ''}<strong>　単価根拠:</strong> ${p['単価根拠資料'] ?? ''}<strong>　その他:</strong> ${p['その他資料'] ?? ''}<br>
     <strong>明細行数:</strong> ${f.details?.length ?? 0}<br>
     <button class="btn btn-sm btn-secondary mt-2" onclick="reflectCSV(${idx})">反映</button>
     <button class="btn btn-sm btn-success mt-2 ms-2" onclick="editCSV(${idx})">編集</button>
