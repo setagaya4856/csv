@@ -63,6 +63,7 @@
     // 受信処理
 window.addEventListener('message', (event) => {
   const data = event.data;
+  console.log('[受信]', data);  // 👈 追加
 
   if (data.fileName && data.parsed && data.details) {
     const index = csvData.findIndex(f => f.fileName === data.fileName);
