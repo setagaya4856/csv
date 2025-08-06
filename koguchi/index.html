@@ -248,6 +248,7 @@ setTimeout(() => {
         body.appendChild(row);
         body.appendChild(detail);
       });
+      exportDetailMasterList(data);
     }
 
     // 検索機能
@@ -278,6 +279,47 @@ setTimeout(() => {
     function reflectCSV(index) {
       window.opener.postMessage({ csv: csvData[index].text }, '*');
       window.close();
+    }
+    
+    function exportDetailMasterList(csvData) {
+      const allDetails = [];
+    
+      for (const file of csvData) {
+        const rows = parseCSV(file.text);
+        const { details } = splitCsvSections(rows);
+    
+        for (const row of details) {
+          if (row.length >= 8) {
+            const sliced = row.slice(0, 8).map(cell => cell.trim());
+            allDetails.push(sliced);
+          }
+        }
+      }
+    
+      // ▼ 単価コードのみで重複除去（1列目＝row[0]）
+      const unique = [];
+      const seen = new Set();
+      for (const row of allDetails) {
+        const code = row[0];
+        if (!seen.has(code)) {
+          seen.add(code);
+          unique.push(row);
+        }
+      }
+    
+      // ▼ CSV出力
+      const header = '"単価コード","名称","単価種別","数量","単位","単価","金額","摘要"';
+      const lines = unique.map(row => row.map(cell => `"${cell}"`).join(','));
+      const bom = '\uFEFF';
+      const csvText = [header, ...lines].join('\n');
+      const blob = new Blob([bom + csvText], { type: 'text/csv;charset=utf-8;' });
+    
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '単価コード一覧.csv';
+      a.click();
+      URL.revokeObjectURL(url);
     }
   </script>
 </body>
