@@ -62,10 +62,10 @@
 
     // 受信処理
 window.addEventListener('message', (event) => {
-  console.log('[受信] event.data:', event.data);  // ← ★ここで確認
+  console.log('[受信] event.data:', event.data);
+
   const data = event.data;
 
-  // 🔄 エディターからの個別更新
   if (data.fileName && data.parsed && data.details) {
     const index = csvData.findIndex(f => f.fileName === data.fileName);
     if (index === -1) {
@@ -73,21 +73,38 @@ window.addEventListener('message', (event) => {
       return;
     }
 
-    // CSV 再生成
+    // 🔁 CSVテキストを更新
     const headers = Object.keys(data.parsed).map(h => `"${h}"`).join(',');
     const values = Object.values(data.parsed).map(v => `"${v}"`).join(',');
     const detailHeader = '"単価コード","名称","単価種別","数量","単位","単価","金額","摘要"';
     const detailLines = data.details.map(row =>
       row.map(cell => `"${cell}"`).join(',')
     ).join('\n');
-
     const csvText = [headers, values, '', detailHeader, detailLines].join('\n');
-    console
+
     csvData[index].text = csvText;
 
+    // 🖼 表を再描画
     renderTable(csvData);
+
+    // ⏳ 再描画が終わってから詳細行を開く（100ms遅延）
+    setTimeout(() => {
+      // 全部閉じる
+      document.querySelectorAll('.detail-row').forEach(row => row.classList.remove('show'));
+
+      // 対象行だけ展開
+      const detailRow = document.getElementById(`detail-${index}`);
+      if (detailRow) detailRow.classList.add('show');
+    }, 100);
+    
     return;
   }
+
+  if (Array.isArray(data?.fileList)) {
+    csvData = data.fileList;
+    renderTable(csvData);
+  }
+});
 
   // 📂 一括ファイルリスト受信（通常ケース）
   if (Array.isArray(data?.fileList)) {
