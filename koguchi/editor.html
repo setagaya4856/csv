@@ -207,10 +207,6 @@ function reflectToParent() {
   const sendChoice = confirm('一覧に反映しますか？');
   if (!sendChoice) return;
 
-  const ujscPattern = /SCL00012_re/i;
-  const listExactUrl = 'https://setagaya4856.github.io/csv/koguchi/';
-  let sent = false;
-
   const targetUrl = 'https://setagaya4856.github.io/csv/koguchi/';
   const target = window.opener;
 
@@ -218,7 +214,11 @@ function reflectToParent() {
     try {
       const href = target.location.href;
       if (href === targetUrl) {
-        target.postMessage(message, '*');
+        target.postMessage({
+          type: 'edit',
+          ...message
+        }, '*');
+
         window.close();
         return;
       }
