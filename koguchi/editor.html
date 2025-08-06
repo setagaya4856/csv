@@ -9,6 +9,10 @@
     textarea { width: 100%; height: 80px; }
     table td input { width: 100%; }
     .btn + .btn { margin-left: 0.5rem; }
+  .list-group-item:hover {
+    background-color: #e9ecef;
+    cursor: pointer;
+  }
   </style>
 </head>
 <body>
@@ -265,6 +269,101 @@ function saveAsFile() {
   a.click();
   URL.revokeObjectURL(url);
 }
+let tankaLookup = new Map();
+// ▼ 単価コード一覧の読み込み（別ファイルでもOK）
+fetch('単価コード一覧.csv')
+  .then(res => res.text())
+  .then(csv => {
+    const rows = parseCSV(csv).filter(r => r[0]); // 空行除去
+    const seen = new Set();
+    rows.forEach(row => {
+      const code = row[0];
+      if (!seen.has(code)) {
+        seen.add(code);
+        tankaLookup.set(code, row); // 単価コードをキーに
+      }
+    });
+  });
+
+// ▼ イベントバインド：動的サジェスト & 自動補完
+document.addEventListener('input', e => {
+  const input = e.target;
+  const cellIndex = input.closest('td')?.cellIndex;
+  const row = input.closest('tr');
+
+  // 「単価コード」入力時：完全一致で補完
+  if (cellIndex === 0) {
+    const rowData = tankaLookup.get(input.value);
+    if (rowData) fillRowFromData(row, rowData);
+  }
+
+  // 「名称」入力時：部分一致候補を動的表示
+  if (cellIndex === 1) {
+    showNameSuggestions(input);
+  }
+});
+
+// ▼ 候補表示：名称部分一致function showNameSuggestions(input) {
+  closeSuggestions();
+
+  const keyword = input.value.trim();
+  if (!keyword) return;
+
+  const suggestions = Array.from(tankaLookup.values()).filter(row =>
+    (row[1] && row[1].includes(keyword)) || // 名称
+    (row[7] && row[7].includes(keyword))    // 摘要
+  );
+
+  if (suggestions.length === 0) return;
+
+  const list = document.createElement('ul');
+  list.className = 'list-group position-absolute bg-white border shadow-sm';
+  list.style.zIndex = 1000;
+  list.style.maxHeight = '200px';
+  list.style.overflowY = 'auto';
+  list.style.width = input.offsetWidth + 'px';
+  list.style.marginTop = '2px';
+
+  suggestions.forEach(row => {
+    const item = document.createElement('li');
+    item.className = 'list-group-item list-group-item-action';
+    item.innerHTML = `<strong>${row[1] ?? ''}</strong><br><small class="text-muted">${row[7] ?? ''}</small>`;
+    item.addEventListener('click', () => {
+      input.value = row[1];
+      fillRowFromData(input.closest('tr'), row);
+      closeSuggestions();
+    });
+    list.appendChild(item);
+  });
+
+  input.parentNode.appendChild(list);
+}
+
+// ▼ 候補を閉じる
+function closeSuggestions() {
+  document.querySelectorAll('.list-group').forEach(e => e.remove());
+}
+
+// ▼ データで該当行を埋める
+function fillRowFromData(tr, data) {
+  const cells = tr.querySelectorAll('td');
+  for (let i = 0; i < 8; i++) {
+    if ([0, 1, 3, 7].includes(i)) {
+      const input = cells[i].querySelector('input');
+      if (input) input.value = data[i];
+    } else {
+      const span = cells[i].querySelector('span');
+      const hidden = cells[i].querySelector('input[type="hidden"]');
+      if (span) span.textContent = data[i];
+      if (hidden) hidden.value = data[i];
+    }
+  }
+}
+
+// ▼ サジェストを閉じる処理（画面外クリック時）
+document.addEventListener('click', e => {
+  if (!e.target.closest('.list-group')) closeSuggestions();
+});
   </script>
 </body>
 </html>
