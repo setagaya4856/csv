@@ -62,6 +62,7 @@
 
     // 受信処理
 window.addEventListener('message', (event) => {
+  console.log('[受信] event.data:', event.data);  // ← ★ここで確認
   const data = event.data;
 
   // 🔄 エディターからの個別更新
@@ -81,7 +82,7 @@ window.addEventListener('message', (event) => {
     ).join('\n');
 
     const csvText = [headers, values, '', detailHeader, detailLines].join('\n');
-
+    console
     csvData[index].text = csvText;
 
     renderTable(csvData);
