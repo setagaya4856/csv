@@ -191,7 +191,7 @@ setTimeout(() => {
     
         // 表示とイベント処理を既存の構造で作る（parsed, detailsを使う）
         const row = document.createElement('tr');
-        row.setAttribute('data-file-name', file.fileName);
+        row.setAttribute('data-file-name', f.fileName);
         row.innerHTML = `
           <td><button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">＋ 詳細</button></td>
           <td>${parsed['住宅名'] ?? ''}</td>
@@ -219,7 +219,7 @@ setTimeout(() => {
         const detail = document.createElement('tr');
         detail.className = 'detail-row';
         detail.id = `detail-${idx}`;
-        detail.setAttribute('data-file-name', file.fileName); // ★ 追加
+        detail.setAttribute('data-file-name', f.fileName); // ★ 追加
         detail.innerHTML = `
           <td colspan="5">
             <div class="mb-2">
