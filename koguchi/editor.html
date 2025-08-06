@@ -303,7 +303,8 @@ document.addEventListener('input', e => {
   }
 });
 
-// ▼ 候補表示：名称部分一致function showNameSuggestions(input) {
+// ▼ 候補表示：名称部分一致
+function showNameSuggestions(input) {
   closeSuggestions();
 
   const keyword = input.value.trim();
