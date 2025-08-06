@@ -65,7 +65,7 @@ window.addEventListener('message', (event) => {
   const data = event.data;
   console.log('[受信]', data);  // 👈 追加
 
-  iif (data?.type === 'edit' && data.fileName && data.parsed && data.details) {
+  if (data?.type === 'edit' && data.fileName && data.parsed && data.details) {
     const index = csvData.findIndex(f => f.fileName === data.fileName);
     if (index === -1) {
       console.warn('一致するファイルが見つかりませんでした');
