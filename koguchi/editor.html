@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>CSVエディター</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding: 2rem; background: #f8f9fa; }
+    textarea { width: 100%; height: 80px; }
+    table td input { width: 100%; }
+    .btn + .btn { margin-left: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h3>📝 CSVデータ編集</h3>
+
+  <div class="mb-3">
+    <label class="form-label fw-bold">実施事項</label>
+    <textarea id="txJisshiJiko"></textarea>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label fw-bold">産廃等処分状況</label>
+    <select id="kbSanpaitoJokyo" class="form-select">
+      <option value="">--選択--</option>
+      <option value="一次保管">一次保管</option>
+      <option value="直接搬入">直接搬入</option>
+      <option value="業者委託">業者委託</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label fw-bold">添付資料</label><br>
+    <span class="me-2">写真</span>
+    <label><input type="radio" name="fgShashinUmu" value="1"> 有</label>
+    <label><input type="radio" name="fgShashinUmu" value="0"> 無</label><br>
+
+    <span class="me-2">図面</span>
+    <label><input type="radio" name="fgZumenUmu" value="1"> 有</label>
+    <label><input type="radio" name="fgZumenUmu" value="0"> 無</label><br>
+
+    <span class="me-2">単価根拠資料</span>
+    <label><input type="radio" name="fgKonkyoshiryoUmu" value="1"> 有</label>
+    <label><input type="radio" name="fgKonkyoshiryoUmu" value="0"> 無</label><br>
+
+    <span class="me-2">その他資料</span>
+    <label><input type="radio" name="fgSonotatenpuUmu" value="1"> 有</label>
+    <label><input type="radio" name="fgSonotatenpuUmu" value="0"> 無</label>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label fw-bold">明細編集</label>
+    <table class="table table-bordered bg-white" id="detailTable">
+      <thead class="table-light">
+        <tr>
+          <th>単価コード</th><th>名称</th><th>単価種別</th><th>数量</th>
+          <th>単位</th><th>単価</th><th>金額</th><th>摘要</th><th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="detailBody"></tbody>
+    </table>
+    <button class="btn btn-outline-secondary btn-sm" onclick="addRow()">＋ 行追加</button>
+  </div>
+
+  <div class="mt-4">
+    <button class="btn btn-primary" onclick="reflectToParent()">元タブに反映</button>
+    <button class="btn btn-secondary" onclick="window.close()">閉じる</button>
+    <button class="btn btn-success" onclick="saveAsFile()">ファイル保存</button>
+  </div>
+
+  <script>
+    let receivedData;
+
+    window.addEventListener('message', e => {
+      receivedData = e.data;
+      const map = receivedData.parsed;
+      document.getElementById('txJisshiJiko').value = map['実施事項'] || '';
+      document.getElementById('kbSanpaitoJokyo').value = map['産廃等処分状況'] || '';
+      setRadio('fgShashinUmu', map['写真']);
+      setRadio('fgZumenUmu', map['図面']);
+      setRadio('fgKonkyoshiryoUmu', map['単価根拠資料']);
+      setRadio('fgSonotatenpuUmu', map['その他資料']);
+      populateDetailRows(receivedData.details || []);
+    });
+
+    function setRadio(name, value) {
+      const v = value === '有' ? '1' : '0';
+      const radios = document.querySelectorAll(`input[name="${name}"]`);
+      radios.forEach(r => { r.checked = r.value === v });
+    }
+
+    function populateDetailRows(rows) {
+      const tbody = document.getElementById('detailBody');
+      tbody.innerHTML = '';
+      rows.forEach(row => addRow(row));
+    }
+
+    function addRow(data = []) {
+      const tr = document.createElement('tr');
+      for (let i = 0; i < 8; i++) {
+        const td = document.createElement('td');
+        td.innerHTML = `<input type="text" value="${data[i] ?? ''}">`;
+        tr.appendChild(td);
+      }
+      const tdOp = document.createElement('td');
+      tdOp.innerHTML = `<button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">削除</button>`;
+      tr.appendChild(tdOp);
+      document.getElementById('detailBody').appendChild(tr);
+    }
+
+    function reflectToParent() {
+      const map = receivedData.parsed;
+      map['実施事項'] = document.getElementById('txJisshiJiko').value;
+      map['産廃等処分状況'] = document.getElementById('kbSanpaitoJokyo').value;
+      map['写真'] = getRadio('fgShashinUmu');
+      map['図面'] = getRadio('fgZumenUmu');
+      map['単価根拠資料'] = getRadio('fgKonkyoshiryoUmu');
+      map['その他資料'] = getRadio('fgSonotatenpuUmu');
+
+      const details = Array.from(document.querySelectorAll('#detailBody tr')).map(tr =>
+        Array.from(tr.querySelectorAll('input')).map(input => input.value.trim())
+      );
+
+      window.opener.postMessage({ fileName: receivedData.fileName, parsed: map, details }, '*');
+      window.close();
+    }
+
+    function getRadio(name) {
+      const val = document.querySelector(`input[name="${name}"]:checked`)?.value;
+      return val === '1' ? '有' : '無';
+    }
+
+    function saveAsFile() {
+      const headerLine = Object.keys(receivedData.parsed).map(h => `"${h}"`).join(',');
+      const valueLine = Object.values(receivedData.parsed).map(v => `"${v}"`).join(',');
+      const detailHeader = '"単価コード","名称","単価種別","数量","単位","単価","金額","摘要"';
+      const detailLines = Array.from(document.querySelectorAll('#detailBody tr')).map(tr =>
+        Array.from(tr.querySelectorAll('input')).map(td => `"${td.value}"`).join(',')
+      );
+      const blob = new Blob([headerLine + '\n' + valueLine + '\n\n' + detailHeader + '\n' + detailLines.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = receivedData.fileName || 'edited.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
