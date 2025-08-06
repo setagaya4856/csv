@@ -22,7 +22,7 @@
 </head>
 <body class="p-4 bg-light">
 
-  <div class="container">
+  <div class="container-fluid">
     <h2 class="mb-4">📋 一覧</h2>
     <!-- 🔍 検索ボックス -->
     <div class="row search-group">
@@ -46,11 +46,11 @@
     <table class="table table-bordered table-striped bg-white" id="csvTable">
       <thead class="table-dark">
         <tr>
-          <th>操作</th>
-          <th>住宅名</th>
-          <th>号棟</th>
-          <th>号室</th>
-          <th>修繕発注事項</th>
+          <th style="width: 5em;">操作</th>
+          <th style="width: 20%;">住宅名</th>           <!-- 倍の幅 -->
+          <th style="width: 10%;">号棟</th>
+          <th style="width: 12%;">号室</th>             <!-- 1.5倍程度 -->
+          <th style="width: 53%;">修繕発注事項</th>     <!-- 残りのスペース -->
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
