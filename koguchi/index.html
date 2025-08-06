@@ -88,18 +88,24 @@ console.log('[比較] 現在のcsvData一覧:', csvData.map(f => f.fileName));
     renderTable(csvData);
 
     // 編集行だけを表示
-    setTimeout(() => {
-      const allRows = document.querySelectorAll('#csvTable tbody tr');
-      const mainRowIndex = index * 2;
-      const detailRowIndex = index * 2 + 1;
+setTimeout(() => {
+  // 全て非表示
+  const rows = document.querySelectorAll('#csvTable tbody tr');
+  rows.forEach(row => row.style.display = 'none');
 
-      allRows.forEach((row, i) => {
-        row.style.display = (i === mainRowIndex || i === detailRowIndex) ? '' : 'none';
-      });
-
-      const detailRow = document.getElementById(`detail-${index}`);
-      if (detailRow) detailRow.classList.add('show');
-    }, 100);
+  // ファイル名に一致する行を探して表示
+  rows.forEach(row => {
+    const fileCell = row.querySelector('td');
+    if (fileCell && fileCell.textContent.includes(data.fileName)) {
+      row.style.display = '';
+      const nextRow = row.nextElementSibling;
+      if (nextRow && nextRow.id?.startsWith('detail-')) {
+        nextRow.style.display = '';
+        nextRow.classList.add('show');
+      }
+    }
+  });
+}, 100);
 
     return;
   }
