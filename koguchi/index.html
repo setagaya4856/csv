@@ -88,21 +88,44 @@ data.forEach((f, idx) => {
   const detail = document.createElement('tr');
   detail.className = 'detail-row';
   detail.id = `detail-${idx}`;
-  const detailHtml = `
-    <strong>発注日:</strong> ${p['発注日'] ?? ''}<br>
-    <strong>備考:</strong> ${p['備考'] ?? ''}<br>
-    <strong>実施事項:</strong> ${p['実施事項'] ?? ''}<br>
-    <strong>産廃等処分状況:</strong> ${p['産廃等処分状況'] ?? ''}
-    <strong> 写真:</strong> ${p['写真'] ?? ''}
-    <strong> 図面:</strong> ${p['図面'] ?? ''}
-    <strong> 単価根拠:</strong> ${p['単価根拠資料'] ?? ''}
-    <strong> その他:</strong> ${p['その他資料'] ?? ''}<br>
-    <strong>明細行数:</strong> ${detRows.length}<br>
-    <strong>明細内容:</strong>
-    <pre style="background:#f8f9fa;border:1px solid #ccc;padding:5px">${detRows.map(row => row.join(',')).join('\n')}</pre>
-    <button class="btn btn-sm btn-secondary mt-2" onclick="reflectCSV(${idx})">反映</button>
-    <button class="btn btn-sm btn-success mt-2 ms-2" onclick="editCSV(${idx})">編集</button>
-  `;
+  // 明細行のHTML生成（table形式）
+const detailTable = `
+  <table class="table table-sm table-bordered mt-2 bg-white">
+    <thead class="table-light">
+      <tr>
+        <th>単価コード</th>
+        <th>名称</th>
+        <th>数量</th>
+        <th>備考</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${detRows.map(row => `
+        <tr>
+          <td>${row[0] ?? ''}</td>
+          <td>${row[1] ?? ''}</td>
+          <td>${row[2] ?? ''}</td>
+          <td>${row[3] ?? ''}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+`;
+const detailHtml = `
+  <strong>発注日:</strong> ${p['発注日'] ?? ''}<br>
+  <strong>備考:</strong> ${p['備考'] ?? ''}<br>
+  <strong>実施事項:</strong> ${p['実施事項'] ?? ''}<br>
+  <strong>産廃等処分状況:</strong> ${p['産廃等処分状況'] ?? ''}
+  <strong> 写真:</strong> ${p['写真'] ?? ''}
+  <strong> 図面:</strong> ${p['図面'] ?? ''}
+  <strong> 単価根拠:</strong> ${p['単価根拠資料'] ?? ''}
+  <strong> その他:</strong> ${p['その他資料'] ?? ''}<br>
+  <strong>明細行数:</strong> ${detRows.length}<br>
+  <strong>明細内容:</strong>
+  ${detailTable}
+  <button class="btn btn-sm btn-secondary mt-2" onclick="reflectCSV(${idx})">反映</button>
+  <button class="btn btn-sm btn-success mt-2 ms-2" onclick="editCSV(${idx})">編集</button>
+`;
   detail.innerHTML = `<td colspan="5">${detailHtml}</td>`;
 
   row.querySelector('.btn-toggle').onclick = () => {
