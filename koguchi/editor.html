@@ -83,14 +83,26 @@
     
 window.addEventListener('message', e => {
   const file = e.data;
-  const rows = parseCSV(file.text); // CSV文字列 → 配列
-  const { headers, values, details } = splitCsvSections(rows); // 共通関数で分解
+  const rows = parseCSV(file.text);
+  const { headers, values, details } = splitCsvSections(rows);
 
   receivedData = {
     fileName: file.fileName,
     parsed: Object.fromEntries(headers.map((h, i) => [h, values[i]])),
     details
   };
+
+  // 単価一覧を格納（ある場合のみ）
+  if (Array.isArray(file.tankaList)) {
+    window.tankaLookup = new Map();
+    for (const row of file.tankaList) {
+      const code = row[0]?.trim();
+      if (code && !window.tankaLookup.has(code)) {
+        window.tankaLookup.set(code, row);
+      }
+    }
+    console.log('単価一覧を受信:', window.tankaLookup);
+  }
 
   // 画面へ反映
   const map = receivedData.parsed;
@@ -113,6 +125,7 @@ function splitCsvSections(rows) {
 
   return { headers, values, details };
 }
+    
 function parseCSV(text) {
   const rows = [];
   let currentRow = [], currentCell = '', inQuotes = false;
@@ -269,21 +282,6 @@ function saveAsFile() {
   a.click();
   URL.revokeObjectURL(url);
 }
-let tankaLookup = new Map();
-// ▼ 単価コード一覧の読み込み（別ファイルでもOK）
-fetch('単価コード一覧.csv')
-  .then(res => res.text())
-  .then(csv => {
-    const rows = parseCSV(csv).filter(r => r[0]); // 空行除去
-    const seen = new Set();
-    rows.forEach(row => {
-      const code = row[0];
-      if (!seen.has(code)) {
-        seen.add(code);
-        tankaLookup.set(code, row); // 単価コードをキーに
-      }
-    });
-  });
 
 // ▼ イベントバインド：動的サジェスト & 自動補完
 document.addEventListener('input', e => {
