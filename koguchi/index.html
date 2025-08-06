@@ -178,11 +178,10 @@ function renderTable(data) {
       setTimeout(send, 1500);
     }
 
-    // 「反映」ボタン押下 → 親に送信
-    function reflectCSV(index) {
-      window.opener.postMessage({ csv: csvData[index].text }, '*');
-      window.close();
-    }
+  function reflectCSV(index) {
+    window.opener.postMessage({ csv: csvData[index].text }, '*');
+    window.close();
+  }
   </script>
 </body>
 </html>
