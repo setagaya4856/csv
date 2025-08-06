@@ -61,11 +61,40 @@
     let csvData = [];
 
     // 受信処理
-    window.addEventListener('message', (event) => {
-      csvData = event.data?.fileList ?? [];
-      if (!Array.isArray(csvData)) return;
-      renderTable(csvData);
-      });
+window.addEventListener('message', (event) => {
+  const data = event.data;
+
+  // 🔄 エディターからの個別更新
+  if (data.fileName && data.parsed && data.details) {
+    const index = csvData.findIndex(f => f.fileName === data.fileName);
+    if (index === -1) {
+      console.warn('一致するファイルが見つかりませんでした');
+      return;
+    }
+
+    // CSV 再生成
+    const headers = Object.keys(data.parsed).map(h => `"${h}"`).join(',');
+    const values = Object.values(data.parsed).map(v => `"${v}"`).join(',');
+    const detailHeader = '"単価コード","名称","単価種別","数量","単位","単価","金額","摘要"';
+    const detailLines = data.details.map(row =>
+      row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+
+    const csvText = [headers, values, '', detailHeader, detailLines].join('\n');
+
+    csvData[index].text = csvText;
+
+    renderTable(csvData);
+    return;
+  }
+
+  // 📂 一括ファイルリスト受信（通常ケース）
+  if (Array.isArray(data?.fileList)) {
+    csvData = data.fileList;
+    renderTable(csvData);
+  }
+});
+    
     // 簡易 CSV パーサー（カンマ区切り、改行・クォート対応）
     function parseCSV(text) {
       const rows = [];
