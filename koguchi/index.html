@@ -89,13 +89,16 @@ console.log('[比較] 現在のcsvData一覧:', csvData.map(f => f.fileName));
 
     // 編集行だけを表示
 setTimeout(() => {
-  // ファイル名に一致する行を探して表示
+  const rows = document.querySelectorAll('#csvTable tbody tr');
+  rows.forEach(row => row.style.display = 'none');
+
+  // fileName 属性で一致する行を探す
   rows.forEach(row => {
-    const fileCell = row.querySelector('td');
-    if (fileCell && fileCell.textContent.includes(data.fileName)) {
+    const fileAttr = row.getAttribute('data-file-name');
+    if (fileAttr === data.fileName) {
       row.style.display = '';
       const nextRow = row.nextElementSibling;
-      if (nextRow && nextRow.id?.startsWith('detail-')) {
+      if (nextRow && nextRow.getAttribute('data-file-name') === data.fileName) {
         nextRow.style.display = '';
         nextRow.classList.add('show');
       }
@@ -188,6 +191,7 @@ setTimeout(() => {
     
         // 表示とイベント処理を既存の構造で作る（parsed, detailsを使う）
         const row = document.createElement('tr');
+        row.setAttribute('data-file-name', file.fileName);
         row.innerHTML = `
           <td><button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">＋ 詳細</button></td>
           <td>${parsed['住宅名'] ?? ''}</td>
@@ -215,6 +219,7 @@ setTimeout(() => {
         const detail = document.createElement('tr');
         detail.className = 'detail-row';
         detail.id = `detail-${idx}`;
+        detail.setAttribute('data-file-name', file.fileName); // ★ 追加
         detail.innerHTML = `
           <td colspan="5">
             <div class="mb-2">
