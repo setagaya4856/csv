@@ -108,13 +108,6 @@ window.addEventListener('message', (event) => {
     renderTable(csvData);
   }
 });
-
-  // 📂 一括ファイルリスト受信（通常ケース）
-  if (Array.isArray(data?.fileList)) {
-    csvData = data.fileList;
-    renderTable(csvData);
-  }
-});
     
     // 簡易 CSV パーサー（カンマ区切り、改行・クォート対応）
     function parseCSV(text) {
