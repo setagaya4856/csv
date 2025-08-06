@@ -308,9 +308,10 @@ function showNameSuggestions(input) {
   const keyword = input.value.trim();
   if (!keyword) return;
 
+  // 名称（1列目）または 摘要（7列目）に部分一致する候補を抽出
   const suggestions = Array.from(tankaLookup.values()).filter(row =>
-    (row[1] && row[1].includes(keyword)) || // 名称
-    (row[7] && row[7].includes(keyword))    // 摘要
+    (row[1] && row[1].includes(keyword)) ||   // 名称
+    (row[7] && row[7].includes(keyword))      // 摘要
   );
 
   if (suggestions.length === 0) return;
@@ -324,14 +325,24 @@ function showNameSuggestions(input) {
   list.style.marginTop = '2px';
 
   suggestions.forEach(row => {
+    const name = row[1] ?? '';
+    const type = row[2] ?? '';
+    const note = row[7] ?? '';
     const item = document.createElement('li');
     item.className = 'list-group-item list-group-item-action';
-    item.innerHTML = `<strong>${row[1] ?? ''}</strong><br><small class="text-muted">${row[7] ?? ''}</small>`;
+
+    // ▼ 表示例: 「扉調整（材工A） - URJKKPM-J.CY同等品、錠調整含」
+    item.innerHTML = `
+      <strong>${name}</strong>
+      <small class="text-muted">（${type}） - ${note}</small>
+    `.trim();
+
     item.addEventListener('click', () => {
-      input.value = row[1];
-      fillRowFromData(input.closest('tr'), row);
+      input.value = name;
+      fillRowFromData(input.closest('tr'), row); // 他の列を自動入力
       closeSuggestions();
     });
+
     list.appendChild(item);
   });
 
