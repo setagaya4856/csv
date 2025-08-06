@@ -66,7 +66,10 @@
       if (!Array.isArray(csvData)) return;
       renderTable(csvData);
     });
-
+    
+function extractDetailRows(rows) {
+  return rows.slice(2).filter(r => /^\d{8}$/.test((r[0] ?? '').trim()));
+}
     // テーブル表示
 function renderTable(data) {
   const body = document.getElementById('tableBody');
@@ -74,7 +77,7 @@ function renderTable(data) {
 
   data.forEach((f, idx) => {
     const p = f.parsed;
-    const detRows = f.details?.slice(2) || []; // 1行目の見出しを除外
+    const detRows = extractDetailRows(f.details || []);
 
     // 一覧行（住宅名、号棟など）
     const row = document.createElement('tr');
