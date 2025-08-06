@@ -120,6 +120,7 @@ function addRow(data = []) {
         <input type="hidden" value="${data[i] ?? ''}">
       `;
     }
+    if (i === 0 || i === 3) td.style.width = '6em'; // 単価コードだけ幅狭く
 
     tr.appendChild(td);
   }
