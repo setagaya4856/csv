@@ -63,7 +63,8 @@
     // 受信処理
 window.addEventListener('message', (event) => {
   const data = event.data;
-  console.log('[受信]', data);  // 👈 追加
+  console.log('[比較] 受信ファイル名:', data.fileName);
+console.log('[比較] 現在のcsvData一覧:', csvData.map(f => f.fileName));
 
   if (data?.type === 'edit' && data.fileName && data.parsed && data.details) {
     const index = csvData.findIndex(f => f.fileName === data.fileName);
