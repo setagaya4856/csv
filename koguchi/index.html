@@ -67,82 +67,91 @@
       renderTable(csvData);
     });
 
-    // テーブル表示data.forEach((f, idx) => {
-  const p = f.parsed;
-  const detRows = f.details?.slice(1) || []; // 見出し除去
+    // テーブル表示
+function renderTable(data) {
+  const body = document.getElementById('tableBody');
+  body.innerHTML = '';
 
-  const row = document.createElement('tr');
-  row.innerHTML = `
-    <td><button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">▶ 詳細</button></td>
-    <td>${p['住宅名']}</td>
-    <td>${p['号棟']}</td>
-    <td>${p['号室']}</td>
-    <td>${p['修繕発注事項']}</td>
-  `;
+  data.forEach((f, idx) => {
+    const p = f.parsed;
+    const detRows = f.details?.slice(1) || []; // 1行目の見出しを除外
 
-  const detail = document.createElement('tr');
-  detail.className = 'detail-row';
-  detail.id = `detail-${idx}`;
+    // 一覧行（住宅名、号棟など）
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">▶ 詳細</button></td>
+      <td>${p['住宅名']}</td>
+      <td>${p['号棟']}</td>
+      <td>${p['号室']}</td>
+      <td>${p['修繕発注事項']}</td>
+    `;
 
-  const detailTable = `
-    <table class="table table-sm table-bordered mt-2 bg-white">
-      <thead class="table-light">
-        <tr>
-          <th>単価コード</th>
-          <th>名称</th>
-          <th>単価種別</th>
-          <th>数量</th>
-          <th>単位</th>
-          <th>単価</th>
-          <th>金額</th>
-          <th>摘要</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${detRows.map(row => `
+    // 明細テーブル（8列）
+    const detailTable = `
+      <table class="table table-sm table-bordered mt-2 bg-white">
+        <thead class="table-light">
           <tr>
-            <td>${row[0] ?? ''}</td>
-            <td>${row[1] ?? ''}</td>
-            <td>${row[2] ?? ''}</td>
-            <td>${row[3] ?? ''}</td>
-            <td>${row[4] ?? ''}</td>
-            <td>${row[5] ?? ''}</td>
-            <td>${row[6] ?? ''}</td>
-            <td>${row[7] ?? ''}</td>
+            <th>単価コード</th>
+            <th>名称</th>
+            <th>単価種別</th>
+            <th>数量</th>
+            <th>単位</th>
+            <th>単価</th>
+            <th>金額</th>
+            <th>摘要</th>
           </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
+        </thead>
+        <tbody>
+          ${detRows.map(row => `
+            <tr>
+              <td>${row[0] ?? ''}</td>
+              <td>${row[1] ?? ''}</td>
+              <td>${row[2] ?? ''}</td>
+              <td>${row[3] ?? ''}</td>
+              <td>${row[4] ?? ''}</td>
+              <td>${row[5] ?? ''}</td>
+              <td>${row[6] ?? ''}</td>
+              <td>${row[7] ?? ''}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
 
-  const detailHtml = `
-    <div class="mb-2">
-      <strong>発注日:</strong> ${p['発注日'] ?? ''}<br>
-      <strong>備考:</strong> ${p['備考'] ?? ''}<br>
-      <strong>実施事項:</strong> ${p['実施事項'] ?? ''}<br>
-      <strong>産廃等処分状況:</strong> ${p['産廃等処分状況'] ?? ''}　
-      <strong>写真:</strong> ${p['写真'] ?? ''}　
-      <strong>図面:</strong> ${p['図面'] ?? ''}　
-      <strong>単価根拠:</strong> ${p['単価根拠資料'] ?? ''}　
-      <strong>その他:</strong> ${p['その他資料'] ?? ''}<br>
-      <strong>明細行数:</strong> ${detRows.length}
-    </div>
-    ${detailTable}
-    <div class="mt-2">
-      <button class="btn btn-sm btn-secondary" onclick="reflectCSV(${idx})">反映</button>
-      <button class="btn btn-sm btn-success ms-2" onclick="editCSV(${idx})">編集</button>
-    </div>
-  `;
+    // 詳細行（展開される部分）
+    const detail = document.createElement('tr');
+    detail.className = 'detail-row';
+    detail.id = `detail-${idx}`;
+    const detailHtml = `
+      <div class="mb-2">
+        <strong>発注日:</strong> ${p['発注日'] ?? ''}<br>
+        <strong>備考:</strong> ${p['備考'] ?? ''}<br>
+        <strong>実施事項:</strong> ${p['実施事項'] ?? ''}<br>
+        <strong>産廃等処分状況:</strong> ${p['産廃等処分状況'] ?? ''}　
+        <strong>写真:</strong> ${p['写真'] ?? ''}　
+        <strong>図面:</strong> ${p['図面'] ?? ''}　
+        <strong>単価根拠:</strong> ${p['単価根拠資料'] ?? ''}　
+        <strong>その他:</strong> ${p['その他資料'] ?? ''}<br>
+        <strong>明細行数:</strong> ${detRows.length}
+      </div>
+      ${detailTable}
+      <div class="mt-2">
+        <button class="btn btn-sm btn-secondary" onclick="reflectCSV(${idx})">反映</button>
+        <button class="btn btn-sm btn-success ms-2" onclick="editCSV(${idx})">編集</button>
+      </div>
+    `;
+    detail.innerHTML = `<td colspan="5">${detailHtml}</td>`;
 
-  detail.innerHTML = `<td colspan="5">${detailHtml}</td>`;
+    // トグルイベント
+    row.querySelector('.btn-toggle').onclick = () => {
+      detail.classList.toggle('show');
+    };
 
-  row.querySelector('.btn-toggle').onclick = () => {
-    detail.classList.toggle('show');
-  };
+    body.appendChild(row);
+    body.appendChild(detail);
+  });
+}
 
-  body.appendChild(row);
-  body.appendChild(detail);
-});
 
     // 検索機能
     document.getElementById('searchInput').addEventListener('input', () => {
