@@ -23,9 +23,9 @@
     <label class="form-label fw-bold">産廃等処分状況</label>
     <select id="kbSanpaitoJokyo" class="form-select">
       <option value="">--選択--</option>
-      <option value="一次保管">一次保管</option>
-      <option value="直接搬入">直接搬入</option>
-      <option value="業者委託">業者委託</option>
+      <option value="一次保管>一次保管</option>
+      <option value="処分済">処分済</option>
+      <option value="なし">なし</option>
     </select>
   </div>
 
@@ -33,32 +33,41 @@
     <label class="form-label fw-bold">添付資料</label><br>
     <span class="me-2">写真</span>
     <label><input type="radio" name="fgShashinUmu" value="1"> 有</label>
-    <label><input type="radio" name="fgShashinUmu" value="0"> 無</label><br>
+    <label><input type="radio" name="fgShashinUmu" value="0"> 無</label>
 
-    <span class="me-2">図面</span>
+    <span class="me-2">　図面</span>
     <label><input type="radio" name="fgZumenUmu" value="1"> 有</label>
-    <label><input type="radio" name="fgZumenUmu" value="0"> 無</label><br>
+    <label><input type="radio" name="fgZumenUmu" value="0"> 無</label>
 
-    <span class="me-2">単価根拠資料</span>
+    <span class="me-2">　単価根拠資料</span>
     <label><input type="radio" name="fgKonkyoshiryoUmu" value="1"> 有</label>
-    <label><input type="radio" name="fgKonkyoshiryoUmu" value="0"> 無</label><br>
+    <label><input type="radio" name="fgKonkyoshiryoUmu" value="0"> 無</label>
 
-    <span class="me-2">その他資料</span>
+    <span class="me-2">　その他資料</span>
     <label><input type="radio" name="fgSonotatenpuUmu" value="1"> 有</label>
     <label><input type="radio" name="fgSonotatenpuUmu" value="0"> 無</label>
   </div>
 
   <div class="mb-3">
     <label class="form-label fw-bold">明細編集</label>
-    <table class="table table-bordered bg-white" id="detailTable">
-      <thead class="table-light">
-        <tr>
-          <th>単価コード</th><th>名称</th><th>単価種別</th><th>数量</th>
-          <th>単位</th><th>単価</th><th>金額</th><th>摘要</th><th>操作</th>
-        </tr>
-      </thead>
-      <tbody id="detailBody"></tbody>
-    </table>
+    <!-- 明細編集テーブル -->
+      <table class="table table-sm table-bordered bg-white" id="detailTable">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>単価コード</th>
+            <th>名称</th>
+            <th>単価種別</th>
+            <th>数量</th>
+            <th>単位</th>
+            <th>単価</th>
+            <th>金額</th>
+            <th>摘要</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="detailBody"></tbody>
+      </table>
     <button class="btn btn-outline-secondary btn-sm" onclick="addRow()">＋ 行追加</button>
   </div>
 
@@ -70,7 +79,7 @@
 
   <script>
     let receivedData;
-
+    
     window.addEventListener('message', e => {
       receivedData = e.data;
       const map = receivedData.parsed;
@@ -97,14 +106,22 @@
 
     function addRow(data = []) {
       const tr = document.createElement('tr');
+      const editableCols = [0, 1, 3, 7]; // 単価コード, 名称, 数量, 摘要
+    
       for (let i = 0; i < 8; i++) {
         const td = document.createElement('td');
-        td.innerHTML = `<input type="text" value="${data[i] ?? ''}">`;
+        if (editableCols.includes(i)) {
+          td.innerHTML = `<input type="text" class="form-control form-control-sm" value="${data[i] ?? ''}">`;
+        } else {
+          td.textContent = data[i] ?? '';
+        }
         tr.appendChild(td);
       }
+    
       const tdOp = document.createElement('td');
       tdOp.innerHTML = `<button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">削除</button>`;
       tr.appendChild(tdOp);
+    
       document.getElementById('detailBody').appendChild(tr);
     }
 
