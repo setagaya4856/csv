@@ -106,7 +106,19 @@ console.log('[比較] 現在のcsvData一覧:', csvData.map(f => f.fileName));
 
   // 通常の一覧受信
   if (Array.isArray(data?.fileList)) {
-    csvData = data.fileList;
+    // 編集済みファイルを維持
+    const incoming = data.fileList;
+    for (const edited of csvData) {
+      if (editedFileNames.has(edited.fileName)) {
+        const i = incoming.findIndex(f => f.fileName === edited.fileName);
+        if (i !== -1) {
+          incoming[i] = edited;
+        } else {
+          incoming.push(edited);
+        }
+      }
+    }
+    csvData = incoming;
     renderTable(csvData);
   }
 });
