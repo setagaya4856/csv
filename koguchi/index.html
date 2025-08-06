@@ -74,7 +74,7 @@ function renderTable(data) {
 
   data.forEach((f, idx) => {
     const p = f.parsed;
-    const detRows = f.details?.slice(1) || []; // 1行目の見出しを除外
+    const detRows = f.details?.slice(2) || []; // 1行目の見出しを除外
 
     // 一覧行（住宅名、号棟など）
     const row = document.createElement('tr');
