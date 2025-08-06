@@ -24,6 +24,7 @@
 
   <div class="container">
     <h2 class="mb-4">📋 CSV一覧</h2>
+  <div id="loading" class="alert alert-info" style="display: none;">読み込み中...</div>
 
     <!-- 🔍 検索ボックス -->
     <div class="row search-group">
@@ -47,11 +48,11 @@
     <table class="table table-bordered table-striped bg-white" id="csvTable">
       <thead class="table-dark">
         <tr>
+          <th>操作</th>
           <th>住宅名</th>
           <th>号棟</th>
           <th>号室</th>
           <th>修繕発注事項</th>
-          <th>操作</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -68,47 +69,58 @@
       renderTable(csvData);
     });
 
-    // テーブル表示
-    function renderTable(data) {
-      const body = document.getElementById('tableBody');
-      body.innerHTML = '';
+    // テーブル表示function renderTable(data) {
+  const body = document.getElementById('tableBody');
+  const loading = document.getElementById('loading');
+  body.innerHTML = '';
+  loading.style.display = 'block';
 
-      data.forEach((f, idx) => {
-        const p = f.parsed;
+  // ちょっとだけ非同期で見せるため setTimeout
+  setTimeout(() => {
+    data.forEach((f, idx) => {
+      const p = f.parsed;
+      const detRows = f.text.split(/\r?\n/).slice(2).filter(line => /^\d{8}/.test(line));
 
-const row = document.createElement('tr');
-row.innerHTML = `
-  <td>${p['住宅名']}</td>
-  <td>${p['号棟']}</td>
-  <td>${p['号室']}</td>
-  <td>${p['修繕発注事項']}</td>
-  <td>
-    <button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">▶ 詳細</button>
-  </td>
-`;
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">▶ 詳細</button></td>
+        <td>${p['住宅名']}</td>
+        <td>${p['号棟']}</td>
+        <td>${p['号室']}</td>
+        <td>${p['修繕発注事項']}</td>
+      `;
 
-const detail = document.createElement('tr');
-detail.className = 'detail-row';
-detail.id = `detail-${idx}`;
-detail.innerHTML = `
-  <td colspan="5">
-    <strong>発注日:</strong> ${p['発注日'] ?? ''}<br>
-    <strong>備考:</strong> ${p['備考'] ?? ''}<br>
-    <strong>実施事項:</strong> ${p['実施事項'] ?? ''}<br>
-    <strong>産廃等処分状況:</strong> ${p['産廃等処分状況'] ?? ''}<strong>　写真:</strong> ${p['写真'] ?? ''}<strong>　図面:</strong> ${p['図面'] ?? ''}<strong>　単価根拠:</strong> ${p['単価根拠資料'] ?? ''}<strong>　その他:</strong> ${p['その他資料'] ?? ''}<br>
-    <strong>明細行数:</strong> ${f.details?.length ?? 0}<br>
-    <button class="btn btn-sm btn-secondary mt-2" onclick="reflectCSV(${idx})">反映</button>
-    <button class="btn btn-sm btn-success mt-2 ms-2" onclick="editCSV(${idx})">編集</button>
-  </td>
-`;
+      const detail = document.createElement('tr');
+      detail.className = 'detail-row';
+      detail.id = `detail-${idx}`;
+      const detailHtml = `
+        <strong>発注日:</strong> ${p['発注日'] ?? ''}<br>
+        <strong>備考:</strong> ${p['備考'] ?? ''}<br>
+        <strong>実施事項:</strong> ${p['実施事項'] ?? ''}<br>
+        <strong>産廃等処分状況:</strong> ${p['産廃等処分状況'] ?? ''}
+        <strong> 写真:</strong> ${p['写真'] ?? ''}
+        <strong> 図面:</strong> ${p['図面'] ?? ''}
+        <strong> 単価根拠:</strong> ${p['単価根拠資料'] ?? ''}
+        <strong> その他:</strong> ${p['その他資料'] ?? ''}<br>
+        <strong>明細行数:</strong> ${detRows.length}<br>
+        <strong>明細内容:</strong>
+        <pre style="background:#f8f9fa;border:1px solid #ccc;padding:5px">${detRows.join('\n')}</pre>
+        <button class="btn btn-sm btn-secondary mt-2" onclick="reflectCSV(${idx})">反映</button>
+        <button class="btn btn-sm btn-success mt-2 ms-2" onclick="editCSV(${idx})">編集</button>
+      `;
+      detail.innerHTML = `<td colspan="5">${detailHtml}</td>`;
 
-row.querySelector('.btn-toggle').onclick = () => {
-  detail.classList.toggle('show');
-};
-        body.appendChild(row);
-body.appendChild(detail);
-      });
-    }
+      row.querySelector('.btn-toggle').onclick = () => {
+        detail.classList.toggle('show');
+      };
+
+      body.appendChild(row);
+      body.appendChild(detail);
+    });
+
+    loading.style.display = 'none';
+  }, 100);
+}
 
     // 検索機能
     document.getElementById('searchInput').addEventListener('input', () => {
