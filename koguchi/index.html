@@ -211,10 +211,10 @@
       setTimeout(send, 1500);
     }
     
-function reflectCSV(index) {
-  window.opener.postMessage({ csv: csvData[index].text }, '*');
-  window.close();
-}
+    function reflectCSV(index) {
+      window.opener.postMessage({ csv: csvData[index].text }, '*');
+      window.close();
+    }
   </script>
 </body>
 </html>
