@@ -106,11 +106,12 @@ function parseCSV(text) {
 
   return rows;
 }
+    
 function splitCsvSections(rows) {
   const clean = r => r.map(c => c?.replace(/^"(.*)"$/, '$1')?.trim() ?? '');
 
   const headers = clean(rows[0] || []);
-  const values = clean([...rows[1] || [], ...rows[2] || []]); // valuesが2行に渡る想定
+  const values = clean(rows[1] || []);  // ✅ ← ここを1行だけに！
   const detailStart = rows.findIndex(r => r[0]?.includes('単価コード'));
   const details = detailStart >= 0 ? rows.slice(detailStart + 1).map(clean) : [];
 
