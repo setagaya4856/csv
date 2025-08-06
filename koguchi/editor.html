@@ -350,7 +350,6 @@ function fillRowFromData(tr, data) {
     if ([0, 1, 7].includes(i)) {
       const input = cells[i].querySelector('input');
       if (input) input.value = data[i];
-    } 
     } else if (i === 3) {
     } else {
       const span = cells[i].querySelector('span');
