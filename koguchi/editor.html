@@ -168,25 +168,24 @@ function reflectToParent() {
   const listExactUrl = 'https://setagaya4856.github.io/csv/koguchi/';
   let sent = false;
 
-  // ▼ タブ探索と処理
-  const targets = [window.opener];
-  for (const win of targets) {
-    try {
-      if (!win || win.closed) continue;
-      const href = win.location.href;
+  const targetUrl = 'https://setagaya4856.github.io/csv/koguchi/';
+  const target = window.opener;
 
-      if (ujscPattern.test(href)) {
-        win.postMessage(message, '*');
-        sent = true;
-      } else if (href === listExactUrl) {
-        win.close(); // 一覧画面を閉じる
+  if (target && !target.closed) {
+    try {
+      const href = target.location.href;
+      if (href === targetUrl) {
+        target.postMessage(message, '*');
+        window.close();
+        return;
       }
     } catch (e) {
-      console.warn('タブのURL取得に失敗しました（別ドメインの可能性）', e);
+      // クロスオリジンなどで location.href にアクセスできなかった場合
+      console.warn('window.opener.location.href にアクセスできませんでした:', e);
     }
   }
-
-  if (!sent) alert('UJSC画面が見つかりませんでした');
+  
+  alert('一覧画面が見つかりませんでした（タブが閉じられたか、URLが一致していない可能性）');
 
   // ▼ 自分（エディタ）を閉じる
   window.close();
