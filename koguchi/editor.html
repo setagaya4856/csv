@@ -71,8 +71,7 @@
   </div>
 
   <div class="mt-4">
-    <button class="btn btn-primary" onclick="reflectToParent()">元タブに反映</button>
-    <button class="btn btn-success" onclick="saveAsFile()">ファイルのみ保存</button>
+    <button class="btn btn-primary" onclick="reflectToParent()">保存</button>
   </div>
 
   <script>
@@ -154,14 +153,14 @@ function reflectToParent() {
   };
 
   // ▼ 保存確認（どちらでも続行）
-  const saveChoice = confirm('保存しますか？');
+  const saveChoice = confirm('ファイル保存しますか？');
   if (saveChoice) {
     console.log('保存処理を実行（必要であれば実装）');
     saveAsFile();
   }
 
   // ▼ 送信確認（YES のときのみ送信）
-  const sendChoice = confirm('元タブに反映してよろしいですか？');
+  const sendChoice = confirm('一覧に反映しますか？');
   if (!sendChoice) return;
 
   const ujscPattern = /SCL00012_re/i;
