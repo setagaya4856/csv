@@ -114,6 +114,7 @@
         } else {
           td.textContent = data[i] ?? '';
         }
+        if (i === 0) td.style.width = '6em'; // 単価コードだけ幅狭く
         tr.appendChild(td);
       }
     
@@ -128,7 +129,8 @@ function reflectToParent() {
   // ▼ 編集内容を取得して map に反映
   const map = receivedData.parsed;
   map['実施事項'] = document.getElementById('txJisshiJiko').value;
-  map['産廃等処分状況'] = document.getElementById('kbSanpaitoJokyo').value;
+  const select = document.getElementById('kbSanpaitoJokyo');
+  map['産廃等処分状況'] = select?.options[select.selectedIndex]?.text || '';
   map['写真'] = getRadio('fgShashinUmu');
   map['図面'] = getRadio('fgZumenUmu');
   map['単価根拠資料'] = getRadio('fgKonkyoshiryoUmu');
