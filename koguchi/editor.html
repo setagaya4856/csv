@@ -188,22 +188,34 @@ function reflectToParent() {
       const val = document.querySelector(`input[name="${name}"]:checked`)?.value;
       return val === '1' ? '有' : '無';
     }
+    
+function saveAsFile() {
+  const bom = '\uFEFF'; // UTF-8 BOM
 
-    function saveAsFile() {
-      const headerLine = Object.keys(receivedData.parsed).map(h => `"${h}"`).join(',');
-      const valueLine = Object.values(receivedData.parsed).map(v => `"${v}"`).join(',');
-      const detailHeader = '"単価コード","名称","単価種別","数量","単位","単価","金額","摘要"';
-      const detailLines = Array.from(document.querySelectorAll('#detailBody tr')).map(tr =>
-        Array.from(tr.querySelectorAll('input')).map(td => `"${td.value}"`).join(',')
-      );
-      const blob = new Blob([headerLine + '\n' + valueLine + '\n\n' + detailHeader + '\n' + detailLines.join('\n')], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = receivedData.fileName || 'edited.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
+  const headerLine = Object.keys(receivedData.parsed).map(h => `"${h}"`).join(',');
+  const valueLine = Object.values(receivedData.parsed).map(v => `"${v}"`).join(',');
+  const detailHeader = '"単価コード","名称","単価種別","数量","単位","単価","金額","摘要"';
+  const detailLines = Array.from(document.querySelectorAll('#detailBody tr')).map(tr =>
+    Array.from(tr.querySelectorAll('input')).map(td => `"${td.value}"`).join(',')
+  );
+
+  const csvText = [
+    headerLine,
+    valueLine,
+    '',
+    detailHeader,
+    ...detailLines
+  ].join('\n');
+
+  const blob = new Blob([bom + csvText], { type: 'text/csv;charset=utf-8;' });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = receivedData.fileName || 'edited.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
   </script>
 </body>
 </html>
