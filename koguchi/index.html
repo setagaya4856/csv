@@ -1,154 +1,40 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>一覧表示</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    .detail-row {
-      display: none;
-    }
-.detail-row.show {
-  display: table-row;
-}
-    .search-group {
-      margin-bottom: 1rem;
-    }
-    .btn-toggle {
-      font-size: 0.9rem;
-      padding: 2px 6px;
-    }
-  </style>
-</head>
-<body class="p-4 bg-light">
+data.forEach((f, idx) => {
+  const p = f.parsed;
+  const detRows = f.details || [];  // ✅ 修正点
 
-  <div class="container">
-    <h2 class="mb-4">📋 一覧</h2>
-    <!-- 🔍 検索ボックス -->
-    <div class="row search-group">
-      <div class="col-md-3">
-        <select id="searchTarget" class="form-select">
-          <option value="all">すべての項目</option>
-          <option value="住宅名">住宅名</option>
-          <option value="号棟">号棟</option>
-          <option value="号室">号室</option>
-          <option value="修繕発注事項">修繕発注事項</option>
-          <option value="実施事項">実施事項</option>
-          <option value="明細">明細</option>
-        </select>
-      </div>
-      <div class="col-md-6">
-        <input type="text" id="searchInput" class="form-control" placeholder="検索語を入力...">
-      </div>
-    </div>
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td><button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">▶ 詳細</button></td>
+    <td>${p['住宅名']}</td>
+    <td>${p['号棟']}</td>
+    <td>${p['号室']}</td>
+    <td>${p['修繕発注事項']}</td>
+  `;
 
-    <!-- 📄 表本体 -->
-    <table class="table table-bordered table-striped bg-white" id="csvTable">
-      <thead class="table-dark">
-        <tr>
-          <th>操作</th>
-          <th>住宅名</th>
-          <th>号棟</th>
-          <th>号室</th>
-          <th>修繕発注事項</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
+  const detail = document.createElement('tr');
+  detail.className = 'detail-row';
+  detail.id = `detail-${idx}`;
+  const detailHtml = `
+    <strong>発注日:</strong> ${p['発注日'] ?? ''}<br>
+    <strong>備考:</strong> ${p['備考'] ?? ''}<br>
+    <strong>実施事項:</strong> ${p['実施事項'] ?? ''}<br>
+    <strong>産廃等処分状況:</strong> ${p['産廃等処分状況'] ?? ''}
+    <strong> 写真:</strong> ${p['写真'] ?? ''}
+    <strong> 図面:</strong> ${p['図面'] ?? ''}
+    <strong> 単価根拠:</strong> ${p['単価根拠資料'] ?? ''}
+    <strong> その他:</strong> ${p['その他資料'] ?? ''}<br>
+    <strong>明細行数:</strong> ${detRows.length}<br>
+    <strong>明細内容:</strong>
+    <pre style="background:#f8f9fa;border:1px solid #ccc;padding:5px">${detRows.map(row => row.join(',')).join('\n')}</pre>
+    <button class="btn btn-sm btn-secondary mt-2" onclick="reflectCSV(${idx})">反映</button>
+    <button class="btn btn-sm btn-success mt-2 ms-2" onclick="editCSV(${idx})">編集</button>
+  `;
+  detail.innerHTML = `<td colspan="5">${detailHtml}</td>`;
 
-  <script>
-    let csvData = [];
+  row.querySelector('.btn-toggle').onclick = () => {
+    detail.classList.toggle('show');
+  };
 
-    // 受信処理
-    window.addEventListener('message', (event) => {
-      csvData = event.data?.fileList ?? [];
-      if (!Array.isArray(csvData)) return;
-      renderTable(csvData);
-    });
-
-    // テーブル表示
-    function renderTable(data) {
-  const body = document.getElementById('tableBody');
-  body.innerHTML = '';
-
-  // ちょっとだけ非同期で見せるため setTimeout
-  setTimeout(() => {
-    data.forEach((f, idx) => {
-      const p = f.parsed;
-      const detRows = f.text.split(/\r?\n/).slice(2).filter(line => /^\d{8}/.test(line));
-
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td><button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">▶ 詳細</button></td>
-        <td>${p['住宅名']}</td>
-        <td>${p['号棟']}</td>
-        <td>${p['号室']}</td>
-        <td>${p['修繕発注事項']}</td>
-      `;
-
-      const detail = document.createElement('tr');
-      detail.className = 'detail-row';
-      detail.id = `detail-${idx}`;
-      const detailHtml = `
-        <strong>発注日:</strong> ${p['発注日'] ?? ''}<br>
-        <strong>備考:</strong> ${p['備考'] ?? ''}<br>
-        <strong>実施事項:</strong> ${p['実施事項'] ?? ''}<br>
-        <strong>産廃等処分状況:</strong> ${p['産廃等処分状況'] ?? ''}
-        <strong> 写真:</strong> ${p['写真'] ?? ''}
-        <strong> 図面:</strong> ${p['図面'] ?? ''}
-        <strong> 単価根拠:</strong> ${p['単価根拠資料'] ?? ''}
-        <strong> その他:</strong> ${p['その他資料'] ?? ''}<br>
-        <strong>明細行数:</strong> ${detRows.length}<br>
-        <strong>明細内容:</strong>
-        <pre style="background:#f8f9fa;border:1px solid #ccc;padding:5px">${detRows.join('\n')}</pre>
-        <button class="btn btn-sm btn-secondary mt-2" onclick="reflectCSV(${idx})">反映</button>
-        <button class="btn btn-sm btn-success mt-2 ms-2" onclick="editCSV(${idx})">編集</button>
-      `;
-      detail.innerHTML = `<td colspan="5">${detailHtml}</td>`;
-
-      row.querySelector('.btn-toggle').onclick = () => {
-        detail.classList.toggle('show');
-      };
-
-      body.appendChild(row);
-      body.appendChild(detail);
-    });
-
-    loading.style.display = 'none';
-  }, 100);
-}
-
-    // 検索機能
-    document.getElementById('searchInput').addEventListener('input', () => {
-      const target = document.getElementById('searchTarget').value;
-      const keyword = document.getElementById('searchInput').value.trim();
-      const filtered = csvData.filter(f => {
-        const p = f.parsed;
-        const detailText = f.text;
-        if (target === 'all') {
-          return Object.values(p).join().includes(keyword) || detailText.includes(keyword);
-        }
-        if (target === '明細') return detailText.includes(keyword);
-        return p[target]?.includes(keyword);
-      });
-      renderTable(filtered);
-    });
-
-    // 「編集」ボタン押下 → 別タブで開く
-    function editCSV(index) {
-      const file = csvData[index];
-      const popup = window.open('editor.html', '_blank');
-      const send = () => popup.postMessage(file, '*');
-      popup.addEventListener('load', send);
-      setTimeout(send, 1500);
-    }
-
-    // 「反映」ボタン押下 → 親に送信
-    function reflectCSV(index) {
-      window.opener.postMessage({ csv: csvData[index].text }, '*');
-      window.close();
-    }
-  </script>
-</body>
-</html>
+  body.appendChild(row);
+  body.appendChild(detail);
+});
