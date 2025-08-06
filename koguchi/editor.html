@@ -102,28 +102,34 @@
       tbody.innerHTML = '';
       rows.forEach(row => addRow(row));
     }
+    
+function addRow(data = []) {
+  const tr = document.createElement('tr');
 
-    function addRow(data = []) {
-      const tr = document.createElement('tr');
-      const editableCols = [0, 1, 3, 7]; // 単価コード, 名称, 数量, 摘要
-    
-      for (let i = 0; i < 8; i++) {
-        const td = document.createElement('td');
-        if (editableCols.includes(i)) {
-          td.innerHTML = `<input type="text" class="form-control form-control-sm" value="${data[i] ?? ''}">`;
-        } else {
-          td.textContent = data[i] ?? '';
-        }
-        if (i === 0　||　i === 3) td.style.width = '6em'; // 単価コードだけ幅狭く
-        tr.appendChild(td);
-      }
-    
-      const tdOp = document.createElement('td');
-      tdOp.innerHTML = `<button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">削除</button>`;
-      tr.appendChild(tdOp);
-    
-      document.getElementById('detailBody').appendChild(tr);
+  for (let i = 0; i < 8; i++) {
+    const td = document.createElement('td');
+
+    if ([0, 1, 3, 7].includes(i)) {
+      // 編集可能列（単価コード、名称、数量、摘要）
+      const type = (i === 3) ? 'number' : 'text';
+      td.innerHTML = `<input type="${type}" class="form-control form-control-sm" value="${data[i] ?? ''}">`;
+    } else {
+      // 編集不可列は表示だけ + hidden で保持
+      td.innerHTML = `
+        <span>${data[i] ?? ''}</span>
+        <input type="hidden" value="${data[i] ?? ''}">
+      `;
     }
+
+    tr.appendChild(td);
+  }
+
+  const tdOp = document.createElement('td');
+  tdOp.innerHTML = `<button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">削除</button>`;
+  tr.appendChild(tdOp);
+
+  document.getElementById('detailBody').appendChild(tr);
+}
 
 function reflectToParent() {
   // ▼ 編集内容を取得して map に反映
