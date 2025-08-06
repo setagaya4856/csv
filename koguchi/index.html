@@ -62,8 +62,6 @@
 
     // 受信処理
 window.addEventListener('message', (event) => {
-  console.log('[受信] event.data:', event.data);
-
   const data = event.data;
 
   if (data.fileName && data.parsed && data.details) {
@@ -73,7 +71,7 @@ window.addEventListener('message', (event) => {
       return;
     }
 
-    // 🔁 CSVテキストを更新
+    // テキスト更新
     const headers = Object.keys(data.parsed).map(h => `"${h}"`).join(',');
     const values = Object.values(data.parsed).map(v => `"${v}"`).join(',');
     const detailHeader = '"単価コード","名称","単価種別","数量","単位","単価","金額","摘要"';
@@ -84,22 +82,27 @@ window.addEventListener('message', (event) => {
 
     csvData[index].text = csvText;
 
-    // 🖼 表を再描画
+    // 再描画
     renderTable(csvData);
 
-    // ⏳ 再描画が終わってから詳細行を開く（100ms遅延）
+    // 編集行だけを表示
     setTimeout(() => {
-      // 全部閉じる
-      document.querySelectorAll('.detail-row').forEach(row => row.classList.remove('show'));
+      const allRows = document.querySelectorAll('#csvTable tbody tr');
+      const mainRowIndex = index * 2;
+      const detailRowIndex = index * 2 + 1;
 
-      // 対象行だけ展開
+      allRows.forEach((row, i) => {
+        row.style.display = (i === mainRowIndex || i === detailRowIndex) ? '' : 'none';
+      });
+
       const detailRow = document.getElementById(`detail-${index}`);
       if (detailRow) detailRow.classList.add('show');
     }, 100);
-    
+
     return;
   }
 
+  // 通常の一覧受信
   if (Array.isArray(data?.fileList)) {
     csvData = data.fileList;
     renderTable(csvData);
