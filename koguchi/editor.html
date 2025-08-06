@@ -324,7 +324,7 @@ function showNameSuggestions(input) {
   list.style.width = input.offsetWidth + 'px';
   list.style.marginTop = '2px';
 
-  suggestions.forEach(row => {
+  suggestions.slice(0, 20).forEach(row => {
     const name = row[1] ?? '';
     const type = row[2] ?? '';
     const note = row[7] ?? '';
