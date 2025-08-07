@@ -268,7 +268,9 @@ setTimeout(() => {
       });
       renderTable(filtered);
     });
-
+    document.getElementById('searchTarget').addEventListener('change', () => {
+      document.getElementById('searchInput').dispatchEvent(new Event('input'));
+    });
     // 「編集」ボタン押下 → 別タブで開く
     function editCSV(index) {
       const tankaListArray = createTankaList();
