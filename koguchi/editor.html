@@ -205,7 +205,12 @@ function reflectToParent() {
   map['住宅名'] = '';
   map['号棟'] = '';
   map['号室'] = '';
-  map['発注日'] = new Date().toLocaleDateString('ja-JP');
+  // 今日の日付を "YYYY/MM/DD" 形式で設定
+  const today = new Date();
+  const formattedDate = today.getFullYear() + '/' +
+    String(today.getMonth() + 1).padStart(2, '0') + '/' +
+    String(today.getDate()).padStart(2, '0');
+  map['発注日'] = formattedDate;
   map['実施事項'] = document.getElementById('txJisshiJiko').value;
   const select = document.getElementById('kbSanpaitoJokyo');
   map['産廃等処分状況'] = select?.options[select.selectedIndex]?.text || '';
