@@ -56,7 +56,7 @@
   </div>
 
   <div class="mb-3">
-    <label class="form-label fw-bold">明細編集</label>
+    <button class="btn btn-outline-secondary btn-sm" onclick="addRow()">＋ 行追加</button>
     <!-- 明細編集テーブル -->
       <table class="table table-sm table-bordered bg-white" id="detailTable">
         <thead class="table-light">
@@ -74,7 +74,6 @@
         </thead>
         <tbody id="detailBody"></tbody>
       </table>
-    <button class="btn btn-outline-secondary btn-sm" onclick="addRow()">＋ 行追加</button>
     <button class="btn btn-primary" onclick="reflectToParent()">反映</button>
     <button class="btn btn-success" onclick="saveAsFile()">保存</button>
   </div>
