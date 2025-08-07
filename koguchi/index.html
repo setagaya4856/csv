@@ -244,8 +244,11 @@ setTimeout(() => {
           </td>
         `;
     
-        row.querySelector('.btn-toggle').onclick = () => {
-          detail.classList.toggle('show');
+        const toggleButton = row.querySelector('.btn-toggle');
+        toggleButton.onclick = () => {
+          const isShown = detail.classList.toggle('show');
+          toggleButton.classList.toggle('btn-primary', isShown);     // ON色
+          toggleButton.classList.toggle('btn-outline-primary', !isShown); // OFF色
         };
     
         body.appendChild(row);
