@@ -260,6 +260,7 @@ setTimeout(() => {
     
       // 空白で複数単語に分割（全角・半角スペースに対応）
       const words = keyword.split(/[\s　]+/).filter(w => w); // 空文字は除去
+      console.log('検索キーワード配列:', words);
     
       const filtered = csvData.filter(f => {
         const p = f.parsed;
@@ -274,9 +275,11 @@ setTimeout(() => {
         })();
     
         // すべてのキーワードが含まれているか
-        return words.every(word =>
-          targetText.toLowerCase().includes(word.toLowerCase())
-        );
+        return words.every(word => {
+          const result = targetText.includes(word);
+          console.log(`"${word}" を含むか:`, result, '対象:', targetText);
+          return result;
+        });
       });
     
       renderTable(filtered);
