@@ -17,6 +17,11 @@
       background-color: #a8e6ff !important;
       transition: background-color 0.3s ease;
     }
+    /* .table-striped のストライプ色を優しい水色に上書き */
+    .table-striped > tbody > tr:nth-of-type(odd) > * {
+      --bs-table-accent-bg: #f5fcff; /* とても淡い水色 */
+      color: inherit; /* 文字色はそのまま */
+    }
   </style>
 </head>
 <body>
