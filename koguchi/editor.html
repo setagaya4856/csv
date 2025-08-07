@@ -17,6 +17,10 @@
       background-color: #ffc107 !important; /* Bootstrapの警告色 (黄) */
       color: #000 !important;
     }
+    .row-flash {
+      background-color: #d0f0ff !important; /* 優しい水色 */
+      transition: background-color 0.3s ease;
+    }
   </style>
 </head>
 <body>
@@ -222,7 +226,10 @@ function moveRow(button, direction) {
 
   // 🔄 一時的にボタンの色を変更
   button.classList.add('btn-flash');
-  setTimeout(() => button.classList.remove('btn-flash'), 300);
+  setTimeout(() => button.classList.remove('btn-flash'), 300);  // 
+  🔄 移動後の行を一時的に水色で強調
+  row.classList.add('row-flash');
+  setTimeout(() => row.classList.remove('row-flash'), 300);
 }
 
 function reflectToParent() {
