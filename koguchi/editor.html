@@ -15,7 +15,7 @@
     }
     .row-flash td {
       background-color: #f5fcff !important;
-      transition: background-color 0.8s ease;
+      transition: background-color 0.3s ease;
     }
   </style>
 </head>
@@ -222,7 +222,7 @@ function moveRow(button, direction) {
 
   // 🔄 移動後の行を一時的に水色で強調
   row.classList.add('row-flash');
-  setTimeout(() => row.classList.remove('row-flash'), 300);
+  setTimeout(() => row.classList.remove('row-flash'), 800);
 }
 
 function reflectToParent() {
