@@ -190,10 +190,31 @@ function addRow(data = []) {
   }
 
   const tdOp = document.createElement('td');
-  tdOp.innerHTML = `<button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">削除</button>`;
+  tdOp.innerHTML = `
+    <button class="btn btn-sm btn-outline-secondary me-1" onclick="moveRow(this, -1)">↑</button>
+    <button class="btn btn-sm btn-outline-secondary me-1" onclick="moveRow(this, 1)">↓</button>
+    <button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">削除</button>
+  `;
   tr.appendChild(tdOp);
 
   document.getElementById('detailBody').appendChild(tr);
+}
+
+function moveRow(button, direction) {
+  const row = button.closest('tr');
+  const tbody = row.parentNode;
+  const rows = Array.from(tbody.children);
+  const index = rows.indexOf(row);
+  const targetIndex = index + direction;
+
+  if (targetIndex < 0 || targetIndex >= rows.length) return;
+
+  const targetRow = rows[targetIndex];
+  if (direction === -1) {
+    tbody.insertBefore(row, targetRow); // 上へ
+  } else {
+    tbody.insertBefore(targetRow, row); // 下へ（targetRowの前に自分を置く）
+  }
 }
 
 function reflectToParent() {
@@ -266,8 +287,32 @@ function reflectToParent() {
 function saveAsFile() {
   const bom = '\uFEFF'; // UTF-8 BOM
 
-  const headerLine = Object.keys(receivedData.parsed).map(h => `"${h}"`).join(',');
-  const valueLine = Object.values(receivedData.parsed).map(v => `"${v}"`).join(',');
+  const map = receivedData.parsed;
+
+  // 🔄 入力内容を map に反映（reflectToParent()と同じ内容をここにも追加）
+  map['実施事項'] = document.getElementById('txJisshiJiko').value;
+  map['修繕発注事項'] = document.getElementById('txNaiyo').value;
+  map['備考'] = '';
+  map['住宅名'] = '';
+  map['号棟'] = '';
+  map['号室'] = '';
+
+  // 発注日を「YYYY/MM/DD」形式に更新
+  const today = new Date();
+  map['発注日'] =
+    today.getFullYear() + '/' +
+    String(today.getMonth() + 1).padStart(2, '0') + '/' +
+    String(today.getDate()).padStart(2, '0');
+
+  map['産廃等処分状況'] = document.getElementById('kbSanpaitoJokyo')?.value || '';
+  map['写真'] = getRadio('fgShashinUmu');
+  map['図面'] = getRadio('fgZumenUmu');
+  map['単価根拠資料'] = getRadio('fgKonkyoshiryoUmu');
+  map['その他資料'] = getRadio('fgSonotatenpuUmu');
+
+  const headerLine = Object.keys(map).map(h => `"${h}"`).join(',');
+  const valueLine = Object.values(map).map(v => `"${v}"`).join(',');
+
   const detailHeader = '"単価コード","名称","単価種別","数量","単位","単価","金額","摘要"';
   const detailLines = Array.from(document.querySelectorAll('#detailBody tr')).map(tr =>
     Array.from(tr.querySelectorAll('input')).map(td => `"${td.value}"`).join(',')
@@ -286,7 +331,8 @@ function saveAsFile() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  const filename = (document.getElementById('txNaiyo').value || 'edited').replace(/[\\/:*?"<>|]/g, '_') + '.csv';
+
+  const filename = (map['修繕発注事項'] || 'edited').replace(/[\\/:*?"<>|]/g, '_') + '.csv';
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
