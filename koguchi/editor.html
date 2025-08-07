@@ -9,10 +9,14 @@
     textarea { width: 100%; height: 80px; }
     table td input { width: 100%; }
     .btn + .btn { margin-left: 0.5rem; }
-  .list-group-item:hover {
-    background-color: #e9ecef;
-    cursor: pointer;
-  }
+    .list-group-item:hover {
+      background-color: #e9ecef;
+      cursor: pointer;
+    }
+    .btn-flash {
+      background-color: #ffc107 !important; /* Bootstrapの警告色 (黄) */
+      color: #000 !important;
+    }
   </style>
 </head>
 <body>
@@ -192,8 +196,8 @@ function addRow(data = []) {
   const tdOp = document.createElement('td');
   tdOp.innerHTML = `
     <button class="btn btn-sm btn-outline-secondary me-1" onclick="moveRow(this, -1)">↑</button>
-    <button class="btn btn-sm btn-outline-secondary me-1" onclick="moveRow(this, 1)">↓</button>
     <button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">削除</button>
+    <button class="btn btn-sm btn-outline-secondary me-1" onclick="moveRow(this, 1)">↓</button>
   `;
   tr.appendChild(tdOp);
 
@@ -213,8 +217,12 @@ function moveRow(button, direction) {
   if (direction === -1) {
     tbody.insertBefore(row, targetRow); // 上へ
   } else {
-    tbody.insertBefore(targetRow, row); // 下へ（targetRowの前に自分を置く）
+    tbody.insertBefore(targetRow, row); // 下へ
   }
+
+  // 🔄 一時的にボタンの色を変更
+  button.classList.add('btn-flash');
+  setTimeout(() => button.classList.remove('btn-flash'), 300);
 }
 
 function reflectToParent() {
