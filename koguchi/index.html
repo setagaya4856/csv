@@ -252,17 +252,14 @@ setTimeout(() => {
           toggleButton.classList.toggle('btn-outline-primary', !isShown);
         
           if (isShown) {
-            detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          
-            setTimeout(() => {
-              const detailRect = detail.getBoundingClientRect();
-              const spaceBelow = window.innerHeight - detailRect.bottom;
-          
-              // もしまだ下に余裕があるときだけ、上に戻す
-              if (spaceBelow > 100) {
-                window.scrollBy({ top: -80, behavior: 'auto' });
-              }
-            }, 300);
+            // 詳細行の位置（offsetTop）を取得し、少し上に補正してスクロール
+            const offset = detail.offsetTop;
+            const scrollTarget = Math.max(offset - 80, 0); // 80px上に余白を取る、負数防止
+        
+            window.scrollTo({
+              top: scrollTarget,
+              behavior: 'smooth' // ← なめらかにスクロール。即時にしたいなら 'auto'
+            });
           }
         };
             
