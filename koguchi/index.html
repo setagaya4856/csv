@@ -272,12 +272,11 @@ setTimeout(() => {
           }
           if (target === '明細') return detailText;
           return p[target] ?? '';
-        })();
+        })().toLowerCase(); // ← ★ここで小文字化
     
         // すべてのキーワードが含まれているか
         return words.every(word => {
-          const result = targetText.includes(word);
-          console.log(`"${word}" を含むか:`, result, '対象:', targetText);
+          const result = targetText.includes(word.toLowerCase());
           return result;
         });
       });
