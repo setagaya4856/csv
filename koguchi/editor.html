@@ -75,7 +75,8 @@
   </div>
 
   <div class="mt-4">
-    <button class="btn btn-primary" onclick="reflectToParent()">保存</button>
+    <button class="btn btn-primary" onclick="reflectToParent()">反映</button>
+    <button class="btn btn-success" onclick="saveAsFile()">保存</button>
   </div>
 
   <script>
@@ -212,13 +213,6 @@ function reflectToParent() {
     parsed: map,
     details
   };
-
-  // ▼ 保存確認（どちらでも続行）
-  const saveChoice = confirm('ファイル保存しますか？');
-  if (saveChoice) {
-    console.log('保存処理を実行（必要であれば実装）');
-    saveAsFile();
-  }
 
   // ▼ 送信確認（YES のときのみ送信）
   const sendChoice = confirm('一覧に反映しますか？');
