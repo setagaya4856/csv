@@ -248,16 +248,24 @@ setTimeout(() => {
         toggleButton.onclick = () => {
           const isShown = detail.classList.toggle('show');
         
-          // ボタンの色切り替え（任意）
           toggleButton.classList.toggle('btn-primary', isShown);
           toggleButton.classList.toggle('btn-outline-primary', !isShown);
         
-          // 🔽 詳細表示されたらスクロール
           if (isShown) {
             detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          
+            setTimeout(() => {
+              const detailRect = detail.getBoundingClientRect();
+              const spaceBelow = window.innerHeight - detailRect.bottom;
+          
+              // もしまだ下に余裕があるときだけ、上に戻す
+              if (spaceBelow > 100) {
+                window.scrollBy({ top: -80, behavior: 'smooth' });
+              }
+            }, 300);
           }
         };
-    
+            
         body.appendChild(row);
         body.appendChild(detail);
       });
