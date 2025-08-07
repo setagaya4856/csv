@@ -247,8 +247,15 @@ setTimeout(() => {
         const toggleButton = row.querySelector('.btn-toggle');
         toggleButton.onclick = () => {
           const isShown = detail.classList.toggle('show');
-          toggleButton.classList.toggle('btn-primary', isShown);     // ON色
-          toggleButton.classList.toggle('btn-outline-primary', !isShown); // OFF色
+        
+          // ボタンの色切り替え（任意）
+          toggleButton.classList.toggle('btn-primary', isShown);
+          toggleButton.classList.toggle('btn-outline-primary', !isShown);
+        
+          // 🔽 詳細表示されたらスクロール
+          if (isShown) {
+            detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
         };
     
         body.appendChild(row);
