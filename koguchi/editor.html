@@ -17,7 +17,10 @@
 </head>
 <body>
   <h3>📝 編集</h3>
-
+  <div class="mb-3">
+    <label class="form-label fw-bold">内容</label>
+    <input type="text" class="form-control" id="txNaiyo">
+  </div>
   <div class="mb-3">
     <label class="form-label fw-bold">実施事項</label>
     <textarea id="txJisshiJiko"></textarea>
@@ -107,6 +110,7 @@ window.addEventListener('message', e => {
 
   // 画面へ反映
   const map = receivedData.parsed;
+  document.getElementById('txNaiyo').value = map['修繕発注事項'] || '';
   document.getElementById('txJisshiJiko').value = map['実施事項'] || '';
   document.getElementById('kbSanpaitoJokyo').value = map['産廃等処分状況'] || '';
   setRadio('fgShashinUmu', map['写真']);
@@ -196,6 +200,12 @@ function addRow(data = []) {
 function reflectToParent() {
   // ▼ 編集内容を取得して map に反映
   const map = receivedData.parsed;
+  map['修繕発注事項'] = document.getElementById('txNaiyo').value;
+  map['備考'] = '';
+  map['住宅名'] = '';
+  map['号棟'] = '';
+  map['号室'] = '';
+  map['発注日'] = new Date().toLocaleDateString('ja-JP');
   map['実施事項'] = document.getElementById('txJisshiJiko').value;
   const select = document.getElementById('kbSanpaitoJokyo');
   map['産廃等処分状況'] = select?.options[select.selectedIndex]?.text || '';
@@ -272,7 +282,8 @@ function saveAsFile() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = receivedData.fileName || 'edited.csv';
+  const filename = (document.getElementById('txNaiyo').value || 'edited').replace(/[\\/:*?"<>|]/g, '_') + '.csv';
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
 }
