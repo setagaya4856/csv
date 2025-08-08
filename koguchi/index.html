@@ -182,91 +182,86 @@ setTimeout(() => {
     
       return { headers, values, details };
     }
-        // テーブル表示
-    function renderTable(data) {
-      const body = document.getElementById('tableBody');
-      body.innerHTML = '';
     
-      data.forEach((f, idx) => {
-        const rows = parseCSV(f.text); // 生CSVテキストをパース
-        const { headers, values, details } = splitCsvSections(rows);
-        const parsed = Object.fromEntries(headers.map((h, i) => [h, values[i]]));
-    
-        // 表示とイベント処理を既存の構造で作る（parsed, detailsを使う）
-        const row = document.createElement('tr');
-        row.setAttribute('data-file-name', f.fileName);
-        row.innerHTML = `
-          <td><button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">詳細</button></td>
-          <td>${parsed['住宅名'] ?? ''}</td>
-          <td>${parsed['号棟'] ?? ''}</td>
-          <td>${parsed['号室'] ?? ''}</td>
-          <td>${parsed['修繕発注事項'] ?? ''}</td>
-        `;
-    
-        const detailTable = `
-          <table class="table table-sm table-bordered mt-2 bg-white">
-            <thead class="table-light">
-              <tr>
-                <th>単価コード</th><th>名称</th><th>単価種別</th><th>数量</th>
-                <th>単位</th><th>単価</th><th>金額</th><th>摘要</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${details.map(row => `
-                <tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>
-              `).join('')}
-            </tbody>
-          </table>
-        `;
-    
-        const detail = document.createElement('tr');
-        detail.className = 'detail-row';
-        detail.id = `detail-${idx}`;
-        detail.setAttribute('data-file-name', f.fileName); // ★ 追加
-        detail.innerHTML = `
-          <td colspan="5">
-            <div class="mb-2">
-              <strong>発注日:</strong> ${parsed['発注日'] ?? ''}<br>
-              <strong>備考:</strong> ${parsed['備考'] ?? ''}<br>
-              <strong>実施事項:</strong> ${parsed['実施事項'] ?? ''}<br>
-              <strong>産廃等処分状況:</strong> ${parsed['産廃等処分状況'] ?? ''}　
-              <strong>写真:</strong> ${parsed['写真'] ?? ''}　
-              <strong>図面:</strong> ${parsed['図面'] ?? ''}　
-              <strong>単価根拠:</strong> ${parsed['単価根拠資料'] ?? ''}　
-              <strong>その他:</strong> ${parsed['その他資料'] ?? ''}<br>
-              <strong>明細行数:</strong> ${details.length}
-            </div>
-            ${detailTable}
-            <div class="mt-2">
-              <button class="btn btn-sm btn-secondary" onclick="reflectCSV(${idx})">反映</button>
-              <button class="btn btn-sm btn-success ms-2" onclick="editCSV(${idx})">編集</button>
-            </div>
-          </td>
-        `;
-    
-        const toggleButton = row.querySelector('.btn-toggle');
-        toggleButton.onclick = () => {
-          const isShown = detail.classList.toggle('show');
-        
-          toggleButton.classList.toggle('btn-primary', isShown);
-          toggleButton.classList.toggle('btn-outline-primary', !isShown);
-        
-          if (isShown) {
-            // 詳細行の位置（offsetTop）を取得し、少し上に補正してスクロール
-            const offset = detail.offsetTop;
-            const scrollTarget = Math.max(offset - 80, 0); // 80px上に余白を取る、負数防止
-        
-            window.scrollTo({
-              top: scrollTarget,
-              behavior: 'smooth' // ← なめらかにスクロール。即時にしたいなら 'auto'
-            });
-          }
-        };
-            
-        body.appendChild(row);
-        body.appendChild(detail);
-      });
-    }
+function renderTable(data) {
+  const isDirectMode = !window.opener; // 直接アクセス判定
+  const body = document.getElementById('tableBody');
+  body.innerHTML = '';
+
+  data.forEach((f, idx) => {
+    const rows = parseCSV(f.text);
+    const { headers, values, details } = splitCsvSections(rows);
+    const parsed = Object.fromEntries(headers.map((h, i) => [h, values[i]]));
+
+    const row = document.createElement('tr');
+    row.setAttribute('data-file-name', f.fileName);
+    row.innerHTML = `
+      <td><button class="btn btn-sm btn-outline-primary btn-toggle" data-idx="${idx}">詳細</button></td>
+      <td>${parsed['住宅名'] ?? ''}</td>
+      <td>${parsed['号棟'] ?? ''}</td>
+      <td>${parsed['号室'] ?? ''}</td>
+      <td>${parsed['修繕発注事項'] ?? ''}</td>
+    `;
+
+    const detailTable = `
+      <table class="table table-sm table-bordered mt-2 bg-white">
+        <thead class="table-light">
+          <tr>
+            <th>単価コード</th><th>名称</th><th>単価種別</th><th>数量</th>
+            <th>単位</th><th>単価</th><th>金額</th><th>摘要</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${details.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+
+    // ★ 直接アクセス時は「反映」ボタンを除く
+    const buttonsHtml = isDirectMode
+      ? `<button class="btn btn-sm btn-success" onclick="editCSV(${idx})">編集</button>`
+      : `<button class="btn btn-sm btn-secondary" onclick="reflectCSV(${idx})">反映</button>
+         <button class="btn btn-sm btn-success ms-2" onclick="editCSV(${idx})">編集</button>`;
+
+    const detail = document.createElement('tr');
+    detail.className = 'detail-row';
+    detail.id = `detail-${idx}`;
+    detail.setAttribute('data-file-name', f.fileName);
+    detail.innerHTML = `
+      <td colspan="5">
+        <div class="mb-2">
+          <strong>発注日:</strong> ${parsed['発注日'] ?? ''}<br>
+          <strong>備考:</strong> ${parsed['備考'] ?? ''}<br>
+          <strong>実施事項:</strong> ${parsed['実施事項'] ?? ''}<br>
+          <strong>産廃等処分状況:</strong> ${parsed['産廃等処分状況'] ?? ''}　
+          <strong>写真:</strong> ${parsed['写真'] ?? ''}　
+          <strong>図面:</strong> ${parsed['図面'] ?? ''}　
+          <strong>単価根拠:</strong> ${parsed['単価根拠資料'] ?? ''}　
+          <strong>その他:</strong> ${parsed['その他資料'] ?? ''}<br>
+          <strong>明細行数:</strong> ${details.length}
+        </div>
+        ${detailTable}
+        <div class="mt-2">
+          ${buttonsHtml}
+        </div>
+      </td>
+    `;
+
+    const toggleButton = row.querySelector('.btn-toggle');
+    toggleButton.onclick = () => {
+      const isShown = detail.classList.toggle('show');
+      toggleButton.classList.toggle('btn-primary', isShown);
+      toggleButton.classList.toggle('btn-outline-primary', !isShown);
+      if (isShown) {
+        const offset = detail.offsetTop;
+        window.scrollTo({ top: Math.max(offset - 80, 0), behavior: 'smooth' });
+      }
+    };
+
+    body.appendChild(row);
+    body.appendChild(detail);
+  });
+}
 
     // 検索機能
     document.getElementById('searchInput').addEventListener('input', () => {
@@ -334,6 +329,32 @@ function createTankaList() {
   }
   return allRows;
 }
+// ページロード時の処理
+window.addEventListener('DOMContentLoaded', async () => {
+  // 元タブから開かれていない場合
+  if (!window.opener) {
+    console.log("直接アクセスモード: フォルダ選択を開始します");
+    await selectFolderAndLoad();
+  }
+});
+
+// フォルダ選択してCSV読み込み
+async function selectFolderAndLoad() {
+  try {
+    const dirHandle = await window.showDirectoryPicker();
+    const fileList = [];
+    for await (const entry of dirHandle.values()) {
+      if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.csv')) {
+        const file = await entry.getFile();
+        const text = await file.text();
+        fileList.push({ fileName: entry.name, text });
+      }
+    }
+    csvData = fileList;
+    renderTable(csvData);
+  } catch (e) {
+    console.warn("フォルダ選択がキャンセルされました", e);
+  }
   </script>
 </body>
 </html>
