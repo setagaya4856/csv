@@ -264,16 +264,15 @@ function renderTable(data) {
 }
 
     // 検索機能
-    document.getElementById('searchInput').addEventListener('input', () => {
+    function doSearch() {
       const target = document.getElementById('searchTarget').value;
       const keyword = document.getElementById('searchInput').value.trim();
     
-      // 空白で複数単語に分割（全角・半角スペースに対応）
       const words = keyword.split(/[\s　]+/).filter(w => w); // 空文字は除去
       console.log('検索キーワード配列:', words);
     
       const filtered = csvData.filter(f => {
-        const p = f.parsed;
+        const p = f.parsed || {};
         const detailText = f.text;
     
         const targetText = (() => {
@@ -282,18 +281,19 @@ function renderTable(data) {
           }
           if (target === '明細') return detailText;
           return p[target] ?? '';
-        })().toLowerCase(); // ← ★ここで小文字化
+        })().toLowerCase();
     
-        // すべてのキーワードが含まれているか
-        return words.every(word => {
-          const result = targetText.includes(word.toLowerCase());
-          return result;
-        });
+        return words.every(word => targetText.includes(word.toLowerCase()));
       });
     
       renderTable(filtered);
-    });
-
+    }
+    
+    // 入力ボックス変更時
+    document.getElementById('searchInput').addEventListener('input', doSearch);
+    
+    // セレクトボックス変更時
+    document.getElementById('searchTarget').addEventListener('change', doSearch);
     
     // 「編集」ボタン押下 → 別タブで開く
     function editCSV(index) {
