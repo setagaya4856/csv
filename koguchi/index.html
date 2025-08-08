@@ -353,13 +353,21 @@ async function selectFolderAndLoad() {
   try {
     const dirHandle = await window.showDirectoryPicker();
     const fileList = [];
+
     for await (const entry of dirHandle.values()) {
       if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.csv')) {
         const file = await entry.getFile();
         const text = await file.text();
-        fileList.push({ fileName: entry.name, text });
+        
+        // ここで parsed を作る
+        const rows = parseCSV(text);
+        const { headers, values } = splitCsvSections(rows);
+        const parsed = Object.fromEntries(headers.map((h, i) => [h, values[i]]));
+
+        fileList.push({ fileName: entry.name, text, parsed });
       }
     }
+
     csvData = fileList;
     renderTable(csvData);
   } catch (e) {
