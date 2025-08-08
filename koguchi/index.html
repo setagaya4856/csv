@@ -329,16 +329,26 @@ function createTankaList() {
   }
   return allRows;
 }
-// ページロード時の処理
-window.addEventListener('DOMContentLoaded', async () => {
-  // 元タブから開かれていない場合
+
+window.addEventListener('DOMContentLoaded', () => {
   if (!window.opener) {
-    console.log("直接アクセスモード: フォルダ選択を開始します");
-    await selectFolderAndLoad();
+    console.log("直接アクセスモード: フォルダ選択ボタンを表示します");
+    showFolderSelectButton();
   }
 });
 
-// フォルダ選択してCSV読み込み
+function showFolderSelectButton() {
+  const container = document.querySelector('.container-fluid');
+  const btn = document.createElement('button');
+  btn.textContent = "📂 フォルダを選択して読み込み";
+  btn.className = "btn btn-primary mb-3";
+  btn.onclick = async () => {
+    await selectFolderAndLoad();
+    btn.remove(); // 読み込み後はボタン削除
+  };
+  container.prepend(btn);
+}
+
 async function selectFolderAndLoad() {
   try {
     const dirHandle = await window.showDirectoryPicker();
@@ -353,8 +363,9 @@ async function selectFolderAndLoad() {
     csvData = fileList;
     renderTable(csvData);
   } catch (e) {
-    console.warn("フォルダ選択がキャンセルされました", e);
+    console.warn("フォルダ選択がキャンセルまたは拒否されました", e);
   }
+}
   </script>
 </body>
 </html>
