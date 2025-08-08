@@ -340,7 +340,7 @@ window.addEventListener('DOMContentLoaded', () => {
 function showFolderSelectButton() {
   const container = document.querySelector('.container-fluid');
   const btn = document.createElement('button');
-  btn.textContent = "📂 フォルダを選択して読み込み";
+  btn.textContent = "📂 フォルダ選択";
   btn.className = "btn btn-primary mb-3";
   btn.onclick = async () => {
     await selectFolderAndLoad();
