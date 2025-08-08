@@ -275,13 +275,20 @@ function renderTable(data) {
         const p = f.parsed || {};
         const detailText = f.text;
     
-        const targetText = (() => {
-          if (target === 'all') {
-            return Object.values(p).join() + detailText;
-          }
-          if (target === '明細') return detailText;
-          return p[target] ?? '';
-        })().toLowerCase();
+      const targetText = (() => {
+        if (target === 'all') {
+          // すべての項目 → 基本情報＋明細
+          return Object.values(p).join() + detailText;
+        }
+        if (target === '明細') {
+          // 明細だけを結合（配列→文字列）
+          const rows = parseCSV(f.text);
+          const { details } = splitCsvSections(rows);
+          return details.map(r => r.join(' ')).join(' ').toLowerCase();
+        }
+        // 特定項目のみ
+        return (p[target] ?? '').toLowerCase();
+      })();
     
         return words.every(word => targetText.includes(word.toLowerCase()));
       });
