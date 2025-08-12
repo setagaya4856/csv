@@ -17,6 +17,11 @@
       background-color: #dff3fb !important;
       transition: none !important;
     }
+  /* 追加: 読み込み中は明細テーブルを無効化 */
+  #detailTable.is-loading {
+    pointer-events: none;
+    opacity: .6;
+  }
   </style>
 </head>
 <body>
@@ -86,8 +91,17 @@
   </div>
 
   <script>
+    // 初期化（未受信でも参照できるように）
+    window.tankaLookup = new Map();
+    // 読み込み完了フラグ
+    let dataReady = false;
     let receivedData;
     
+    // 起動直後はテーブルを無効化
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('detailTable')?.classList.add('is-loading');
+    });
+
 window.addEventListener('message', e => {
   const file = e.data;
   const rows = parseCSV(file.text);
@@ -99,16 +113,13 @@ window.addEventListener('message', e => {
     details
   };
 
-  // 単価一覧を格納（ある場合のみ）
+  // 単価一覧（上書き）
   if (Array.isArray(file.tankaList)) {
-    window.tankaLookup = new Map();
+    window.tankaLookup.clear();
     for (const row of file.tankaList) {
       const code = row[0]?.trim();
-      if (code && !window.tankaLookup.has(code)) {
-        window.tankaLookup.set(code, row);
-      }
+      if (code && !window.tankaLookup.has(code)) window.tankaLookup.set(code, row);
     }
-    console.log('単価一覧を受信:', window.tankaLookup);
   }
 
   // 画面へ反映
@@ -120,7 +131,11 @@ window.addEventListener('message', e => {
   setRadio('fgZumenUmu', map['図面']);
   setRadio('fgKonkyoshiryoUmu', map['単価根拠資料']);
   setRadio('fgSonotatenpuUmu', map['その他資料']);
+  // ★ この描画が初回にフォーカスを飛ばしていた
   populateDetailRows(receivedData.details || []);
+  // 読み込み完了 → テーブル操作を有効化
+  dataReady = true;
+  document.getElementById('detailTable')?.classList.remove('is-loading');
 });
 
 function splitCsvSections(rows) {
@@ -361,15 +376,14 @@ function saveAsFile() {
 document.addEventListener('input', e => {
   const input = e.target;
   const cellIndex = input.closest('td')?.cellIndex;
-  const row = input.closest('tr');
 
-  // 「単価コード」入力時：完全一致で補完
+  // まだ読み込み前は何もしない（フォーカスだけ保つ）
+  if (!dataReady) return;
+
   if (cellIndex === 0) {
-    const rowData = tankaLookup.get(input.value);
-    if (rowData) fillRowFromData(row, rowData);
+    const rowData = window.tankaLookup.get(input.value);
+    if (rowData) fillRowFromData(input.closest('tr'), rowData);
   }
-
-  // 「名称」入力時：部分一致候補を動的表示
   if (cellIndex === 1) {
     showNameSuggestions(input);
   }
