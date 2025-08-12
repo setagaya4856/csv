@@ -25,6 +25,13 @@
   </style>
 </head>
 <body>
+  <!-- 追加: ローディング表示 -->
+  <div id="loading" class="d-flex align-items-center text-muted mb-3" style="gap:.5rem;">
+    <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+    <span>読み込み中です…</span>
+  </div>
+  <!-- 追加: 編集UI（初期は非表示） -->
+  <div id="editor" style="display:none;">
   <h3>📝 編集</h3>
   <div class="mb-3">
     <label class="form-label fw-bold">修繕発注事項(ファイル名)</label>
@@ -86,7 +93,8 @@
     <button class="btn btn-primary" onclick="reflectToParent()">反映</button>
     <button class="btn btn-success" onclick="saveAsFile()">保存</button>
   </div>
-
+  </div>
+</body>
   <div class="mt-4">
   </div>
 
@@ -96,6 +104,8 @@
     // 読み込み完了フラグ
     let dataReady = false;
     let receivedData;
+// 追加: 初回だけ初期化するためのフラグ
+let initialized = false;
     
     // 起動直後はテーブルを無効化
     document.addEventListener('DOMContentLoaded', () => {
@@ -103,6 +113,10 @@
     });
 
 window.addEventListener('message', e => {
+  // ★ 重要：二重postMessage対策（最初の1回だけ受け付ける）
+  if (initialized) return;
+  initialized = true;
+  
   const file = e.data;
   const rows = parseCSV(file.text);
   const { headers, values, details } = splitCsvSections(rows);
@@ -133,9 +147,13 @@ window.addEventListener('message', e => {
   setRadio('fgSonotatenpuUmu', map['その他資料']);
   // ★ この描画が初回にフォーカスを飛ばしていた
   populateDetailRows(receivedData.details || []);
-  // 読み込み完了 → テーブル操作を有効化
+  // 読み込み完了 → テーブル操作を有効化＆UIを表示
   dataReady = true;
   document.getElementById('detailTable')?.classList.remove('is-loading');
+  const loading = document.getElementById('loading');
+  if (loading) loading.style.display = 'none';
+  const editor = document.getElementById('editor');
+  if (editor) editor.style.display = '';
 });
 
 function splitCsvSections(rows) {
@@ -241,6 +259,7 @@ function moveRow(button, direction) {
 }
 
 function reflectToParent() {
+  if (!dataReady) { alert('読み込み完了後に操作してください'); return; }
   // ▼ 編集内容を取得して map に反映
   const map = receivedData.parsed;
   map['修繕発注事項'] = document.getElementById('txNaiyo').value;
@@ -314,6 +333,7 @@ function reflectToParent() {
     }
     
 function saveAsFile() {
+  if (!dataReady) { alert('読み込み完了後に操作してください'); return; }
   const bom = '\uFEFF'; // UTF-8 BOM
 
   const map = receivedData.parsed;
