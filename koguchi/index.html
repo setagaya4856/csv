@@ -300,11 +300,17 @@ function renderTable(data) {
 
   renderTable(filtered); // ← __idx 付きの配列を渡す
 }
+        // 入力ボックス変更時
+    document.getElementById('searchInput').addEventListener('input', doSearch);
+    
+    // セレクトボックス変更時
+    document.getElementById('searchTarget').addEventListener('change', doSearch);
     
     function reflectCSV(index) {
       window.opener.postMessage({ csv: csvData[index].text }, '*');
       //window.close();
     }
+    
   function createTankaList() {
   const cleanRow = row => row.map(c => c?.replace(/^"(.*)"$/, '$1')?.trim() ?? '');
 
