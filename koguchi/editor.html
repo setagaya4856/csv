@@ -98,98 +98,140 @@
   </div>
 
   <script>
+    // === 新規：共通UI切替 ===
+    function showEditorUI() {
+      const loading = document.getElementById('loading');
+      const editor  = document.getElementById('editor');
+      if (loading) loading.style.display = 'none';
+      if (editor)  editor.style.display  = '';
+    }
+
     // 初期化（未受信でも参照できるように）
     window.tankaLookup = new Map();
     // 読み込み完了フラグ
     let dataReady = false;
-    let receivedData;
-// 追加: 初回だけ初期化するためのフラグ
-let initialized = false;
+    let receivedData = false;
+    
+    // === 新規：初期化の本体（postMessage/直接アクセスの両方から呼ぶ） ===
+    function finalizeInit(file) {
+      // --- あなたの既存「受信後の反映」ロジックをここに集約 ---
+      const rows = parseCSV(file.text);
+      const { headers, values, details } = splitCsvSections(rows);
+    
+      receivedData = {
+        fileName: file.fileName,
+        parsed: Object.fromEntries(headers.map((h, i) => [h, values[i]])),
+        details
+      };
+
+      // 単価一覧
+      if (Array.isArray(file.tankaList)) {
+        tankaLookup.clear();
+        for (const row of file.tankaList) {
+          const code = row[0]?.trim();
+          if (code && !tankaLookup.has(code)) tankaLookup.set(code, row);
+        }
+      }
+      
+      // 画面へ反映
+      const map = receivedData.parsed;
+      document.getElementById('txNaiyo').value = map['修繕発注事項'] || '';
+      document.getElementById('txJisshiJiko').value = map['実施事項'] || '';
+      document.getElementById('kbSanpaitoJokyo').value = map['産廃等処分状況'] || '';
+      setRadio('fgShashinUmu', map['写真']);
+      setRadio('fgZumenUmu', map['図面']);
+      setRadio('fgKonkyoshiryoUmu', map['単価根拠資料']);
+      setRadio('fgSonotatenpuUmu', map['その他資料']);
+      populateDetailRows(receivedData.details || []);
+    
+      // 完了：編集可にしてUI表示
+      dataReady = true;
+      document.getElementById('detailTable')?.classList.remove('is-loading');
+      showEditorUI();
+    }
     
     // 起動直後はテーブルを無効化
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('detailTable')?.classList.add('is-loading');
     });
 
-window.addEventListener('message', e => {
-  // ★ 重要：二重postMessage対策（最初の1回だけ受け付ける）
-  if (initialized) return;
-  initialized = true;
-  
-  const file = e.data;
-  const rows = parseCSV(file.text);
-  const { headers, values, details } = splitCsvSections(rows);
 
-  receivedData = {
-    fileName: file.fileName,
-    parsed: Object.fromEntries(headers.map((h, i) => [h, values[i]])),
-    details
-  };
+    // === 新規：postMessage 二重受信ガード ===
+    let initialized = false;
+    window.addEventListener('message', (e) => {
+      if (initialized) return;     // 最初の1回だけ受ける
+      initialized = true;
+      try {
+        finalizeInit(e.data);
+      } catch (err) {
+        console.error('初期化に失敗:', err);
+        showEditorUI();            // 失敗しても固まらない
+      }
+    });
 
-  // 単価一覧（上書き）
-  if (Array.isArray(file.tankaList)) {
-    window.tankaLookup.clear();
-    for (const row of file.tankaList) {
-      const code = row[0]?.trim();
-      if (code && !window.tankaLookup.has(code)) window.tankaLookup.set(code, row);
-    }
-  }
+    // === 新規：直接アクセス対応（openerがない時のファイル選択） ===
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!window.opener) {
+        try {
+          const [handle] = await window.showOpenFilePicker({
+            types: [{ description: 'CSV Files', accept: { 'text/csv': ['.csv'] } }],
+            multiple: false
+          });
+          const file = await handle.getFile();
+          const text = await file.text();
+          const payload = { fileName: file.name, text /*, tankaList: [...] */ };
+          initialized = true;
+          finalizeInit(payload);
+        } catch (e) {
+          console.warn('直接アクセス: ファイル選択がキャンセル/失敗', e);
+          showEditorUI();          // とりあえずUIは出す（dataReady=falseなので操作は弾かれる）
+        }
+      }
+    });
 
-  // 画面へ反映
-  const map = receivedData.parsed;
-  document.getElementById('txNaiyo').value = map['修繕発注事項'] || '';
-  document.getElementById('txJisshiJiko').value = map['実施事項'] || '';
-  document.getElementById('kbSanpaitoJokyo').value = map['産廃等処分状況'] || '';
-  setRadio('fgShashinUmu', map['写真']);
-  setRadio('fgZumenUmu', map['図面']);
-  setRadio('fgKonkyoshiryoUmu', map['単価根拠資料']);
-  setRadio('fgSonotatenpuUmu', map['その他資料']);
-  // ★ この描画が初回にフォーカスを飛ばしていた
-  populateDetailRows(receivedData.details || []);
-  // 読み込み完了 → テーブル操作を有効化＆UIを表示
-  dataReady = true;
-  document.getElementById('detailTable')?.classList.remove('is-loading');
-  const loading = document.getElementById('loading');
-  if (loading) loading.style.display = 'none';
-  const editor = document.getElementById('editor');
-  if (editor) editor.style.display = '';
-});
+    // === 新規：保険（親からpostMessageが来ないケース用） ===
+    setTimeout(() => {
+      if (!initialized) {
+        console.warn('postMessage未達のためタイムアウトでUI表示');
+        showEditorUI();
+      }
+    }, 5000);
 
-function splitCsvSections(rows) {
-  const clean = r => r.map(c => c?.replace(/^"(.*)"$/, '$1')?.trim() ?? '');
-
-  const headers = clean(rows[0] || []);
-  const values = clean(rows[1] || []);
-  const detailStart = rows.findIndex(r => r[0]?.includes('単価コード'));
-  const details = detailStart >= 0 ? rows.slice(detailStart + 1).map(clean) : [];
-
-  return { headers, values, details };
-}
+    function splitCsvSections(rows) {
+      const clean = r => r.map(c => c?.replace(/^"(.*)"$/, '$1')?.trim() ?? '');
     
-function parseCSV(text) {
-  const rows = [];
-  let currentRow = [], currentCell = '', inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i], nextChar = text[i + 1];
-    if (char === '"' && inQuotes && nextChar === '"') {
-      currentCell += '"'; i++;
-    } else if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      currentRow.push(currentCell); currentCell = '';
-    } else if ((char === '\n' || (char === '\r' && nextChar !== '\n')) && !inQuotes) {
-      currentRow.push(currentCell); rows.push(currentRow);
-      currentCell = ''; currentRow = [];
-    } else {
-      currentCell += char;
+      const headers = clean(rows[0] || []);
+      const values = clean(rows[1] || []);
+      const detailStart = rows.findIndex(r => r[0]?.includes('単価コード'));
+      const details = detailStart >= 0 ? rows.slice(detailStart + 1).map(clean) : [];
+    
+      return { headers, values, details };
     }
-  }
-  if (currentCell || currentRow.length) {
-    currentRow.push(currentCell); rows.push(currentRow);
-  }
-  return rows;
-}
+    
+    function parseCSV(text) {
+      const rows = [];
+      let currentRow = [], currentCell = '', inQuotes = false;
+    
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i], nextChar = text[i + 1];
+        if (char === '"' && inQuotes && nextChar === '"') {
+          currentCell += '"'; i++;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          currentRow.push(currentCell); currentCell = '';
+        } else if ((char === '\n' || (char === '\r' && nextChar !== '\n')) && !inQuotes) {
+          currentRow.push(currentCell); rows.push(currentRow);
+          currentCell = ''; currentRow = [];
+        } else {
+          currentCell += char;
+        }
+      }
+      if (currentCell || currentRow.length) {
+        currentRow.push(currentCell); rows.push(currentRow);
+      }
+      return rows;
+    }
     function setRadio(name, value) {
       const v = value === '有' ? '1' : '0';
       const radios = document.querySelectorAll(`input[name="${name}"]`);
@@ -202,60 +244,60 @@ function parseCSV(text) {
       rows.forEach(row => addRow(row));
     }
     
-function addRow(data = []) {
-  const tr = document.createElement('tr');
-
-  for (let i = 0; i < 8; i++) {
-    const td = document.createElement('td');
-
-    if ([0, 1, 3, 7].includes(i)) {
-      // 編集可能列（単価コード、名称、数量、摘要）
-      const type = (i === 3) ? 'number' : 'text';
-      td.innerHTML = `<input type="${type}" class="form-control form-control-sm" value="${data[i] ?? ''}">`;
-    } else {
-      // 編集不可列は表示だけ + hidden で保持
-      td.innerHTML = `
-        <span>${data[i] ?? ''}</span>
-        <input type="hidden" value="${data[i] ?? ''}">
+    function addRow(data = []) {
+      const tr = document.createElement('tr');
+    
+      for (let i = 0; i < 8; i++) {
+        const td = document.createElement('td');
+    
+        if ([0, 1, 3, 7].includes(i)) {
+          // 編集可能列（単価コード、名称、数量、摘要）
+          const type = (i === 3) ? 'number' : 'text';
+          td.innerHTML = `<input type="${type}" class="form-control form-control-sm" value="${data[i] ?? ''}">`;
+        } else {
+          // 編集不可列は表示だけ + hidden で保持
+          td.innerHTML = `
+            <span>${data[i] ?? ''}</span>
+            <input type="hidden" value="${data[i] ?? ''}">
+          `;
+        }
+        
+        if (i === 0 || i === 3) td.style.width = '6em';
+        
+        tr.appendChild(td);
+      }
+    
+      const tdOp = document.createElement('td');
+      tdOp.innerHTML = `
+        <button class="btn btn-sm btn-outline-secondary me-1" onclick="moveRow(this, -1)">↑</button>
+        <button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">削除</button>
+        <button class="btn btn-sm btn-outline-secondary me-1" onclick="moveRow(this, 1)">↓</button>
       `;
+      tr.appendChild(tdOp);
+    
+      document.getElementById('detailBody').appendChild(tr);
     }
+
+    function moveRow(button, direction) {
+      const row = button.closest('tr');
+      const tbody = row.parentNode;
+      const rows = Array.from(tbody.children);
+      const index = rows.indexOf(row);
+      const targetIndex = index + direction;
     
-    if (i === 0 || i === 3) td.style.width = '6em';
+      if (targetIndex < 0 || targetIndex >= rows.length) return;
     
-    tr.appendChild(td);
-  }
-
-  const tdOp = document.createElement('td');
-  tdOp.innerHTML = `
-    <button class="btn btn-sm btn-outline-secondary me-1" onclick="moveRow(this, -1)">↑</button>
-    <button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">削除</button>
-    <button class="btn btn-sm btn-outline-secondary me-1" onclick="moveRow(this, 1)">↓</button>
-  `;
-  tr.appendChild(tdOp);
-
-  document.getElementById('detailBody').appendChild(tr);
-}
-
-function moveRow(button, direction) {
-  const row = button.closest('tr');
-  const tbody = row.parentNode;
-  const rows = Array.from(tbody.children);
-  const index = rows.indexOf(row);
-  const targetIndex = index + direction;
-
-  if (targetIndex < 0 || targetIndex >= rows.length) return;
-
-  const targetRow = rows[targetIndex];
-  if (direction === -1) {
-    tbody.insertBefore(row, targetRow); // 上へ
-  } else {
-    tbody.insertBefore(targetRow, row); // 下へ
-  }
-
-  // 🔄 移動後の行を一時的に水色で強調
-  row.classList.add('row-flash');
-  setTimeout(() => row.classList.remove('row-flash'), 800);
-}
+      const targetRow = rows[targetIndex];
+      if (direction === -1) {
+        tbody.insertBefore(row, targetRow); // 上へ
+      } else {
+        tbody.insertBefore(targetRow, row); // 下へ
+      }
+    
+      // 🔄 移動後の行を一時的に水色で強調
+      row.classList.add('row-flash');
+      setTimeout(() => row.classList.remove('row-flash'), 800);
+    }
 
 function reflectToParent() {
   if (!dataReady) { alert('読み込み完了後に操作してください'); return; }
