@@ -1,91 +1,100 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>データ編集</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { padding: 2rem; background: #f8f9fa; }
     textarea { width: 100%; height: 80px; }
     table td input { width: 100%; }
     .btn + .btn { margin-left: 0.5rem; }
-    .list-group-item:hover { background-color: #e9ecef; cursor: pointer; }
-    .row-flash td { background-color: #dff3fb !important; transition: none !important; }
-    /* 読み込み中は明細テーブルを無効化 */
-    #detailTable.is-loading { pointer-events: none; opacity: .6; }
+    .list-group-item:hover {
+      background-color: #e9ecef;
+      cursor: pointer;
+    }
+    .row-flash td {
+      background-color: #dff3fb !important;
+      transition: none !important;
+    }
+  /* 追加: 読み込み中は明細テーブルを無効化 */
+  #detailTable.is-loading {
+    pointer-events: none;
+    opacity: .6;
+  }
   </style>
 </head>
 <body>
-  <!-- ローディング表示 -->
+  <!-- 追加: ローディング表示 -->
   <div id="loading" class="d-flex align-items-center text-muted mb-3" style="gap:.5rem;">
     <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
     <span>読み込み中です…</span>
   </div>
-
-  <!-- 編集UI（初期は非表示） -->
+  <!-- 追加: 編集UI（初期は非表示） -->
   <div id="editor" style="display:none;">
-    <h3>📝 編集</h3>
+  <h3>📝 編集</h3>
+  <div class="mb-3">
+    <label class="form-label fw-bold">修繕発注事項(ファイル名)</label>
+    <input type="text" class="form-control" id="txNaiyo">
+  </div>
+  <div class="mb-3">
+    <label class="form-label fw-bold">実施事項</label>
+    <textarea id="txJisshiJiko"></textarea>
+  </div>
 
-    <div class="mb-3">
-      <label for="txNaiyo" class="form-label fw-bold">修繕発注事項(ファイル名)</label>
-      <input type="text" class="form-control" id="txNaiyo" />
-    </div>
+  <div class="mb-3">
+    <label class="form-label fw-bold">産廃等処分状況</label>
+    <select id="kbSanpaitoJokyo" class="form-select">
+      <option value="">--選択--</option>
+      <option value="一次保管">一次保管</option>
+      <option value="処分済">処分済</option>
+      <option value="なし">なし</option>
+    </select>
+  </div>
 
-    <div class="mb-3">
-      <label for="txJisshiJiko" class="form-label fw-bold">実施事項</label>
-      <textarea id="txJisshiJiko"></textarea>
-    </div>
+  <div class="mb-3">
+    <label class="form-label fw-bold">添付資料</label><br>
+    <span class="me-2">写真</span>
+    <label><input type="radio" name="fgShashinUmu" value="1"> 有</label>
+    <label><input type="radio" name="fgShashinUmu" value="0"> 無</label>
 
-    <div class="mb-3">
-      <label for="kbSanpaitoJokyo" class="form-label fw-bold">産廃等処分状況</label>
-      <select id="kbSanpaitoJokyo" class="form-select">
-        <option value="">--選択--</option>
-        <option value="一次保管">一次保管</option>
-        <option value="処分済">処分済</option>
-        <option value="なし">なし</option>
-      </select>
-    </div>
+    <span class="me-2">　図面</span>
+    <label><input type="radio" name="fgZumenUmu" value="1"> 有</label>
+    <label><input type="radio" name="fgZumenUmu" value="0"> 無</label>
 
-    <div class="mb-3">
-      <label class="form-label fw-bold d-block">添付資料</label>
-      <div class="form-check form-check-inline">
-        <span class="me-2">写真</span>
-        <label class="form-check-label me-2"><input class="form-check-input" type="radio" name="fgShashinUmu" value="1"> 有</label>
-        <label class="form-check-label"><input class="form-check-input" type="radio" name="fgShashinUmu" value="0"> 無</label>
-      </div>
-      <div class="form-check form-check-inline ms-3">
-        <span class="me-2">図面</span>
-        <label class="form-check-label me-2"><input class="form-check-input" type="radio" name="fgZumenUmu" value="1"> 有</label>
-        <label class="form-check-label"><input class="form-check-input" type="radio" name="fgZumenUmu" value="0"> 無</label>
-      </div>
-      <div class="form-check form-check-inline ms-3">
-        <span class="me-2">単価根拠資料</span>
-        <label class="form-check-label me-2"><input class="form-check-input" type="radio" name="fgKonkyoshiryoUmu" value="1"> 有</label>
-        <label class="form-check-label"><input class="form-check-input" type="radio" name="fgKonkyoshiryoUmu" value="0"> 無</label>
-      </div>
-      <div class="form-check form-check-inline ms-3">
-        <span class="me-2">その他資料</span>
-        <label class="form-check-label me-2"><input class="form-check-input" type="radio" name="fgSonotatenpuUmu" value="1"> 有</label>
-        <label class="form-check-label"><input class="form-check-input" type="radio" name="fgSonotatenpuUmu" value="0"> 無</label>
-      </div>
-    </div>
+    <span class="me-2">　単価根拠資料</span>
+    <label><input type="radio" name="fgKonkyoshiryoUmu" value="1"> 有</label>
+    <label><input type="radio" name="fgKonkyoshiryoUmu" value="0"> 無</label>
 
-    <div class="mb-3">
-      <button class="btn btn-outline-secondary btn-sm" onclick="addRow()">＋ 行追加</button>
-      <table class="table table-sm table-bordered bg-white mt-2" id="detailTable">
+    <span class="me-2">　その他資料</span>
+    <label><input type="radio" name="fgSonotatenpuUmu" value="1"> 有</label>
+    <label><input type="radio" name="fgSonotatenpuUmu" value="0"> 無</label>
+  </div>
+
+  <div class="mb-3">
+    <button class="btn btn-outline-secondary btn-sm" onclick="addRow()">＋ 行追加</button>
+    <!-- 明細編集テーブル -->
+      <table class="table table-sm table-bordered bg-white" id="detailTable">
         <thead class="table-light">
           <tr>
-            <th>単価コード</th><th>名称</th><th>単価種別</th><th>数量</th>
-            <th>単位</th><th>単価</th><th>金額</th><th>摘要</th><th>操作</th>
+            <th>単価コード</th>
+            <th>名称</th>
+            <th>単価種別</th>
+            <th>数量</th>
+            <th>単位</th>
+            <th>単価</th>
+            <th>金額</th>
+            <th>摘要</th>
+            <th>操作</th>
           </tr>
         </thead>
         <tbody id="detailBody"></tbody>
       </table>
-      <button class="btn btn-primary" onclick="reflectToParent()">反映</button>
-      <button class="btn btn-success" onclick="saveAsFile()">保存</button>
-    </div>
-
-    <div class="mt-4"></div>
+    <button class="btn btn-primary" onclick="reflectToParent()">反映</button>
+    <button class="btn btn-success" onclick="saveAsFile()">保存</button>
+  </div>
+  <div class="mt-4">
+  </div>
   </div>
 
   <script>
