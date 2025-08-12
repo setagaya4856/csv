@@ -318,17 +318,10 @@ function renderTable(data) {
       window.opener.postMessage({ csv: csvData[index].text }, '*');
       //window.close();
     }
-    
-function createTankaList() {
-  // 1) ファイル名が tanka.csv のものを優先（大文字小文字は無視）
-  const tankaFile = csvData.find(f => f.fileName?.toLowerCase() === 'tanka.csv');
-
-  // 値整形（両端クォート除去・trim）
+  function createTankaList() {
   const cleanRow = row => row.map(c => c?.replace(/^"(.*)"$/, '$1')?.trim() ?? '');
 
-  // 共通：配列から単価コード（1列目）でユニーク化
-  const uniqByCode = (rows) => {
-    const seen = new Set();
+  const uniqByCode = (rows, seen) => {
     const out = [];
     for (const r of rows) {
       const code = (r?.[0] ?? '').trim();
@@ -339,34 +332,38 @@ function createTankaList() {
     return out;
   };
 
-  if (tankaFile) {
-    // 2) tanka.csv の形式に柔軟対応
-    //   a) 「…」「」ヘッダ＋明細の通常CSV（"単価コード"行を起点に明細）
-    //   b) 単価表だけのCSV（1行目が"単価コード"ヘッダ）
-    const rows = parseCSV(tankaFile.text).map(cleanRow);
-
-    // ヘッダ行（単価コードを含む）を探す
-    const headerIdx = rows.findIndex(r => (r?.[0] ?? '').includes('単価コード'));
-
-    // 明細部分を切り出し（ヘッダが無ければ全体を明細とみなす）
-    const details =
-      headerIdx >= 0 ? rows.slice(headerIdx + 1) : rows;
-
-    return uniqByCode(details);
-  }
-
-  // 3) フォールバック：全ファイルの明細から作成（従来動作）
-  const allRows = [];
+  const tankaFile = csvData.find(f => f.fileName?.toLowerCase() === 'tanka.csv');
   const seen = new Set();
+  const allRows = [];
 
-  for (const f of csvData) {
-    const rows = parseCSV(f.text);
-    const { details } = splitCsvSections(rows); // 既存ヘルパー
-    for (const row of details.map(cleanRow)) {
-      const code = (row?.[0] ?? '').trim();
-      if (!code || seen.has(code)) continue;
-      seen.add(code);
-      allRows.push(row);
+  if (tankaFile) {
+    // 1) tanka.csv の明細を先に登録
+    const rows = parseCSV(tankaFile.text).map(cleanRow);
+    const headerIdx = rows.findIndex(r => (r?.[0] ?? '').includes('単価コード'));
+    const details = headerIdx >= 0 ? rows.slice(headerIdx + 1) : rows;
+    allRows.push(...uniqByCode(details, seen));
+
+    // 2) 他CSVから未登録の単価を追加（名称の頭に※）
+    for (const f of csvData) {
+      if (f === tankaFile) continue;
+      const rows = parseCSV(f.text);
+      const { details } = splitCsvSections(rows);
+      for (const row of details.map(cleanRow)) {
+        const code = (row?.[0] ?? '').trim();
+        if (!code || seen.has(code)) continue;
+        seen.add(code);
+        // 名称の頭に※
+        if (row[1]) row[1] = `※${row[1]}`;
+        allRows.push(row);
+      }
+    }
+
+  } else {
+    // tanka.csv がない → 従来通り
+    for (const f of csvData) {
+      const rows = parseCSV(f.text);
+      const { details } = splitCsvSections(rows);
+      allRows.push(...uniqByCode(details.map(cleanRow), seen));
     }
   }
 
