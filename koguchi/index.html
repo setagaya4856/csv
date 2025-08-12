@@ -320,20 +320,56 @@ function renderTable(data) {
     }
     
 function createTankaList() {
-  const seen = new Set();
+  // 1) ファイル名が tanka.csv のものを優先（大文字小文字は無視）
+  const tankaFile = csvData.find(f => f.fileName?.toLowerCase() === 'tanka.csv');
+
+  // 値整形（両端クォート除去・trim）
+  const cleanRow = row => row.map(c => c?.replace(/^"(.*)"$/, '$1')?.trim() ?? '');
+
+  // 共通：配列から単価コード（1列目）でユニーク化
+  const uniqByCode = (rows) => {
+    const seen = new Set();
+    const out = [];
+    for (const r of rows) {
+      const code = (r?.[0] ?? '').trim();
+      if (!code || seen.has(code)) continue;
+      seen.add(code);
+      out.push(r);
+    }
+    return out;
+  };
+
+  if (tankaFile) {
+    // 2) tanka.csv の形式に柔軟対応
+    //   a) 「…」「」ヘッダ＋明細の通常CSV（"単価コード"行を起点に明細）
+    //   b) 単価表だけのCSV（1行目が"単価コード"ヘッダ）
+    const rows = parseCSV(tankaFile.text).map(cleanRow);
+
+    // ヘッダ行（単価コードを含む）を探す
+    const headerIdx = rows.findIndex(r => (r?.[0] ?? '').includes('単価コード'));
+
+    // 明細部分を切り出し（ヘッダが無ければ全体を明細とみなす）
+    const details =
+      headerIdx >= 0 ? rows.slice(headerIdx + 1) : rows;
+
+    return uniqByCode(details);
+  }
+
+  // 3) フォールバック：全ファイルの明細から作成（従来動作）
   const allRows = [];
+  const seen = new Set();
 
   for (const f of csvData) {
     const rows = parseCSV(f.text);
-    const { details } = splitCsvSections(rows);
-    for (const row of details) {
-      const code = row[0]?.trim();
-      if (code && !seen.has(code)) {
-        seen.add(code);
-        allRows.push(row);
-      }
+    const { details } = splitCsvSections(rows); // 既存ヘルパー
+    for (const row of details.map(cleanRow)) {
+      const code = (row?.[0] ?? '').trim();
+      if (!code || seen.has(code)) continue;
+      seen.add(code);
+      allRows.push(row);
     }
   }
+
   return allRows;
 }
 
