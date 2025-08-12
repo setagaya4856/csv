@@ -184,11 +184,15 @@ setTimeout(() => {
     }
     
 function renderTable(data) {
-  const isDirectMode = !window.opener; // 直接アクセス判定
+  const isDirectMode = !window.opener;
   const body = document.getElementById('tableBody');
   body.innerHTML = '';
 
-  data.forEach((f, idx) => {
+  data.forEach((f, _idx) => {
+    const idx = f.__idx ?? _idx; // ★ 元配列のインデックスを優先
+    // ★ ここで tanka.csv を再度除外する必要は基本なし（念のため残しても害はなし）
+    if (f.fileName?.toLowerCase() === 'tanka.csv') return;
+
     const rows = parseCSV(f.text);
     const { headers, values, details } = splitCsvSections(rows);
     const parsed = Object.fromEntries(headers.map((h, i) => [h, values[i]]));
@@ -212,12 +216,11 @@ function renderTable(data) {
           </tr>
         </thead>
         <tbody>
-          ${details.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+          ${details.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}
         </tbody>
       </table>
     `;
 
-    // ★ 直接アクセス時は「反映」ボタンを除く
     const buttonsHtml = isDirectMode
       ? `<button class="btn btn-sm btn-success" onclick="editCSV(${idx})">編集</button>`
       : `<button class="btn btn-sm btn-secondary" onclick="reflectCSV(${idx})">反映</button>
@@ -262,26 +265,28 @@ function renderTable(data) {
     body.appendChild(detail);
   });
 }
-
     // 検索機能
     function doSearch() {
-      const target = document.getElementById('searchTarget').value;
-      const keyword = document.getElementById('searchInput').value.trim();
-    
-      const words = keyword.split(/[\s　]+/).filter(w => w); // 空文字は除去
-      console.log('検索キーワード配列:', words);
-    
-      const filtered = csvData.filter(f => {
-        const p = f.parsed || {};
-        const detailText = f.text;
-    
+  const target = document.getElementById('searchTarget').value;
+  const keyword = document.getElementById('searchInput').value.trim();
+
+  const words = keyword.split(/[\s　]+/).filter(w => w);
+  console.log('検索キーワード配列:', words);
+
+  // ★ 元配列のインデックスを __idx に付与し、tanka.csv を除外
+  const filtered = csvData
+    .map((f, i) => ({ ...f, __idx: i }))
+    .filter(f => f.fileName?.toLowerCase() !== 'tanka.csv')
+    .filter(f => {
+      const p = f.parsed || {};
+      const detailText = f.text;
+
       const targetText = (() => {
         if (target === 'all') {
-          // すべての項目 → 基本情報＋明細
-          return Object.values(p).join() + detailText;
+          // すべての項目 → 基本情報＋明細（lower 化）
+          return (Object.values(p).join('') + detailText).toLowerCase();
         }
         if (target === '明細') {
-          // 明細だけを結合（配列→文字列）
           const rows = parseCSV(f.text);
           const { details } = splitCsvSections(rows);
           return details.map(r => r.join(' ')).join(' ').toLowerCase();
@@ -289,30 +294,12 @@ function renderTable(data) {
         // 特定項目のみ
         return (p[target] ?? '').toLowerCase();
       })();
-    
-        return words.every(word => targetText.includes(word.toLowerCase()));
-      });
-    
-      renderTable(filtered);
-    }
-    
-    // 入力ボックス変更時
-    document.getElementById('searchInput').addEventListener('input', doSearch);
-    
-    // セレクトボックス変更時
-    document.getElementById('searchTarget').addEventListener('change', doSearch);
-    
-    // 「編集」ボタン押下 → 別タブで開く
-    function editCSV(index) {
-      const tankaListArray = createTankaList();
-      const file = { ...csvData[index] };  // シャローコピーしておく（安全）
-      file.tankaList = tankaListArray;     // 単価一覧の配列を追加（※あとで定義）
-      
-      const popup = window.open('editor.html', '_blank');
-      const send = () => popup.postMessage(file, '*');
-      popup.addEventListener('load', send);
-      setTimeout(send, 1500);
-    }
+
+      return words.every(word => targetText.includes(word.toLowerCase()));
+    });
+
+  renderTable(filtered); // ← __idx 付きの配列を渡す
+}
     
     function reflectCSV(index) {
       window.opener.postMessage({ csv: csvData[index].text }, '*');
