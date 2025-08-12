@@ -401,6 +401,17 @@ async function selectFolderAndLoad() {
     console.warn("フォルダ選択がキャンセルまたは拒否されました", e);
   }
 }
+
+    function editCSV(index) {
+  const tankaListArray = createTankaList();
+  const file = { ...csvData[index] }; // ← 元配列 index を使用（ズレない）
+  file.tankaList = tankaListArray;
+
+  const popup = window.open('editor.html', '_blank');
+  const send = () => popup.postMessage(file, '*');
+  popup.addEventListener('load', send);
+  setTimeout(send, 1500);
+}
   </script>
 </body>
 </html>
