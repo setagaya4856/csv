@@ -31,7 +31,7 @@
     <span>読み込み中です…</span>
   </div>
   <!-- 追加: 編集UI（初期は非表示） -->
-  <div id="editor" style="display:none;">
+  <div id="editor" class="d-none">
   <h3>📝 編集</h3>
   <div class="mb-3">
     <label class="form-label fw-bold">修繕発注事項(ファイル名)</label>
@@ -100,11 +100,16 @@
   <script>
     // === 新規：共通UI切替 ===
     function showEditorUI() {
-      const loading = document.getElementById('loading');
-      const editor  = document.getElementById('editor');
-      if (loading) loading.style.display = 'none';
-      if (editor)  editor.style.display  = '';
+    // ローディングが複数あっても全部潰す
+    document.querySelectorAll('#loading').forEach(el => el.remove());
+  
+    const editor = document.getElementById('editor');
+    if (editor) {
+      editor.classList.remove('d-none');
+      // 念のため inline の display にも手を入れておく
+      editor.style.removeProperty('display');
     }
+  }
 
     // 初期化（未受信でも参照できるように）
     window.tankaLookup = new Map();
