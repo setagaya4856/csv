@@ -259,7 +259,7 @@
       }
     
       const gridOptions = {
-        columnDefs,
+        columnDefs: colDefs,   // ← 左は固定、右は自分の変数名
         rowData,
         defaultColDef: {
           editable: true,          // ← これ重要：貼り付け先は editable 必須
