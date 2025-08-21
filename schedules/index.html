@@ -53,6 +53,17 @@
     </div>
     <button id="run">/functions/v1/schedules-get を叩く</button>
     <pre id="output">ここに結果が出ます</pre>
+    <div id="sched-summary" style="margin:12px 0;color:#555;"></div>
+    <div class="row" style="gap:12px">
+      <div style="flex:1 1 380px;min-width:320px">
+        <h2 style="margin:8px 0">スケジュール一覧</h2>
+        <div id="sched-list"></div>
+      </div>
+      <div style="flex:1 1 380px;min-width:320px">
+        <h2 style="margin:8px 0">カレンダー</h2>
+        <div id="sched-calendar"></div>
+      </div>
+  </div>
   </fieldset>
 
   <script type="module">
@@ -153,6 +164,188 @@
         out.textContent = 'Fetchエラー: ' + e.message;
       }
     });
+    // ===== スケジュール描画ユーティリティ =====
+    // レスポンスを柔軟に正規化（配列 or {items|data|schedules} 想定）
+    function normalizeSchedules(json) {
+      const arr = Array.isArray(json)
+        ? json
+        : (json?.items || json?.data || json?.schedules || []);
+    
+      // 代表キーの推測ヘルパ
+      const pick = (obj, keys) => {
+        for (const k of keys) {
+          if (obj[k] != null) return obj[k];
+          const lk = Object.keys(obj).find(x => x.toLowerCase() === k.toLowerCase());
+          if (lk && obj[lk] != null) return obj[lk];
+        }
+        return undefined;
+      };
+    
+      // 各要素を {title, start, end, date, meta} に寄せる
+      return arr.map(x => {
+        const title = pick(x, ['title','summary','name','subject']) ?? '';
+        // 日付/開始/終了の各パターンをざっくり吸収
+        const date  = pick(x, ['date','day','dt']);
+        const start = pick(x, ['start','start_at','startAt','start_time','startTime','from']);
+        const end   = pick(x, ['end','end_at','endAt','end_time','endTime','to']);
+        const location = pick(x, ['location','place','where']);
+        const note = pick(x, ['note','notes','memo','description']);
+    
+        // 文字列→Date（JST前提で標準化）
+        const toDate = v => {
+          if (!v) return null;
+          // YYYY-MM / YYYY-MM-DD / ISO / epoch をゆるく対応
+          if (/^\d{4}-\d{2}$/.test(v)) return new Date(v + '-01T00:00:00+09:00');
+          if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return new Date(v + 'T00:00:00+09:00');
+          const n = Number(v);
+          if (!Number.isNaN(n) && String(v).length >= 10) return new Date(n);
+          const d = new Date(v);
+          return Number.isNaN(d.getTime()) ? null : d;
+        };
+    
+        const dDate  = toDate(date);
+        const dStart = toDate(start) || dDate;
+        const dEnd   = toDate(end);
+    
+        return {
+          raw: x,
+          title: String(title || '(無題)'),
+          start: dStart,
+          end: dEnd,
+          // “日付のみ”のデータも扱えるように基準日を保持
+          baseDate: dDate || dStart || null,
+          location: location || '',
+          note: note || ''
+        };
+      }).filter(x => x.baseDate);
+    }
+    
+    function fmtDate(d) {
+      if (!d) return '';
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const da = String(d.getDate()).padStart(2,'0');
+      const wd = '日月火水木金土'[d.getDay()];
+      return `${y}-${m}-${da}（${wd}）`;
+    }
+    function fmtTime(d) {
+      if (!d) return '';
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      return `${hh}:${mm}`;
+    }
+    
+    // 指定月（YYYY-MM）内に入るものだけ抽出（baseDate で判定）
+    function filterByMonth(items, ym) {
+      const [y,m] = ym.split('-').map(Number);
+      return items.filter(x => {
+        const d = x.baseDate;
+        return d && d.getFullYear() === y && (d.getMonth()+1) === m;
+      });
+    }
+    
+    // 一覧描画（日付ごとグループ）
+    function renderList(items, mount) {
+      if (!items.length) { mount.innerHTML = '<p>該当なし</p>'; return; }
+      const groups = new Map();
+      for (const it of items) {
+        const k = fmtDate(it.baseDate);
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(it);
+      }
+      // 各日ソート：開始時刻→タイトル
+      for (const arr of groups.values()) {
+        arr.sort((a,b) => (a.start?.getTime()||0) - (b.start?.getTime()||0)
+          || a.title.localeCompare(b.title,'ja'));
+      }
+    
+      let html = '';
+      for (const [day, arr] of groups) {
+        html += `<h3 style="margin:12px 0 6px">${day}</h3>`;
+        html += `<ul style="margin:0 0 12px 16px;padding:0">`;
+        for (const it of arr) {
+          const timePart = it.start ? (it.end ? `${fmtTime(it.start)}–${fmtTime(it.end)}` : `${fmtTime(it.start)}`) : '';
+          const loc = it.location ? ` <span style="color:#666">＠${escapeHtml(it.location)}</span>` : '';
+          const note = it.note ? `<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(it.note)}</div>` : '';
+          html += `<li style="margin:4px 0">
+            <strong>${escapeHtml(it.title)}</strong> ${timePart}${loc}
+            ${note}
+          </li>`;
+        }
+        html += `</ul>`;
+      }
+      mount.innerHTML = html;
+    }
+    
+    function escapeHtml(s){ return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    
+    // 月間カレンダー描画（〇で件数表示）
+    function renderCalendar(items, ym, mount) {
+      const [year, month] = ym.split('-').map(Number);
+      const first = new Date(year, month-1, 1);
+      const last = new Date(year, month, 0);
+      const startCell = (first.getDay()+6)%7; // 月曜始まりにしたい時は調整
+      const totalDays = last.getDate();
+    
+      // 日毎件数
+      const counts = Array.from({length: totalDays+1}, () => 0);
+      for (const it of items) {
+        const d = it.baseDate.getDate();
+        counts[d] += 1;
+      }
+    
+      // テーブル生成（シンプルCSS）
+      let html = `
+        <style>
+          .cal {border-collapse:collapse;width:100%;}
+          .cal th,.cal td{border:1px solid #ddd;text-align:right;padding:6px;vertical-align:top;height:60px;}
+          .cal th{background:#f3f4f6;text-align:center}
+          .dot{display:inline-block;min-width:1.6em;padding:.1em .5em;border-radius:999px;background:#e5e7eb;margin-left:4px;font-size:.85em}
+          .has .dot{background:#dbeafe}
+          .today{outline:2px solid #60a5fa;outline-offset:-2px;border-radius:4px}
+        </style>
+        <table class="cal">
+          <thead><tr>
+            <th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
+          </tr></thead><tbody>
+      `;
+    
+      let day = 1;
+      for (let r=0; r<6 && day<=totalDays; r++) {
+        html += '<tr>';
+        for (let c=0; c<7; c++) {
+          const cellIndex = r*7 + c;
+          if (cellIndex < startCell || day > totalDays) {
+            html += '<td></td>';
+          } else {
+            const cnt = counts[day];
+            const cls = cnt ? 'has' : '';
+            const dstr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const isToday = (new Date().toISOString().slice(0,10) === dstr);
+            html += `<td class="${cls} ${isToday?'today':''}">
+              <div>${day}${cnt?`<span class="dot">${cnt}</span>`:''}</div>
+            </td>`;
+            day++;
+          }
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      mount.innerHTML = html;
+    }
+    
+    function renderSchedules(json, ym) {
+      const itemsAll = normalizeSchedules(json);
+      const items = filterByMonth(itemsAll, ym);
+      const listEl = document.getElementById('sched-list');
+      const calEl = document.getElementById('sched-calendar');
+      const sumEl = document.getElementById('sched-summary');
+    
+      sumEl.textContent = `${ym} の予定: ${items.length}件（取得総数: ${itemsAll.length}件）`;
+      renderList(items, listEl);
+      renderCalendar(items, ym, calEl);
+    }
   </script>
 </body>
 </html>
