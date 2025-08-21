@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <title>Supabase Edge Function テスト</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- head 内（CDN） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
+  <style>
+    /* セル折返し（複数予定を改行で表示する時に便利） */
+    .ag-theme-alpine .ag-cell {
+      white-space: pre-wrap;
+      line-height: 1.2;
+    }
+  </style>
   <style>
     body{font-family:system-ui, sans-serif; max-width:860px; margin:24px auto; padding:0 12px;}
     fieldset{margin:12px 0; padding:12px;}
@@ -63,7 +73,10 @@
         <h2 style="margin:8px 0">カレンダー</h2>
         <div id="sched-calendar"></div>
       </div>
-  </div>
+    </div>
+    <!-- body 内・表示セクション（お好みの位置に） -->
+    <h2 style="margin:16px 0 8px">従業員 × 日付 マトリクス</h2>
+    <div id="matrixGrid" class="ag-theme-alpine" style="height: 520px; width: 100%;"></div>
   </fieldset>
 
   <script type="module">
@@ -161,11 +174,110 @@
         const json = await res.json();
         out.textContent = JSON.stringify(json, null, 2);
         renderSchedules(json, month);                      // ← 追加：一覧 & カレンダー描画
+        renderMatrix(normalizeSchedules(json), month); // ← 追加（同じ正規化関数を再利用）
       } catch (e) {
         out.textContent = 'Fetchエラー: ' + e.message;
       }
     });
     // ===== スケジュール描画ユーティリティ =====
+    
+    // ===== AG Grid で「縦=従業員、横=日付」の表を描く =====
+    
+    // ★ ここをあなたのデータ構造に合わせて変更（従業員名のキーを返す）
+    function extractEmployeeName(item) {
+      // 例1: raw の中に employee / user / name / assignee のいずれかがある想定
+      const r = item.raw || {};
+      return r.employee || r.user || r.name || r.assignee || '（未割当）';
+    }
+    
+    // ★ セル表示モード（'count' | 'first' | 'titles' から選択）
+    const CELL_MODE = 'titles'; 
+    // - 'count'  : その日の予定件数（数値）
+    // - 'first'  : その日の最初の予定タイトル
+    // - 'titles' : その日の全予定タイトルを改行で連結
+    
+    function buildMatrix(items, ym) {
+      // 当月の全日付列を作成
+      const [y, m] = ym.split('-').map(Number);
+      const first = new Date(y, m - 1, 1);
+      const last = new Date(y, m, 0);
+      const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
+    
+      // 従業員ごと→日付ごとの予定配列
+      const byEmp = new Map();
+      for (const it of items) {
+        const emp = extractEmployeeName(it);
+        if (!byEmp.has(emp)) byEmp.set(emp, {});
+        const d = it.baseDate.getDate();
+        if (!byEmp.get(emp)[d]) byEmp.get(emp)[d] = [];
+        byEmp.get(emp)[d].push(it);
+      }
+    
+      // 行データ生成
+      const rows = [];
+      for (const [emp, perDay] of byEmp) {
+        const row = { name: emp };
+        for (const d of days) {
+          const arr = perDay[d] || [];
+          if (CELL_MODE === 'count') {
+            row[d] = arr.length || '';
+          } else if (CELL_MODE === 'first') {
+            row[d] = arr.length ? arr[0].title : '';
+          } else { // 'titles'
+            row[d] = arr.map(a => a.title).join('\n');
+          }
+        }
+        rows.push(row);
+      }
+    
+      // 列定義（Name + 1..N日）
+      const colDefs = [
+        { headerName: '名前', field: 'name', pinned: 'left', width: 160 },
+        ...days.map(d => ({
+          headerName: String(d),
+          field: String(d),
+          width: 110,
+          editable: true,              // セル直接編集OK（貼り付けもOK）
+          cellEditor: 'agLargeTextCellEditor', // 改行編集したいときに便利
+        })),
+      ];
+    
+      return { colDefs, rowData: rows };
+    }
+    
+    let matrixGridApi = null;
+    
+    async function renderMatrix(items, ym) {
+      const { colDefs, rowData } = buildMatrix(items, ym);
+    
+      // すでに作っていれば差し替え
+      if (matrixGridApi) {
+        matrixGridApi.setColumnDefs(colDefs);
+        matrixGridApi.setGridOption('rowData', rowData);
+        matrixGridApi.refreshClientSideRowModel();
+        return;
+      }
+    
+      const gridOptions = {
+        columnDefs: colDefs,
+        rowData,
+        defaultColDef: {
+          resizable: true,
+        },
+        enableRangeSelection: true,    // 範囲選択
+        rowSelection: 'multiple',
+        suppressRowClickSelection: true,
+        undoRedoCellEditing: true,
+        clipboardDelimiter: '\t',      // Excel互換TSVでコピー
+        // 貼り付け可（ブラウザ許可が必要な場合あり）
+        processDataFromClipboard: params => params.data,
+      };
+    
+      const gridDiv = document.getElementById('matrixGrid');
+      const { Grid } = await import('https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.auto.esm.min.js');
+      matrixGridApi = new Grid(gridDiv, gridOptions).api;
+    }
+
     // レスポンスを柔軟に正規化（配列 or {items|data|schedules} 想定）
     function normalizeSchedules(json) {
       const arr = Array.isArray(json)
