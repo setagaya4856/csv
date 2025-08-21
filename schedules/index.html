@@ -276,9 +276,12 @@
         onPasteEnd:   e => {},
       };
     
+      // 初回描画後に先頭セルへフォーカス（キーボードコピー用）
       const gridDiv = document.getElementById('matrixGrid');
       const { Grid } = await import('https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.auto.esm.min.js');
-      matrixGridApi = new Grid(gridDiv, gridOptions).api;
+      const grid = new Grid(gridDiv, gridOptions);
+      matrixGridApi = grid.api;
+      +matrixGridApi.setFocusedCell(0, 'name'); // ← 何か1セルにフォーカスを置く
     }
 
     function normalizeSchedules(json) {
