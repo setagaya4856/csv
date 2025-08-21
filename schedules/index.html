@@ -171,6 +171,8 @@
         const res = await fetch(`${url}/functions/v1/schedules-get?month=${encodeURIComponent(month)}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log('days:', json.days, 'firstRowCellsKeys:',
+          json.rows?.[0] ? Object.keys(json.rows[0].cells || {}) : []);
         const json = await res.json();
         out.textContent = JSON.stringify(json, null, 2);
         renderSchedules(json, month);                      // ← 追加：一覧 & カレンダー描画
