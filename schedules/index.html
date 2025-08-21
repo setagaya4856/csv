@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Supabase Edge Function テスト</title>
+</head>
+<body>
+  <h1>Edge Function Test</h1>
+  <button id="run">実行</button>
+  <pre id="output"></pre>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const SUPABASE_URL = "https://rqrgsytkxbhbrnrhqlca.supabase.co";   // 例: https://xxxx.supabase.co
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0";  // anon key
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById("run").addEventListener("click", async () => {
+      const out = document.getElementById("output");
+      out.textContent = "実行中...\n";
+
+      // ログインしていない場合 → セッションが null
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error) {
+        out.textContent += "セッション取得エラー: " + error.message;
+        return;
+      }
+      if (!session) {
+        out.textContent += "まだログインしていません。\n";
+        return;
+      }
+
+      const token = session.access_token;
+
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/functions/v1/schedules-get?month=2025-09`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+
+        const json = await res.json();
+        out.textContent += JSON.stringify(json, null, 2);
+      } catch (err) {
+        out.textContent += "Fetchエラー: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
