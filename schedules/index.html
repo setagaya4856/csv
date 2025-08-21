@@ -99,7 +99,11 @@
       const email = $('#email').value.trim();
       const password = $('#password').value;
       out.textContent = 'サインアップ中...';
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password,
+      options: {
+        // ← ここをあなたの最終着地点に（GitHub Pages の repo パス込み）
+        emailRedirectTo: 'https://setagaya4856.github.io/csv/schedules/'
+      } });
       if (error) out.textContent = 'エラー: ' + error.message;
       else out.textContent = 'サインアップ完了。メールの確認が必要な場合があります。';
       setUser(data.user);
