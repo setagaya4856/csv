@@ -160,6 +160,7 @@
         });
         const json = await res.json();
         out.textContent = JSON.stringify(json, null, 2);
+        renderSchedules(json, month);                      // ← 追加：一覧 & カレンダー描画
       } catch (e) {
         out.textContent = 'Fetchエラー: ' + e.message;
       }
