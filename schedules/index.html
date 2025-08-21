@@ -1,54 +1,152 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Supabase Edge Function テスト</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui, sans-serif; max-width:860px; margin:24px auto; padding:0 12px;}
+    fieldset{margin:12px 0; padding:12px;}
+    label{display:block; margin:6px 0 2px;}
+    input{padding:6px; width:100%; max-width:360px;}
+    button{margin:6px 6px 0 0; padding:6px 12px;}
+    pre{background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto;}
+    .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  </style>
 </head>
 <body>
-  <h1>Edge Function Test</h1>
-  <button id="run">実行</button>
-  <pre id="output"></pre>
+  <h1>Supabase Edge Function テスト</h1>
+
+  <fieldset>
+    <legend>設定</legend>
+    <div class="row">
+      <label>SUPABASE_URL</label>
+      <input id="url" placeholder="https://xxxx.supabase.co" />
+    </div>
+    <div class="row">
+      <label>ANON_KEY</label>
+      <input id="anon" placeholder="anon public key" />
+    </div>
+    <button id="init">Supabase 初期化</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>ログイン</legend>
+    <label>メールアドレス</label>
+    <input id="email" type="email" placeholder="you@example.com" />
+    <label>パスワード（パスワード方式で使う場合）</label>
+    <input id="password" type="password" placeholder="8文字以上" />
+    <div class="row">
+      <button id="login-pw">メール＋パスワードでログイン</button>
+      <button id="signup-pw">（初回）メール＋パスワードでサインアップ</button>
+      <button id="login-otp">マジックリンク送信（メールOTP）</button>
+      <button id="logout">ログアウト</button>
+    </div>
+    <div id="who" style="margin-top:6px;color:#333;"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>関数呼び出し</legend>
+    <div class="row">
+      <label>month（YYYY-MM）</label>
+      <input id="month" value="2025-09" />
+    </div>
+    <button id="run">/functions/v1/schedules-get を叩く</button>
+    <pre id="output">ここに結果が出ます</pre>
+  </fieldset>
 
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    const SUPABASE_URL = "https://rqrgsytkxbhbrnrhqlca.supabase.co";   // 例: https://xxxx.supabase.co
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0";  // anon key
+    let supabase = null;
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const $ = (q) => document.querySelector(q);
+    const out = $('#output');
+    const who = $('#who');
 
-    document.getElementById("run").addEventListener("click", async () => {
-      const out = document.getElementById("output");
-      out.textContent = "実行中...\n";
+    function log(msg){ out.textContent += (out.textContent ? "\n" : "") + msg; }
+    function setUser(u){
+      who.textContent = u ? `ログイン中: ${u.email}` : '未ログイン';
+    }
 
-      // ログインしていない場合 → セッションが null
-      const { data: { session }, error } = await supabase.auth.getSession();
+    // 初期化
+    $('#init').addEventListener('click', () => {
+      const url = $('#url').value.trim();
+      const anon = $('#anon').value.trim();
+      if (!url || !anon) { alert('SUPABASE_URL と ANON_KEY を入れてください'); return; }
+      supabase = createClient(url, anon);
+      out.textContent = 'Supabase 初期化完了';
+      supabase.auth.getSession().then(({ data: { session }}) => setUser(session?.user ?? null));
+      // セッション変化を監視
+      supabase.auth.onAuthStateChange((evt, session) => setUser(session?.user ?? null));
+    });
 
-      if (error) {
-        out.textContent += "セッション取得エラー: " + error.message;
-        return;
-      }
-      if (!session) {
-        out.textContent += "まだログインしていません。\n";
-        return;
-      }
+    // パスワードでログイン
+    $('#login-pw').addEventListener('click', async () => {
+      if (!supabase) return alert('先に「Supabase 初期化」を押してください');
+      const email = $('#email').value.trim();
+      const password = $('#password').value;
+      out.textContent = 'ログイン中...';
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) out.textContent = 'エラー: ' + error.message;
+      else out.textContent = 'ログイン成功';
+      setUser(data.user);
+    });
+
+    // パスワードでサインアップ
+    $('#signup-pw').addEventListener('click', async () => {
+      if (!supabase) return alert('先に「Supabase 初期化」を押してください');
+      const email = $('#email').value.trim();
+      const password = $('#password').value;
+      out.textContent = 'サインアップ中...';
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) out.textContent = 'エラー: ' + error.message;
+      else out.textContent = 'サインアップ完了。メールの確認が必要な場合があります。';
+      setUser(data.user);
+    });
+
+    // マジックリンク（OTP）
+    $('#login-otp').addEventListener('click', async () => {
+      if (!supabase) return alert('先に「Supabase 初期化」を押してください');
+      const email = $('#email').value.trim();
+      out.textContent = 'マジックリンク送信中...';
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: location.origin  // 認証後に戻るURL（Auth設定にも登録を）
+        }
+      });
+      out.textContent = error ? ('エラー: ' + error.message) : 'メールを確認してリンクを開いてください';
+    });
+
+    // ログアウト
+    $('#logout').addEventListener('click', async () => {
+      if (!supabase) return alert('先に「Supabase 初期化」を押してください');
+      await supabase.auth.signOut();
+      setUser(null);
+      out.textContent = 'ログアウトしました';
+    });
+
+    // 関数呼び出し
+    $('#run').addEventListener('click', async () => {
+      if (!supabase) return alert('先に「Supabase 初期化」を押してください');
+      out.textContent = '呼び出し中...';
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { out.textContent = '未ログインです'; return; }
 
       const token = session.access_token;
+      const url = $('#url').value.trim();
+      const month = $('#month').value.trim();
 
       try {
-        const res = await fetch(
-          `${SUPABASE_URL}/functions/v1/schedules-get?month=2025-09`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-
+        const res = await fetch(`${url}/functions/v1/schedules-get?month=${encodeURIComponent(month)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         const json = await res.json();
-        out.textContent += JSON.stringify(json, null, 2);
-      } catch (err) {
-        out.textContent += "Fetchエラー: " + err.message;
+        out.textContent = JSON.stringify(json, null, 2);
+      } catch (e) {
+        out.textContent = 'Fetchエラー: ' + e.message;
       }
     });
   </script>
