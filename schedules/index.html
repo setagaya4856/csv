@@ -259,21 +259,21 @@
       }
     
       const gridOptions = {
-        columnDefs: colDefs,   // ← 左は固定、右は自分の変数名
+        columnDefs: colDefs,
         rowData,
+      
         defaultColDef: {
-          editable: true,          // ← これ重要：貼り付け先は editable 必須
+          editable: true,          // 貼り付け先は editable 必須
           resizable: true,
         },
-        enableRangeSelection: true, // ← 範囲選択（矩形）ON
-        undoRedoCellEditing: true,  // ← Ctrl+Z / Ctrl+Y
-        clipboardDelimiter: '\t',   // ← Excel互換TSV
-        // クリップボード入出力の最終調整（必要に応じて）
-        processCellForClipboard: params => params.value,      // コピー時
-        processCellFromClipboard: params => params.value,     // ペースト時
-        // 貼り付けイベント（検証・保存など挟むなら）
-        onPasteStart: (e) => { /* console.log('paste start', e); */ },
-        onPasteEnd:   (e) => { /* console.log('paste end', e); */ },
+        enableRangeSelection: true,      // 範囲選択（矩形）
+        suppressCopyRowsToClipboard: true, // 行コピーよりセルコピー優先
+        undoRedoCellEditing: true,
+        clipboardDelimiter: '\t',
+        processCellForClipboard: p => p.value,
+        processCellFromClipboard: p => p.value,
+        onPasteStart: e => {},
+        onPasteEnd:   e => {},
       };
     
       const gridDiv = document.getElementById('matrixGrid');
