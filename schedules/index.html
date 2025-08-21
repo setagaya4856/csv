@@ -185,9 +185,9 @@
     
     // ★ ここをあなたのデータ構造に合わせて変更（従業員名のキーを返す）
     function extractEmployeeName(item) {
-      // 例1: raw の中に employee / user / name / assignee のいずれかがある想定
       const r = item.raw || {};
-      return r.employee || r.user || r.name || r.assignee || '（未割当）';
+      // normalizeSchedules で employee_name を直付けしているのでまずそれを見る
+      return item.employee_name || r.employee_name || r.employee || r.user || r.name || r.assignee || '（未割当）';
     }
     
     // ★ セル表示モード（'count' | 'first' | 'titles' から選択）
@@ -278,61 +278,95 @@
       matrixGridApi = new Grid(gridDiv, gridOptions).api;
     }
 
-    // レスポンスを柔軟に正規化（配列 or {items|data|schedules} 想定）
     function normalizeSchedules(json) {
-      const arr = Array.isArray(json)
+      // 1) すでに配列や {items|data|schedules} 形式なら従来処理
+      const arr0 = Array.isArray(json)
         ? json
-        : (json?.items || json?.data || json?.schedules || []);
+        : (json?.items || json?.data || json?.schedules || null);
+      if (arr0) {
+        return arr0.map(x => {
+          const pick = (obj, keys) => {
+            for (const k of keys) {
+              if (obj[k] != null) return obj[k];
+              const lk = Object.keys(obj).find(t => t.toLowerCase() === k.toLowerCase());
+              if (lk && obj[lk] != null) return obj[lk];
+            }
+            return undefined;
+          };
+          const title = pick(x, ['title','summary','name','subject']) ?? '';
+          const date  = pick(x, ['date','day','dt']);
+          const start = pick(x, ['start','start_at','startAt','start_time','startTime','from']) || date;
+          const end   = pick(x, ['end','end_at','endAt','end_time','endTime','to']);
+          const location = pick(x, ['location','place','where']) || '';
+          const note = pick(x, ['note','notes','memo','description']) || '';
     
-      // 代表キーの推測ヘルパ
-      const pick = (obj, keys) => {
-        for (const k of keys) {
-          if (obj[k] != null) return obj[k];
-          const lk = Object.keys(obj).find(x => x.toLowerCase() === k.toLowerCase());
-          if (lk && obj[lk] != null) return obj[lk];
+          const toDate = v => {
+            if (!v) return null;
+            if (/^\d{4}-\d{2}$/.test(v)) return new Date(v + '-01T00:00:00+09:00');
+            if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return new Date(v + 'T00:00:00+09:00');
+            const n = Number(v);
+            if (!Number.isNaN(n) && String(v).length >= 10) return new Date(n);
+            const d = new Date(v);
+            return Number.isNaN(d.getTime()) ? null : d;
+          };
+    
+          const dDate  = toDate(date);
+          const dStart = toDate(start) || dDate;
+          const dEnd   = toDate(end);
+    
+          return {
+            raw: x,
+            title: String(title || '(無題)'),
+            start: dStart,
+            end: dEnd,
+            baseDate: dDate || dStart || null,
+            location,
+            note
+          };
+        }).filter(x => x.baseDate);
+      }
+    
+      // 2) ← ここが追加： { days, rows } のマトリクス形式に対応
+      // 例:
+      // {
+      //   "days": ["2025-09-01", ...],
+      //   "rows": [
+      //     { "employee_id": "...", "employee_name": "田中", "row_index": 1,
+      //       "cells": { "2025-09-01": { "am": "大田区", "pm": "" }, ... } }
+      //   ]
+      // }
+      if (json && Array.isArray(json.days) && Array.isArray(json.rows)) {
+        const items = [];
+        for (const row of json.rows) {
+          const emp = row.employee_name || row.name || '（未割当）';
+          const cells = row.cells || {};
+          for (const d of json.days) {
+            const cell = cells[d];
+            if (!cell) continue;
+            // am/pm のどちらか（両方ある場合は改行で連結）
+            const titles = [cell.am, cell.pm].filter(Boolean);
+            if (titles.length === 0) continue;
+    
+            // 1行＝1日1従業員のイベントとみなしてアイテム化
+            items.push({
+              raw: { ...row, date: d, cell },
+              employee_name: emp,         // ← 後段の extractEmployeeName で拾えるように付与
+              title: titles.join('\n'),   // 例: "大田区\n品川区"
+              start: new Date(d + 'T00:00:00+09:00'),
+              end: null,
+              baseDate: new Date(d + 'T00:00:00+09:00'),
+              location: '',               // 必要なら cell.location などに合わせて拡張
+              note: ''                    // 必要なら備考を入れる
+            });
+          }
         }
-        return undefined;
-      };
+        return items;
+      }
     
-      // 各要素を {title, start, end, date, meta} に寄せる
-      return arr.map(x => {
-        const title = pick(x, ['title','summary','name','subject']) ?? '';
-        // 日付/開始/終了の各パターンをざっくり吸収
-        const date  = pick(x, ['date','day','dt']);
-        const start = pick(x, ['start','start_at','startAt','start_time','startTime','from']);
-        const end   = pick(x, ['end','end_at','endAt','end_time','endTime','to']);
-        const location = pick(x, ['location','place','where']);
-        const note = pick(x, ['note','notes','memo','description']);
-    
-        // 文字列→Date（JST前提で標準化）
-        const toDate = v => {
-          if (!v) return null;
-          // YYYY-MM / YYYY-MM-DD / ISO / epoch をゆるく対応
-          if (/^\d{4}-\d{2}$/.test(v)) return new Date(v + '-01T00:00:00+09:00');
-          if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return new Date(v + 'T00:00:00+09:00');
-          const n = Number(v);
-          if (!Number.isNaN(n) && String(v).length >= 10) return new Date(n);
-          const d = new Date(v);
-          return Number.isNaN(d.getTime()) ? null : d;
-        };
-    
-        const dDate  = toDate(date);
-        const dStart = toDate(start) || dDate;
-        const dEnd   = toDate(end);
-    
-        return {
-          raw: x,
-          title: String(title || '(無題)'),
-          start: dStart,
-          end: dEnd,
-          // “日付のみ”のデータも扱えるように基準日を保持
-          baseDate: dDate || dStart || null,
-          location: location || '',
-          note: note || ''
-        };
-      }).filter(x => x.baseDate);
+      // 3) 合致しなければ空
+      return [];
     }
-    
+
     function fmtDate(d) {
       if (!d) return '';
       const y = d.getFullYear();
