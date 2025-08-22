@@ -245,44 +245,45 @@
       return { colDefs, rowData: rows };
     }
     
-    let matrixGridApi = null;
-    
-    async function renderMatrix(items, ym) {
-      const { colDefs, rowData } = buildMatrix(items, ym);
-    
-      // すでに作っていれば差し替え
-      if (matrixGridApi) {
-        matrixGridApi.setColumnDefs(colDefs);
-        matrixGridApi.setGridOption('rowData', rowData);
-        matrixGridApi.refreshClientSideRowModel();
-        return;
-      }
-    
-      const gridOptions = {
-        columnDefs: colDefs,
-        rowData,
-      
-        defaultColDef: {
-          editable: true,          // 貼り付け先は editable 必須
-          resizable: true,
-        },
-        enableRangeSelection: true,      // 範囲選択（矩形）
-        suppressCopyRowsToClipboard: true, // 行コピーよりセルコピー優先
-        undoRedoCellEditing: true,
-        clipboardDelimiter: '\t',
-        processCellForClipboard: p => p.value,
-        processCellFromClipboard: p => p.value,
-        onPasteStart: e => {},
-        onPasteEnd:   e => {},
-      };
-    
-      // 初回描画後に先頭セルへフォーカス（キーボードコピー用）
-      const gridDiv = document.getElementById('matrixGrid');
-      const { Grid } = await import('https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.auto.esm.min.js');
-      const grid = new Grid(gridDiv, gridOptions);
-      matrixGridApi = grid.api;
-      +matrixGridApi.setFocusedCell(0, 'name'); // ← 何か1セルにフォーカスを置く
-    }
+let matrixGridApi = null;
+
+async function renderMatrix(items, ym) {
+  const { colDefs, rowData } = buildMatrix(items, ym);
+
+  if (matrixGridApi) {
+    matrixGridApi.setColumnDefs(colDefs);
+    matrixGridApi.setGridOption('rowData', rowData);
+    matrixGridApi.refreshClientSideRowModel();
+    return;
+  }
+
+  const gridDiv = document.getElementById('matrixGrid');
+  const { Grid } = await import('https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.auto.esm.min.js');
+
+  const gridOptions = {
+    columnDefs: colDefs,
+    rowData,
+    defaultColDef: { editable: true, resizable: true },
+    enableRangeSelection: true,
+    suppressCopyRowsToClipboard: true,
+    undoRedoCellEditing: true,
+    clipboardDelimiter: '\t',
+    processCellForClipboard: p => p.value,
+    processCellFromClipboard: p => p.value,
+
+    // ← ここでAPIを受け取り、準備完了後にフォーカスを置く
+    onGridReady: (params) => {
+      matrixGridApi = params.api;                  // ← これが正しいAPIの取り方
+      // 初回データ描画後に安全にフォーカス
+      requestAnimationFrame(() => {
+        matrixGridApi.setFocusedCell(0, 'name');
+      });
+    },
+  };
+
+  new Grid(gridDiv, gridOptions); // 戻り値は使わない（void）
+}
+
 
     function normalizeSchedules(json) {
       // 1) すでに配列や {items|data|schedules} 形式なら従来処理
