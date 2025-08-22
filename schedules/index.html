@@ -4,17 +4,13 @@
   <meta charset="UTF-8" />
   <title>Supabase Edge Function テスト</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- head 内（CDN） -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
+
+  <!-- ▼ Handsontable（CDN） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
+
   <style>
-    /* セル折返し（複数予定を改行で表示する時に便利） */
-    .ag-theme-alpine .ag-cell {
-      white-space: pre-wrap;
-      line-height: 1.2;
-    }
-  </style>
-  <style>
+    /* セル折返し（複数予定を改行で表示） */
+    .htCore td { white-space: pre-wrap; line-height: 1.2; }
     body{font-family:system-ui, sans-serif; max-width:860px; margin:24px auto; padding:0 12px;}
     fieldset{margin:12px 0; padding:12px;}
     label{display:block; margin:6px 0 2px;}
@@ -74,13 +70,14 @@
         <div id="sched-calendar"></div>
       </div>
     </div>
-    <!-- body 内・表示セクション（お好みの位置に） -->
+
     <h2 style="margin:16px 0 8px">従業員 × 日付 マトリクス</h2>
-    <div id="matrixGrid" class="ag-theme-alpine" style="height: 520px; width: 100%;"></div>
+    <div id="matrixGrid" style="height:520px;width:100%;"></div>
   </fieldset>
 
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    import Handsontable from 'https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js';
 
     let supabase = null;
 
@@ -101,7 +98,6 @@
       supabase = createClient(url, anon);
       out.textContent = 'Supabase 初期化完了';
       supabase.auth.getSession().then(({ data: { session }}) => setUser(session?.user ?? null));
-      // セッション変化を監視
       supabase.auth.onAuthStateChange((evt, session) => setUser(session?.user ?? null));
     });
 
@@ -119,15 +115,13 @@
 
     // パスワードでサインアップ
     $('#signup-pw').addEventListener('click', async () => {
-      if (!supabase) return alert('先に「Supabase 初期化」を押してください');
+      if (!supabase) return alert('先に「Supーム゙ース 初期化」を押してください');
       const email = $('#email').value.trim();
       const password = $('#password').value;
       out.textContent = 'サインアップ中...';
       const { data, error } = await supabase.auth.signUp({ email, password,
-      options: {
-        // ← ここをあなたの最終着地点に（GitHub Pages の repo パス込み）
-        emailRedirectTo: 'https://setagaya4856.github.io/csv/schedules/'
-      } });
+        options: { emailRedirectTo: 'https://setagaya4856.github.io/csv/schedules/' }
+      });
       if (error) out.textContent = 'エラー: ' + error.message;
       else out.textContent = 'サインアップ完了。メールの確認が必要な場合があります。';
       setUser(data.user);
@@ -140,9 +134,7 @@
       out.textContent = 'マジックリンク送信中...';
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: {
-          emailRedirectTo: location.origin  // 認証後に戻るURL（Auth設定にも登録を）
-        }
+        options: { emailRedirectTo: location.origin }
       });
       out.textContent = error ? ('エラー: ' + error.message) : 'メールを確認してリンクを開いてください';
     });
@@ -155,7 +147,7 @@
       out.textContent = 'ログアウトしました';
     });
 
-    // 関数呼び出し
+    // ====== Schedules 呼び出し ======
     $('#run').addEventListener('click', async () => {
       if (!supabase) return alert('先に「Supabase 初期化」を押してください');
       out.textContent = '呼び出し中...';
@@ -173,37 +165,26 @@
         });
         const json = await res.json();
         out.textContent = JSON.stringify(json, null, 2);
-        renderSchedules(json, month);                      // ← 追加：一覧 & カレンダー描画
-        renderMatrix(normalizeSchedules(json), month); // ← 追加（同じ正規化関数を再利用）
+        renderSchedules(json, month);
+        renderMatrixHot(normalizeSchedules(json), month); // ← Handsontable描画
       } catch (e) {
         out.textContent = 'Fetchエラー: ' + e.message;
       }
     });
-    // ===== スケジュール描画ユーティリティ =====
-    
-    // ===== AG Grid で「縦=従業員、横=日付」の表を描く =====
-    
-    // ★ ここをあなたのデータ構造に合わせて変更（従業員名のキーを返す）
+
+    // ====== マトリクス（Handsontable） ======
+    // 既存 buildMatrix を活かしつつ、2次元配列に詰め替え
+    const CELL_MODE = 'titles';
     function extractEmployeeName(item) {
       const r = item.raw || {};
-      // normalizeSchedules で employee_name を直付けしているのでまずそれを見る
       return item.employee_name || r.employee_name || r.employee || r.user || r.name || r.assignee || '（未割当）';
     }
-    
-    // ★ セル表示モード（'count' | 'first' | 'titles' から選択）
-    const CELL_MODE = 'titles'; 
-    // - 'count'  : その日の予定件数（数値）
-    // - 'first'  : その日の最初の予定タイトル
-    // - 'titles' : その日の全予定タイトルを改行で連結
-    
+
     function buildMatrix(items, ym) {
-      // 当月の全日付列を作成
       const [y, m] = ym.split('-').map(Number);
-      const first = new Date(y, m - 1, 1);
       const last = new Date(y, m, 0);
       const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
-    
-      // 従業員ごと→日付ごとの予定配列
+
       const byEmp = new Map();
       for (const it of items) {
         const emp = extractEmployeeName(it);
@@ -212,8 +193,7 @@
         if (!byEmp.get(emp)[d]) byEmp.get(emp)[d] = [];
         byEmp.get(emp)[d].push(it);
       }
-    
-      // 行データ生成
+
       const rows = [];
       for (const [emp, perDay] of byEmp) {
         const row = { name: emp };
@@ -223,73 +203,69 @@
             row[d] = arr.length || '';
           } else if (CELL_MODE === 'first') {
             row[d] = arr.length ? arr[0].title : '';
-          } else { // 'titles'
+          } else {
             row[d] = arr.map(a => a.title).join('\n');
           }
         }
         rows.push(row);
       }
-    
-      // 列定義（Name + 1..N日）
+
       const colDefs = [
-        { headerName: '名前', field: 'name', pinned: 'left', width: 160 },
-        ...days.map(d => ({
-          headerName: String(d),
-          field: String(d),
-          width: 110,
-          editable: true,              // セル直接編集OK（貼り付けもOK）
-          cellEditor: 'agLargeTextCellEditor', // 改行編集したいときに便利
-        })),
+        { headerName: '名前', field: 'name' },
+        ...days.map(d => ({ headerName: String(d), field: String(d) })),
       ];
-    
-      return { colDefs, rowData: rows };
+      return { colDefs, rowData: rows, days };
     }
-    
-let matrixGridApi = null;
 
-async function renderMatrix(items, ym) {
-  const { colDefs, rowData } = buildMatrix(items, ym);
+    let hot = null;
 
-  if (matrixGridApi) {
-    matrixGridApi.setColumnDefs(colDefs);
-    matrixGridApi.setGridOption('rowData', rowData);
-    matrixGridApi.refreshClientSideRowModel();
-    return;
-  }
+    function renderMatrixHot(items, ym) {
+      const { colDefs, rowData, days } = buildMatrix(items, ym);
 
-  const gridDiv = document.getElementById('matrixGrid');
-  const { Grid } = await import('https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.auto.esm.min.js');
-
-  const gridOptions = {
-    columnDefs: colDefs,
-    rowData,
-    defaultColDef: { editable: true, resizable: true },
-    enableRangeSelection: true,
-    suppressCopyRowsToClipboard: true,
-    undoRedoCellEditing: true,
-    clipboardDelimiter: '\t',
-    processCellForClipboard: p => p.value,
-    processCellFromClipboard: p => p.value,
-
-    // ← ここでAPIを受け取り、準備完了後にフォーカスを置く
-    onGridReady: (params) => {
-      matrixGridApi = params.api;                  // ← これが正しいAPIの取り方
-      // 初回データ描画後に安全にフォーカス
-      requestAnimationFrame(() => {
-        matrixGridApi.setFocusedCell(0, 'name');
+      // 2次元配列へ変換（[ [名前, 1,2,3,...], ... ]）
+      const colHeaders = colDefs.map(c => c.headerName);
+      const data = rowData.map(r => {
+        const row = [r.name];
+        for (const d of days) row.push(r[d] ?? '');
+        return row;
       });
-    },
-  };
 
-  new Grid(gridDiv, gridOptions); // 戻り値は使わない（void）
-}
+      const container = document.getElementById('matrixGrid');
 
+      if (hot) {
+        hot.updateSettings({ data, colHeaders });
+        hot.render();
+        return;
+      }
 
+      hot = new Handsontable(container, {
+        data,
+        colHeaders,
+        rowHeaders: true,
+        contextMenu: true,           // 右クリックメニュー
+        manualRowResize: true,
+        manualColumnResize: true,
+        licenseKey: 'non-commercial-and-evaluation', // 評価/非商用
+
+        // Excelっぽい操作
+        fillHandle: true,            // オートフィル（ドラッグ複製）
+        copyPaste: true,             // クリップボード
+        selectionMode: 'multiple',   // 複数範囲選択OK
+
+        // 見やすさ調整
+        stretchH: 'all',
+        height: 520,
+        colWidths: (index) => index === 0 ? 160 : 110,
+        cells: (row, col) => {
+          // 1列目（名前）は編集不可
+          if (col === 0) return { readOnly: true };
+        }
+      });
+    }
+
+    // ====== スケジュール：整形・表示（既存） ======
     function normalizeSchedules(json) {
-      // 1) すでに配列や {items|data|schedules} 形式なら従来処理
-      const arr0 = Array.isArray(json)
-        ? json
-        : (json?.items || json?.data || json?.schedules || null);
+      const arr0 = Array.isArray(json) ? json : (json?.items || json?.data || json?.schedules || null);
       if (arr0) {
         return arr0.map(x => {
           const pick = (obj, keys) => {
@@ -306,7 +282,7 @@ async function renderMatrix(items, ym) {
           const end   = pick(x, ['end','end_at','endAt','end_time','endTime','to']);
           const location = pick(x, ['location','place','where']) || '';
           const note = pick(x, ['note','notes','memo','description']) || '';
-    
+
           const toDate = v => {
             if (!v) return null;
             if (/^\d{4}-\d{2}$/.test(v)) return new Date(v + '-01T00:00:00+09:00');
@@ -316,11 +292,11 @@ async function renderMatrix(items, ym) {
             const d = new Date(v);
             return Number.isNaN(d.getTime()) ? null : d;
           };
-    
+
           const dDate  = toDate(date);
           const dStart = toDate(start) || dDate;
           const dEnd   = toDate(end);
-    
+
           return {
             raw: x,
             title: String(title || '(無題)'),
@@ -333,12 +309,8 @@ async function renderMatrix(items, ym) {
         }).filter(x => x.baseDate);
       }
 
-      // ------ ここから { days, rows } 形式に強化対応 ------
       if (json && Array.isArray(json.rows)) {
-        // 日付正規化: 先頭10文字（YYYY-MM-DD）を抜き出して比較
         const normDay = (s) => (String(s || '').trim().slice(0, 10));
-    
-        // もし days が無くても cells のキーから拾って動くようにする
         const daysFromRows = (() => {
           const set = new Set();
           for (const row of json.rows) {
@@ -347,33 +319,25 @@ async function renderMatrix(items, ym) {
           }
           return Array.from(set).sort();
         })();
-    
-        const days = Array.isArray(json.days) && json.days.length
-          ? json.days.map(normDay)
-          : daysFromRows;
-    
+        const days = Array.isArray(json.days) && json.days.length ? json.days.map(normDay) : daysFromRows;
+
         const items = [];
         for (const row of json.rows) {
           const emp = row.employee_name || row.name || '（未割当）';
           const cells = row.cells || {};
-    
-          // cells 側のキーをすべて走査（days と一致しなくても拾える）
           for (const k of Object.keys(cells)) {
             const d = normDay(k);
             if (!d) continue;
-            // 月フィルタは後段（filterByMonth）がやるので、ここでは生成だけ
             const cell = cells[k] || {};
-            // am/pm 以外に null/undefined/空白の可能性を吸収
             const toTitle = v => (v == null ? '' : String(v).trim());
             const titles = [toTitle(cell.am), toTitle(cell.pm)].filter(t => t !== '');
-    
             if (titles.length === 0) continue;
-    
+
             items.push({
               raw: { ...row, date: d, cell },
               employee_name: emp,
               title: titles.join('\n'),
-              start: new Date(`${d}T00:00:00`), // ローカル扱いでOK（後段は年月で判定）
+              start: new Date(`${d}T00:00:00`),
               end: null,
               baseDate: new Date(`${d}T00:00:00`),
               location: '',
@@ -383,8 +347,6 @@ async function renderMatrix(items, ym) {
         }
         return items;
       }
-    
-      // 3) 合致しなければ空
       return [];
     }
 
@@ -402,8 +364,7 @@ async function renderMatrix(items, ym) {
       const mm = String(d.getMinutes()).padStart(2,'0');
       return `${hh}:${mm}`;
     }
-    
-    // 指定月（YYYY-MM）内に入るものだけ抽出（baseDate で判定）
+
     function filterByMonth(items, ym) {
       const [y,m] = ym.split('-').map(Number);
       return items.filter(x => {
@@ -411,8 +372,7 @@ async function renderMatrix(items, ym) {
         return d && d.getFullYear() === y && (d.getMonth()+1) === m;
       });
     }
-    
-    // 一覧描画（日付ごとグループ）
+
     function renderList(items, mount) {
       if (!items.length) { mount.innerHTML = '<p>該当なし</p>'; return; }
       const groups = new Map();
@@ -421,12 +381,10 @@ async function renderMatrix(items, ym) {
         if (!groups.has(k)) groups.set(k, []);
         groups.get(k).push(it);
       }
-      // 各日ソート：開始時刻→タイトル
       for (const arr of groups.values()) {
         arr.sort((a,b) => (a.start?.getTime()||0) - (b.start?.getTime()||0)
           || a.title.localeCompare(b.title,'ja'));
       }
-    
       let html = '';
       for (const [day, arr] of groups) {
         html += `<h3 style="margin:12px 0 6px">${day}</h3>`;
@@ -444,26 +402,23 @@ async function renderMatrix(items, ym) {
       }
       mount.innerHTML = html;
     }
-    
+
     function escapeHtml(s){ return String(s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    
-    // 月間カレンダー描画（〇で件数表示）
+
     function renderCalendar(items, ym, mount) {
       const [year, month] = ym.split('-').map(Number);
       const first = new Date(year, month-1, 1);
       const last = new Date(year, month, 0);
-      const startCell = (first.getDay()+6)%7; // 月曜始まりにしたい時は調整
+      const startCell = (first.getDay()+6)%7;
       const totalDays = last.getDate();
-    
-      // 日毎件数
+
       const counts = Array.from({length: totalDays+1}, () => 0);
       for (const it of items) {
         const d = it.baseDate.getDate();
         counts[d] += 1;
       }
-    
-      // テーブル生成（シンプルCSS）
+
       let html = `
         <style>
           .cal {border-collapse:collapse;width:100%;}
@@ -478,7 +433,7 @@ async function renderMatrix(items, ym) {
             <th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
           </tr></thead><tbody>
       `;
-    
+
       let day = 1;
       for (let r=0; r<6 && day<=totalDays; r++) {
         html += '<tr>';
@@ -502,14 +457,14 @@ async function renderMatrix(items, ym) {
       html += '</tbody></table>';
       mount.innerHTML = html;
     }
-    
+
     function renderSchedules(json, ym) {
       const itemsAll = normalizeSchedules(json);
       const items = filterByMonth(itemsAll, ym);
       const listEl = document.getElementById('sched-list');
       const calEl = document.getElementById('sched-calendar');
       const sumEl = document.getElementById('sched-summary');
-    
+
       sumEl.textContent = `${ym} の予定: ${items.length}件（取得総数: ${itemsAll.length}件）`;
       renderList(items, listEl);
       renderCalendar(items, ym, calEl);
