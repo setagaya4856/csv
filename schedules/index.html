@@ -341,8 +341,6 @@ function renderMatrixHot(items, ym) {
   }
   const topRow    = ['名前', ...days.flatMap(d => [`${m}/${d}`, `${m}/${d}`])];
   const bottomRow = ['(dummy)', ...days.flatMap(() => ['午前','午後'])];
-  
-  const colHeaders = [topRow, bottomRow];
 
   hot = new Handsontable(container, {
     data,
