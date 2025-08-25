@@ -90,7 +90,6 @@
     const out = $('#output');
     const who = $('#who');
 
-    function log(msg){ out.textContent += (out.textContent ? "\n" : "") + msg; }
     function setUser(u){
       who.textContent = u ? `ログイン中: ${u.email}` : '未ログイン';
     }
@@ -245,7 +244,6 @@ function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
 }
     // ====== マトリクス（Handsontable） ======
     // 既存 buildMatrix を活かしつつ、2次元配列に詰め替え
-    const CELL_MODE = 'titles';
     function extractEmployeeName(item) {
       const r = item.raw || {};
       return item.employee_name || r.employee_name || r.employee || r.user || r.name || r.assignee || '（未割当）';
@@ -323,15 +321,6 @@ function classesByDate(ds, today) {
 function classesByValue(value) {
   const v = String(value ?? '');
   return v.includes('休') ? ['ht-holiday'] : [];
-}
-
-// cells コールバック用: 列の曜日/今日に応じたクラスを返す（名前列は readOnly）
-function makeCellsRule(colDates, today) {
-  return (row, col) => {
-    if (col === 0) return { readOnly: true, className: 'htDimmed' };
-    const base = classesByDate(colDates[col], today);
-    return base.length ? { className: base.join(' ') } : {};
-  };
 }
 
 // afterChange 用: 値で変わるクラス（ht-holiday）だけ付け外しする
@@ -601,7 +590,6 @@ function renderMatrixHot(items, ym) {
       const itemsAll = normalizeSchedules(json);
       const items = filterByMonth(itemsAll, ym);
       const listEl = document.getElementById('sched-list');
-      const calEl = document.getElementById('sched-calendar');
       const sumEl = document.getElementById('sched-summary');
 
       sumEl.textContent = `${ym} の予定: ${items.length}件（取得総数: ${itemsAll.length}件）`;
