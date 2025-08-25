@@ -67,14 +67,10 @@
     <button id="run">/functions/v1/schedules-get を叩く</button>
     <pre id="output">ここに結果が出ます</pre>
     <div id="sched-summary" style="margin:12px 0;color:#555;"></div>
-    <div class="row" style="gap:12px; width:95%; margin:0 auto;">
+    <div class="row" style="gap:12px; width:100%; margin:0 auto;">
       <div style="flex:1 1 380px;min-width:320px">
         <h2 style="margin:8px 0">スケジュール一覧</h2>
         <div id="sched-list"></div>
-      </div>
-      <div style="flex:1 1 380px;min-width:320px">
-        <h2 style="margin:8px 0">カレンダー</h2>
-        <div id="sched-calendar"></div>
       </div>
     </div>
 
@@ -516,58 +512,6 @@ function renderMatrixHot(items, ym) {
     function escapeHtml(s){ return String(s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-    function renderCalendar(items, ym, mount) {
-      const [year, month] = ym.split('-').map(Number);
-      const first = new Date(year, month-1, 1);
-      const last = new Date(year, month, 0);
-      const startCell = (first.getDay()+6)%7;
-      const totalDays = last.getDate();
-
-      const counts = Array.from({length: totalDays+1}, () => 0);
-      for (const it of items) {
-        const d = it.baseDate.getDate();
-        counts[d] += 1;
-      }
-
-      let html = `
-        <style>
-          .cal {border-collapse:collapse;width:100%;}
-          .cal th,.cal td{border:1px solid #ddd;text-align:right;padding:6px;vertical-align:top;height:60px;}
-          .cal th{background:#f3f4f6;text-align:center}
-          .dot{display:inline-block;min-width:1.6em;padding:.1em .5em;border-radius:999px;background:#e5e7eb;margin-left:4px;font-size:.85em}
-          .has .dot{background:#dbeafe}
-          .today{outline:2px solid #60a5fa;outline-offset:-2px;border-radius:4px}
-        </style>
-        <table class="cal">
-          <thead><tr>
-            <th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
-          </tr></thead><tbody>
-      `;
-
-      let day = 1;
-      for (let r=0; r<6 && day<=totalDays; r++) {
-        html += '<tr>';
-        for (let c=0; c<7; c++) {
-          const cellIndex = r*7 + c;
-          if (cellIndex < startCell || day > totalDays) {
-            html += '<td></td>';
-          } else {
-            const cnt = counts[day];
-            const cls = cnt ? 'has' : '';
-            const dstr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-            const isToday = (new Date().toISOString().slice(0,10) === dstr);
-            html += `<td class="${cls} ${isToday?'today':''}">
-              <div>${day}${cnt?`<span class="dot">${cnt}</span>`:''}</div>
-            </td>`;
-            day++;
-          }
-        }
-        html += '</tr>';
-      }
-      html += '</tbody></table>';
-      mount.innerHTML = html;
-    }
-
     function renderSchedules(json, ym) {
       const itemsAll = normalizeSchedules(json);
       const items = filterByMonth(itemsAll, ym);
@@ -577,7 +521,6 @@ function renderMatrixHot(items, ym) {
 
       sumEl.textContent = `${ym} の予定: ${items.length}件（取得総数: ${itemsAll.length}件）`;
       renderList(items, listEl);
-      renderCalendar(items, ym, calEl);
     }
   </script>
 </body>
