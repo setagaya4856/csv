@@ -220,59 +220,55 @@ async function pasteFromClipboard(hot) {
       const r = item.raw || {};
       return item.employee_name || r.employee_name || r.employee || r.user || r.name || r.assignee || '（未割当）';
     }
+    
+    function buildMatrixAmPm(items, ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const last = new Date(y, m, 0);
+  const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
 
-    function buildMatrix(items, ym) {
-      const [y, m] = ym.split('-').map(Number);
-      const last = new Date(y, m, 0);
-      const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
+  const byEmp = new Map();
+  for (const it of items) {
+    const emp = extractEmployeeName(it);
+    if (!byEmp.has(emp)) byEmp.set(emp, {});
+    const d = it.baseDate.getDate();
+    if (!byEmp.get(emp)[d]) byEmp.get(emp)[d] = { am: [], pm: [] };
+    // 午前/午後は何らかの基準で振り分ける必要あり
+    const hour = it.start?.getHours() ?? 0;
+    const key = hour < 12 ? 'am' : 'pm';
+    byEmp.get(emp)[d][key].push(it);
+  }
 
-      const byEmp = new Map();
-      for (const it of items) {
-        const emp = extractEmployeeName(it);
-        if (!byEmp.has(emp)) byEmp.set(emp, {});
-        const d = it.baseDate.getDate();
-        if (!byEmp.get(emp)[d]) byEmp.get(emp)[d] = [];
-        byEmp.get(emp)[d].push(it);
-      }
-
-      const rows = [];
-      for (const [emp, perDay] of byEmp) {
-        const row = { name: emp };
-        for (const d of days) {
-          const arr = perDay[d] || [];
-          if (CELL_MODE === 'count') {
-            row[d] = arr.length || '';
-          } else if (CELL_MODE === 'first') {
-            row[d] = arr.length ? arr[0].title : '';
-          } else {
-            row[d] = arr.map(a => a.title).join('\n');
-          }
-        }
-        rows.push(row);
-      }
-
-      const colDefs = [
-        { headerName: '名前', field: 'name' },
-        ...days.map(d => ({ headerName: String(d), field: String(d) })),
-      ];
-      return { colDefs, rowData: rows, days };
+  const rows = [];
+  for (const [emp, perDay] of byEmp) {
+    const row = [emp];
+    for (const d of days) {
+      const arrAm = perDay[d]?.am || [];
+      const arrPm = perDay[d]?.pm || [];
+      row.push(arrAm.map(a => a.title).join('\n')); // 午前
+      row.push(arrPm.map(a => a.title).join('\n')); // 午後
     }
+    rows.push(row);
+  }
+
+  // 1列目は名前
+  const colHeaders = ['名前'];
+  for (const d of days) {
+    colHeaders.push(`${m}/${d} 午前`);
+    colHeaders.push(`${m}/${d} 午後`);
+  }
+
+  return { colHeaders, data: rows };
+}
+
 
     let hot = null;
 
 function renderMatrixHot(items, ym) {
-  const { colDefs, rowData, days } = buildMatrix(items, ym);
-
-  const colHeaders = colDefs.map(c => c.headerName);
-  const data = rowData.map(r => {
-    const row = [r.name];
-    for (const d of days) row.push(r[d] ?? '');
-    return row;
-  });
+  const { colHeaders, data } = buildMatrixAmPm(items, ym);
 
   const container = document.getElementById('matrixGrid');
-  const maxRows = data.length;          // 行数を固定
-  const maxCols = colHeaders.length;    // 列数を固定（「名前」＋日数列）
+  const maxRows = data.length;
+  const maxCols = colHeaders.length;
 
   const commonSettings = {
     data,
