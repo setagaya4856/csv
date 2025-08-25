@@ -508,13 +508,18 @@ function applyValueRule(hot, row, col, value) {
     const targetCol = colDates.findIndex(d => d === todayStr); // am列（先に出てくる方）
     if (targetCol > 0) {
       // セル選択でスクロールさせる（左端へ寄る）
-      setTimeout(() => {
-        try {
-          hot.selectCell(0, targetCol, 0, targetCol, true); // scroll = true
-          // 選択ハイライトを消したい場合は次で解除
-          hot.deselectCell();
-        } catch {}
-      }, 0);
+ setTimeout(() => {
+   try {
+     // まず対象列がレンダリングされる位置まで持ってくる
+     if (hot.scrollViewportTo) hot.scrollViewportTo(0, targetCol);
+     const cell = hot.getCell(0, targetCol);
+     const holder = container.querySelector('.ht_master .wtHolder');
+     if (cell && holder) {
+       // セルの左端がホルダーの左端に来るようにスクロール
+       holder.scrollLeft = Math.max(0, cell.offsetLeft - 4); // 4px だけ余白
+     }
+   } catch {}
+ }, 0);
     }
   }
 }
