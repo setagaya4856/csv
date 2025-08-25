@@ -236,32 +236,51 @@
         hot.render();
         return;
       }
+hot = new Handsontable(container, {
+  data,
+  colHeaders,
+  rowHeaders: true,
+  licenseKey: 'non-commercial-and-evaluation',
 
-      hot = new Handsontable(container, {
-        data,
-        colHeaders,
-        rowHeaders: true,
-        contextMenu: true,           // 右クリックメニュー
-        manualRowResize: true,
-        manualColumnResize: true,
-        licenseKey: 'non-commercial-and-evaluation', // 評価/非商用
+  // ---- ここを置き換え ----
+  contextMenu: {
+    items: {
+      copy:       { name: 'コピー' },
+      cut:        { name: '切り取り' },
+      paste:      { name: '貼り付け' }, // ブラウザ制限で許可ダイアログが出る場合あり
 
-        // Excelっぽい操作
-        fillHandle: true,            // オートフィル（ドラッグ複製）
-        copyPaste: true,             // クリップボード
-        selectionMode: 'multiple',   // 複数範囲選択OK
+      '---------': Handsontable.plugins.ContextMenu.SEPARATOR,
 
-        // 見やすさ調整
-        stretchH: 'all',
-        height: 520,
-        colWidths: (index) => index === 0 ? 160 : 110,
-        cells: (row, col) => {
-          // 1列目（名前）は編集不可
-          if (col === 0) return { readOnly: true };
-        }
-      });
+      row_above:  { name: '上に行を挿入' },
+      row_below:  { name: '下に行を挿入' },
+      remove_row: { name: '行を削除' },
+
+      '---------2': Handsontable.plugins.ContextMenu.SEPARATOR,
+
+      col_right:  { name: '右に列を挿入' },   // ← 例えば「左に列」は入れない（=非表示）
+      remove_col: { name: '列を削除' },
+
+      '---------3': Handsontable.plugins.ContextMenu.SEPARATOR,
+
+      undo:       { name: '元に戻す' },
+      redo:       { name: 'やり直す' },
     }
+  },
+  // ---- ここまで ----
 
+  // Excelっぽい操作
+  fillHandle: true,
+  copyPaste: true,
+  selectionMode: 'multiple',
+
+  // 見やすさ
+  stretchH: 'all',
+  height: 520,
+  colWidths: (index) => index === 0 ? 160 : 110,
+
+  // 1列目（名前）は編集不可
+  cells: (row, col) => { if (col === 0) return { readOnly: true }; },
+});
     // ====== スケジュール：整形・表示（既存） ======
     function normalizeSchedules(json) {
       const arr0 = Array.isArray(json) ? json : (json?.items || json?.data || json?.schedules || null);
