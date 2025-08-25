@@ -260,66 +260,81 @@ async function pasteFromClipboard(hot) {
 
     let hot = null;
 
-    function renderMatrixHot(items, ym) {
-      const { colDefs, rowData, days } = buildMatrix(items, ym);
+function renderMatrixHot(items, ym) {
+  const { colDefs, rowData, days } = buildMatrix(items, ym);
 
-      // 2次元配列へ変換（[ [名前, 1,2,3,...], ... ]）
-      const colHeaders = colDefs.map(c => c.headerName);
-      const data = rowData.map(r => {
-        const row = [r.name];
-        for (const d of days) row.push(r[d] ?? '');
-        return row;
-      });
+  const colHeaders = colDefs.map(c => c.headerName);
+  const data = rowData.map(r => {
+    const row = [r.name];
+    for (const d of days) row.push(r[d] ?? '');
+    return row;
+  });
 
-      const container = document.getElementById('matrixGrid');
+  const container = document.getElementById('matrixGrid');
+  const maxRows = data.length;          // 行数を固定
+  const maxCols = colHeaders.length;    // 列数を固定（「名前」＋日数列）
 
-      if (hot) {
-        hot.updateSettings({ data, colHeaders });
-        hot.render();
-        return;
-      }hot = new Handsontable(container, {
-  data,
-  colHeaders,
-  rowHeaders: true,
-  licenseKey: 'non-commercial-and-evaluation',
+  const commonSettings = {
+    data,
+    colHeaders,
+    rowHeaders: true,
+    licenseKey: 'non-commercial-and-evaluation',
 
-  // ↓↓↓ ここを置き換え
-  contextMenu: {
-    items: {
-      copyCustom: {
-        name: 'コピー',
-        callback: () => copySelection(hot),
-        disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
-      },
-      cutCustom: {
-        name: '切り取り',
-        callback: () => cutSelection(hot),
-        disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
-      },
-      pasteCustom: {
-        name: '貼り付け',
-        callback: () => pasteFromClipboard(hot),
-        disabled: () => !navigator.clipboard?.readText
-      },
+    // ① 右クリックはコピー/切り取り/貼り付け/Undo/Redo のみ（既存）
+    contextMenu: {
+      items: {
+        copyCustom: {
+          name: 'コピー',
+          callback: () => copySelection(hot),
+          disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
+        },
+        cutCustom: {
+          name: '切り取り',
+          callback: () => cutSelection(hot),
+          disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
+        },
+        pasteCustom: {
+          name: '貼り付け',
+          callback: () => pasteFromClipboard(hot),
+          disabled: () => !navigator.clipboard?.readText
+        },
+        '--------': Handsontable.plugins.ContextMenu.SEPARATOR,
+        undo: { name: '元に戻す' },
+        redo: { name: 'やり直す' },
+      }
+    },
 
-      '--------': Handsontable.plugins.ContextMenu.SEPARATOR,
-      undo: { name: '元に戻す' },
-      redo: { name: 'やり直す' },
-    }
-  },
-  // ↑↑↑ ここまで
+    // ② 構造固定：自動拡張や API での追加/削除をブロック
+    maxRows,
+    maxCols,
+    // フィルハンドルで最下行を越えても行を増やさない
+    fillHandle: { autoInsertRow: false },
+    // 貼り付けが表外にはみ出す場合は切り捨て（maxRows/maxCols が効きます）
+    copyPaste: true,
+    selectionMode: 'multiple',
 
-  // Excelっぽい操作
-  fillHandle: true,
-  copyPaste: true,            // キーボードショートカットも有効（Ctrl/Cmd + C/V）
-  selectionMode: 'multiple',
+    // ③ 明示的にフックで拒否（プログラム側からの alter() も無効化）
+    beforeCreateRow: () => false,
+    beforeRemoveRow: () => false,
+    beforeCreateCol: () => false,
+    beforeRemoveCol: () => false,
 
-  stretchH: 'all',
-  height: 520,
-  colWidths: (index) => index === 0 ? 160 : 110,
-  cells: (row, col) => { if (col === 0) return { readOnly: true }; },
-});
-    }
+    // 表示まわり（既存）
+    stretchH: 'all',
+    height: 520,
+    colWidths: (index) => index === 0 ? 160 : 110,
+    cells: (row, col) => { if (col === 0) return { readOnly: true }; },
+  };
+
+  if (hot) {
+    hot.updateSettings(commonSettings);
+    hot.render();
+    return;
+  }
+
+  hot = new Handsontable(container, commonSettings);
+}
+
 
     // ====== スケジュール：整形・表示（既存） ======
     function normalizeSchedules(json) {
