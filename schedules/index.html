@@ -287,29 +287,22 @@ async function pasteFromClipboard(hot) {
   contextMenu: {
     items: {
       copyCustom: {
-        name: 'コピー（Clipboard API）',
+        name: 'コピー',
         callback: () => copySelection(hot),
         disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
       },
       cutCustom: {
-        name: '切り取り（Clipboard API）',
+        name: '切り取り',
         callback: () => cutSelection(hot),
         disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
       },
       pasteCustom: {
-        name: '貼り付け（Clipboard API）',
+        name: '貼り付け',
         callback: () => pasteFromClipboard(hot),
         disabled: () => !navigator.clipboard?.readText
       },
 
       '--------': Handsontable.plugins.ContextMenu.SEPARATOR,
-
-      row_above:  { name: '上に行を挿入' },
-      row_below:  { name: '下に行を挿入' },
-      remove_row: { name: '行を削除' },
-      remove_col: { name: '列を削除' },
-
-      '--------2': Handsontable.plugins.ContextMenu.SEPARATOR,
       undo: { name: '元に戻す' },
       redo: { name: 'やり直す' },
     }
