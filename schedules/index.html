@@ -258,156 +258,100 @@ async function pasteFromClipboard(hot) {
       return { colDefs, rowData: rows, days };
     }
 
-function buildMatrixAmPm(items, ym) {
-  const [y, m] = ym.split('-').map(Number);
-  const last = new Date(y, m, 0);
-  const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
+    let hot = null;
 
-  const byEmp = new Map();
-  const ensure = (emp, d) => {
-    if (!byEmp.has(emp)) byEmp.set(emp, new Map());
-    const perDay = byEmp.get(emp);
-    if (!perDay.has(d)) perDay.set(d, { am: '', pm: '' });
-    return perDay.get(d);
-  };
+    function renderMatrixHot(items, ym) {
+      const { colDefs, rowData, days } = buildMatrix(items, ym);
 
-  const decideSlot = (it) => {
-    const cell = it?.raw?.cell;
-    if (cell) {
-      const am = (cell.am ?? '').toString().trim();
-      const pm = (cell.pm ?? '').toString().trim();
-      if (am && !pm) return 'am';
-      if (!am && pm) return 'pm';
-      if (am && pm) return 'am';
-    }
-    if (it?.start instanceof Date && !isNaN(it.start)) {
-      return it.start.getHours() < 12 ? 'am' : 'pm';
-    }
-    const t = (it?.title || '').toString();
-    if (/午前|AM/i.test(t) && !/午後|PM/i.test(t)) return 'am';
-    if (/午後|PM/i.test(t) && !/午前|AM/i.test(t)) return 'pm';
-    return 'am';
-  };
+      // 2次元配列へ変換（[ [名前, 1,2,3,...], ... ]）
+      const colHeaders = colDefs.map(c => c.headerName);
+      const data = rowData.map(r => {
+        const row = [r.name];
+        for (const d of days) row.push(r[d] ?? '');
+        return row;
+      });
 
-  for (const it of items) {
-    const d = it.baseDate?.getDate?.();
-    if (!d) continue;
-    const emp = extractEmployeeName(it);
-    const slot = decideSlot(it);
-    const box = ensure(emp, d);
-    const val = (it.title || '').toString().trim();
-    if (!val) continue;
-    box[slot] = box[slot] ? (box[slot] + '\n' + val) : val;
-  }
+      const container = document.getElementById('matrixGrid');
 
-  // ===== ヘッダー定義（2段組み） =====
-  const topRow = ['名前'];
-  const bottomRow = ['名前']; // 「名前」は1段で表示したいのでダミー重複
-  for (const d of days) {
-    const label = `${m}/${d}`;
-    topRow.push(label, label);
-    bottomRow.push('午前', '午後');
-  }
-
-  // 2段配列を渡すと multi-level header になる
-  const colHeaders = [topRow, bottomRow];
-
-  // データ配列
-  const data = [];
-  for (const [emp, perDay] of byEmp) {
-    const row = [emp];
-    for (const d of days) {
-      const box = perDay.get(d) || { am: '', pm: '' };
-      row.push(box.am || '');
-      row.push(box.pm || '');
-    }
-    data.push(row);
-  }
-
-  return { colHeaders, data, days };   // ← days も返すようにする！
-}
-
-let hot = null;
-
-function renderMatrixHot(items, ym) {
-  const { colHeaders, data, days } = buildMatrixAmPm(items, ym);
-
-  const container = document.getElementById('matrixGrid');
-
-  if (hot) {
-    hot.updateSettings({ data, nestedHeaders: colHeaders });
-    hot.render();
-    return;
-  }
-
-  hot = new Handsontable(container, {
-    data,
-    nestedHeaders: colHeaders,   // 2段ヘッダーを表示
-    rowHeaders: true,
-    licenseKey: 'non-commercial-and-evaluation',
-
-    // 編集体験
-    selectionMode: 'multiple',
-    copyPaste: true,
-    pasteMode: 'overwrite',
-    fillHandle: { autoInsertRow: false },
-
-    // 見た目
-    stretchH: 'all',
-    height: 520,
-    colWidths: (i) => i === 0 ? 160 : 95,
-
-    // 名前列は完全ReadOnly
-    cells: (row, col) => {
-      if (col === 0) return { readOnly: true, className: 'htDimmed' };
-    },
-
-    // 右クリックメニュー：挿入/削除 なし（内容変更のみ）
-    contextMenu: {
-      items: {
-        copy: { name: 'コピー' },
-        cut:  { name: '切り取り' },
-        paste:{ name: '貼り付け' },
-        '---------': Handsontable.plugins.ContextMenu.SEPARATOR,
-        undo: { name: '元に戻す' },
-        redo: { name: 'やり直す' },
+      if (hot) {
+        hot.updateSettings({ data, colHeaders });
+        hot.render();
+        return;
       }
-    },
-  });
 
-  // 追加・削除はフックで全面禁止
-  hot.addHook('beforeCreateRow', () => false);
-  hot.addHook('beforeCreateCol', () => false);
-  hot.addHook('beforeRemoveRow', () => false);
-  hot.addHook('beforeRemoveCol', () => false);
+hot = new Handsontable(container, {
+  data,
+  colHeaders,
+  rowHeaders: true,
+  licenseKey: 'non-commercial-and-evaluation',
 
-  // 貼り付け：名前列ブロック＋上書き範囲をグリッド内にトリム
-  hot.addHook('beforePaste', (data, coords) => {
-    const maxRow = hot.countRows() - 1;
-    const maxCol = hot.countCols() - 1;
-    const [start] = coords;
+  selectionMode: 'multiple',
+  copyPaste: true,
+  pasteMode: 'overwrite',
+  fillHandle: { autoInsertRow: false },
+  manualRowResize: true,
+  manualColumnResize: true,
 
-    if (start.col === 0) return false; // 名前列に貼り付け禁止
+  stretchH: 'all',
+  height: 520,
+  colWidths: (index) => index === 0 ? 160 : 110,
 
-    const rows = data.length;
-    const cols = data[0] ? data[0].length : 0;
-    const allowRows = Math.max(0, Math.min(rows, maxRow - start.row + 1));
-    const allowCols = Math.max(0, Math.min(cols, maxCol - start.col + 1));
-    if (allowRows <= 0 || allowCols <= 0) return false;
-
-    data.length = allowRows;
-    for (let r = 0; r < allowRows; r++) {
-      if (data[r].length > allowCols) data[r].length = allowCols;
+  // === セル単位の設定 ===
+  cells: (row, col) => {
+    if (col === 0) {
+      return { readOnly: true, className: 'htDimmed' }; 
+      // htDimmed: グレーアウト風の見た目に（任意）
     }
-    coords.length = 1;
-    return undefined;
-  });
+  },
 
-  // オートフィルで名前列に触れない
-  hot.addHook('beforeAutofill', (start, end) => {
-    if (start.col === 0 || end.col === 0) return false;
-  });
-}
+  // === 右クリックメニュー（挿入/削除は削除済み） ===
+  contextMenu: {
+    items: {
+      copy: { name: 'コピー' },
+      cut:  { name: '切り取り' },
+      paste: { name: '貼り付け' },
+      '---------': Handsontable.plugins.ContextMenu.SEPARATOR,
+      undo: { name: '元に戻す' },
+      redo: { name: 'やり直す' },
+    }
+  },
+});
+
+// === 行列の追加削除は禁止 ===
+hot.addHook('beforeCreateRow', () => false);
+hot.addHook('beforeCreateCol', () => false);
+hot.addHook('beforeRemoveRow', () => false);
+hot.addHook('beforeRemoveCol', () => false);
+
+// === 貼り付け時：名前列(0列目)を守る ===
+hot.addHook('beforePaste', (data, coords) => {
+  const maxRow = hot.countRows() - 1;
+  const maxCol = hot.countCols() - 1;
+  const [start] = coords;
+
+  // 名前列に貼り付けが始まる or はみ出して col=0 を含む場合はNG
+  if (start.col === 0) return false;
+
+  const rows = data.length;
+  const cols = data[0] ? data[0].length : 0;
+
+  // 貼り先が名前列にかぶる分を切り落とす
+  const allowCols = Math.max(0, Math.min(cols, maxCol - start.col + 1));
+  if (allowCols <= 0) return false;
+
+  for (let r = 0; r < rows; r++) {
+    if (data[r].length > allowCols) data[r].length = allowCols;
+  }
+  coords.length = 1;
+  return undefined;
+});
+
+// === オートフィルで名前列を上書きさせない ===
+hot.addHook('beforeAutofill', (start, end, data) => {
+  if (start.col === 0 || end.col === 0) return false;
+});
+    }
+
     // ====== スケジュール：整形・表示（既存） ======
     function normalizeSchedules(json) {
       const arr0 = Array.isArray(json) ? json : (json?.items || json?.data || json?.schedules || null);
@@ -494,7 +438,7 @@ function renderMatrixHot(items, ym) {
       }
       return [];
     }
-    
+
     function fmtDate(d) {
       if (!d) return '';
       const y = d.getFullYear();
