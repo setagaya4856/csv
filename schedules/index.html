@@ -277,77 +277,54 @@ async function pasteFromClipboard(hot) {
         hot.updateSettings({ data, colHeaders });
         hot.render();
         return;
-      }
-hot = new Handsontable(container, {
+      }hot = new Handsontable(container, {
   data,
   colHeaders,
   rowHeaders: true,
   licenseKey: 'non-commercial-and-evaluation',
 
-  selectionMode: 'multiple',
-  copyPaste: true,
-  pasteMode: 'overwrite',
-  fillHandle: { autoInsertRow: false },
-  manualRowResize: true,
-  manualColumnResize: true,
-
-  stretchH: 'all',
-  height: 520,
-  colWidths: (index) => index === 0 ? 160 : 110,
-
-  // === セル単位の設定 ===
-  cells: (row, col) => {
-    if (col === 0) {
-      return { readOnly: true, className: 'htDimmed' }; 
-      // htDimmed: グレーアウト風の見た目に（任意）
-    }
-  },
-
-  // === 右クリックメニュー（挿入/削除は削除済み） ===
+  // ↓↓↓ ここを置き換え
   contextMenu: {
     items: {
-      copy: { name: 'コピー' },
-      cut:  { name: '切り取り' },
-      paste: { name: '貼り付け' },
-      '---------': Handsontable.plugins.ContextMenu.SEPARATOR,
+      copyCustom: {
+        name: 'コピー（Clipboard API）',
+        callback: () => copySelection(hot),
+        disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
+      },
+      cutCustom: {
+        name: '切り取り（Clipboard API）',
+        callback: () => cutSelection(hot),
+        disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
+      },
+      pasteCustom: {
+        name: '貼り付け（Clipboard API）',
+        callback: () => pasteFromClipboard(hot),
+        disabled: () => !navigator.clipboard?.readText
+      },
+
+      '--------': Handsontable.plugins.ContextMenu.SEPARATOR,
+
+      row_above:  { name: '上に行を挿入' },
+      row_below:  { name: '下に行を挿入' },
+      remove_row: { name: '行を削除' },
+      remove_col: { name: '列を削除' },
+
+      '--------2': Handsontable.plugins.ContextMenu.SEPARATOR,
       undo: { name: '元に戻す' },
       redo: { name: 'やり直す' },
     }
   },
-});
+  // ↑↑↑ ここまで
 
-// === 行列の追加削除は禁止 ===
-hot.addHook('beforeCreateRow', () => false);
-hot.addHook('beforeCreateCol', () => false);
-hot.addHook('beforeRemoveRow', () => false);
-hot.addHook('beforeRemoveCol', () => false);
+  // Excelっぽい操作
+  fillHandle: true,
+  copyPaste: true,            // キーボードショートカットも有効（Ctrl/Cmd + C/V）
+  selectionMode: 'multiple',
 
-// === 貼り付け時：名前列(0列目)を守る ===
-hot.addHook('beforePaste', (data, coords) => {
-  const maxRow = hot.countRows() - 1;
-  const maxCol = hot.countCols() - 1;
-  const [start] = coords;
-
-  // 名前列に貼り付けが始まる or はみ出して col=0 を含む場合はNG
-  if (start.col === 0) return false;
-
-  const rows = data.length;
-  const cols = data[0] ? data[0].length : 0;
-
-  // 貼り先が名前列にかぶる分を切り落とす
-  const allowCols = Math.max(0, Math.min(cols, maxCol - start.col + 1));
-  if (allowCols <= 0) return false;
-
-  for (let r = 0; r < rows; r++) {
-    if (data[r].length > allowCols) data[r].length = allowCols;
-  }
-  coords.length = 1;
-  return undefined;
-});
-
-// === オートフィルで名前列を上書きさせない ===
-hot.addHook('beforeAutofill', (start, end, data) => {
-  if (start.col === 0 || end.col === 0) return false;
+  stretchH: 'all',
+  height: 520,
+  colWidths: (index) => index === 0 ? 160 : 110,
+  cells: (row, col) => { if (col === 0) return { readOnly: true }; },
 });
     }
 
