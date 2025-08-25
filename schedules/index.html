@@ -28,6 +28,10 @@
     .holiday-cell {
   background-color: #ffe5e5 !important; /* 薄いピンク */
 }
+  .ht-today  { background:#fff9db !important; }  /* 今日: 薄い黄 */
+  .ht-sat    { background:#e6ffed !important; }  /* 土曜: 緑 */
+  .ht-sun    { background:#ffe5e5 !important; }  /* 日曜: ピンク */
+  .ht-holiday{ background:#ffe5e5 !important; }  /* 「休」含む: ピンク */
   </style>
 </head>
 <body>
@@ -233,6 +237,13 @@ async function pasteFromClipboard(hot) {
     hot.setDataAtCell(startRow + i, startCol + j, val);
   }));
 }
+function todayStrJST() {
+  const now = new Date();
+  const tzOffsetMs = now.getTimezoneOffset() * 60000;
+  // JST(+09:00) に補正して YYYY-MM-DD に
+  const jst = new Date(now.getTime() - tzOffsetMs + 9*60*60000);
+  return jst.toISOString().slice(0,10);
+}
     
 function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
   for (let r = r1; r <= r2; r++) {
@@ -249,7 +260,6 @@ function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
       const r = item.raw || {};
       return item.employee_name || r.employee_name || r.employee || r.user || r.name || r.assignee || '（未割当）';
     }
-    
     function buildMatrixAmPm(items, ym) {
   const [y, m] = ym.split('-').map(Number);
   const last = new Date(y, m, 0);
@@ -261,13 +271,12 @@ function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
     if (!byEmp.has(emp)) byEmp.set(emp, {});
     const d = it.baseDate.getDate();
     if (!byEmp.get(emp)[d]) byEmp.get(emp)[d] = { am: [], pm: [] };
-    // 午前/午後は何らかの基準で振り分ける必要あり
     const hour = it.start?.getHours() ?? 0;
     const key = hour < 12 ? 'am' : 'pm';
     byEmp.get(emp)[d][key].push(it);
   }
 
-  const rows = [];
+  const data = [];
   for (const [emp, perDay] of byEmp) {
     const row = [emp];
     for (const d of days) {
@@ -276,28 +285,30 @@ function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
       row.push(arrAm.map(a => a.title).join('\n')); // 午前
       row.push(arrPm.map(a => a.title).join('\n')); // 午後
     }
-    rows.push(row);
+    data.push(row);
   }
 
-  // 1列目は名前
   const colHeaders = ['名前'];
+  // 各列がどの日付かを保存（0列目は名前なので null）
+  const colDates = [null];
   for (const d of days) {
+    const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     colHeaders.push(`${m}/${d} 午前`);
     colHeaders.push(`${m}/${d} 午後`);
+    colDates.push(ds, ds); // 午前・午後とも同じ日付
   }
 
-  return { colHeaders, data: rows };
+  return { colHeaders, data, colDates };
 }
 
 
     let hot = null;
-
 function renderMatrixHot(items, ym) {
-  const { colHeaders, data } = buildMatrixAmPm(items, ym);
-
+  const { colHeaders, data, colDates } = buildMatrixAmPm(items, ym);
   const container = document.getElementById('matrixGrid');
   const maxRows = data.length;
   const maxCols = colHeaders.length;
+  const today = todayStrJST();
 
   const commonSettings = {
     data,
@@ -355,38 +366,67 @@ function renderMatrixHot(items, ym) {
       }
     }
   },
-
-      // 変更があったとき
-  afterChange: (changes, source) => {
-    if (!changes) return;
-    for (const [row, col, oldVal, newVal] of changes) {
-      if (newVal === oldVal) continue;
-      const cellMeta = hot.getCellMeta(row, col);
-      // 名前列（col===0）は対象外
-      if (col === 0) continue;
-      if (String(newVal).includes('休')) {
-        hot.setCellMeta(row, col, 'className', 'holiday-cell');
-      } else {
-        hot.removeCellMeta(row, col, 'className');
+    
+    // ② 値変更で「休」を検知 → ピンク
+    afterChange: (changes, source) => {
+      if (!changes) return;
+      // 一括貼り付けにも対応
+      for (const [row, col, oldVal, newVal] of changes) {
+        if (col === 0) continue; // 名前列は無視
+        const v = String(newVal ?? '');
+        // 既存クラスを維持しつつ holiday だけ付け外し
+        const meta = hot.getCellMeta(row, col);
+        const base = (meta.className || '').split(' ').filter(Boolean)
+          .filter(c => c !== 'ht-holiday'); // まず既存のholidayは外す
+        if (v.includes('休')) base.push('ht-holiday');
+        hot.setCellMeta(row, col, 'className', base.join(' '));
       }
-    }
-    hot.render(); // 見た目更新
-  },
+      hot.render();
+    },
   
     // 表示まわり（既存）
     stretchH: 'all',
     height: 520,
     colWidths: (index) => index === 0 ? 160 : 110,
-    cells: (row, col) => { if (col === 0) return { readOnly: true }; },
+    // ① 日付ベースの色付け（名前列は除外）
+    cells: (row, col) => {
+      if (col === 0) return { readOnly: true, className: 'htDimmed' };
+      const ds = colDates[col]; // YYYY-MM-DD or null
+      if (!ds) return;
+
+      const d = new Date(ds + 'T00:00:00');
+      const wd = d.getDay(); // 0=日,6=土
+      let cls = '';
+      if (ds === today) cls += ' ht-today';
+      if (wd === 6) cls += ' ht-sat';
+      if (wd === 0) cls += ' ht-sun';
+      return { className: cls.trim() };
+    },
   };
 
-  if (hot) {
-    hot.updateSettings(commonSettings);
+   if (hot) {
+    hot.updateSettings(settings);
     hot.render();
-    return;
+  } else {
+    hot = new Handsontable(container, settings);
   }
 
-  hot = new Handsontable(container, commonSettings);
+  // 初期データにも「休」色を適用（afterChangeは変更時のみなので）
+  // 全セル走査は回数を抑えるため、ここで1回だけ。
+  for (let r = 0; r < data.length; r++) {
+    for (let c = 1; c < colHeaders.length; c++) {
+      const v = String(data[r][c] ?? '');
+      if (v.includes('休')) {
+        const meta = hot.getCellMeta(r, c);
+        const base = (meta.className || '').split(' ').filter(Boolean);
+        if (!base.includes('ht-holiday')) {
+          base.push('ht-holiday');
+          hot.setCellMeta(r, c, 'className', base.join(' '));
+        }
+      }
+    }
+  }
+  hot.render();
 }
 
 
