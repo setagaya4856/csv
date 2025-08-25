@@ -234,13 +234,6 @@ async function pasteFromClipboard(hot) {
     hot.setDataAtCell(startRow + i, startCol + j, val);
   }));
 }
-function todayStrJST() {
-  const now = new Date();
-  const tzOffsetMs = now.getTimezoneOffset() * 60000;
-  // JST(+09:00) に補正して YYYY-MM-DD に
-  const jst = new Date(now.getTime() - tzOffsetMs + 9*60*60000);
-  return jst.toISOString().slice(0,10);
-}
     
 function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
   for (let r = r1; r <= r2; r++) {
@@ -313,7 +306,7 @@ function todayStrJST() {
   const jst = new Date(now.getTime() - tzOffsetMs + 9 * 60 * 60000);
   return jst.toISOString().slice(0, 10);
 }
-
+    
 // 列→日付(YYYY-MM-DD) マップを使って、列ベースの曜日/今日クラスを返す
 function classesByDate(ds, today) {
   if (!ds) return [];
