@@ -257,6 +257,76 @@ async function pasteFromClipboard(hot) {
       ];
       return { colDefs, rowData: rows, days };
     }
+
+function buildMatrixAmPm(items, ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const last = new Date(y, m, 0);
+  const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
+
+  const byEmp = new Map();
+  const ensure = (emp, d) => {
+    if (!byEmp.has(emp)) byEmp.set(emp, new Map());
+    const perDay = byEmp.get(emp);
+    if (!perDay.has(d)) perDay.set(d, { am: '', pm: '' });
+    return perDay.get(d);
+  };
+
+  const decideSlot = (it) => {
+    const cell = it?.raw?.cell;
+    if (cell) {
+      const am = (cell.am ?? '').toString().trim();
+      const pm = (cell.pm ?? '').toString().trim();
+      if (am && !pm) return 'am';
+      if (!am && pm) return 'pm';
+      if (am && pm) return 'am';
+    }
+    if (it?.start instanceof Date && !isNaN(it.start)) {
+      return it.start.getHours() < 12 ? 'am' : 'pm';
+    }
+    const t = (it?.title || '').toString();
+    if (/午前|AM/i.test(t) && !/午後|PM/i.test(t)) return 'am';
+    if (/午後|PM/i.test(t) && !/午前|AM/i.test(t)) return 'pm';
+    return 'am';
+  };
+
+  for (const it of items) {
+    const d = it.baseDate?.getDate?.();
+    if (!d) continue;
+    const emp = extractEmployeeName(it);
+    const slot = decideSlot(it);
+    const box = ensure(emp, d);
+    const val = (it.title || '').toString().trim();
+    if (!val) continue;
+    box[slot] = box[slot] ? (box[slot] + '\n' + val) : val;
+  }
+
+  // ===== ヘッダー定義（2段組み） =====
+  const topRow = ['名前'];
+  const bottomRow = ['名前']; // 「名前」は1段で表示したいのでダミー重複
+  for (const d of days) {
+    const label = `${m}/${d}`;
+    topRow.push(label, label);
+    bottomRow.push('午前', '午後');
+  }
+
+  // 2段配列を渡すと multi-level header になる
+  const colHeaders = [topRow, bottomRow];
+
+  // データ配列
+  const data = [];
+  for (const [emp, perDay] of byEmp) {
+    const row = [emp];
+    for (const d of days) {
+      const box = perDay.get(d) || { am: '', pm: '' };
+      row.push(box.am || '');
+      row.push(box.pm || '');
+    }
+    data.push(row);
+  }
+
+  return { colHeaders, data };
+}
+
 let hot = null;
 
 function renderMatrixHot(items, ym) {
@@ -269,10 +339,14 @@ function renderMatrixHot(items, ym) {
     hot.render();
     return;
   }
+  const topRow    = ['名前', ...days.flatMap(d => [`${m}/${d}`, `${m}/${d}`])];
+  const bottomRow = ['(dummy)', ...days.flatMap(() => ['午前','午後'])];
+  
+  const colHeaders = [topRow, bottomRow];
 
   hot = new Handsontable(container, {
     data,
-    colHeaders,
+    nestedHeaders: colHeaders,
     rowHeaders: true,
     licenseKey: 'non-commercial-and-evaluation',
 
@@ -424,76 +498,6 @@ function renderMatrixHot(items, ym) {
       }
       return [];
     }
-    
-// items（normalizeSchedulesの結果）, ym = 'YYYY-MM'
-function buildMatrixAmPm(items, ym) {
-  const [y, m] = ym.split('-').map(Number);
-  const last = new Date(y, m, 0);
-  const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
-
-  // 従業員 -> 日付 -> { am:'', pm:'' }
-  const byEmp = new Map();
-
-  const ensure = (emp, d) => {
-    if (!byEmp.has(emp)) byEmp.set(emp, new Map());
-    const perDay = byEmp.get(emp);
-    if (!perDay.has(d)) perDay.set(d, { am: '', pm: '' });
-    return perDay.get(d);
-  };
-
-  // どちらの枠に入れるか判定
-  const decideSlot = (it) => {
-    // 1) rows/cells 由来なら raw.cell.am/pm を優先
-    const cell = it?.raw?.cell;
-    if (cell) {
-      const am = (cell.am ?? '').toString().trim();
-      const pm = (cell.pm ?? '').toString().trim();
-      if (am && !pm) return 'am';
-      if (!am && pm) return 'pm';
-      // 両方ある場合は呼び出し側で2件に分かれているはずだが、保険としてam
-      if (am && pm) return 'am';
-    }
-    // 2) 開始時刻から（<12:00 を午前）
-    if (it?.start instanceof Date && !isNaN(it.start)) {
-      return it.start.getHours() < 12 ? 'am' : 'pm';
-    }
-    // 3) タイトル内のヒント（"午前"/"AM","午後"/"PM"）
-    const t = (it?.title || '').toString();
-    if (/午前|AM/i.test(t) && !/午後|PM/i.test(t)) return 'am';
-    if (/午後|PM/i.test(t) && !/午前|AM/i.test(t)) return 'pm';
-    // 4) デフォルトは午前
-    return 'am';
-  };
-
-  // 埋め込み
-  for (const it of items) {
-    const d = it.baseDate?.getDate?.();
-    if (!d) continue;
-    const emp = extractEmployeeName(it);
-    const slot = decideSlot(it); // 'am' | 'pm'
-    const box = ensure(emp, d);
-    const val = (it.title || '').toString().trim();
-    if (!val) continue;
-    box[slot] = box[slot] ? (box[slot] + '\n' + val) : val;
-  }
-
-  // ヘッダー（「名前」＋ 1日あたり2列）
-  const colHeaders = ['名前', ...days.flatMap(d => [`${d}日 午前`, `${d}日 午後`])];
-
-  // 2次元配列に展開
-  const data = [];
-  for (const [emp, perDay] of byEmp) {
-    const row = [emp];
-    for (const d of days) {
-      const box = perDay.get(d) || { am: '', pm: '' };
-      row.push(box.am || '');
-      row.push(box.pm || '');
-    }
-    data.push(row);
-  }
-
-  return { colHeaders, data, days };
-}
     
     function fmtDate(d) {
       if (!d) return '';
