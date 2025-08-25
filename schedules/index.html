@@ -285,30 +285,31 @@ hot = new Handsontable(container, {
   rowHeaders: true,
   licenseKey: 'non-commercial-and-evaluation',
 
-  // 編集体験
   selectionMode: 'multiple',
   copyPaste: true,
-  pasteMode: 'overwrite',          // ← ずらさず「上書き」のみ
-  fillHandle: { autoInsertRow: false }, // ← オートフィルで行を増やさない
+  pasteMode: 'overwrite',
+  fillHandle: { autoInsertRow: false },
   manualRowResize: true,
   manualColumnResize: true,
 
-  // 見た目
   stretchH: 'all',
   height: 520,
   colWidths: (index) => index === 0 ? 160 : 110,
 
-  // 1列目（名前）は編集不可
-  cells: (row, col) => { if (col === 0) return { readOnly: true }; },
+  // === セル単位の設定 ===
+  cells: (row, col) => {
+    if (col === 0) {
+      return { readOnly: true, className: 'htDimmed' }; 
+      // htDimmed: グレーアウト風の見た目に（任意）
+    }
+  },
 
-  // 右クリックメニュー（挿入/削除を出さない）
+  // === 右クリックメニュー（挿入/削除は削除済み） ===
   contextMenu: {
     items: {
       copy: { name: 'コピー' },
       cut:  { name: '切り取り' },
-      // 貼り付けはブラウザ制約があるので必要ならClipboard API版に差し替え可
       paste: { name: '貼り付け' },
-
       '---------': Handsontable.plugins.ContextMenu.SEPARATOR,
       undo: { name: '元に戻す' },
       redo: { name: 'やり直す' },
@@ -316,36 +317,39 @@ hot = new Handsontable(container, {
   },
 });
 
-// === ここから「行/列の追加・削除」をあらゆる経路で拒否 ===
+// === 行列の追加削除は禁止 ===
 hot.addHook('beforeCreateRow', () => false);
 hot.addHook('beforeCreateCol', () => false);
 hot.addHook('beforeRemoveRow', () => false);
 hot.addHook('beforeRemoveCol', () => false);
 
-// 貼り付けが範囲外にハミ出す場合は切り落として安全に上書き
+// === 貼り付け時：名前列(0列目)を守る ===
 hot.addHook('beforePaste', (data, coords) => {
   const maxRow = hot.countRows() - 1;
   const maxCol = hot.countCols() - 1;
   const [start] = coords;
+
+  // 名前列に貼り付けが始まる or はみ出して col=0 を含む場合はNG
+  if (start.col === 0) return false;
+
   const rows = data.length;
   const cols = data[0] ? data[0].length : 0;
 
-  // はみ出す分をトリム
-  const allowRows = Math.max(0, Math.min(rows, maxRow - start.row + 1));
+  // 貼り先が名前列にかぶる分を切り落とす
   const allowCols = Math.max(0, Math.min(cols, maxCol - start.col + 1));
-  if (allowRows <= 0 || allowCols <= 0) return false; // 何も貼れない
+  if (allowCols <= 0) return false;
 
-  // 切り詰め
-  data.length = allowRows;
-  for (let r = 0; r < allowRows; r++) {
+  for (let r = 0; r < rows; r++) {
     if (data[r].length > allowCols) data[r].length = allowCols;
   }
-  coords.length = 1; // 貼り先は1ブロックだけ
-  return undefined;  // 続行
+  coords.length = 1;
+  return undefined;
 });
 
-//（オプション）列・行の移動や挿入につながる操作をUI側で封じたい場合：
-// hot.updateSettings({ manualRowMove: false, manualColumnMove: false });
+// === オートフィルで名前列を上書きさせない ===
+hot.addHook('beforeAutofill', (start, end, data) => {
+  if (start.col === 0 || end.col === 0) return false;
+});
     }
 
     // ====== スケジュール：整形・表示（既存） ======
