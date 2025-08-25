@@ -205,14 +205,38 @@ async function cutSelection(hot) {
 async function pasteFromClipboard(hot) {
   const text = await navigator.clipboard.readText();
   if (!text) return;
-  const rows = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').map(line => line.split('\t'));
+
+  const rows = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+                   .split('\n').map(line => line.split('\t'));
+
   const rng = hot.getSelectedRangeLast?.();
   if (!rng) { alert('貼り付け先のセルを選択してください'); return; }
+
   const startRow = Math.min(rng.from.row, rng.to.row);
   const startCol = Math.min(rng.from.col, rng.to.col);
-  rows.forEach((r, i) => r.forEach((val, j) => hot.setDataAtCell(startRow + i, startCol + j, val)));
-}
+  const endRow   = startRow + rows.length - 1;
+  const endCol   = startCol + (rows[0]?.length ?? 1) - 1;
 
+  // ★ readOnly を含むなら中止
+  if (containsReadOnlyInRange(hot, startRow, startCol, endRow, endCol)) {
+    alert('貼り付け先に読み取り専用セルが含まれているため、貼り付けできません。');
+    return;
+  }
+
+  // 貼り付け実行
+  rows.forEach((r, i) => r.forEach((val, j) => {
+    hot.setDataAtCell(startRow + i, startCol + j, val);
+  }));
+}
+    
+function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
+  for (let r = r1; r <= r2; r++) {
+    for (let c = c1; c <= c2; c++) {
+      if (hot.getCellMeta(r, c)?.readOnly) return true;
+    }
+  }
+  return false;
+}
     // ====== マトリクス（Handsontable） ======
     // 既存 buildMatrix を活かしつつ、2次元配列に詰め替え
     const CELL_MODE = 'titles';
@@ -315,6 +339,17 @@ function renderMatrixHot(items, ym) {
     beforeCreateCol: () => false,
     beforeRemoveCol: () => false,
 
+    beforePaste: (data, coords) => {
+    // coords は通常1要素だが、配列で来るので全部チェック
+    for (const sel of coords || []) {
+      // sel.startRow/Col, sel.endRow/Col は貼り付け後の実適用範囲
+      const { startRow, startCol, endRow, endCol } = sel;
+      if (containsReadOnlyInRange(hot, startRow, startCol, endRow, endCol)) {
+        alert('貼り付け先に読み取り専用セルが含まれているため、貼り付けできません。');
+        return false; // ← 貼り付け自体をキャンセル
+      }
+    }
+  },
     // 表示まわり（既存）
     stretchH: 'all',
     height: 520,
