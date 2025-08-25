@@ -245,7 +245,19 @@
         manualRowResize: true,
         manualColumnResize: true,
         licenseKey: 'non-commercial-and-evaluation', // 評価/非商用
-
+        // ---- ここを置き換え ----
+        contextMenu: {
+          items: {
+            copy:       { name: 'コピー' },
+            cut:        { name: '切り取り' },
+            paste:      { name: '貼り付け' }, // ブラウザ制限で許可ダイアログが出る場合あり
+      
+            '---------': Handsontable.plugins.ContextMenu.SEPARATOR,
+      
+            undo:       { name: '元に戻す' },
+            redo:       { name: 'やり直す' },
+          }
+        },
         // Excelっぽい操作
         fillHandle: true,            // オートフィル（ドラッグ複製）
         copyPaste: true,             // クリップボード
