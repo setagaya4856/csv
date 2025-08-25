@@ -251,6 +251,24 @@
             copy:       { name: 'コピー' },
             cut:        { name: '切り取り' },
             paste:      { name: '貼り付け' }, // ブラウザ制限で許可ダイアログが出る場合あり
+    pasteCustom: {
+      name: '貼り付け',
+      callback: async () => {
+        const text = await navigator.clipboard.readText();
+        if (!text) return;
+
+        const rows = text.split(/\r?\n/).map(r => r.split('\t'));
+        const sel = hot.getSelectedLast();  // 最後に選択されたセル範囲
+        if (!sel) return;
+
+        const [row, col] = sel;  // 開始セル
+        rows.forEach((rdata, i) => {
+          rdata.forEach((cell, j) => {
+            hot.setDataAtCell(row + i, col + j, cell);
+          });
+        });
+      }
+    },
       
             '---------': Handsontable.plugins.ContextMenu.SEPARATOR,
       
@@ -480,6 +498,24 @@
       renderList(items, listEl);
       renderCalendar(items, ym, calEl);
     }
+
+    async function doCopy(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log("コピー成功:", text);
+  } catch (err) {
+    alert("コピーに失敗しました: " + err);
+  }
+}
+    async function doPaste() {
+  try {
+    const text = await navigator.clipboard.readText();  // クリップボード文字列を取得
+    console.log("クリップボード:", text);
+    return text;
+  } catch (err) {
+    alert("クリップボードの読み取りが許可されませんでした: " + err);
+  }
+}
   </script>
 </body>
 </html>
