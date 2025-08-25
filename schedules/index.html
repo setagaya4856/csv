@@ -279,55 +279,73 @@ async function pasteFromClipboard(hot) {
         return;
       }
 
-      hot = new Handsontable(container, {
+hot = new Handsontable(container, {
   data,
   colHeaders,
   rowHeaders: true,
   licenseKey: 'non-commercial-and-evaluation',
 
-  // ↓↓↓ ここを置き換え
+  // 編集体験
+  selectionMode: 'multiple',
+  copyPaste: true,
+  pasteMode: 'overwrite',          // ← ずらさず「上書き」のみ
+  fillHandle: { autoInsertRow: false }, // ← オートフィルで行を増やさない
+  manualRowResize: true,
+  manualColumnResize: true,
+
+  // 見た目
+  stretchH: 'all',
+  height: 520,
+  colWidths: (index) => index === 0 ? 160 : 110,
+
+  // 1列目（名前）は編集不可
+  cells: (row, col) => { if (col === 0) return { readOnly: true }; },
+
+  // 右クリックメニュー（挿入/削除を出さない）
   contextMenu: {
     items: {
-      copyCustom: {
-        name: 'コピー（Clipboard API）',
-        callback: () => copySelection(hot),
-        disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
-      },
-      cutCustom: {
-        name: '切り取り（Clipboard API）',
-        callback: () => cutSelection(hot),
-        disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
-      },
-      pasteCustom: {
-        name: '貼り付け（Clipboard API）',
-        callback: () => pasteFromClipboard(hot),
-        disabled: () => !navigator.clipboard?.readText
-      },
+      copy: { name: 'コピー' },
+      cut:  { name: '切り取り' },
+      // 貼り付けはブラウザ制約があるので必要ならClipboard API版に差し替え可
+      paste: { name: '貼り付け' },
 
-      '--------': Handsontable.plugins.ContextMenu.SEPARATOR,
-
-      row_above:  { name: '上に行を挿入' },
-      row_below:  { name: '下に行を挿入' },
-      remove_row: { name: '行を削除' },
-      remove_col: { name: '列を削除' },
-
-      '--------2': Handsontable.plugins.ContextMenu.SEPARATOR,
+      '---------': Handsontable.plugins.ContextMenu.SEPARATOR,
       undo: { name: '元に戻す' },
       redo: { name: 'やり直す' },
     }
   },
-  // ↑↑↑ ここまで
-
-  // Excelっぽい操作
-  fillHandle: true,
-  copyPaste: true,            // キーボードショートカットも有効（Ctrl/Cmd + C/V）
-  selectionMode: 'multiple',
-
-  stretchH: 'all',
-  height: 520,
-  colWidths: (index) => index === 0 ? 160 : 110,
-  cells: (row, col) => { if (col === 0) return { readOnly: true }; },
 });
+
+// === ここから「行/列の追加・削除」をあらゆる経路で拒否 ===
+hot.addHook('beforeCreateRow', () => false);
+hot.addHook('beforeCreateCol', () => false);
+hot.addHook('beforeRemoveRow', () => false);
+hot.addHook('beforeRemoveCol', () => false);
+
+// 貼り付けが範囲外にハミ出す場合は切り落として安全に上書き
+hot.addHook('beforePaste', (data, coords) => {
+  const maxRow = hot.countRows() - 1;
+  const maxCol = hot.countCols() - 1;
+  const [start] = coords;
+  const rows = data.length;
+  const cols = data[0] ? data[0].length : 0;
+
+  // はみ出す分をトリム
+  const allowRows = Math.max(0, Math.min(rows, maxRow - start.row + 1));
+  const allowCols = Math.max(0, Math.min(cols, maxCol - start.col + 1));
+  if (allowRows <= 0 || allowCols <= 0) return false; // 何も貼れない
+
+  // 切り詰め
+  data.length = allowRows;
+  for (let r = 0; r < allowRows; r++) {
+    if (data[r].length > allowCols) data[r].length = allowCols;
+  }
+  coords.length = 1; // 貼り先は1ブロックだけ
+  return undefined;  // 続行
+});
+
+//（オプション）列・行の移動や挿入につながる操作をUI側で封じたい場合：
+// hot.updateSettings({ manualRowMove: false, manualColumnMove: false });
     }
 
     // ====== スケジュール：整形・表示（既存） ======
