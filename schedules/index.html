@@ -29,6 +29,9 @@
   .ht-sat    { background:#e6ffed !important; }  /* 土曜: 緑 */
   .ht-sun    { background:#ffe5e5 !important; }  /* 日曜: ピンク */
   .ht-holiday{ background:#ffe5e5 !important; }  /* 「休」含む: ピンク */
+  .tabs{display:flex;gap:6px;margin:8px 0 12px}
+  .tabs button{padding:6px 10px;border:1px solid #ccc;background:#f6f6f6;cursor:pointer;border-radius:6px}
+  .tabs button.active{background:#fff;border-color:#999;font-weight:600;box-shadow:0 1px 0 #ddd}
   </style>
 </head>
 <body>
@@ -64,13 +67,10 @@
 
   <fieldset>
     <legend>関数呼び出し</legend>
-    <div class="row">
-      <label>month（YYYY-MM）</label>
-      <input id="month" value="2025-09" />
-    </div>
     <button id="run">/functions/v1/schedules-get を叩く</button>
     <pre id="output">ここに結果が出ます</pre>
     <div id="sched-summary" style="margin:12px 0;color:#555;"></div>
+    <div id="month-tabs" class="tabs"></div>
     <div class="row" style="gap:12px; width:100%; margin:0 auto;">
       <div style="flex:1 1 380px;min-width:320px">
         <h2 style="margin:8px 0">スケジュール一覧</h2>
@@ -89,6 +89,83 @@
     const $ = (q) => document.querySelector(q);
     const out = $('#output');
     const who = $('#who');
+// ==== タブ＆月ユーティリティ ====
+// 月キャッシュ: Map<"YYYY-MM", Array<item>>
+const monthCache = new Map();
+
+function ymOf(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function monthsAround(baseDate, back=3, forward=3){
+  const list = [];
+  const d = new Date(baseDate.getFullYear(), baseDate.getMonth()-back, 1);
+  const end = new Date(baseDate.getFullYear(), baseDate.getMonth()+forward+1, 1);
+  while (d < end){
+    list.push(ymOf(d));
+    d.setMonth(d.getMonth()+1, 1);
+  }
+  return list; // 昇順、計 back+forward+1 個
+}
+function todayJST(){
+  const now = new Date();
+  return new Date(now.getTime() + (9*60 + now.getTimezoneOffset())*60000);
+}
+    function buildMonthTabs() {
+  const base = todayJST();
+  const months = monthsAround(base, 3, 3);
+  const todayYm = ymOf(base);
+  const wrap = document.getElementById('month-tabs');
+  wrap.innerHTML = '';
+  for (const ym of months) {
+    const btn = document.createElement('button');
+    btn.textContent = ym;
+    btn.dataset.month = ym;
+    if (ym === todayYm) btn.classList.add('active');
+    btn.addEventListener('click', () => onMonthTabClick(btn));
+    wrap.appendChild(btn);
+  }
+  return { months, todayYm };
+}
+
+async function onMonthTabClick(btn){
+  // active切替
+  document.querySelectorAll('#month-tabs button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const ym = btn.dataset.month;
+  // 取得＆描画（キャッシュ利用、スクロールは不要）
+  await loadMonth(ym, { scrollToToday: false });
+}
+    async function fetchMonthData(ym, token, url){
+  // すでにキャッシュあればそれを返す
+  if (monthCache.has(ym)) return monthCache.get(ym);
+
+  const res = await fetch(`${url}/functions/v1/schedules-get?month=${encodeURIComponent(ym)}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const json = await res.json();
+  const items = normalizeSchedules(json);
+  monthCache.set(ym, items);
+  return items;
+}
+
+async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
+  if (!supabase) return alert('先に「Supabase 初期化」を押してください');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { out.textContent = '未ログインです'; return; }
+  const token = session.access_token;
+  const url = $('#url').value.trim();
+
+  out.textContent = `読み込み中... (${ym})`;
+  try{
+    const items = await fetchMonthData(ym, token, url);
+    out.textContent = `OK: ${ym} / ${items.length}件`;
+    // 一覧＆マトリクスを月単位で描画
+    renderSchedules(items, ym);        // ← 既存のまま（内部で month で絞る）
+    renderMatrixHot(items, ym, { scrollToToday }); // ← 次の手順で対応
+  }catch(e){
+    out.textContent = 'Fetchエラー: ' + e.message;
+  }
+}
 
     function setUser(u){
       who.textContent = u ? `ログイン中: ${u.email}` : '未ログイン';
@@ -151,30 +228,15 @@
       out.textContent = 'ログアウトしました';
     });
 
-    // ====== Schedules 呼び出し ======
-    $('#run').addEventListener('click', async () => {
-      if (!supabase) return alert('先に「Supabase 初期化」を押してください');
-      out.textContent = '呼び出し中...';
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { out.textContent = '未ログインです'; return; }
-
-      const token = session.access_token;
-      const url = $('#url').value.trim();
-      const month = $('#month').value.trim();
-
-      try {
-        const res = await fetch(`${url}/functions/v1/schedules-get?month=${encodeURIComponent(month)}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const json = await res.json();
-        out.textContent = JSON.stringify(json, null, 2);
-        renderSchedules(json, month);
-        renderMatrixHot(normalizeSchedules(json), month); // ← Handsontable描画
-      } catch (e) {
-        out.textContent = 'Fetchエラー: ' + e.message;
-      }
-    });
+ // ====== 初期化（タブ生成→今日の月を表示） ======
+ $('#run').addEventListener('click', async () => {
+   const { todayYm } = (() => {
+     const { months, todayYm } = buildMonthTabs();
+     return { todayYm };
+   })();
+   await loadMonth(todayYm, { scrollToToday: true });
+ });
 // 2D配列 → TSV
 const tsvFrom2D = (arr) =>
   arr.map(row => row.map(v => (v == null ? '' : String(v))).join('\t')).join('\n');
@@ -339,8 +401,7 @@ function applyValueRule(hot, row, col, value) {
 }
 
     let hot = null;
-    
-function renderMatrixHot(items, ym) {
+  function renderMatrixHot(items, ym, opts = {}) {
   const { colHeaders, data, colDates } = buildMatrixAmPm(items, ym);
   const container = document.getElementById('matrixGrid');
   const maxRows = data.length;
@@ -440,6 +501,22 @@ function renderMatrixHot(items, ym) {
     }
   }
   hot.render();
+  if (opts.scrollToToday) {
+    const base = todayJST();
+    const todayStr = `${base.getFullYear()}-${String(base.getMonth()+1).padStart(2,'0')}-${String(base.getDate()).padStart(2,'0')}`;
+    // buildMatrixAmPm の colDates をここで参照できる前提
+    const targetCol = colDates.findIndex(d => d === todayStr); // am列（先に出てくる方）
+    if (targetCol > 0) {
+      // セル選択でスクロールさせる（左端へ寄る）
+      setTimeout(() => {
+        try {
+          hot.selectCell(0, targetCol, 0, targetCol, true); // scroll = true
+          // 選択ハイライトを消したい場合は次で解除
+          hot.deselectCell();
+        } catch {}
+      }, 0);
+    }
+  }
 }
 
 
