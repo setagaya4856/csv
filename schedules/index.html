@@ -324,27 +324,25 @@ function buildMatrixAmPm(items, ym) {
     data.push(row);
   }
 
-  return { colHeaders, data };
+  return { colHeaders, data, days };   // ← days も返すようにする！
 }
 
 let hot = null;
 
 function renderMatrixHot(items, ym) {
-  const { colHeaders, data } = buildMatrixAmPm(items, ym);
+  const { colHeaders, data, days } = buildMatrixAmPm(items, ym);
 
   const container = document.getElementById('matrixGrid');
 
   if (hot) {
-    hot.updateSettings({ data, colHeaders });
+    hot.updateSettings({ data, nestedHeaders: colHeaders });
     hot.render();
     return;
   }
-  const topRow    = ['名前', ...days.flatMap(d => [`${m}/${d}`, `${m}/${d}`])];
-  const bottomRow = ['(dummy)', ...days.flatMap(() => ['午前','午後'])];
 
   hot = new Handsontable(container, {
     data,
-    nestedHeaders: colHeaders,
+    nestedHeaders: colHeaders,   // 2段ヘッダーを表示
     rowHeaders: true,
     licenseKey: 'non-commercial-and-evaluation',
 
