@@ -399,7 +399,23 @@ function applyValueRule(hot, row, col, value) {
   const next = keep.concat(add);
   hot.setCellMeta(row, col, 'className', next.join(' '));
 }
-
+function scrollColumnToLeft(hot, container, colIndex) {
+  setTimeout(() => {
+    try {
+      // まず見える位置に
+      if (hot.scrollViewportTo) hot.scrollViewportTo(0, colIndex);
+      const cell = hot.getCell(0, colIndex); // 先頭行のセルを参照
+      const holder = container.querySelector('.ht_master .wtHolder');
+      if (holder) {
+        if (cell) {
+          holder.scrollLeft = Math.max(0, cell.offsetLeft - 4); // 左に寄せる（少し余白）
+        } else {
+          holder.scrollLeft = 0; // 行が無い場合などは単純に左端へ
+        }
+      }
+    } catch {}
+  }, 0);
+}
     let hot = null;
   function renderMatrixHot(items, ym, opts = {}) {
   const { colHeaders, data, colDates } = buildMatrixAmPm(items, ym);
@@ -501,26 +517,22 @@ function applyValueRule(hot, row, col, value) {
     }
   }
   hot.render();
+  
+  // ▼ 初期表示スクロール
   if (opts.scrollToToday) {
+    // 今日の列へ（AM列が先に当たる）
     const base = todayJST();
     const todayStr = `${base.getFullYear()}-${String(base.getMonth()+1).padStart(2,'0')}-${String(base.getDate()).padStart(2,'0')}`;
-    // buildMatrixAmPm の colDates をここで参照できる前提
-    const targetCol = colDates.findIndex(d => d === todayStr); // am列（先に出てくる方）
+    const targetCol = colDates.findIndex(d => d === todayStr);
     if (targetCol > 0) {
-      // セル選択でスクロールさせる（左端へ寄る）
- setTimeout(() => {
-   try {
-     // まず対象列がレンダリングされる位置まで持ってくる
-     if (hot.scrollViewportTo) hot.scrollViewportTo(0, targetCol);
-     const cell = hot.getCell(0, targetCol);
-     const holder = container.querySelector('.ht_master .wtHolder');
-     if (cell && holder) {
-       // セルの左端がホルダーの左端に来るようにスクロール
-       holder.scrollLeft = Math.max(0, cell.offsetLeft - 4); // 4px だけ余白
-     }
-   } catch {}
- }, 0);
+      scrollColumnToLeft(hot, container, targetCol);
+    } else {
+      // 今日がその月に無い（あり得る）場合は1日に寄せる
+      scrollColumnToLeft(hot, container, 1);
     }
+  } else {
+    // 他タブ：常に「1日（AM列=col 1）」を左端へ
+    scrollColumnToLeft(hot, container, 1);
   }
 }
 
