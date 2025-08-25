@@ -298,7 +298,14 @@ function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
   return { colHeaders, data, colDates };
 }
 // ==== 条件付き書式ルール群 ====
-
+// 追加：クラスを結合するユーティリティ
+function mergeClass(existing, add) {
+  const arr = Array.isArray(add) ? add : [add];
+  const set = new Set(String(existing || '').split(' ').filter(Boolean));
+  for (const c of arr) if (c) set.add(c);
+  return Array.from(set).join(' ');
+}
+    
 // JST 今日 (YYYY-MM-DD)
 function todayStrJST() {
   const now = new Date();
@@ -411,9 +418,23 @@ function renderMatrixHot(items, ym) {
         }
       }
     },
+    
+ // ★ここを新規追加
+  afterGetCellMeta: (row, col, props) => {
+    if (col === 0) {
+      // 名前列はreadOnly＋見た目薄く
+      props.readOnly = true;
+      props.className = mergeClass(props.className, 'htDimmed');
+      return;
+    }
+    const ds = colDates[col]; // YYYY-MM-DD
+    if (!ds) return;
 
-    // ▼ 条件付き書式：列（日付）で決まるクラス
-    cells: makeCellsRule(colDates, today),
+    // 列の日付に応じた “今日/土/日” のクラスを既存に追加
+    const add = classesByDate(ds, today); // ['ht-today'], ['ht-sat'], ['ht-sun'] など
+    props.className = mergeClass(props.className, add);
+  },
+
 
     // ▼ 条件付き書式：値（「休」）で決まるクラス
     afterChange: (changes, source) => {
