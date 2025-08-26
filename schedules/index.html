@@ -715,7 +715,6 @@ if (opts.scrollToToday) {
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     function renderSchedules(itemsAll, ym) {
-      const itemsAll = normalizeSchedules(json);
       const items = filterByMonth(itemsAll, ym);
       const listEl = document.getElementById('sched-list');
       const sumEl = document.getElementById('sched-summary');
