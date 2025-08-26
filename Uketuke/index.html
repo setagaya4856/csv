@@ -59,9 +59,9 @@
         <label>[居住者]</label>
         <input type="text" placeholder="名前（様）">
         <div class="inline">
-          <input type="tel" placeholder="電話番号1">
-          <input type="tel" placeholder="電話番号2">
-          <input type="tel" placeholder="電話番号3">
+          <input type="tel" class="tel" placeholder="電話番号1">
+          <input type="tel" class="tel" placeholder="電話番号2">
+          <input type="tel" class="tel" placeholder="電話番号3">
         </div>
       </div>
       <div class="row">
@@ -120,6 +120,22 @@
     }
     document.getElementById('btnPdf').addEventListener('click', exportPdf);
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
+
+    // ===== 電話番号ハイフン自動フォーマット =====
+    function formatTel(value){
+      const digits = value.replace(/\D/g, '');
+      if(digits.length <= 3) return digits;
+      if(digits.length <= 7) return digits.replace(/(\d{3})(\d+)/, '$1-$2');
+      return digits.replace(/(\d{3})(\d{4})(\d+)/, '$1-$2-$3');
+    }
+
+    document.querySelectorAll('.tel').forEach(input => {
+      input.addEventListener('input', e => {
+        const cursor = e.target.selectionStart;
+        e.target.value = formatTel(e.target.value);
+        e.target.setSelectionRange(cursor, cursor);
+      });
+    });
   </script>
 </body>
 </html>
