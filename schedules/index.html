@@ -573,9 +573,9 @@ if (opts.scrollToToday) {
       if (Array.isArray(json) && json.length && json[0]?.baseDate instanceof Date) {
         return json;
       }
-      const arr0 = Array.isArray(json) ? json : (json?.items || json?.data || json?.schedules || null);
-      if (arr0) {
-        return arr0.map(x => {
+  const arr0 = Array.isArray(json) ? json : (json?.items || json?.data || json?.schedules || null);
+  if (arr0) {
+    return arr0.map(x => {
           const pick = (obj, keys) => {
             for (const k of keys) {
               if (obj[k] != null) return obj[k];
@@ -605,17 +605,17 @@ if (opts.scrollToToday) {
           const dStart = toDate(start) || dDate;
           const dEnd   = toDate(end);
 
-          return {
-            raw: x,
-            title: String(title || '(無題)'),
-            start: dStart,
-            end: dEnd,
-            baseDate: dDate || dStart || null,
-            location,
-            note
-          };
-        }).filter(x => x.baseDate);
-      }
+      return {
+        raw: x,                 // ※ “初回だけ”ならOK（循環はしない）
+        title: String(title || '(無題)'),
+        start: dStart,
+        end: dEnd,
+        baseDate: dDate || dStart || null,
+        location,
+        note
+      };
+    }).filter(x => x.baseDate);
+  }
 
       if (json && Array.isArray(json.rows)) {
         const normDay = (s) => (String(s || '').trim().slice(0, 10));
