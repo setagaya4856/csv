@@ -359,23 +359,27 @@ function mergeClass(existing, add) {
   return Array.from(set).join(' ');
 }
     
-// JST 今日 (YYYY-MM-DD)
+// JST 今日 (YYYY-MM-DD) — 端末タイムゾーンに依存しない
 function todayStrJST() {
-  const now = new Date();
-  const tzOffsetMs = now.getTimezoneOffset() * 60000;
-  const jst = new Date(now.getTime() - tzOffsetMs + 9 * 60 * 60000);
-  return jst.toISOString().slice(0, 10);
+  const dt = new Date();
+  const f = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  });
+  const parts = Object.fromEntries(f.formatToParts(dt).map(p => [p.type, p.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
 }
     
-// 列→日付(YYYY-MM-DD) マップを使って、列ベースの曜日/今日クラスを返す
+// 列→日付(YYYY-MM-DD) をJST(固定)で評価してクラス付与
 function classesByDate(ds, today) {
   if (!ds) return [];
-  const d = new Date(ds + 'T00:00:00');
-  const wd = d.getDay(); // 0=日, 6=土
+  // JSTとして解釈（端末TZに依存させない）
+  const d = new Date(ds + 'T00:00:00+09:00');
+  const wd = d.getUTCDay(); // +09:00で作ったのでUTCベースで曜日OK
   const classes = [];
   if (ds === today) classes.push('ht-today');
-  if (wd === 6) classes.push('ht-sat');
-  if (wd === 0) classes.push('ht-sun');
+  if (wd === 6) classes.push('ht-sat'); // 土
+  if (wd === 0) classes.push('ht-sun'); // 日
   return classes;
 }
 
@@ -503,6 +507,7 @@ function scrollColumnToLeft(hot, container, colIndex) {
     colWidths: (index) => index === 0 ? 160 : 110,
   };
 
+  const wasInit = !!hot;
   if (hot) {
     hot.updateSettings(settings);
     hot.render();
@@ -518,21 +523,21 @@ function scrollColumnToLeft(hot, container, colIndex) {
   }
   hot.render();
   
-  // ▼ 初期表示スクロール
-  if (opts.scrollToToday) {
-    // 今日の列へ（AM列が先に当たる）
-    const base = todayJST();
-    const todayStr = `${base.getFullYear()}-${String(base.getMonth()+1).padStart(2,'0')}-${String(base.getDate()).padStart(2,'0')}`;
-    const targetCol = colDates.findIndex(d => d === todayStr);
-    if (targetCol > 0) {
-      scrollColumnToLeft(hot, container, targetCol);
-    } else {
-      // 今日がその月に無い（あり得る）場合は1日に寄せる
+  // ▼ 初回表示のみ：afterRenderで“今日”のAM列を左端へ
+  if (opts.scrollToToday && !wasInit) {
+    const base = new Date(); // ここは端末時刻OK（todayStrJSTで日付はJST化済み）
+    const todayStr = today; // already JST YYYY-MM-DD
+    const targetCol = colDates.findIndex(d => d === todayStr); // AM列が先にヒット
+    const col = targetCol > 0 ? targetCol : 1; // 無ければ1日AM
+
+    hot.addHookOnce('afterRender', () => {
+      scrollColumnToLeft(hot, container, col);
+    });
+  } else if (!opts.scrollToToday) {
+    // 他タブは常に1日AMへ
+    hot.addHookOnce('afterRender', () => {
       scrollColumnToLeft(hot, container, 1);
-    }
-  } else {
-    // 他タブ：常に「1日（AM列=col 1）」を左端へ
-    scrollColumnToLeft(hot, container, 1);
+    });
   }
 }
 
