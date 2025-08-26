@@ -92,9 +92,6 @@
 // ==== タブ＆月ユーティリティ ====
 // 月キャッシュ: Map<"YYYY-MM", Array<item>>
 const monthCache = new Map();
-// 月ごとの「左端に出す列」の記憶
-// 例: monthScroll.get("2025-08") === 13（13列目を左端に）
-const monthScroll = new Map();
 
 function ymOf(d){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
@@ -131,18 +128,15 @@ function todayJST(){
 }
 
 async function onMonthTabClick(btn){
+  // active切替
   document.querySelectorAll('#month-tabs button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const ym = btn.dataset.month;
-
-  // 既に記憶があれば scrollToToday は false（記憶優先）
-  const hasRemember = monthScroll.has(ym);
-  const scrollToToday = !hasRemember && (ym === todayYmJST?.() /* あれば */);
-
-  await loadMonth(ym, { scrollToToday });
+  // 取得＆描画（キャッシュ利用、スクロールは不要）
+  await loadMonth(ym, { scrollToToday: false });
 }
-// ==== 月データ取得（キャッシュ付き）====
-async function fetchMonthData(ym, token, url){
+    async function fetchMonthData(ym, token, url){
+  // すでにキャッシュあればそれを返す
   if (monthCache.has(ym)) return monthCache.get(ym);
 
   const res = await fetch(`${url}/functions/v1/schedules-get?month=${encodeURIComponent(ym)}`, {
@@ -444,28 +438,6 @@ function scrollColumnToLeft(hot, container, colIndex) {
     holder.scrollLeft = Math.max(0, offset - 4);
   });
 }
-    // 現在のスクロール位置から「左端に表示中のスクロール可能列」を推定
-function leftmostVisibleScrollableCol(hot, container) {
-  const holder = container.querySelector('.ht_master .wtHolder');
-  if (!holder) return null;
-  const sl = holder.scrollLeft;
-  const fixed = hot.getSettings().fixedColumnsStart || 0;
-
-  let acc = 0;
-  for (let c = fixed; c < hot.countCols(); c++) {
-    const w = hot.getColWidth(c) || 0;
-    if (acc + w > sl + 1) return c; // しきい値+1で安定化
-    acc += w;
-  }
-  return hot.countCols() - 1;
-}
-
-// その月のスクロール位置（左端列）を保存
-function rememberMonthScroll(hot, container, ym) {
-  const col = leftmostVisibleScrollableCol(hot, container);
-  if (col != null) monthScroll.set(ym, col);
-}
-
     let hot = null;
   function renderMatrixHot(items, ym, opts = {}) {
   const { colHeaders, data, colDates } = buildMatrixAmPm(items, ym);
@@ -558,13 +530,7 @@ afterGetCellMeta: (row, col, props) => {
     hot.updateSettings(settings);
     hot.render();
   } else {
-  hot = new Handsontable(container, settings);
-
-  // ← ここに「スクロールイベントで記憶」を追加する
-  const holder = container.querySelector('.ht_master .wtHolder');
-  if (holder) {
-    holder.addEventListener('scroll', () => rememberMonthScroll(hot, container, ym), { passive: true });
-  }
+    hot = new Handsontable(container, settings);
   }
 
   // 初期データにも値ベースのクラス（ht-holiday）を一括適用
@@ -575,23 +541,23 @@ afterGetCellMeta: (row, col, props) => {
   }
   hot.render();
   
-// ▼ スクロール（記憶があれば優先、なければ従来のデフォルト）
-const rememberedCol = monthScroll.get(ym);
-
-// デフォルト列（今月でscrollToToday=trueなら今日AM、そうでなければ1日AM）
-const todayStr = today; // JST YYYY-MM-DD
-const targetCol = colDates.findIndex(d => d === todayStr); // AMが先にヒット
-const defaultCol = (opts.scrollToToday && targetCol > 0) ? targetCol : 1;
-
-const colToUse = (rememberedCol != null) ? rememberedCol : defaultCol;
-
-hot.addHookOnce('afterRender', () => {
-  scrollColumnToLeft(hot, container, colToUse);
-  // プログラムで動かした位置も記憶（ズレ最小化）
-  monthScroll.set(ym, colToUse);
-});
-hot.render();
-
+// ▼ 初期表示スクロール
+if (opts.scrollToToday && !wasInit) {
+  const todayStr = today; // JST YYYY-MM-DD
+  const targetCol = colDates.findIndex(d => d === todayStr);
+  const col = targetCol > 0 ? targetCol : 1; // 無ければ1日AM
+  hot.addHookOnce('afterRender', () => {
+    scrollColumnToLeft(hot, container, col);
+  });
+  // ★ フック直後に再レンダで必ず afterRender を発火
+  hot.render();
+} else {
+  // 他タブ：常に「1日AM(=col 1)」へ
+  hot.addHookOnce('afterRender', () => {
+    scrollColumnToLeft(hot, container, 1);
+  });
+  hot.render(); // ★ 同上
+}
 }
 
 
