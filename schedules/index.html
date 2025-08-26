@@ -359,7 +359,7 @@ function mergeClass(existing, add) {
   return Array.from(set).join(' ');
 }
     
-// JST 今日 (YYYY-MM-DD) はそのまま（Intlで安定）
+// JST 今日 (YYYY-MM-DD) — 端末タイムゾーンに依存しない
 function todayStrJST() {
   const dt = new Date();
   const f = new Intl.DateTimeFormat('ja-JP', {
@@ -370,25 +370,19 @@ function todayStrJST() {
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
     
-// ★置き換え：曜日/今日の色付け（タイムゾーンに依らない）
+// 列→日付(YYYY-MM-DD) をJST(固定)で評価してクラス付与
 function classesByDate(ds, today) {
   if (!ds) return [];
-  const [y, m, d] = ds.split('-').map(Number);
-  const wd = weekdayOf(y, m, d); // 0=Sun ... 6=Sat
+  // JSTとして解釈（端末TZに依存させない）
+  const d = new Date(ds + 'T00:00:00+09:00');
+  const wd = d.getUTCDay(); // +09:00で作ったのでUTCベースで曜日OK
   const classes = [];
   if (ds === today) classes.push('ht-today');
-  if (wd === 6) classes.push('ht-sat');
-  if (wd === 0) classes.push('ht-sun');
+  if (wd === 6) classes.push('ht-sat'); // 土
+  if (wd === 0) classes.push('ht-sun'); // 日
   return classes;
 }
-    
-// 0=Sun,1=Mon,...6=Sat を返す（タイムゾーン非依存）
-function weekdayOf(y, m, d) {
-  // Tomohiko Sakamoto’s algorithm
-  const t = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
-  if (m < 3) y -= 1;
-  return (y + Math.floor(y/4) - Math.floor(y/100) + Math.floor(y/400) + t[m-1] + d) % 7;
-}
+
 // 値に応じたクラス（内容に「休」を含む）
 function classesByValue(value) {
   const v = String(value ?? '');
@@ -415,27 +409,19 @@ function applyValueRule(hot, row, col, value) {
     .filter(c => c && c !== 'ht-today' && c !== 'ht-sat' && c !== 'ht-sun')
     .join(' ');
 }
-// ★固定列を考慮しつつ、目的列を左端にピタッと合わせる
 function scrollColumnToLeft(hot, container, colIndex) {
-  hot.render();
-  const holder = container.querySelector('.ht_master .wtHolder');
-  if (!holder) return;
-
-  const fixed = hot.getSettings().fixedColumnsStart || 0;
-
-  // まず、目的列がDOMに描画されるように可視領域へスクロール
-  hot.scrollViewportTo(0, colIndex);
-
-  // 描画が落ち着いた後に“幅の総和”でスクロール量を決定
+  // レンダリング完了直後に2段階で実行して確実にセル位置を取得
   requestAnimationFrame(() => {
-    let offset = 0;
-    // master側は fixedColumnsStart 以降がスクロール対象
-    // → 左固定列の幅は除外し、[fixed .. colIndex-1] の幅を積算
-    for (let c = fixed; c < colIndex; c++) {
-      offset += hot.getColWidth(c) || 0;
-    }
-    // ほんの少し余白（任意）
-    holder.scrollLeft = Math.max(0, offset - 4);
+    try {
+      if (hot.scrollViewportTo) hot.scrollViewportTo(0, colIndex);
+      requestAnimationFrame(() => {
+        const cell = hot.getCell(0, colIndex); // 表示先頭行の該当列
+        const holder = container.querySelector('.ht_master .wtHolder');
+        if (holder && cell) {
+          holder.scrollLeft = Math.max(0, cell.offsetLeft - 4);
+        }
+      });
+    } catch {}
   });
 }
     let hot = null;
