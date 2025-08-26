@@ -1,1 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>受付表（夜間緊急当番用） - 入力＆A4 PDF出力</title>
+  <!-- Handsontable -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@14.6.0/dist/handsontable.full.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/handsontable@14.6.0/dist/handsontable.full.min.js"></script>
+  <!-- PDF/Canvas -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <style>
+    :root{
+      --sheet-w-mm: 210;
+      --sheet-h-mm: 297;
+      --margin-mm: 12;
+      --font: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans JP", sans-serif;
+    }
+    html, body { height: 100%; }
+    body{
+      margin: 0; padding: env(safe-area-inset-top) 8px env(safe-area-inset-bottom) 8px;
+      font-family: var(--font);
+      -webkit-text-size-adjust: 100%;
+      background: #f6f7f9;
+    }
+    header{
+      display:flex; gap:8px; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:10; background:#fff; padding:8px 10px; border-radius:12px; box-shadow: 0 2px 10px rgba(0,0,0,.05);
+      margin: 8px 0;
+    }
+    header h1{ font-size: clamp(16px, 2.6vw, 22px); margin:0; }
+    .toolbar { display:flex; gap:6px; flex-wrap:wrap; }
+    .btn{
+      appearance:none; -webkit-appearance:none;
+      font: 600 15px/1 var(--font);
+      padding: 10px 14px; border-radius: 10px; border:1px solid #d0d7de; background:#fff; cursor:pointer;
+      transition:.15s; user-select:none; touch-action: manipulation;
+    }
+    .btn:hover{ background:#f3f4f6 }
+    .btn.primary{ background:#0ea5e9; color:#fff; border-color:#0ea5e9; }
+    .btn.primary:hover{ filter:brightness(.95) }
+
+    .layout{
+      display:grid; grid-template-columns: minmax(320px, 1fr) minmax(420px, 1.1fr);
+      gap: 12px; align-items:start; margin: 8px 0 16px;
+    }
+    .panel{
+      background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:10px; box-shadow: 0 2px 10px rgba(0,0,0,.04);
+    }
+    .panel h2{ font-size:16px; margin: 0 0 8px; opacity:.7 }
+
+    /* A4 プレビュー（mm を px に） */
+    .preview-wrap{ display:flex; justify-content:center; }
+    .sheet{
+      width: calc(var(--sheet-w-mm) * 3.7795px);  /* 1mm ≒ 3.7795px */
+      height: calc(var(--sheet-h-mm) * 3.7795px);
+      background:#fff; color:#111; box-shadow: 0 5px 20px rgba(0,0,0,.08);
+      position: relative; overflow: hidden; border: 1px solid #e5e7eb; border-radius: 2px;
+    }
+    .sheet-inner{
+      /* 余白 */
+      position:absolute; inset: calc(var(--margin-mm) * 3.7795px);
+      display:flex; flex-direction:column; gap:8px;
+      font-size: 12px;
+    }
+    .sheet-header{ display:flex; justify-content:space-between; align-items:center; }
+    .title{ font-weight:700; font-size: 18px; }
+    .meta{ display:grid; grid-template-columns: auto auto; gap:4px 12px; align-items:center; }
+    .meta label{ opacity:.75 }
+
+    table.print{ width:100%; border-collapse:collapse; table-layout:fixed; }
+    .print th, .print td{ border:1px solid #1f2937; padding:4px 6px; word-break:break-all; }
+    .print thead th{ text-align:center; background:#f3f4f6; }
+    .print tfoot td{ border:none; padding-top:8px; font-size:11px; }
+
+    .small-note{ font-size: 10px; opacity:.7 }
+
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; }
+      .sheet{ transform: scale(.8); transform-origin: top center; height: calc(var(--sheet-h-mm) * 3.7795px * .8); }
+    }
+
+    /* 印刷用（ブラウザ印刷でもA4） */
+    @media print{
+      body{ background: #fff; }
+      header, .panel:first-of-type{ display:none; }
+      .sheet{ box-shadow:none; border:none; transform:none !important; }
+      @page{ size: A4 portrait; margin: 12mm; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>受付表（夜間緊急当番用） 入力＆PDF出力</h1>
+    <div class="toolbar">
+      <button class="btn" id="addRowBtn">行を追加</button>
+      <button class="btn" id="deleteRowBtn">選択行を削除</button>
+      <button class="btn" id="previewBtn">プレビュー更新</button>
+      <button class="btn primary" id="pdfBtn">PDF保存（A4）</button>
+      <button class="btn" id="printBtn">ブラウザ印刷</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>① Excelライク入力（Handsontable）</h2>
+      <div id="grid" style="height: 70vh; min-height: 420px"></div>
+      <p class="small-note">※ iOS/Safari でもズームが起きにくいよう 16px 以上の UI サイズに調整済みです。</p>
+    </section>
+
+    <section class="panel">
+      <h2>② A4 プレビュー（この見た目でPDF化）</h2>
+      <div class="preview-wrap">
+        <div id="sheet" class="sheet" aria-label="A4 sheet preview">
+          <div class="sheet-inner" id="sheetInner">
+            <div class="sheet-header">
+              <div class="title">受付表（夜間緊急当番用）</div>
+              <div class="meta">
+                <label>作成日:</label><div id="metaDate"></div>
+                <label>担当:</label><div id="metaTanto"></div>
+              </div>
+            </div>
+            <table class="print" id="printTable">
+              <thead>
+                <tr>
+                  <th style="width:12%">受付日</th>
+                  <th style="width:10%">時刻</th>
+                  <th style="width:18%">発生場所</th>
+                  <th style="width:16%">依頼者</th>
+                  <th>内容</th>
+                  <th style="width:12%">対応者</th>
+                  <th style="width:10%">備考</th>
+                </tr>
+              </thead>
+              <tbody id="printTbody">
+                <!-- JS で挿入 -->
+              </tbody>
+              <tfoot>
+                <tr><td colspan="7">
+                  <div class="small-note">※ 1ページ（A4）に収まる程度の件数を想定。件数が多いときはシートを分割してください。</div>
+                </td></tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ====== Handsontable 設定 ======
+    const container = document.getElementById('grid');
+    const todayStr = new Date().toLocaleDateString('ja-JP');
+
+    const columns = [
+      { data: 'date', type: 'date', dateFormat: 'YYYY/MM/DD', correctFormat: true },
+      { data: 'time', type: 'time', timeFormat: 'HH:mm', correctFormat: true },
+      { data: 'place' },
+      { data: 'client' },
+      { data: 'detail' },
+      { data: 'person' },
+      { data: 'note' },
+    ];
+
+    const colHeaders = ['受付日', '時刻', '発生場所', '依頼者', '内容', '対応者', '備考'];
+
+    const data = Array.from({length: 10}).map(_ => ({ date: '', time: '', place: '', client: '', detail: '', person: '', note: '' }));
+
+    let hot = new Handsontable(container, {
+      data,
+      columns,
+      colHeaders,
+      rowHeaders: true,
+      licenseKey: 'non-commercial-and-evaluation',
+      stretchH: 'all',
+      width: '100%',
+      height: '70vh',
+      manualColumnResize: true,
+      manualRowResize: true,
+      contextMenu: [
+        'undo', 'redo',
+        '---------',
+        'copy', 'cut', 'paste',
+        '---------',
+        'remove_row', 'row_above', 'row_below',
+      ],
+      filters: true,
+      dropdownMenu: true,
+      columnSorting: false,
+      autoWrapRow: true,
+      autoWrapCol: false,
+      wordWrap: true,
+      className: 'htMiddle htLeft',
+      cells: (row, col) => {
+        const cellMeta = {};
+        if (col === 4) cellMeta.className = 'htLeft'; // 内容は広め
+        return cellMeta;
+      },
+      afterInit(){
+        // 初期行に今日の日付を入れておく（サンプル）
+        const d = new Date();
+        const y = d.getFullYear(); const m = ('0'+(d.getMonth()+1)).slice(-2); const dd=('0'+d.getDate()).slice(-2);
+        hot.setDataAtCell(0, 0, `${y}/${m}/${dd}`);
+      }
+    });
+
+    // ====== プレビュー同期 ======
+    const metaDate = document.getElementById('metaDate');
+    const metaTanto = document.getElementById('metaTanto');
+    metaDate.textContent = todayStr;
+    metaTanto.textContent = '';
+
+    function syncPreview(){
+      const tbody = document.getElementById('printTbody');
+      tbody.innerHTML = '';
+      const all = hot.getData();
+      const headers = colHeaders; // 参照用
+
+      // データを行オブジェクトに再構成
+      const rows = all.map(arr => ({
+        date: arr[0]||'',
+        time: arr[1]||'',
+        place: arr[2]||'',
+        client: arr[3]||'',
+        detail: arr[4]||'',
+        person: arr[5]||'',
+        note: arr[6]||'',
+      })).filter(r => Object.values(r).some(v => String(v).trim() !== ''));
+
+      // A4 1枚に無理なく入る推奨行数（だいたい）
+      const maxRows = 22; // 行の高さにより調整
+      const sliced = rows.slice(0, maxRows);
+
+      for(const r of sliced){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(r.date)}</td>
+          <td>${escapeHtml(r.time)}</td>
+          <td>${escapeHtml(r.place)}</td>
+          <td>${escapeHtml(r.client)}</td>
+          <td>${escapeHtml(r.detail)}</td>
+          <td>${escapeHtml(r.person)}</td>
+          <td>${escapeHtml(r.note)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      if(rows.length > maxRows){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="7" style="text-align:center; background:#fff3cd">`+
+                       `※ 行数が多いため 1 ページに収まりません（先頭 ${maxRows} 行のみ表示）。`+
+                       `PDF はページ分割して作成してください。`+
+                       `</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
+    }
+
+    // ====== PDF 出力 ======
+    async function exportPdf(){
+      // まずプレビューを最新化
+      syncPreview();
+      const sheet = document.getElementById('sheet');
+      // 高解像度でキャプチャ（スケール 2 くらい）
+      const canvas = await html2canvas(sheet, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      // 画像サイズを A4 にフィット
+      const pageW = 210, pageH = 297;
+      const margin = 0; // 余白はシート側に確保済み
+      const imgW = pageW - margin * 2;
+      const imgH = imgW * (canvas.height / canvas.width);
+      const offsetY = (pageH - imgH) / 2;
+      pdf.addImage(imgData, 'JPEG', margin, Math.max(0, offsetY), imgW, imgH, undefined, 'FAST');
+      pdf.save(`受付表_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+
+    // ====== UI イベント ======
+    document.getElementById('addRowBtn').addEventListener('click', () => hot.alter('insert_row_above', hot.countRows()));
+    document.getElementById('deleteRowBtn').addEventListener('click', () => {
+      const sel = hot.getSelectedLast();
+      if(!sel){ alert('削除する行を選択してください'); return; }
+      const [r1, , r2] = sel; const from = Math.min(r1, r2); const cnt = Math.abs(r2 - r1) + 1;
+      hot.alter('remove_row', from, cnt);
+    });
+
+    document.getElementById('previewBtn').addEventListener('click', syncPreview);
+    document.getElementById('pdfBtn').addEventListener('click', exportPdf);
+    document.getElementById('printBtn').addEventListener('click', () => { syncPreview(); window.print(); });
+
+    // 初期プレビュー
+    syncPreview();
+  </script>
+</body>
+</html>
 
