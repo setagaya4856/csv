@@ -426,7 +426,6 @@ function applyValueRule(hot, row, col, value) {
 }
 // ★固定列を考慮しつつ、目的列を左端にピタッと合わせる
 function scrollColumnToLeft(hot, container, colIndex) {
-  hot.render();
   const holder = container.querySelector('.ht_master .wtHolder');
   if (!holder) return;
 
