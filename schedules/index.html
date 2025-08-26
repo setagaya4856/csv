@@ -403,22 +403,26 @@ function applyValueRule(hot, row, col, value) {
   const next = keep.concat(add);
   hot.setCellMeta(row, col, 'className', next.join(' '));
 }
+  function stripDateClasses(className) {
+  return String(className || '')
+    .split(/\s+/)
+    .filter(c => c && c !== 'ht-today' && c !== 'ht-sat' && c !== 'ht-sun')
+    .join(' ');
+}
 function scrollColumnToLeft(hot, container, colIndex) {
-  setTimeout(() => {
+  // レンダリング完了直後に2段階で実行して確実にセル位置を取得
+  requestAnimationFrame(() => {
     try {
-      // まず見える位置に
       if (hot.scrollViewportTo) hot.scrollViewportTo(0, colIndex);
-      const cell = hot.getCell(0, colIndex); // 先頭行のセルを参照
-      const holder = container.querySelector('.ht_master .wtHolder');
-      if (holder) {
-        if (cell) {
-          holder.scrollLeft = Math.max(0, cell.offsetLeft - 4); // 左に寄せる（少し余白）
-        } else {
-          holder.scrollLeft = 0; // 行が無い場合などは単純に左端へ
+      requestAnimationFrame(() => {
+        const cell = hot.getCell(0, colIndex); // 表示先頭行の該当列
+        const holder = container.querySelector('.ht_master .wtHolder');
+        if (holder && cell) {
+          holder.scrollLeft = Math.max(0, cell.offsetLeft - 4);
         }
-      }
+      });
     } catch {}
-  }, 0);
+  });
 }
     let hot = null;
   function renderMatrixHot(items, ym, opts = {}) {
@@ -433,7 +437,7 @@ function scrollColumnToLeft(hot, container, colIndex) {
     colHeaders,
     rowHeaders: true,
     licenseKey: 'non-commercial-and-evaluation',
-
+    fixedColumnsStart: 1,
     // ① 右クリックはコピー/切り取り/貼り付け/Undo/Redo のみ（既存）
     contextMenu: {
       items: {
@@ -476,21 +480,21 @@ function scrollColumnToLeft(hot, container, colIndex) {
       }
     },
     
- // ★ここを新規追加
-  afterGetCellMeta: (row, col, props) => {
-    if (col === 0) {
-      // 名前列はreadOnly＋見た目薄く
-      props.readOnly = true;
-      props.className = mergeClass(props.className, 'htDimmed');
-      return;
-    }
-    const ds = colDates[col]; // YYYY-MM-DD
-    if (!ds) return;
+afterGetCellMeta: (row, col, props) => {
+  if (col === 0) {
+    props.readOnly = true;
+    props.className = mergeClass(props.className, 'htDimmed');
+    return;
+  }
+  // ここで前回の “日付ベース” クラスだけ剥がしてから付け直す
+  props.className = stripDateClasses(props.className);
 
-    // 列の日付に応じた “今日/土/日” のクラスを既存に追加
-    const add = classesByDate(ds, today); // ['ht-today'], ['ht-sat'], ['ht-sun'] など
-    props.className = mergeClass(props.className, add);
-  },
+  const ds = colDates[col]; // YYYY-MM-DD
+  if (!ds) return;
+
+  const add = classesByDate(ds, today); // ['ht-today'], ['ht-sat'], ['ht-sun']
+  props.className = mergeClass(props.className, add);
+},
 
 
     // ▼ 条件付き書式：値（「休」）で決まるクラス
@@ -523,22 +527,23 @@ function scrollColumnToLeft(hot, container, colIndex) {
   }
   hot.render();
   
-  // ▼ 初回表示のみ：afterRenderで“今日”のAM列を左端へ
-  if (opts.scrollToToday && !wasInit) {
-    const base = new Date(); // ここは端末時刻OK（todayStrJSTで日付はJST化済み）
-    const todayStr = today; // already JST YYYY-MM-DD
-    const targetCol = colDates.findIndex(d => d === todayStr); // AM列が先にヒット
-    const col = targetCol > 0 ? targetCol : 1; // 無ければ1日AM
-
-    hot.addHookOnce('afterRender', () => {
-      scrollColumnToLeft(hot, container, col);
-    });
-  } else if (!opts.scrollToToday) {
-    // 他タブは常に1日AMへ
-    hot.addHookOnce('afterRender', () => {
-      scrollColumnToLeft(hot, container, 1);
-    });
-  }
+// ▼ 初期表示スクロール
+if (opts.scrollToToday && !wasInit) {
+  const todayStr = today; // JST YYYY-MM-DD
+  const targetCol = colDates.findIndex(d => d === todayStr);
+  const col = targetCol > 0 ? targetCol : 1; // 無ければ1日AM
+  hot.addHookOnce('afterRender', () => {
+    scrollColumnToLeft(hot, container, col);
+  });
+  // ★ フック直後に再レンダで必ず afterRender を発火
+  hot.render();
+} else {
+  // 他タブ：常に「1日AM(=col 1)」へ
+  hot.addHookOnce('afterRender', () => {
+    scrollColumnToLeft(hot, container, 1);
+  });
+  hot.render(); // ★ 同上
+}
 }
 
 
