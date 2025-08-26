@@ -426,6 +426,7 @@ function applyValueRule(hot, row, col, value) {
 }
 // ★固定列を考慮しつつ、目的列を左端にピタッと合わせる
 function scrollColumnToLeft(hot, container, colIndex) {
+  hot.render();
   const holder = container.querySelector('.ht_master .wtHolder');
   if (!holder) return;
 
@@ -569,6 +570,10 @@ if (opts.scrollToToday) {
 
     // ====== スケジュール：整形・表示（既存） ======
     function normalizeSchedules(json) {
+      // すでに正規化済み（baseDate が Date）ならそのまま返す
+      if (Array.isArray(json) && json.length && json[0]?.baseDate instanceof Date) {
+        return json;
+      }
       const arr0 = Array.isArray(json) ? json : (json?.items || json?.data || json?.schedules || null);
       if (arr0) {
         return arr0.map(x => {
@@ -710,7 +715,7 @@ if (opts.scrollToToday) {
     function escapeHtml(s){ return String(s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-    function renderSchedules(json, ym) {
+    function renderSchedules(itemsAll, ym) {
       const itemsAll = normalizeSchedules(json);
       const items = filterByMonth(itemsAll, ym);
       const listEl = document.getElementById('sched-list');
