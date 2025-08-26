@@ -56,6 +56,7 @@
       header, .toolbar { display:none; }
       body{ background:#fff; font-size:14px; }
       .sheet{ border:none; box-shadow:none; padding: 12mm; }
+      input::placeholder, textarea::placeholder { color: transparent !important; }
       @page{ size: A4 portrait; margin: 0; }
     }
   </style>
@@ -155,7 +156,7 @@
           </div>
           <div style="margin-top:8px">
             <label style="display:block; font-weight:700; margin-bottom:6px">※対応内容</label>
-            <textarea class="short"></textarea>
+            <textarea class="short" placeholder="対応内容を記入"></textarea>
           </div>
           <div class="checks" style="margin-top:8px">
             <span>※集金の必要性</span>
