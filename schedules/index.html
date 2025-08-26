@@ -141,6 +141,18 @@ async function onMonthTabClick(btn){
 
   await loadMonth(ym, { scrollToToday });
 }
+// ==== 月データ取得（キャッシュ付き）====
+async function fetchMonthData(ym, token, url){
+  if (monthCache.has(ym)) return monthCache.get(ym);
+
+  const res = await fetch(`${url}/functions/v1/schedules-get?month=${encodeURIComponent(ym)}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const json = await res.json();
+  const items = normalizeSchedules(json);
+  monthCache.set(ym, items);
+  return items;
+}
 
 async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
   if (!supabase) return alert('先に「Supabase 初期化」を押してください');
