@@ -7,95 +7,196 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <style>
-    body { margin:0; font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif; background:#f6f7f9; }
-    header { padding: 10px; text-align: center; background:#fff; position:sticky; top:0; z-index:10; }
-    header h1 { font-size: 28px; font-weight:900; margin:0; letter-spacing:0.05em; }
+    :root{
+      --ink:#1f2937;        /* 枠線 */
+      --grid:#d1d5db;       /* 罫線 */
+      --bg:#ffffff;         /* 用紙 */
+      --pad:12px;           /* 用紙内側余白（画面）*/
+      --font: system-ui, -apple-system, "Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    }
+    body { margin:0; font-family: var(--font); background:#f6f7f9; }
+
+    /* 画面上のツール */
+    header { padding: 8px 12px; background:#fff; position:sticky; top:0; z-index:10; border-bottom:1px solid #e5e7eb; }
+    header .bar{ display:flex; gap:8px; justify-content:space-between; align-items:center; }
+    header .bar .hint{ font-size:12px; opacity:.7 }
 
     .toolbar { position: fixed; bottom:0; left:0; right:0; display:flex; gap:8px; padding:10px; background:#fff; border-top:1px solid #ddd; }
-    .btn { flex:1; padding:12px; font-size:16px; font-weight:700; border-radius:10px; border:1px solid #ccc; }
+    .btn { flex:1; padding:12px; font-size:16px; font-weight:700; border-radius:10px; border:1px solid #ccc; background:#fff; }
     .btn.primary { background:#0ea5e9; color:#fff; border-color:#0ea5e9; }
 
     main { display:flex; justify-content:center; padding:12px; margin-bottom:100px; }
-    .sheet { background:#fff; width:100%; max-width:800px; padding:16px; border:1px solid #ddd; box-shadow:0 2px 8px rgba(0,0,0,.05); }
-    .row { margin-bottom:12px; }
-    label { font-weight:700; display:block; margin-bottom:4px; }
-    input, textarea, select { width:100%; font-size:15px; padding:8px; border:1px solid #ccc; border-radius:6px; }
-    textarea { min-height: 160px; }
-    .checks { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
-    .checks label { font-weight:400; display:flex; align-items:center; gap:4px; }
+
+    /* A4シート風だが、スマホ幅にフィット */
+    .sheet { background:var(--bg); width:100%; max-width:820px; padding: var(--pad); border:1px solid #e5e7eb; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+
+    /* タイトルはシート内に含め、PDFにも確実に入る */
+    .title { text-align:center; font-weight:900; letter-spacing:0.06em; margin: 2px 0 10px; 
+             font-size: clamp(22px, 6.2vw, 32px); }
+    .subtitle { text-align:center; font-size:12px; opacity:.7; margin-bottom:8px; }
+
+    /* = Excel っぽい表の罫線 = */
+    .grid-table { display:grid; grid-template-columns: 140px 1fr; border:1px solid var(--ink); }
+    .th, .td { border-right:1px solid var(--ink); border-bottom:1px solid var(--ink); min-height:40px; padding:8px; }
+    .th { background:#f3f4f6; font-weight:700; display:flex; align-items:center; justify-content:center; }
+    .td { display:block; }
+
+    /* 入力要素をセルっぽく */
+    input, textarea, select { width:100%; font-size:15px; padding:8px; border:1px solid var(--grid); border-radius:4px; background:#fff; }
+    textarea { min-height: 200px; }          /* 内容：10行相当 */
+    .tall-15 textarea { min-height: 300px; } /* 経過：15行相当 */
+
     .inline { display:flex; gap:8px; flex-wrap:wrap; }
-    .inline input { flex:1; }
+    .inline input, .inline select { flex:1; min-width:120px; }
+
+    /* チェック群：横並びで改行時はそのまま折返し（縦書きにしない） */
+    .checks { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; }
+    .checks label { display:inline-flex; align-items:center; gap:6px; white-space:normal; writing-mode: horizontal-tb; }
+    .checks input[type="checkbox"]{ width:18px; height:18px; }
+
+    /* 号棟/号室：自動サフィックスを付与する見た目 */
+    .with-suffix { position:relative; }
+    .with-suffix input { padding-right:44px; }
+    .suffix { position:absolute; right:10px; top:50%; transform:translateY(-50%); opacity:.7; font-size:13px; pointer-events:none; }
+
+    /* 折返し */
+    .td { white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
+
+    @media print{
+      header, .toolbar { display:none; }
+      body{ background:#fff; }
+      .sheet{ border:none; box-shadow:none; padding: 12mm; }
+      @page{ size: A4 portrait; margin: 0; }
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>受　付　表</h1>
+    <div class="bar">
+      <div class="hint">フィールドを入力すると、この紙面がそのままPDFになります</div>
+      <div style="opacity:.6; font-size:12px">スマホ最適化</div>
+    </div>
   </header>
 
   <main>
     <section class="sheet" id="sheet">
-      <div class="row">
-        <label>[受付区分]</label>
-        <select><option>JS時間外</option><option>日常受付</option><option>その他</option></select>
-        <input type="text" placeholder="名前（直接入力）" value="イイノ" />
-      </div>
-      <div class="row">
-        <label>[受付日時]</label>
-        <input type="date"> <input type="time">
-        <input type="text" placeholder="受付者名" />
-      </div>
-      <div class="row">
-        <label>[団地名]</label>
-        <select><option>滝山団地</option><option>ひばりが丘</option><option>その他</option></select>
-      </div>
-      <div class="row">
-        <label>[号棟号室]</label>
-        <div class="inline">
-          <input type="text" placeholder="号棟">
-          <input type="text" placeholder="号室">
+      <!-- ★ PDFに入るタイトル（シート内） -->
+      <div class="title">受　付　表</div>
+      <div class="subtitle">（夜間緊急当番用）</div>
+
+      <div class="grid-table">
+        <!-- 受付区分 -->
+        <div class="th">受付区分</div>
+        <div class="td">
+          <div class="inline">
+            <select id="uk-kbn">
+              <option>JS時間外</option>
+              <option>日常受付</option>
+              <option>その他</option>
+            </select>
+            <input type="text" id="uk-name" placeholder="名前（直接入力可）" value="イイノ" />
+          </div>
         </div>
-      </div>
-      <div class="row">
-        <label>[居住者]</label>
-        <input type="text" placeholder="名前（様）">
-        <div class="inline">
-          <input type="tel" class="tel" placeholder="電話番号1">
-          <input type="tel" class="tel" placeholder="電話番号2">
-          <input type="tel" class="tel" placeholder="電話番号3">
+
+        <!-- 受付日時 -->
+        <div class="th">受付日時</div>
+        <div class="td">
+          <div class="inline">
+            <input type="date" id="uk-date">
+            <input type="time" id="uk-time">
+            <input type="text" id="uk-operator" placeholder="受付者（直接入力）">
+          </div>
         </div>
-      </div>
-      <div class="row">
-        <label>[内容]</label>
-        <textarea placeholder="上階より漏水など"></textarea>
-      </div>
-      <div class="row">
-        <label>[情報]</label>
-        <div class="checks">
-          <label>□ JS時間外受付番号 No.<input type="text" style="width:80px"></label>
-          <label>□ 補修伝票発行済 No.<input type="text" style="width:80px"></label>
-          <label><input type="checkbox"> 未発行</label>
-          <label><input type="checkbox"> 共益費</label>
-          <label><input type="checkbox"> 個人負担</label>
-          <label><input type="checkbox"> クレーム</label>
+
+        <!-- 団地名 -->
+        <div class="th">団地名</div>
+        <div class="td">
+          <div class="inline">
+            <select id="danchi">
+              <option>滝山団地</option>
+              <option>ひばりが丘</option>
+              <option>その他</option>
+            </select>
+            <input type="text" id="danchi-free" placeholder="直接入力可（任意）">
+          </div>
         </div>
-      </div>
-      <div class="row">
-        <label>[経過 及び 処理]</label>
-        <textarea placeholder="経過処理を記入" style="min-height:220px"></textarea>
-        <div class="checks">
-          <label>※出勤者 <input type="checkbox">本人 <input type="checkbox">業者 <input type="checkbox">その他<input type="text" placeholder="記入"></label>
+
+        <!-- 号棟号室 -->
+        <div class="th">号棟号室</div>
+        <div class="td">
+          <div class="inline">
+            <div class="with-suffix"><input type="text" id="gotou" placeholder="8"><span class="suffix">号棟</span></div>
+            <div class="with-suffix"><input type="text" id="goushitsu" placeholder="208"><span class="suffix">号室</span></div>
+          </div>
         </div>
-        <div class="row">
-          <label>※作業対応</label>
-          <select><option>応急処置</option><option>本修理</option><option>その他</option></select>
+
+        <!-- 居住者 -->
+        <div class="th">居住者</div>
+        <div class="td">
+          <div class="inline">
+            <input type="text" id="resident" placeholder="名前（様）">
+          </div>
+          <div class="inline" style="margin-top:8px">
+            <input type="tel" class="tel" placeholder="電話番号1">
+            <input type="tel" class="tel" placeholder="電話番号2">
+            <input type="tel" class="tel" placeholder="電話番号3">
+          </div>
         </div>
-        <div class="row">
-          <label>※対応内容</label>
-          <textarea placeholder="対応内容を記入" style="min-height:160px"></textarea>
+
+        <!-- 内容：10行相当の高さ -->
+        <div class="th">内　容</div>
+        <div class="td">
+          <textarea id="naiyo" placeholder="内部改行可（10行程度の高さを確保）"></textarea>
         </div>
-        <div class="checks">
-          <label>※集金の必要性 <input type="checkbox">有 <input type="checkbox">無</label>
-          <label>※JS時間外報告 <input type="checkbox">済 <input type="checkbox">未報告</label>
+
+        <!-- 情報（チェック群＋番号） -->
+        <div class="th">情　報</div>
+        <div class="td">
+          <div class="checks">
+            <label><input type="checkbox" id="js-no-on">ＪＳ時間外受付番号</label>
+            <span>No.<input type="text" id="js-no" style="width:90px"></span>
+            <label><input type="checkbox" id="hoshu-on">補修伝票発行済</label>
+            <span>No.<input type="text" id="hoshu-no" style="width:90px"></span>
+            <label><input type="checkbox" id="mihakkou">未発行</label>
+            <label><input type="checkbox" id="kyoeki">共益費</label>
+            <label><input type="checkbox" id="kojin">個人負担</label>
+            <label><input type="checkbox" id="claim">クレーム</label>
+          </div>
+        </div>
+
+        <!-- 経過及び処理（15行） -->
+        <div class="th">経過及び処理</div>
+        <div class="td tall-15">
+          <textarea id="keika" placeholder="例）7:30 現着 一次対応／8:30 引継ぎ"></textarea>
+          <div class="checks" style="margin-top:8px">
+            <span>※出勤者</span>
+            <label><input type="checkbox" id="shukkin-honnin">本人</label>
+            <label><input type="checkbox" id="shukkin-gyosha">業者</label>
+            <label><input type="checkbox" id="shukkin-sonota">その他</label>
+            <span><input type="text" id="shukkin-etc" placeholder="（直接入力可）" style="width:220px"></span>
+          </div>
+          <div class="inline" style="margin-top:8px">
+            <label style="display:inline-flex; align-items:center; gap:6px">※作業対応
+              <select id="sagyo">
+                <option>応急処置</option>
+                <option>本修理</option>
+                <option>調査のみ</option>
+                <option>その他</option>
+              </select>
+            </label>
+          </div>
+          <div style="margin-top:8px">
+            <label style="display:block; font-weight:700; margin-bottom:6px">※対応内容</label>
+            <textarea id="taiou" placeholder="10行程度の高さを確保" style="min-height:200px"></textarea>
+          </div>
+          <div class="checks" style="margin-top:8px">
+            <span>※集金の必要性</span>
+            <label><input type="checkbox" id="shukin-ari">有</label>
+            <label><input type="checkbox" id="shukin-nashi">無</label>
+            <span style="margin-left:12px">※JS時間外報告</span>
+            <label><input type="checkbox" id="js-done">済</label>
+            <label><input type="checkbox" id="js-mihokoku">未報告</label>
+          </div>
         </div>
       </div>
     </section>
@@ -107,6 +208,7 @@
   </nav>
 
   <script>
+    // ===== PDF保存（タイトルも含む #sheet を撮影） =====
     async function exportPdf(){
       const node = document.getElementById('sheet');
       const canvas = await html2canvas(node, { scale:2, backgroundColor:'#fff' });
@@ -115,25 +217,29 @@
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pageW = 210, pageH = 297;
       const imgW = pageW; const imgH = imgW * (canvas.height / canvas.width);
-      pdf.addImage(img, 'JPEG', 0, 0, imgW, imgH);
+      const y = Math.max(0, (pageH - imgH) / 2);
+      pdf.addImage(img, 'JPEG', 0, y, imgW, imgH);
       pdf.save('受付表.pdf');
     }
     document.getElementById('btnPdf').addEventListener('click', exportPdf);
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
 
     // ===== 電話番号ハイフン自動フォーマット =====
-    function formatTel(value){
-      const digits = value.replace(/\D/g, '');
-      if(digits.length <= 3) return digits;
-      if(digits.length <= 7) return digits.replace(/(\d{3})(\d+)/, '$1-$2');
-      return digits.replace(/(\d{3})(\d{4})(\d+)/, '$1-$2-$3');
+    function formatTel(v){
+      const d = v.replace(/[^0-9]/g, '');
+      if(d.startsWith('0120')){
+        if(d.length <= 4) return d;
+        if(d.length <= 7) return d.slice(0,4) + '-' + d.slice(4);
+        return d.slice(0,4) + '-' + d.slice(4,7) + '-' + d.slice(7,11);
+      }
+      if(d.length <= 3) return d;
+      if(d.length <= 7) return d.slice(0,3) + '-' + d.slice(3);
+      return d.slice(0,3) + '-' + d.slice(3,7) + '-' + d.slice(7,11);
     }
-
     document.querySelectorAll('.tel').forEach(input => {
       input.addEventListener('input', e => {
-        const cursor = e.target.selectionStart;
-        e.target.value = formatTel(e.target.value);
-        e.target.setSelectionRange(cursor, cursor);
+        const formatted = formatTel(e.target.value);
+        e.target.value = formatted;
       });
     });
   </script>
