@@ -526,7 +526,6 @@ afterGetCellMeta: (row, col, props) => {
       for (const [row, col, _oldVal, newVal] of changes) {
         applyValueRule(hot, row, col, newVal);
       }
-      hot.render();
     },
 
     stretchH: 'all',
