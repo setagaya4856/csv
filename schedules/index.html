@@ -128,12 +128,13 @@ function todayJST(){
 }
 
 async function onMonthTabClick(btn){
-  // active切替
   document.querySelectorAll('#month-tabs button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const ym = btn.dataset.month;
-  // 取得＆描画（キャッシュ利用、スクロールは不要）
-  await loadMonth(ym, { scrollToToday: false });
+
+  // ★ 今月を選んだら毎回「今日(AM)へ寄せる」
+  const scrollToToday = (ym === todayYmJST());
+  await loadMonth(ym, { scrollToToday });
 }
     async function fetchMonthData(ym, token, url){
   // すでにキャッシュあればそれを返す
@@ -230,13 +231,14 @@ async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
 
 
  // ====== 初期化（タブ生成→今日の月を表示） ======
- $('#run').addEventListener('click', async () => {
-   const { todayYm } = (() => {
-     const { months, todayYm } = buildMonthTabs();
-     return { todayYm };
-   })();
-   await loadMonth(todayYm, { scrollToToday: true });
- });
+$('#run').addEventListener('click', async () => {
+  const { todayYm } = (() => {
+    const { months, todayYm } = buildMonthTabs();
+    return { todayYm };
+  })();
+  // ★ 初回はもちろん今日へ
+  await loadMonth(todayYm, { scrollToToday: true });
+});
 // 2D配列 → TSV
 const tsvFrom2D = (arr) =>
   arr.map(row => row.map(v => (v == null ? '' : String(v))).join('\t')).join('\n');
@@ -358,7 +360,14 @@ function mergeClass(existing, add) {
   for (const c of arr) if (c) set.add(c);
   return Array.from(set).join(' ');
 }
-    
+// JSTの "YYYY-MM"
+function todayYmJST() {
+  const f = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit'
+  });
+  const parts = Object.fromEntries(f.formatToParts(new Date()).map(p => [p.type, p.value]));
+  return `${parts.year}-${parts.month}`;
+}
 // JST 今日 (YYYY-MM-DD) はそのまま（Intlで安定）
 function todayStrJST() {
   const dt = new Date();
@@ -525,7 +534,6 @@ afterGetCellMeta: (row, col, props) => {
     colWidths: (index) => index === 0 ? 160 : 110,
   };
 
-  const wasInit = !!hot;
   if (hot) {
     hot.updateSettings(settings);
     hot.render();
@@ -541,22 +549,21 @@ afterGetCellMeta: (row, col, props) => {
   }
   hot.render();
   
-// ▼ 初期表示スクロール
-if (opts.scrollToToday && !wasInit) {
+// ▼ スクロール（今月なら毎回 今日(AM)へ）
+if (opts.scrollToToday) {
   const todayStr = today; // JST YYYY-MM-DD
-  const targetCol = colDates.findIndex(d => d === todayStr);
-  const col = targetCol > 0 ? targetCol : 1; // 無ければ1日AM
+  const targetCol = colDates.findIndex(d => d === todayStr); // AMが先にヒット
+  const col = targetCol > 0 ? targetCol : 1; // 見つからなければ1日AM
   hot.addHookOnce('afterRender', () => {
     scrollColumnToLeft(hot, container, col);
   });
-  // ★ フック直後に再レンダで必ず afterRender を発火
-  hot.render();
+  hot.render(); // afterRenderを必ず発火
 } else {
-  // 他タブ：常に「1日AM(=col 1)」へ
+  // 他月は1日AMへ
   hot.addHookOnce('afterRender', () => {
     scrollColumnToLeft(hot, container, 1);
   });
-  hot.render(); // ★ 同上
+  hot.render();
 }
 }
 
