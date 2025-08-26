@@ -207,6 +207,108 @@
     document.querySelectorAll('.tel').forEach(input=>{
       input.addEventListener('input',e=>{ e.target.value=formatTel(e.target.value); });
     });
+  // 末尾追加：A4クローン方式のPDF出力に差し替え（既存リスナーを除去）
+  (function(){
+    function normalizeForPrint(root){
+      // input（checkbox以外）→テキスト
+      root.querySelectorAll('input').forEach(el => {
+        const type = (el.getAttribute('type')||'text').toLowerCase();
+        if(type === 'checkbox') return;
+        const span = document.createElement('span');
+        span.style.whiteSpace = 'pre-wrap';
+        span.textContent = el.value || '';
+        el.replaceWith(span);
+      });
+      // select →選択テキスト
+      root.querySelectorAll('select').forEach(sel => {
+        const span = document.createElement('span');
+        span.textContent = sel.options[sel.selectedIndex]?.text || '';
+        sel.replaceWith(span);
+      });
+      // textarea →改行保持テキスト
+      root.querySelectorAll('textarea').forEach(ta => {
+        const div = document.createElement('div');
+        div.style.whiteSpace = 'pre-wrap';
+        div.textContent = ta.value || '';
+        ta.replaceWith(div);
+      });
+      // checkbox → □/☑ + ラベル文
+      root.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        const label = cb.closest('label');
+        const box = cb.checked ? '☑︎' : '☐';
+        if(label){
+          const text = label.textContent.replace(/[\s\u2610\u2611\u2705]*/g, '').trim();
+          const span = document.createElement('span');
+          span.textContent = box + ' ' + text;
+          label.replaceWith(span);
+        } else {
+          const span = document.createElement('span');
+          span.textContent = box;
+          cb.replaceWith(span);
+        }
+      });
+    }
+
+    async function exportPdfA4(){
+      const src = document.getElementById('sheet');
+      // 画面外にA4サイズ相当のクローン生成（PC見た目固定）
+      const printRoot = document.createElement('div');
+      printRoot.style.position = 'fixed';
+      printRoot.style.left = '-10000px';
+      printRoot.style.top = '0';
+      printRoot.style.width = '1240px'; // ≒ A4 幅 150dpi 目安
+
+      const clone = src.cloneNode(true);
+      clone.id = 'sheetPrint';
+      clone.style.width = '1240px';
+      clone.style.maxWidth = '1240px';
+      clone.style.minWidth = '1240px';
+      clone.style.boxShadow = 'none';
+      clone.style.border = '1px solid #1f2937';
+      clone.style.padding = '48px'; // ≒ 12mm
+
+      normalizeForPrint(clone);
+      printRoot.appendChild(clone);
+      document.body.appendChild(printRoot);
+
+      // キャプチャ
+      const widthPx = clone.offsetWidth;
+      const heightPx = clone.scrollHeight;
+      const canvas = await html2canvas(clone, {
+        backgroundColor:'#ffffff',
+        scale: 2,
+        width: widthPx,
+        height: heightPx,
+        windowWidth: widthPx,
+        windowHeight: heightPx
+      });
+
+      // A4へフィット（縦横比維持・中央寄せ）
+      const img = canvas.toDataURL('image/jpeg', 0.98);
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = 210, pageH = 297;
+      const imgWmm = pageW;
+      const imgHmm = imgWmm * (canvas.height / canvas.width);
+      const scaleToFit = Math.min(pageH / imgHmm, 1);
+      const finalW = imgWmm * scaleToFit;
+      const finalH = imgHmm * scaleToFit;
+      const offsetX = (pageW - finalW) / 2;
+      const offsetY = (pageH - finalH) / 2;
+      pdf.addImage(img, 'JPEG', offsetX, offsetY, finalW, finalH, undefined, 'FAST');
+      pdf.save('受付表.pdf');
+
+      document.body.removeChild(printRoot);
+    }
+
+    // 既存のリスナーを消すためにボタンをクローンして置き換え
+    const oldBtn = document.getElementById('btnPdf');
+    if(oldBtn){
+      const newBtn = oldBtn.cloneNode(true);
+      oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+      newBtn.addEventListener('click', exportPdfA4);
+    }
+  })();
   </script>
 </body>
 </html>
