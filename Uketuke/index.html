@@ -354,19 +354,11 @@ function normalizeForPrint(root){
     danchi: tdByThText('団地名'),
   };
 
-  // --- 情報ブロック（補修伝票の前で改行するための下準備：既存処理維持） ---
-  const infoTh = [...root.querySelectorAll('.th')].find(th => th.textContent.includes('情'));
-  const infoTd = infoTh ? infoTh.nextElementSibling : null;
-  if(infoTd){
-    const labels = [...infoTd.querySelectorAll('label')];
-    const hoshuLabel = labels.find(l => l.textContent.includes('補修伝票発行済'));
-    if(hoshuLabel){
-      const br1 = document.createElement('div');
-      br1.style.width = '100%';
-      br1.style.height = '0';
-      hoshuLabel.parentNode.insertBefore(br1, hoshuLabel);
-    }
-  }
+    // 情報ブロック特別処理 → 削除
+    const infoTh = [...root.querySelectorAll('.th')].find(th => th.textContent.includes('情'));
+    const infoTd = infoTh ? infoTh.nextElementSibling : null;
+    // 以前はここで hoshuLabel の直前に <div> を入れて改行していたが削除
+
 
   // --- まず通常どおり変換（checkbox以外の input / select / textarea） ---
   root.querySelectorAll('input').forEach(el => {
