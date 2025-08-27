@@ -320,13 +320,14 @@ pdf.save(complexName);
       
       document.body.removeChild(printRoot);
     }
+    
 function normalizeForPrint(root){
-  // 枠付きボックス（印刷時に幅が縮まず、常に枠と余白を持つ）
+  // 小さなユーティリティ（枠付きボックスの生成）
   const makeBox = (text, {block=true, minH=48, minW=null, width=null, pad=12, border='#000', flexGrow=null, inline=false}={}) => {
     const div = document.createElement('div');
     div.textContent = text || '';
     div.style.whiteSpace = 'pre-wrap';
-    div.style.border = `1px solid ${border}`;  // ← 枠線（少し薄くしたい場合は #888 でもOK）
+    div.style.border = `1px solid ${border}`;
     div.style.borderRadius = '4px';
     div.style.padding = pad + 'px';
     div.style.lineHeight = '1.8';
@@ -340,14 +341,26 @@ function normalizeForPrint(root){
     return div;
   };
 
-  // ーーー 「情報」ブロックの体裁：補修伝票の前で改行させる準備 ーーー
+  // --- ヘルパー：見出しテキストから「同じ行の td」を取る ---
+  const tdByThText = (kw) => {
+    const th = [...root.querySelectorAll('.th')].find(t => t.textContent.includes(kw));
+    return th ? th.nextElementSibling : null;
+  };
+
+  // --- 「印刷時は1行表示」にする対象 td を取得 ---
+  const oneLineTds = {
+    kubun:  tdByThText('受付区分'),
+    jikan:  tdByThText('受付日時'),
+    danchi: tdByThText('団地名'),
+  };
+
+  // --- 情報ブロック（補修伝票の前で改行するための下準備：既存処理維持） ---
   const infoTh = [...root.querySelectorAll('.th')].find(th => th.textContent.includes('情'));
   const infoTd = infoTh ? infoTh.nextElementSibling : null;
   if(infoTd){
     const labels = [...infoTd.querySelectorAll('label')];
     const hoshuLabel = labels.find(l => l.textContent.includes('補修伝票発行済'));
     if(hoshuLabel){
-      // ラベルの直前に改行ブロックを入れる
       const br1 = document.createElement('div');
       br1.style.width = '100%';
       br1.style.height = '0';
@@ -355,7 +368,7 @@ function normalizeForPrint(root){
     }
   }
 
-  // input（checkbox以外）→ ボックス化
+  // --- まず通常どおり変換（checkbox以外の input / select / textarea） ---
   root.querySelectorAll('input').forEach(el => {
     const type = (el.getAttribute('type')||'text').toLowerCase();
     if(type === 'checkbox') return;
@@ -367,15 +380,12 @@ function normalizeForPrint(root){
     const isEtcOut = el.getAttribute('placeholder')?.includes('直接入力可') && el.style.width === '220px'; // 出勤者「その他」
 
     if(inSuffix){
-      // 号棟/号室：小さめ並列（半幅領域内）
       el.replaceWith(makeBox(el.value, {inline:true, minH:48, minW:140}));
     } else if(isTel){
-      // 電話：3つ均等（親flex等分）→ ボックスはflex:1
       const box = makeBox(el.value, {inline:false, minH:48});
       box.style.flex = '1 1 0';
       el.replaceWith(box);
     } else if(isNo && inInfo){
-      // 情報欄の No. → 倍幅 & 直後で改行
       const box = makeBox(el.value, {inline:true, minH:48, minW:180});
       const parentSpan = el.parentElement;
       el.replaceWith(box);
@@ -385,18 +395,14 @@ function normalizeForPrint(root){
         parentSpan.style.marginTop = '6px';
       }
     } else if(isNo){
-      // その他の No.
       el.replaceWith(makeBox(el.value, {inline:true, minH:48, minW:110}));
     } else if(isEtcOut){
-      // 出勤者「その他」入力欄を広く
       el.replaceWith(makeBox(el.value, {block:false, minH:48, minW:440}));
     } else {
-      // 受付区分 / 受付者 / 団地 / 居住者 など：幅いっぱい
       el.replaceWith(makeBox(el.value, {block:true, minH:56}));
     }
   });
 
-  // select → 「※作業対応」は1列表示（ラベル内でインライン）
   root.querySelectorAll('select').forEach(sel => {
     const inWorkLabel = !!sel.closest('label') && sel.closest('label')?.textContent.includes('※作業対応');
     if(inWorkLabel){
@@ -406,20 +412,19 @@ function normalizeForPrint(root){
     }
   });
 
-  // textarea → 内容/対応内容は常に10行相当の高さ、幅100%
   root.querySelectorAll('textarea').forEach(ta => {
-    const minH = ta.classList.contains('tall') ? 400 : 340; // 印刷時拡大
-    const box = makeBox(ta.value, {block:true, minH, border:'#888'}); // ← 少し薄い枠
+    const minH = ta.classList.contains('tall') ? 400 : 340;
+    const box = makeBox(ta.value, {block:true, minH, border:'#888'});
     box.style.width = '100%';
     ta.replaceWith(box);
   });
 
-  // ※対応内容の見出しは太字を削除
+  // ※対応内容の見出しは太字解除（既存維持）
   root.querySelectorAll('label').forEach(lab=>{
     if(lab.textContent.trim().includes('※対応内容')) lab.style.fontWeight='400';
   });
 
-  // checkbox → □/☑︎ + 文言
+  // checkbox → □/☑︎ に置換（既存維持）
   root.querySelectorAll('input[type="checkbox"]').forEach(cb => {
     const label = cb.closest('label');
     const sym = cb.checked ? '☑︎' : '☐';
@@ -435,12 +440,48 @@ function normalizeForPrint(root){
     }
   });
 
-  // 「集金の必要性 有 無」の後で改行（= 次の「※JS時間外報告」を新行へ）
+  // 「集金の必要性 …」の後で改行（既存維持）
   const lastChecks = root.querySelector('.td.tall .checks:last-of-type');
   if(lastChecks){
     const spans = lastChecks.querySelectorAll('span');
     if(spans[1]){ spans[1].style.display='block'; spans[1].style.width='100%'; spans[1].style.marginTop='10px'; }
   }
+
+  // --- ここから：対象3行を“1行横並び”に最終整形 ---
+  const enforceOneLine = (td, opts={}) => {
+    if(!td) return;
+    // 親 .inline を横一列＆折返しなしに
+    const inlineWrap = td.querySelector('.inline') || td;
+    inlineWrap.style.display = 'flex';
+    inlineWrap.style.flexWrap = 'nowrap';
+    inlineWrap.style.alignItems = 'center';
+    inlineWrap.style.gap = '12px';
+
+    // 子ボックス（さきほど makeBox で置換された要素）を全部インライン化
+    [...inlineWrap.children].forEach(ch => {
+      if(!(ch instanceof HTMLElement)) return;
+      // 「No.～」などの span も横並びに
+      ch.style.display = 'inline-block';
+      ch.style.width = 'auto';
+      ch.style.minWidth = '0';
+      ch.style.flex = '0 0 auto';
+      // 号棟/号室用の小さめ余白を少し詰める
+      if(opts.compact){ ch.style.padding = '10px'; }
+      // 受付者など長め入力は少し広めに
+      if(opts.wide && ch.tagName === 'DIV' && ch.style.minWidth === ''){
+        ch.style.minWidth = '240px';
+      }
+    });
+  };
+
+  // 受付区分（セレクト＋名前）：1行
+  enforceOneLine(oneLineTds.kubun, { wide:true });
+
+  // 受付日時（日付＋時刻＋受付者）：1行
+  enforceOneLine(oneLineTds.jikan, { wide:true });
+
+  // 団地名（セレクト＋任意入力）：1行
+  enforceOneLine(oneLineTds.danchi, { wide:true, compact:true });
 }
 
 
