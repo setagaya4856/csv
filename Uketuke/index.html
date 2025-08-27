@@ -484,7 +484,27 @@ function normalizeForPrint(root){
   inputSpan.style.gap = '8px';
   inputSpan.style.width = 'auto';
 })();
+// --- 「※JS時間外報告」の前に改行を入れる ---
+(() => {
+  const tallTh = [...root.querySelectorAll('.th')].find(t => t.textContent.includes('経過及び処理'));
+  const tallTd = tallTh ? tallTh.nextElementSibling : null;
+  const lastChecks = tallTd ? tallTd.querySelector('.checks:last-of-type') : null;
+  if (!lastChecks) return;
 
+  // 「※JS時間外報告」の span を探す
+  const spans = [...lastChecks.children];
+  const jsSpan = spans.find(el => el.tagName === 'SPAN' && el.textContent.includes('※JS時間外報告'));
+  if (!jsSpan) return;
+
+  // 改行要素を作って「※JS時間外報告」の直前に挿入
+  const br = document.createElement('div');
+  br.style.width = '100%';
+  br.style.height = '0';
+  br.style.display = 'block';
+  br.style.marginTop = '8px'; // お好みで余白
+  lastChecks.insertBefore(br, jsSpan);
+})();
+  
   // 受付区分（セレクト＋名前）：1行
   enforceOneLine(oneLineTds.kubun, { wide:true });
 
