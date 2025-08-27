@@ -52,7 +52,32 @@
     .checks { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; }
     .checks label { display:inline-flex; align-items:center; gap:6px; white-space:normal; writing-mode: horizontal-tb; }
     .checks input[type="checkbox"]{ width:18px; height:18px; }
-
+    /* 受付区分：select と text を 50%/50% で 1 行 */
+    .grid-table .td:nth-of-type(1) .inline > *{
+      flex:0 0 50% !important;
+      max-width:50% !important;
+    }
+    
+    /* 受付日時：date / time / text を 1/3 ずつで 1 行 */
+    .grid-table .td:nth-of-type(2) .inline > *{
+      flex:0 0 33.3333% !important;
+      max-width:33.3333% !important;
+    }
+    
+    /* 団地名：select と text を 50%/50% で 1 行 */
+    .grid-table .td:nth-of-type(3) .inline > *{
+      flex:0 0 50% !important;
+      max-width:50% !important;
+    }
+    /* 経過および処理：最初の checks 行は折返し禁止（“その他”入力まで 1 行） */
+    .td.tall .checks:first-of-type{
+      flex-wrap:nowrap !important;
+      white-space:nowrap !important;
+    }
+    .td.tall .checks:first-of-type > *{
+      display:inline-flex !important;
+      align-items:center;
+    }
     @media (max-width: 380px){
       .grid-table{ grid-template-columns: 100px 1fr; }
       .th, .td{ min-height: 60px; padding: 12px 10px; }
@@ -112,21 +137,6 @@
     display:inline-block !important;
   }
 
-  /* 「補修伝票発行済」の前で改行＋No.欄を倍幅→その後も改行 */
-  .checks label:has(> input[type="checkbox"]) + span:has(> input[style*="width:90px"]){
-    display:block !important;             /* ← ラベルの直後(= No.)を改行 */
-  }
-  .checks span input[style*="width:90px"]{
-    width:180px !important;               /* ← 倍幅 */
-    display:inline-block !important;
-    margin-top:6px;
-  }
-  .checks span:has(> input[style*="width:90px"]){
-    display:block !important;             /* ← No.の“後”で改行 */
-    width:100% !important;
-    margin-top:6px;
-  }
-
   /* ※対応内容の太字は削除（印刷時のみ） */
   .td label{ font-weight:400 !important; }
 
@@ -136,7 +146,19 @@
     width:100% !important;
     margin-top:10px;
   }
-
+  /* 情報欄：No.入力は倍幅、かつ “No. のあと” で改行 */
+  .checks span:has(> input[style*="width:90px"]) input{
+    width:180px !important;              /* 倍幅 */
+    display:inline-block !important;
+    vertical-align:middle;
+  }
+  .checks span:has(> input[style*="width:90px"])::after{
+    content:"";
+    display:block;                       /* ← ここで改行を入れる */
+    height:0;
+    width:100%;
+    margin-top:6px;
+  }
   @page{ size: A4 portrait; margin: 0; }
 }
   </style>
@@ -168,8 +190,8 @@
         <div class="th">団地名</div>
         <div class="td">
           <div class="inline">
-            <select><option>ひばりが丘PH</option><option>GPひばりが丘南</option><option></option><option>新柳沢団地</option><option>PS田無向台</option><option>GH東久留米</option><option>滝山団地</option><option>滝山東団地</option><option></option>
-              <option>フレール西経堂</option><option>経堂赤堤通り団地/option><option>スクエアー世田谷桜丘</option><option>世田谷通りシティハイツ若林</option><option>CC二子玉川/option><option>CC上馬</option><option>上馬二丁目</option><option>その他</option></select>
+            <select><option>ひばりが丘PH</option><option>GPひばりが丘南</option><option>新柳沢団地</option><option>PS田無向台</option><option>GH東久留米</option><option>滝山団地</option><option>滝山東団地</option>
+              <option>フレール西経堂</option><option>経堂赤堤通り団地</option><option>スクエアー世田谷桜丘</option><option>世田谷通りシティハイツ若林</option><option>CC二子玉川</option><option>CC上馬</option><option>上馬二丁目</option><option>その他</option></select>
             <input type="text" placeholder="直接入力可（任意）">
           </div>
         </div>
