@@ -505,14 +505,28 @@ function normalizeForPrint(root){
   lastChecks.insertBefore(br, jsSpan);
 })();
   
-  // 受付区分（セレクト＋名前）：1行
-  enforceOneLine(oneLineTds.kubun, { wide:true });
+  // 受付区分（セレクト＋名前）：1行、min-width:300px
+if (oneLineTds.kubun) {
+  enforceOneLine(oneLineTds.kubun);
+  [...oneLineTds.kubun.querySelectorAll('div')].forEach(ch => {
+    ch.style.minWidth = '300px';
+  });
+}
 
-  // 受付日時（日付＋時刻＋受付者）：1行
-  enforceOneLine(oneLineTds.jikan, { wide:true });
+// 受付日時（日付＋時刻＋受付者）：1行、min-width:200px
+if (oneLineTds.jikan) {
+  enforceOneLine(oneLineTds.jikan);
+  [...oneLineTds.jikan.querySelectorAll('div')].forEach(ch => {
+    ch.style.minWidth = '200px';
+  });
+}
 
-  // 団地名（セレクト＋任意入力）：1行
-  enforceOneLine(oneLineTds.danchi, { wide:true, compact:true });
+// 団地名（セレクト＋任意入力）：1行、min-width:300px
+if (oneLineTds.danchi) {
+  enforceOneLine(oneLineTds.danchi);
+  [...oneLineTds.danchi.querySelectorAll('div')].forEach(ch => {
+    ch.style.minWidth = '300px';
+  });
 }
 
 
