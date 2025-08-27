@@ -370,8 +370,17 @@ function normalizeForPrint(root){
         parentSpan.style.width = 'auto';
         parentSpan.style.marginTop = '0';
       }
-    } else if(isEtcOut){
-      el.replaceWith(makeBox(el.value, {block:false, minH:48, minW:440}));
+    }else if(isEtcOut){
+      // 出勤者「その他」入力欄を横並びのまま広く表示
+      const box = makeBox(el.value, {inline:true, minH:48, minW:440});
+      const parentSpan = el.parentElement;
+      el.replaceWith(box);
+      if (parentSpan) {
+        parentSpan.style.display = 'inline-flex';
+        parentSpan.style.alignItems = 'center';
+        parentSpan.style.gap = '8px';
+        parentSpan.style.width = 'auto';
+      }
     } else {
       el.replaceWith(makeBox(el.value, {block:true, minH:56}));
     }
