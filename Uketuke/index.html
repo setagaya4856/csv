@@ -88,7 +88,7 @@
 
   /* テキストエリア：枠は“少し薄く”、はみ出し防止、10行相当の高さ */
   textarea.short, textarea.tall{
-    border:1px solid #888 !important;   /* ← 少し薄く */
+    border:1px solid #ccc !important;
     width:100% !important;
     box-sizing:border-box !important;
     overflow-wrap:anywhere !important;
@@ -334,7 +334,7 @@ function normalizeForPrint(root){
     const div = document.createElement('div');
     div.textContent = text || '';
     div.style.whiteSpace = 'pre-wrap';
-    div.style.border = `1px solid ${border}`;  // ← 枠線（少し薄くしたい場合は #888 でもOK）
+    div.style.border = `1px solid ${border}`;  // ← #ccc に
     div.style.borderRadius = '4px';
     div.style.padding = pad + 'px';
     div.style.lineHeight = '1.8';
@@ -417,7 +417,7 @@ function normalizeForPrint(root){
   // textarea → 内容/対応内容は常に10行相当の高さ、幅100%
   root.querySelectorAll('textarea').forEach(ta => {
     const minH = ta.classList.contains('tall') ? 400 : 340; // 印刷時拡大
-    const box = makeBox(ta.value, {block:true, minH, border:'#888'}); // ← 少し薄い枠
+    const box = makeBox(ta.value, {block:true, minH, border:'#ccc'}); // ← #ccc
     box.style.width = '100%';
     ta.replaceWith(box);
   });
@@ -446,8 +446,15 @@ function normalizeForPrint(root){
   // 「集金の必要性 有 無」の後で改行（= 次の「※JS時間外報告」を新行へ）
   const lastChecks = root.querySelector('.td.tall .checks:last-of-type');
   if(lastChecks){
-    const spans = lastChecks.querySelectorAll('span');
-    if(spans[1]){ spans[1].style.display='block'; spans[1].style.width='100%'; spans[1].style.marginTop='10px'; }
+    const labels = lastChecks.querySelectorAll('label');
+    if(labels[1]){ // 無まで一行
+      const jsSpan = lastChecks.querySelector('span:nth-of-type(2)');
+      if(jsSpan){
+        jsSpan.style.display='block';
+        jsSpan.style.width='100%';
+        jsSpan.style.marginTop='10px';
+      }
+    }
   }
 }
 
