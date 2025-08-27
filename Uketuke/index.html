@@ -370,7 +370,7 @@ function normalizeForPrint(root){
         parentSpan.style.width = 'auto';
         parentSpan.style.marginTop = '0';
       }
-    }else if(isEtcOut){
+    } else if(isEtcOut){
       // 出勤者「その他」入力欄を横並びのまま広く表示
       const box = makeBox(el.value, {inline:true, minH:48, minW:300});
       const parentSpan = el.parentElement;
