@@ -434,13 +434,6 @@ function normalizeForPrint(root){
     }
   });
 
-  // 「集金の必要性 …」の後で改行（既存維持）
-  const lastChecks = root.querySelector('.td.tall .checks:last-of-type');
-  if(lastChecks){
-    const spans = lastChecks.querySelectorAll('span');
-    if(spans[1]){ spans[1].style.display='block'; spans[1].style.width='100%'; spans[1].style.marginTop='10px'; }
-  }
-
   // --- ここから：対象3行を“1行横並び”に最終整形 ---
   const enforceOneLine = (td, opts={}) => {
     if(!td) return;
