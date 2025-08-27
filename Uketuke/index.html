@@ -377,7 +377,7 @@ function normalizeForPrint(root){
       const box = makeBox(el.value, {inline:false, minH:48});
       box.style.flex = '1 1 0';
       el.replaceWith(box);
-    } else if(isNo && inInfo){
+    } else if(isNo){
       const box = makeBox(el.value, {inline:true, minH:48, minW:180});
       const parentSpan = el.parentElement;
       el.replaceWith(box);
