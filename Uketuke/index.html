@@ -64,13 +64,24 @@
       .th{ padding: 12px 6px; word-break: keep-all; line-height:1.35; }
     }
 
-    @media print{
-      .toolbar { display:none; }
-      body{ background:#fff; font-size:17px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .sheet{ border:none; box-shadow:none; padding: 12mm; width:auto; max-width:none; }
-      input::placeholder, textarea::placeholder { color: transparent !important; }
-      @page{ size: A4 portrait; margin: 0; }
-    }
+@media print{
+  .toolbar { display:none; }
+  body{
+    background:#fff;
+    font-size:19px;           /* ← 印刷時の本文サイズUP */
+    line-height:1.7;          /* ← 縦方向にゆったり */
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .sheet{ border:none; box-shadow:none; padding: 12mm; width:auto; max-width:none; }
+  input::placeholder, textarea::placeholder { color: transparent !important; }
+
+  /* 印刷時も内容/対応内容は常に10行相当以上を確保し、枠を明示 */
+  textarea.short, textarea.tall { border:1px solid #000 !important; }
+  textarea.short { min-height:300px !important; }
+  textarea.tall  { min-height:360px !important; }
+
+  @page{ size: A4 portrait; margin: 0; }
+}
   </style>
 </head>
 <body>
@@ -199,8 +210,10 @@
       clone.style.maxWidth = '1240px';
       clone.style.minWidth = '1240px';
       clone.style.boxShadow = 'none';
-      clone.style.border = '1px solid #1f2937';
+      /* 外枠は不要 */
       clone.style.padding = '48px';
+      clone.style.fontSize = '19px';   /* 印刷時も本文大きめ */
+      clone.style.lineHeight = '1.7';
 
       // 入力UIを「枠付きの表示ボックス」に置換して枠/高さ/折返しを安定化
       normalizeForPrint(clone);
@@ -236,69 +249,73 @@
       document.body.removeChild(printRoot);
     }
 
-    function normalizeForPrint(root){
-      // 枠と高さを維持する表示用ボックスを作成
-      const toBox = (text, opts={}) => {
-        const div = document.createElement('div');
-        div.textContent = text || '';
-        div.style.whiteSpace = 'pre-wrap';
-        div.style.border = '1px solid #999';
-        div.style.borderRadius = '4px';
-        div.style.padding = '10px';
-        div.style.lineHeight = '1.65';
-        if (opts.minHeight) div.style.minHeight = opts.minHeight;
-        if (opts.minWidth)  div.style.minWidth  = opts.minWidth;
-        if (opts.inline)    div.style.display   = 'inline-block';
-        return div;
-      };
+function normalizeForPrint(root){
+  // 表示用ボックス（印刷時に幅が縮まず、常に枠と余白を持つ）
+  const makeBox = (text, {block=true, minH=44, minW=null, pad=12, border='#000'}={}) => {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    div.style.whiteSpace = 'pre-wrap';
+    div.style.border = `1px solid ${border}`;
+    div.style.borderRadius = '4px';
+    div.style.padding = pad + 'px';
+    div.style.lineHeight = '1.7';
+    if(block){ div.style.display = 'block'; div.style.width = '100%'; }
+    else { div.style.display = 'inline-block'; }
+    if(minH){ div.style.minHeight = (typeof minH==='number'? minH+'px' : minH); }
+    if(minW){ div.style.minWidth  = (typeof minW==='number'? minW+'px' : minW); }
+    return div;
+  };
 
-      // input（checkbox以外）→ボックス化
-      root.querySelectorAll('input').forEach(el => {
-        const type = (el.getAttribute('type')||'text').toLowerCase();
-        if(type === 'checkbox') return;
+  // input（checkbox以外）→ ボックス化
+  root.querySelectorAll('input').forEach(el => {
+    const type = (el.getAttribute('type')||'text').toLowerCase();
+    if(type === 'checkbox') return;
 
-        // No. の小さい箱は幅を固定
-        const isNoBox = (el.parentElement && /No\./.test(el.parentElement.textContent));
-        const minW = isNoBox ? '90px' : null;
+    const parent = el.closest('.with-suffix');
+    const isTel  = el.classList.contains('tel');
+    const isNo   = el.parentElement && /No\./.test(el.parentElement.textContent);
 
-        // 号棟/号室の小さめ入力もつぶれないように
-        const inSuffix = el.closest('.with-suffix') ? '120px' : minW;
-
-        const box = toBox(el.value || '', { inline: !!(minW||inSuffix), minWidth: (inSuffix||minW) });
-        el.replaceWith(box);
-      });
-
-      // select → 選択テキストを枠付きボックスに
-      root.querySelectorAll('select').forEach(sel => {
-        const box = toBox(sel.options[sel.selectedIndex]?.text || '');
-        sel.replaceWith(box);
-      });
-
-      // textarea → 常に「短くても10行」相当の高さを確保
-      root.querySelectorAll('textarea').forEach(ta => {
-        const minH = ta.classList.contains('short') ? '260px'
-                    : ta.classList.contains('tall')  ? '300px'
-                    : '200px';
-        const box = toBox(ta.value || '', { minHeight: minH });
-        ta.replaceWith(box);
-      });
-
-      // checkbox → □/☑︎ + 文言（インライン）
-      root.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        const label = cb.closest('label');
-        const sym = cb.checked ? '☑︎' : '☐';
-        if(label){
-          const text = label.textContent.replace(/[\s\u2610\u2611\u2705]*/g, '').trim();
-          const span = document.createElement('span');
-          span.textContent = `${sym} ${text}`;
-          label.replaceWith(span);
-        } else {
-          const span = document.createElement('span');
-          span.textContent = sym;
-          cb.replaceWith(span);
-        }
-      });
+    // 号棟/号室・電話・No. は横並びの小さめボックスを維持
+    if(parent){
+      el.replaceWith(makeBox(el.value, {block:false, minH:44, minW:140}));
+    } else if(isTel){
+      el.replaceWith(makeBox(el.value, {block:false, minH:44, minW:160}));
+    } else if(isNo){
+      el.replaceWith(makeBox(el.value, {block:false, minH:44, minW:90}));
+    } else {
+      // 受付区分 / 受付日時 / 団地 / 居住者 などは幅いっぱいの大きめボックス
+      el.replaceWith(makeBox(el.value, {block:true, minH:48}));
     }
+  });
+
+  // select → 幅いっぱい
+  root.querySelectorAll('select').forEach(sel => {
+    sel.replaceWith(makeBox(sel.options[sel.selectedIndex]?.text || '', {block:true, minH:48}));
+  });
+
+  // textarea → 内容 / 対応内容 は常に10行ぶん以上の高さ
+  root.querySelectorAll('textarea').forEach(ta => {
+    const minH = ta.classList.contains('tall') ? 360 : 300; // 印刷時拡大
+    ta.replaceWith(makeBox(ta.value, {block:true, minH}));
+  });
+
+  // checkbox → □/☑︎ + 文言（インライン）
+  root.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    const label = cb.closest('label');
+    const sym = cb.checked ? '☑︎' : '☐';
+    if(label){
+      const text = label.textContent.replace(/[\s\u2610\u2611\u2705]*/g, '').trim();
+      const span = document.createElement('span');
+      span.textContent = `${sym} ${text}`;
+      label.replaceWith(span);
+    } else {
+      const span = document.createElement('span');
+      span.textContent = sym;
+      cb.replaceWith(span);
+    }
+  });
+}
+
 
     document.getElementById('btnPdf').addEventListener('click', exportPdf);
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
