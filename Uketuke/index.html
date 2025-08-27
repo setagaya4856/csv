@@ -106,27 +106,12 @@
 
   /* 出勤者の「その他」の横の入力欄を広く（元:220px → 倍） */
   input[placeholder*="直接入力可"][style*="width:220px"]{
-    min-width:440px !important;
-    display:inline-block !important;
-  }
-
-  /* 「補修伝票発行済」の前で改行＋No.欄を倍幅→その後も改行 */
-  .checks span input[style*="width:70px"]{
-    width:180px !important;               /* ← 倍幅 */
-    display:inline-block !important;
-    margin-top:6px;
+    min-width:300px !important;
   }
 
   /* ※対応内容の太字は削除（印刷時のみ） */
   .td label{ font-weight:400 !important; }
-
-  /* 「集金の必要性 有 無」の後で改行（= 次の「※JS時間外報告」を新行へ） */
-  .td.tall .checks:last-of-type span:nth-of-type(2){
-    display:block !important;
-    width:100% !important;
-    margin-top:10px;
-  }
-
+  
   @page{ size: A4 portrait; margin: 0; }
 }
   </style>
