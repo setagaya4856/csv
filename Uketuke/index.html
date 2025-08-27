@@ -303,11 +303,12 @@ pdf.save(complexName);
     
 function normalizeForPrint(root){
   // 小さなユーティリティ（枠付きボックスの生成）
-  const makeBox = (text, {block=true, minH=48, minW=null, width=null, pad=12, border='#000', flexGrow=null, inline=false}={}) => {
+  const makeBox = (text, {block=true, minH=48, minW=null, width=null, pad=12, border='#888', flexGrow=null, inline=false}={}) => {
     const div = document.createElement('div');
     div.textContent = text || '';
     div.style.whiteSpace = 'pre-wrap';
-    div.style.border = `1px solid ${border}`;
+    div.style.border = `1px solid ${border}`;         // 既定は #888（薄め）
+    div.style.boxShadow = 'none';                      // 念のため影は消す
     div.style.borderRadius = '4px';
     div.style.padding = pad + 'px';
     div.style.lineHeight = '1.8';
