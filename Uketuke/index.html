@@ -378,16 +378,18 @@ function normalizeForPrint(root){
       box.style.flex = '1 1 0';
       el.replaceWith(box);
     } else if(isNo){
-      const box = makeBox(el.value, {inline:true, minH:48, minW:180});
+      // No. 欄：常に横並び（改行しない）
+      const box = makeBox(el.value, {inline:true, minH:48, minW:160}); // お好みで 140～200 に調整可
       const parentSpan = el.parentElement;
       el.replaceWith(box);
-      if(parentSpan){
-        parentSpan.style.display = 'block';
-        parentSpan.style.width = '100%';
-        parentSpan.style.marginTop = '6px';
+      if (parentSpan) {
+        // block ではなく inline-flex にして折り返さない
+        parentSpan.style.display = 'inline-flex';
+        parentSpan.style.alignItems = 'center';
+        parentSpan.style.gap = '8px';
+        parentSpan.style.width = 'auto';
+        parentSpan.style.marginTop = '0';
       }
-    } else if(isNo){
-      el.replaceWith(makeBox(el.value, {inline:true, minH:48, minW:110}));
     } else if(isEtcOut){
       el.replaceWith(makeBox(el.value, {block:false, minH:48, minW:440}));
     } else {
