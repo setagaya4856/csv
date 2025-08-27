@@ -68,20 +68,34 @@
   .toolbar { display:none; }
   body{
     background:#fff;
-    font-size:19px;           /* ← 印刷時の本文サイズUP */
-    line-height:1.7;          /* ← 縦方向にゆったり */
+    font-size:32px;           /* ← だいたい2倍 */
+    line-height:1.8;          /* ← 縦を広く */
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
-  .sheet{ border:none; box-shadow:none; padding: 12mm; width:auto; max-width:none; }
+  /* 左列を広めにして大きい見出しが収まりやすく */
+  .grid-table{ grid-template-columns: minmax(180px, 35%) 1fr; }
+
+  /* 左側の見出し（受付区分/受付日時/団地/居住者…）を約3倍 */
+  .th{ font-size:3em; font-weight:900; }
+
+  .sheet{ border:none; box-shadow:none; padding: 14mm; width:auto; max-width:none; }
   input::placeholder, textarea::placeholder { color: transparent !important; }
 
-  /* 印刷時も内容/対応内容は常に10行相当以上を確保し、枠を明示 */
-  textarea.short, textarea.tall { border:1px solid #000 !important; }
-  textarea.short { min-height:300px !important; }
-  textarea.tall  { min-height:360px !important; }
+  /* テキストエリアは常に10行相当、はみ出さないよう幅100% & 枠太め */
+  textarea.short, textarea.tall { border:2px solid #000 !important; width:100% !important; box-sizing:border-box !important; }
+  textarea.short { min-height:320px !important; }
+  textarea.tall  { min-height:380px !important; }
+
+  /* 電話番号3つを横1列で均等配置（居住者欄の2段目 .inline をflex化） */
+  .td .inline{ display:flex; gap:12px; }
+  .td .inline > div,
+  .td .inline > span,
+  .td .inline > input,
+  .td .inline > select { flex:1 1 0; min-width:0; }
 
   @page{ size: A4 portrait; margin: 0; }
 }
+
   </style>
 </head>
 <body>
@@ -212,8 +226,8 @@
       clone.style.boxShadow = 'none';
       /* 外枠は不要 */
       clone.style.padding = '48px';
-      clone.style.fontSize = '19px';   /* 印刷時も本文大きめ */
-      clone.style.lineHeight = '1.7';
+      clone.style.fontSize = '32px';   // ← 2倍相当
+      clone.style.lineHeight = '1.8';  // ← 縦を広く
 
       // 入力UIを「枠付きの表示ボックス」に置換して枠/高さ/折返しを安定化
       normalizeForPrint(clone);
@@ -250,19 +264,22 @@
     }
 
 function normalizeForPrint(root){
-  // 表示用ボックス（印刷時に幅が縮まず、常に枠と余白を持つ）
-  const makeBox = (text, {block=true, minH=44, minW=null, pad=12, border='#000'}={}) => {
+  // 枠付きボックス（印刷時に幅が縮まず、常に枠と余白を持つ）
+  const makeBox = (text, {block=true, minH=48, minW=null, width=null, pad=12, border='#000', flexGrow=null, inline=false}={}) => {
     const div = document.createElement('div');
     div.textContent = text || '';
     div.style.whiteSpace = 'pre-wrap';
-    div.style.border = `1px solid ${border}`;
+    div.style.border = `2px solid ${border}`;
     div.style.borderRadius = '4px';
     div.style.padding = pad + 'px';
-    div.style.lineHeight = '1.7';
-    if(block){ div.style.display = 'block'; div.style.width = '100%'; }
-    else { div.style.display = 'inline-block'; }
+    div.style.lineHeight = '1.8';
+    div.style.boxSizing = 'border-box';
+    if(width){ div.style.width = width; }
     if(minH){ div.style.minHeight = (typeof minH==='number'? minH+'px' : minH); }
     if(minW){ div.style.minWidth  = (typeof minW==='number'? minW+'px' : minW); }
+    if(flexGrow !== null){ div.style.flex = `${flexGrow} 1 0`; }
+    if(inline){ div.style.display = 'inline-block'; }
+    else if(block){ div.style.display = 'block'; div.style.width = div.style.width || '100%'; }
     return div;
   };
 
@@ -271,35 +288,50 @@ function normalizeForPrint(root){
     const type = (el.getAttribute('type')||'text').toLowerCase();
     if(type === 'checkbox') return;
 
-    const parent = el.closest('.with-suffix');
-    const isTel  = el.classList.contains('tel');
-    const isNo   = el.parentElement && /No\./.test(el.parentElement.textContent);
+    const inSuffix = !!el.closest('.with-suffix');   // 号棟/号室
+    const isTel    = el.classList.contains('tel');   // 電話
+    const isNo     = el.parentElement && /No\./.test(el.parentElement.textContent); // No.
+    const isEtcOut = el.getAttribute('placeholder')?.includes('直接入力可') && el.style.width === '220px'; // 出勤者「その他(直接入力可)」
 
-    // 号棟/号室・電話・No. は横並びの小さめボックスを維持
-    if(parent){
-      el.replaceWith(makeBox(el.value, {block:false, minH:44, minW:140}));
+    if(inSuffix){
+      // 号棟/号室：小さめ並列ボックス（半幅領域内）
+      el.replaceWith(makeBox(el.value, {inline:true, minH:48, minW:140}));
     } else if(isTel){
-      el.replaceWith(makeBox(el.value, {block:false, minH:44, minW:160}));
+      // 電話：3つ並べて均等（flexで親が等分）→ ボックスはflex:1
+      const box = makeBox(el.value, {inline:false, minH:48});
+      box.style.flex = '1 1 0';
+      el.replaceWith(box);
     } else if(isNo){
-      el.replaceWith(makeBox(el.value, {block:false, minH:44, minW:90}));
+      // No.入力：小さめ
+      el.replaceWith(makeBox(el.value, {inline:true, minH:48, minW:110}));
+    } else if(isEtcOut){
+      // 出勤者の「その他」入力欄は幅を広く
+      el.replaceWith(makeBox(el.value, {block:false, minH:48, minW:360}));
     } else {
-      // 受付区分 / 受付日時 / 団地 / 居住者 などは幅いっぱいの大きめボックス
-      el.replaceWith(makeBox(el.value, {block:true, minH:48}));
+      // 受付区分 / 受付者 / 団地 / 居住者 など：幅いっぱい
+      el.replaceWith(makeBox(el.value, {block:true, minH:56}));
     }
   });
 
-  // select → 幅いっぱい
+  // select → 「※作業対応」のセレクトはラベル内で1列表示（インライン）
   root.querySelectorAll('select').forEach(sel => {
-    sel.replaceWith(makeBox(sel.options[sel.selectedIndex]?.text || '', {block:true, minH:48}));
+    const inWorkLabel = !!sel.closest('label') && sel.closest('label')?.textContent.includes('※作業対応');
+    if(inWorkLabel){
+      sel.replaceWith(makeBox(sel.options[sel.selectedIndex]?.text || '', {inline:true, minH:48, minW:260}));
+    } else {
+      sel.replaceWith(makeBox(sel.options[sel.selectedIndex]?.text || '', {block:true, minH:56}));
+    }
   });
 
-  // textarea → 内容 / 対応内容 は常に10行ぶん以上の高さ
+  // textarea → 内容/対応内容は常に10行相当の高さ、はみ出さない幅100%
   root.querySelectorAll('textarea').forEach(ta => {
-    const minH = ta.classList.contains('tall') ? 360 : 300; // 印刷時拡大
-    ta.replaceWith(makeBox(ta.value, {block:true, minH}));
+    const minH = ta.classList.contains('tall') ? 380 : 320; // 印刷時拡大
+    const box = makeBox(ta.value, {block:true, minH});
+    box.style.width = '100%';
+    ta.replaceWith(box);
   });
 
-  // checkbox → □/☑︎ + 文言（インライン）
+  // checkbox → □/☑︎ + 文言（インラインのまま）
   root.querySelectorAll('input[type="checkbox"]').forEach(cb => {
     const label = cb.closest('label');
     const sym = cb.checked ? '☑︎' : '☐';
@@ -315,7 +347,6 @@ function normalizeForPrint(root){
     }
   });
 }
-
 
     document.getElementById('btnPdf').addEventListener('click', exportPdf);
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
