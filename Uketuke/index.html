@@ -449,6 +449,41 @@ function normalizeForPrint(root){
       }
     });
   };
+// --- 「※出勤者」内の「その他 + 入力」を1塊にして改行させない ---
+(() => {
+  // 「経過及び処理」の最初の .checks（= ※出勤者の行）を取得
+  const tallTh = [...root.querySelectorAll('.th')].find(t => t.textContent.includes('経過及び処理'));
+  const tallTd = tallTh ? tallTh.nextElementSibling : null;
+  const firstChecks = tallTd ? tallTd.querySelector('.checks') : null;
+  if (!firstChecks) return;
+
+  // チェックボックスは既に span（☐その他）に置換済みなので、その span を特定
+  const spans = [...firstChecks.children];
+  const sonotaSpan = spans.find(el => el.tagName === 'SPAN' && el.textContent.includes('その他'));
+  if (!sonotaSpan) return;
+
+  // 「その他」の直後は <span>（中に 440px のボックスが入っている）
+  const inputSpan = sonotaSpan.nextElementSibling;
+  if (!inputSpan || inputSpan.tagName !== 'SPAN') return;
+
+  // ラベル＋入力を1塊にして nowrap
+  const wrap = document.createElement('span');
+  wrap.style.display = 'inline-flex';
+  wrap.style.alignItems = 'center';
+  wrap.style.gap = '8px';
+  wrap.style.whiteSpace = 'nowrap';
+
+  // その場で置き換え（移動）
+  firstChecks.insertBefore(wrap, sonotaSpan);
+  wrap.appendChild(sonotaSpan);
+  wrap.appendChild(inputSpan);
+
+  // 念のため、内側 span も横並び指定を強める
+  inputSpan.style.display = 'inline-flex';
+  inputSpan.style.alignItems = 'center';
+  inputSpan.style.gap = '8px';
+  inputSpan.style.width = 'auto';
+})();
 
   // 受付区分（セレクト＋名前）：1行
   enforceOneLine(oneLineTds.kubun, { wide:true });
