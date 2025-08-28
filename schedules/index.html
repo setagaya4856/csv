@@ -626,7 +626,6 @@ afterGetCellMeta: (row, col, props) => {
   
   // ② 初期スクロール：opts.scrollToToday が true なら “今日” へ、
   //    それ以外（他タブなど）は常に「1日AM(col=1)」を左端へ
-  hot.render();
   if (opts?.scrollToToday) {
     const base = todayJST();
     const todayStr = `${base.getFullYear()}-${String(base.getMonth()+1).padStart(2,'0')}-${String(base.getDate()).padStart(2,'0')}`;
