@@ -92,6 +92,52 @@
 // ==== タブ＆月ユーティリティ ====
 // 月キャッシュ: Map<"YYYY-MM", Array<item>>
 const monthCache = new Map();
+// === マウス縦ホイール → 横スクロールに振替 ===
+function enableHorizontalWheel(container) {
+  const holder = container.querySelector('.ht_master .wtHolder');
+  if (!holder || holder.__wheelToX) return;
+
+  const onWheel = (e) => {
+    // エディタやメニュー上では邪魔しない
+    if (e.target.closest('.handsontableInput') || e.target.closest('.htMenu')) return;
+    if (e.ctrlKey) return; // ズーム操作は尊重
+
+    const scale = (e.deltaMode === 1) ? 40 : 1; // 行単位→px
+    const dy = e.deltaY * scale;
+    const dx = e.deltaX * scale;
+    const move = (Math.abs(dx) > Math.abs(dy)) ? dx : dy;
+
+    if (move !== 0) {
+      holder.scrollLeft += move;
+      e.preventDefault(); // 縦スクロールは止める
+    }
+  };
+
+  holder.addEventListener('wheel', onWheel, { passive: false });
+  holder.__wheelToX = onWheel;
+}
+
+function disableHorizontalWheel(container) {
+  const holder = container.querySelector('.ht_master .wtHolder');
+  if (holder && holder.__wheelToX) {
+    holder.removeEventListener('wheel', holder.__wheelToX);
+    delete holder.__wheelToX;
+  }
+}
+
+// === 指定列を左端へ寄せる（初期スクロール用）===
+function scrollColumnToLeft(hot, container, colIndex) {
+  setTimeout(() => {
+    try {
+      if (hot.scrollViewportTo) hot.scrollViewportTo(0, colIndex);
+      const cell = hot.getCell(0, colIndex);
+      const holder = container.querySelector('.ht_master .wtHolder');
+      if (holder) {
+        holder.scrollLeft = cell ? Math.max(0, cell.offsetLeft - 4) : 0;
+      }
+    } catch {}
+  }, 0);
+}
 
 function ymOf(d){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
@@ -524,7 +570,42 @@ afterGetCellMeta: (row, col, props) => {
     colWidths: (index) => index === 0 ? 160 : 110,
   };
 
-  const wasInit = !!hot;
+  afterDocumentKeyDown: (event) => {
+    if (event.key !== 'Enter') return;
+
+    // 編集中のEnterは既定動作（改行など）にしたい場合は以下で早期return
+    const ae = hot.getActiveEditor?.();
+    if (ae && ae.isOpened()) return;
+
+    event.preventDefault(); // 既定の“下移動”を止める
+
+    const sel = hot.getSelectedLast?.();
+    if (!sel) return;
+
+    let [row, col] = sel;              // 現在セル
+    const firstEditableCol = 1;        // 0列目は名前（readOnly）
+    const lastCol = hot.countCols() - 1;
+
+    let nextRow = row;
+    let nextCol = col + 1;
+
+    // 右端なら次の行の先頭(=col 1)へ。最終行の次は先頭行へ。
+    if (nextCol > lastCol) {
+      nextCol = firstEditableCol;
+      nextRow = (row + 1) % hot.countRows();
+    }
+    // 誤って名前列(0)に行かないようガード
+    if (nextCol === 0) nextCol = firstEditableCol;
+
+    hot.selectCell(nextRow, nextCol);
+    hot.getActiveEditor()?.beginEditing();
+  },
+
+  stretchH: 'all',
+  height: 520,
+  colWidths: (index) => index === 0 ? 160 : 110,
+};
+    
   if (hot) {
     hot.updateSettings(settings);
     hot.render();
@@ -539,24 +620,21 @@ afterGetCellMeta: (row, col, props) => {
     }
   }
   hot.render();
+    
+  // ① ホイール横スクロールを有効化
+  enableHorizontalWheel(container);
   
-// ▼ 初期表示スクロール
-if (opts.scrollToToday && !wasInit) {
-  const todayStr = today; // JST YYYY-MM-DD
-  const targetCol = colDates.findIndex(d => d === todayStr);
-  const col = targetCol > 0 ? targetCol : 1; // 無ければ1日AM
-  hot.addHookOnce('afterRender', () => {
-    scrollColumnToLeft(hot, container, col);
-  });
-  // ★ フック直後に再レンダで必ず afterRender を発火
+  // ② 初期スクロール：opts.scrollToToday が true なら “今日” へ、
+  //    それ以外（他タブなど）は常に「1日AM(col=1)」を左端へ
   hot.render();
-} else {
-  // 他タブ：常に「1日AM(=col 1)」へ
-  hot.addHookOnce('afterRender', () => {
+  if (opts?.scrollToToday) {
+    const base = todayJST();
+    const todayStr = `${base.getFullYear()}-${String(base.getMonth()+1).padStart(2,'0')}-${String(base.getDate()).padStart(2,'0')}`;
+    const targetCol = colDates.findIndex(d => d === todayStr);
+    scrollColumnToLeft(hot, container, targetCol > 0 ? targetCol : 1);
+  } else {
     scrollColumnToLeft(hot, container, 1);
-  });
-  hot.render(); // ★ 同上
-}
+  }
 }
 
 
