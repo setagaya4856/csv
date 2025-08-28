@@ -132,8 +132,9 @@ async function onMonthTabClick(btn){
   document.querySelectorAll('#month-tabs button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const ym = btn.dataset.month;
-  // 取得＆描画（キャッシュ利用、スクロールは不要）
-  await loadMonth(ym, { scrollToToday: false });
+  // 今月なら今日AMへスクロール、他の月は固定（1日AM）
+  const isThisMonth = ym === ymOf(todayJST());
+  await loadMonth(ym, { scrollToToday: isThisMonth });
 }
     async function fetchMonthData(ym, token, url){
   // すでにキャッシュあればそれを返す
@@ -540,11 +541,12 @@ afterGetCellMeta: (row, col, props) => {
   }
   hot.render();
   
-// ▼ 初期表示スクロール
-if (opts.scrollToToday && !wasInit) {
-  const todayStr = today; // JST YYYY-MM-DD
-  const targetCol = colDates.findIndex(d => d === todayStr);
-  const col = targetCol > 0 ? targetCol : 1; // 無ければ1日AM
+// ▼ スクロール：要求があれば「今日のAM」へ、そうでなければ「1日AM」
+if (opts.scrollToToday) {
+  const base = todayJST();
+  const d = base.getDate();                     // 1..31
+  const amCol = 1 + 2 * (d - 1);                // 1列目=1日AM → 2列ずつ進む
+  const col = Math.min(amCol, colHeaders.length - 1);
   hot.addHookOnce('afterRender', () => {
     scrollColumnToLeft(hot, container, col);
   });
