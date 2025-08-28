@@ -89,6 +89,26 @@
     const $ = (q) => document.querySelector(q);
     const out = $('#output');
     const who = $('#who');
+    function enableHorizontalWheel(container, hot) {
+  // 多重登録防止
+  if (container.dataset.hwBound === '1') return;
+  container.dataset.hwBound = '1';
+
+  const holder = container.querySelector('.ht_master .wtHolder');
+  if (!holder) return;
+
+  holder.addEventListener('wheel', (e) => {
+    // セル選択がある時だけ横スクロールに変換
+    const hasSelection = !!hot?.getSelectedRangeLast?.();
+    if (!hasSelection) return;
+
+    // 縦スクロール量を横スクロールへ
+    if (Math.abs(e.deltaY) >= Math.abs(e.deltaX)) {
+      holder.scrollLeft += e.deltaY; // 下(+)→右 / 上(-)→左
+      e.preventDefault();            // 既定の縦スクロールを止める
+    }
+  }, { passive: false });
+}
 // ==== タブ＆月ユーティリティ ====
 // 月キャッシュ: Map<"YYYY-MM", Array<item>>
 const monthCache = new Map();
@@ -452,6 +472,8 @@ function scrollColumnToLeft(hot, container, colIndex) {
     rowHeaders: true,
     licenseKey: 'non-commercial-and-evaluation',
     fixedColumnsStart: 1,
+    // Enterで右/Shift+Enterで左へ
+    enterMoves: (e) => (e && e.shiftKey ? { row: 0, col: -1 } : { row: 0, col: 1 }),
     // ① 右クリックはコピー/切り取り/貼り付け/Undo/Redo のみ（既存）
     contextMenu: {
       items: {
@@ -559,6 +581,8 @@ if (opts.scrollToToday) {
   });
   hot.render(); // ★ 同上
 }
+  // マウスホイール横変換（セル選択中のみ有効）
+  enableHorizontalWheel(container, hot);
 }
 
 
