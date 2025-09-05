@@ -598,6 +598,12 @@ function scrollColumnToLeft(hot, container, colIndex) {
     holder.scrollLeft = Math.max(0, offset - 4);
   });
 }
+    // ★ 自分の行かどうか（太枠用、編集可否とは独立）
+const isMyRow = (rowIdx, rowEmployees, currentUser) => {
+  const emp = rowEmployees[rowIdx];
+  if (!emp || !currentUser?.email) return false;
+  return (emp.email || '').toLowerCase() === currentUser.email.toLowerCase();
+};
     let hot = null;
   function renderMatrixHot(items, ym, opts = {}) {
   const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
@@ -677,8 +683,10 @@ function scrollColumnToLeft(hot, container, colIndex) {
         props.readOnly = true;
         const bucket = bucketByDepartment(emp?.department);
         props.className = mergeClass(props.className, `dep-${bucket}`);
-        // 自分の行の太枠
-        if (canEditRow(row)) props.className = mergeClass(props.className, 'my-row');
+        // ★ 太枠は「自分の行」だけ（管理者でも全行太枠にはしない）
+        if (isMyRow(row, rowEmployees, currentUser)) {
+          props.className = mergeClass(props.className, 'my-row');
+        }
         return;
       }
 
@@ -694,9 +702,10 @@ function scrollColumnToLeft(hot, container, colIndex) {
 
       // ★ 編集可否：自分の行だけ編集可（管理者は全行可）
       props.readOnly = !canEditRow(row);
-
-      // ★ 自分の行の太枠
-      if (canEditRow(row)) props.className = mergeClass(props.className, 'my-row');
+      // ★ 太枠は「自分の行」だけ
+      if (isMyRow(row, rowEmployees, currentUser)) {
+        props.className = mergeClass(props.className, 'my-row');
+      }
     },
 
 
