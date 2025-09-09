@@ -102,7 +102,16 @@
     <pre id="output">ここに結果が出ます</pre>
     <div id="sched-summary" style="margin:12px 0;color:#555;"></div>
     <h3 style="margin:8px 0">クイック登録</h3>
-    <div id="quickEntry" style="max-width:720px; margin:6px 0 12px;"></div>
+    <div class="row" style="align-items:flex-start; gap:12px; margin:12px 0">
+      <!-- クイック入力テーブル -->
+      <div id="quickEntry" style="flex:1; min-width:360px"></div>
+      <!-- 登録ボタン（テーブル横） -->
+      <div>
+        <button id="quickSaveBtn" style="padding:8px 16px; font-weight:bold;">
+          登録
+        </button>
+      </div>
+    </div>
     <div id="month-tabs" class="tabs"></div>
     <div class="row" style="gap:12px; width:100%; margin:0 auto;">
       <div style="flex:1 1 380px;min-width:320px">
@@ -152,51 +161,43 @@ function isValidDateYYYYMMDD(s) {
   const d = new Date(s + 'T00:00:00');
   return !Number.isNaN(d.getTime()) && s === `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-
+    
+let quickHot = null;
 // クイック登録用 HOT を描画
 function renderQuickEntryHot() {
   const container = document.getElementById('quickEntry');
-  if (!container) return;
-
   const data = [
-    [todayYYYYMMDD(), '', '']  // 1行だけ（必要なら複数行に増やせる）
+    { date: todayStrJST(), am: '', pm: '' }
   ];
 
   const settings = {
     data,
-    colHeaders: ['日付 (YYYY-MM-DD)', '午前（テキスト）', '午後（テキスト）', ''],
     columns: [
-      { type: 'text', width: 150 },
-      { type: 'text', width: 220 },
-      { type: 'text', width: 220 },
-      { renderer: buttonRenderer, readOnly: true, width: 90 },
+      { data: 'date', type: 'date', dateFormat: 'YYYY-MM-DD', correctFormat: true },
+      { data: 'am', type: 'text' },
+      { data: 'pm', type: 'text' }
     ],
+    colHeaders: ['日付', '午前', '午後'],
     rowHeaders: false,
-    stretchH: 'all',
-    height: 48 + 2, // 1行ぶん
     licenseKey: 'non-commercial-and-evaluation',
-    contextMenu: false,
-    manualColumnResize: true,
-    manualRowResize: false,
-    enterMoves: (e) => (e && e.shiftKey ? { row: 0, col: -1 } : { row: 0, col: 1 }),
-    afterChange: (changes, source) => {
-      if (!changes || source !== 'edit') return;
-      for (const [row, col, oldVal, newVal] of changes) {
-        if (col === 0 && newVal != null && newVal !== '' && !isValidDateYYYYMMDD(String(newVal))) {
-          // 日付の軽いバリデーション
-          setTimeout(() => alert('日付は YYYY-MM-DD 形式で入力してください'), 0);
-        }
-      }
-    },
-    cells: () => ({ renderer: fitTextRenderer }), // 既存の縮小レンダラーを流用してOK
+    stretchH: 'all',
+    height: 80,
   };
 
-  if (hotQuick) {
-    hotQuick.updateSettings(settings);
+  if (quickHot) {
+    quickHot.updateSettings(settings);
   } else {
-    hotQuick = new Handsontable(container, settings);
+    quickHot = new Handsontable(container, settings);
   }
 }
+
+// 登録ボタン押下時の処理
+document.getElementById('quickSaveBtn').addEventListener('click', () => {
+  if (!quickHot) return;
+  const row = quickHot.getSourceData()[0];
+  console.log('登録データ:', row);
+  // ここで Edge Function / schedules-upsert を叩いて保存処理へ
+});
     // ===== テキスト幅に応じてフォントサイズを縮小するレンダラー =====
 const _measureCanvas = document.createElement('canvas');
 const _ctx = _measureCanvas.getContext('2d');
