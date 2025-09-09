@@ -194,7 +194,7 @@ document.getElementById('quickSaveBtn').addEventListener('click', async () => {
   }
 
   // ここで upsert へ渡す
-  // await handleQuickSave({ date, am, pm });
+  await handleQuickSave({ date, am, pm });
 
   console.log('登録データ:', { date, am, pm });
   out.textContent = `登録データ: 日付=${date} / 午前="${am}" / 午後="${pm}"`;
@@ -346,16 +346,100 @@ function todayJST(){
   return { months, todayYm };
 }
 async function handleQuickSave({ date, am, pm }) {
-  if (!date || !isValidDateYYYYMMDD(date)) {
-    alert('日付は YYYY-MM-DD で入力してください');
+  if (!supabase) return alert('先に「Supabase 初期化」を押してください');
+
+  // 1) 入力チェック
+  const ymd = String(date || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) {
+    alert('日付は YYYY-MM-DD 形式で入力してください');
     return;
   }
-  // ここでは UI だけ先につくるので、ひとまずログ出力
-  out.textContent = `クイック登録 受信: date=${date} / AM="${am}" / PM="${pm}"`;
-  // このあと実装予定：
-  //   - ログインユーザーから従業員IDを確定（email → employees.id）
-  //   - Edge Function /functions/v1/schedules-upsert に POST（am/pm それぞれ）
-  //   - 成功したら、対象の月を再読込して表を更新
+  const amText = String(am || '').trim();
+  const pmText = String(pm || '').trim();
+
+  if (!amText && !pmText) {
+    alert('午前・午後のどちらかは入力してください');
+    return;
+  }
+
+  // 2) 自分の従業員IDを取得
+  const employee_id = await ensureMyEmployeeId();
+
+  // 3) Edge Function に投げるペイロード作成
+  const rows = [];
+  if (amText) rows.push({ employee_id, date: ymd, slot: 'am', place: amText });
+  if (pmText) rows.push({ employee_id, date: ymd, slot: 'pm', place: pmText });
+
+  // 4) 認証トークン取得
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) {
+    alert('アクセストークンが取得できません（未ログインの可能性）');
+    return;
+  }
+
+  // 5) エンドポイントURL
+  const baseUrl = document.getElementById('url').value.trim();
+  const endpoint = `${baseUrl}/functions/v1/schedules-upsert`;
+
+  // 6) POST（Authorization: Bearer <JWT>）
+  try {
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(rows)
+    });
+
+    const json = await resp.json().catch(() => ({}));
+
+    if (!resp.ok) {
+      // Edge Function 内の 400/405/500 など
+      const msg = json?.error || `HTTP ${resp.status}`;
+      throw new Error(msg);
+    }
+
+    // { ok: true } を想定
+    if (json?.ok) {
+      out.textContent = `保存しました：${ymd} 午前="${amText}" 午後="${pmText}"`;
+      // 入力をクリアしたい場合は下記のように
+      // if (quickHot) quickHot.setDataAtRowProp(0, 'am', ''), quickHot.setDataAtRowProp(0, 'pm', '');
+    } else {
+      throw new Error('保存結果が想定外です');
+    }
+  } catch (e) {
+    console.error(e);
+    alert('保存に失敗しました：' + e.message);
+  }
+}
+
+let myEmployeeId = null;
+let myEmail = null;
+
+async function ensureMyEmployeeId() {
+  if (myEmployeeId) return myEmployeeId;
+  if (!supabase) throw new Error('supabase 未初期化');
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('未ログインです');
+
+  myEmail = session.user?.email || null;
+  if (!myEmail) throw new Error('メールが取得できません');
+
+  // employees から email で引く（RLSで公開 SELECT 可としている前提）
+  const { data, error } = await supabase
+    .from('employees')
+    .select('id,email')
+    .eq('email', myEmail)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error(`employees に email=${myEmail} が見つかりません`);
+
+  myEmployeeId = data.id;
+  return myEmployeeId;
 }
 async function onMonthTabClick(btn){
   // active切替
