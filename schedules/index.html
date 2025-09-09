@@ -101,17 +101,11 @@
     <button id="run">/functions/v1/schedules-get を叩く</button>
     <pre id="output">ここに結果が出ます</pre>
     <div id="sched-summary" style="margin:12px 0;color:#555;"></div>
-    <h3 style="margin:8px 0">クイック登録</h3>
-    <div class="row" style="align-items:flex-start; gap:12px; margin:12px 0">
-      <!-- クイック入力テーブル -->
-      <div id="quickEntry" style="flex:1; min-width:360px"></div>
-      <!-- 登録ボタン（テーブル横） -->
-      <div>
-        <button id="quickSaveBtn" style="padding:8px 16px; font-weight:bold;">
-          登録
-        </button>
-      </div>
-    </div>
+    <h3 class="quick-title" style="margin:8px 0; display:flex; align-items:center; gap:8px;">
+      クイック登録
+      <button id="quickSaveBtn" style="padding:6px 12px; font-weight:600;">登録</button>
+    </h3>
+    <div id="quickEntry" style="flex:1; min-width:360px"></div>
     <div id="month-tabs" class="tabs"></div>
     <div class="row" style="gap:12px; width:100%; margin:0 auto;">
       <div style="flex:1 1 380px;min-width:320px">
@@ -191,13 +185,23 @@ function renderQuickEntryHot() {
   }
 }
 
-// 登録ボタン押下時の処理
-document.getElementById('quickSaveBtn').addEventListener('click', () => {
+document.getElementById('quickSaveBtn').addEventListener('click', async () => {
   if (!quickHot) return;
-  const row = quickHot.getSourceData()[0];
-  console.log('登録データ:', row);
-  // ここで Edge Function / schedules-upsert を叩いて保存処理へ
+
+  const [date, am, pm] = quickHot.getDataAtRow(0).map(v => (v ?? '').toString().trim());
+
+  if (!isValidDateYYYYMMDD(date)) {
+    alert('日付は YYYY-MM-DD 形式で入力してください');
+    return;
+  }
+
+  // ここで upsert へ渡す
+  // await handleQuickSave({ date, am, pm });
+
+  console.log('登録データ:', { date, am, pm });
+  out.textContent = `登録データ: 日付=${date} / 午前="${am}" / 午後="${pm}"`;
 });
+
     // ===== テキスト幅に応じてフォントサイズを縮小するレンダラー =====
 const _measureCanvas = document.createElement('canvas');
 const _ctx = _measureCanvas.getContext('2d');
