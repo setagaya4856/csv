@@ -178,10 +178,10 @@ function renderQuickEntryHot() {
       { data: 'pm', type: 'text' }
     ],
     colHeaders: ['日付', '午前', '午後'],
-    rowHeaders: false,
-    licenseKey: 'non-commercial-and-evaluation',
-    stretchH: 'all',
+    colWidths: [120, 200, 200],  // ★ここで列ごとの幅をピクセル指定
+    stretchH: 'none',            // 自動伸縮をオフにする
     height: 80,
+    licenseKey: 'non-commercial-and-evaluation'
   };
 
   if (quickHot) {
