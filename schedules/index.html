@@ -16,6 +16,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       line-height: 1.2;
+      vertical-align: middle; /* ★ 追加 */
     }
     body{
       font-family:system-ui, sans-serif;
@@ -732,10 +733,12 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
       const emp = rowEmployees[row];
 
       // 1列目（名前）は常に readOnly。部署色＋ノート表示用のクラス付与
-      if (col === 0) {
-        props.readOnly = true;
+      if (col === 0　|| col === 1) {
         const bucket = bucketByDepartment(emp?.department);
-        props.className = mergeClass(props.className, `dep-${bucket}`);
+        props.className = mergeClass(props.className, `dep-${bucket}`);        
+        if (col === 0) {
+          props.readOnly = true;
+        }
         // ★ 太枠は「自分の行」だけ（管理者でも全行太枠にはしない）
         if (isMyRow(row, rowEmployees, currentUser)) {
           props.className = mergeClass(props.className, 'my-row');
