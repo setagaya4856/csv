@@ -10,8 +10,13 @@
 <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
 
   <style>
-    /* セル折返し（複数予定を改行で表示） */
-    .htCore td { white-space: pre-wrap; line-height: 1.2; }
+    /* 折り返しをやめて、縮小＋省略で表示 */
+    .htCore td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
     body{
       font-family:system-ui, sans-serif;
       /* 画面の95%まで広げる（上限もかけておく場合は 1200px などに調整可） */
@@ -100,6 +105,53 @@
   </fieldset>
 
   <script type="module">
+    // ===== テキスト幅に応じてフォントサイズを縮小するレンダラー =====
+const _measureCanvas = document.createElement('canvas');
+const _ctx = _measureCanvas.getContext('2d');
+
+function measureTextWidth(text, font) {
+  _ctx.font = font;
+  return _ctx.measureText(text).width;
+}
+
+function fitTextRenderer(instance, td, row, col, prop, value, cellProperties) {
+  // 既定のテキスト描画
+  Handsontable.renderers.TextRenderer.apply(this, arguments);
+
+  // 折り返しオフ＋省略
+  td.style.whiteSpace = 'nowrap';
+  td.style.overflow = 'hidden';
+  td.style.textOverflow = 'ellipsis';
+
+  // 表示文字列（改行は1行にまとめる）
+  const raw = (value == null ? '' : String(value));
+  const show = raw.replace(/\r?\n/g, ' / ');
+
+  // 基準フォントサイズと最小フォントサイズ
+  const basePx = 14;     // 好みで調整
+  const minPx  = 10;     // 下限
+  let fontPx = basePx;
+
+  // セルの横幅（余白分を差し引く）
+  const padding = 14; // 左右の内余白相当
+  const colWidth = (instance.getColWidth(col) || td.clientWidth || 100) - padding;
+
+  // 現在のフォント（太字やクラスがある前提は簡易化）
+  const fontFamily = getComputedStyle(td).fontFamily || 'system-ui,sans-serif';
+  const fontWeight = getComputedStyle(td).fontWeight || 'normal';
+
+  // 収まるまでフォントサイズを下げる（簡易）
+  while (fontPx > minPx) {
+    const font = `${fontWeight} ${fontPx}px ${fontFamily}`;
+    const w = measureTextWidth(show, font);
+    if (w <= colWidth) break;
+    fontPx -= 1;
+  }
+  td.style.fontSize = `${fontPx}px`;
+
+  // cell の実テキストを差し替える（1行化）
+  td.textContent = show;
+}
     // ===== 従業員メタ & 権限 =====
 let currentUser = { email: null, employee_id: null, is_admin: false };
 let employeesAll = []; // [{id,name,email,department,note,row_index,is_admin}, ...]
@@ -470,8 +522,8 @@ function buildFullMatrixWithEmployees(items, ym) {
   // Handsontable 表示用データ
   const data = [];
   const rowEmployees = []; // 各行に対応する従業員メタ
-  const colHeaders = ['名前'];
-  const colDates = [null];
+  const colHeaders = ['名前', 'メモ'];   // ★ ノート列を追加
+  const colDates = [null, null];          // ★ 2列分は日付なし
   for (const d of days) {
     colHeaders.push(`${m}/${d} 午前`);
     colHeaders.push(`${m}/${d} 午後`);
@@ -485,9 +537,8 @@ function buildFullMatrixWithEmployees(items, ym) {
     const agg = byEmpKey.get(key);
     const row = [];
 
-    // 1列目（名前＋ノート）
-    const nameCell = emp.note ? `${emp.name}\n（${emp.note}）` : emp.name;
-    row.push(nameCell);
+    row.push(emp.name);           // 名前列
+    row.push(emp.note || '');     // ★ ノート列（固定列2列目）
 
     // 各日 AM/PM
     for (const d of days) {
@@ -625,9 +676,11 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
     colHeaders,
     rowHeaders: true,
     licenseKey: 'non-commercial-and-evaluation',
-    fixedColumnsStart: 1,
+    fixedColumnsStart: 2,
     // Enterで右/Shift+Enterで左へ
     enterMoves: (e) => (e && e.shiftKey ? { row: 0, col: -1 } : { row: 0, col: 1 }),
+    // 全セルに縮小レンダラーを適用
+    cells: (row, col) => ({ renderer: fitTextRenderer }),
     // ① 右クリックはコピー/切り取り/貼り付け/Undo/Redo のみ（既存）
     contextMenu: {
       items: {
@@ -720,7 +773,8 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
 
     stretchH: 'all',
     height: 520,
-    colWidths: (index) => index === 0 ? 160 : 110,
+    // ★ 列幅調整：名前=180 / メモ=180 / 以降=110
+    colWidths: (index) => (index === 0 ? 110 : index === 1 ? 180 : 110),
   };
 
   const wasInit = !!hot;
