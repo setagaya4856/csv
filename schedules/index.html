@@ -338,10 +338,49 @@ function todayJST(){
   const now = new Date();
   return new Date(now.getTime() + (9*60 + now.getTimezoneOffset())*60000);
 }
-    function buildMonthTabs() {
-  const base = todayJST();
-  const months = monthsAround(base, 3, 3);
-  const todayYm = ymOf(base);
+    
+// "YYYY-MM-DD" -> "YYYY-MM"
+function ymFromYmd(ymd) {
+  return String(ymd || '').slice(0, 7);
+}
+
+// 指定月を中心にタブを作り直す
+function buildMonthTabsFor(baseYm) {
+  const [y, m] = baseYm.split('-').map(Number);
+  const base = new Date(y, m - 1, 1);
+  const months = monthsAround(base, 3, 3); // 既存ロジックを再利用
+  const wrap = document.getElementById('month-tabs');
+  wrap.innerHTML = '';
+  for (const ym of months) {
+    const btn = document.createElement('button');
+    btn.textContent = ym;
+    btn.dataset.month = ym;
+    btn.addEventListener('click', () => onMonthTabClick(btn));
+    wrap.appendChild(btn);
+  }
+  return months;
+}
+
+// 指定月のタブを active にしてロード
+async function selectMonthAndReload(ym, { scrollToToday=false } = {}) {
+  // タブに存在するかチェック
+  let targetBtn = document.querySelector(`#month-tabs button[data-month="${ym}"]`);
+  if (!targetBtn) {
+    // なければタブをその月で再構成
+    buildMonthTabsFor(ym);
+    targetBtn = document.querySelector(`#month-tabs button[data-month="${ym}"]`);
+  }
+  // active 切り替え
+  document.querySelectorAll('#month-tabs button').forEach(b => b.classList.remove('active'));
+  if (targetBtn) targetBtn.classList.add('active');
+
+  // 読み直し
+  await loadMonth(ym, { scrollToToday });
+}
+
+function buildMonthTabs(baseDate = todayJST()) {
+  const months = monthsAround(baseDate, 3, 3);
+  const todayYm = ymOf(baseDate);
   const wrap = document.getElementById('month-tabs');
   wrap.innerHTML = '';
   for (const ym of months) {
@@ -354,37 +393,39 @@ function todayJST(){
   }
   return { months, todayYm };
 }
+
 async function handleQuickSave({ date, am, pm }) {
   if (!supabase) return alert('先に「Supabase 初期化」を押してください');
 
+  // 1) 入力チェック
   const ymd = String(date || '').trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) {
     alert('日付は YYYY-MM-DD 形式で入力してください');
     return;
   }
-
   const amText = String(am ?? '').trim();
   const pmText = String(pm ?? '').trim();
 
+  // 2) 自分の従業員ID
   const employee_id = await ensureMyEmployeeId();
 
-  // upsert対象・delete対象を仕分け
+  // 3) upsert対象・delete対象を仕分け
   const upserts = [];
   const deletes = [];
   if (amText) upserts.push({ employee_id, date: ymd, slot: 'am', place: amText });
-  else deletes.push({ employee_id, date: ymd, slot: 'am' });
+  else       deletes.push({ employee_id, date: ymd, slot: 'am' });
 
   if (pmText) upserts.push({ employee_id, date: ymd, slot: 'pm', place: pmText });
-  else deletes.push({ employee_id, date: ymd, slot: 'pm' });
+  else       deletes.push({ employee_id, date: ymd, slot: 'pm' });
 
+  // 4) トークン & エンドポイント
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   if (!token) { alert('アクセストークンが取得できません（未ログインの可能性）'); return; }
-
   const baseUrl = document.getElementById('url').value.trim();
 
   try {
-    // 1) 削除（空欄だったslot）
+    // 5) 先に削除（空欄だった slot）
     if (deletes.length) {
       const delRes = await fetch(`${baseUrl}/functions/v1/schedules-delete`, {
         method: 'POST',
@@ -397,7 +438,7 @@ async function handleQuickSave({ date, am, pm }) {
       }
     }
 
-    // 2) upsert（入力があったslot）
+    // 6) 次に upsert（入力があった slot）
     if (upserts.length) {
       const upRes = await fetch(`${baseUrl}/functions/v1/schedules-upsert`, {
         method: 'POST',
@@ -410,17 +451,26 @@ async function handleQuickSave({ date, am, pm }) {
       }
     }
 
-    // 表示反映：対象月だけキャッシュを捨てて再取得
-    const ym = ymd.slice(0, 7);
-    monthCache.delete(ym);
-    await loadMonth(ym, { scrollToToday: (ym === ymOf(todayJST())) });
-
+    // 7) 表示更新：対象月のキャッシュを捨てて、その月のタブを選択＆再取得
+    const ym = ymFromYmd(ymd);
+    monthCache.delete(ym); // schedules-get のキャッシュを無効化
     out.textContent = `更新しました：${ymd} 午前="${amText}" 午後="${pmText}"`;
+
+    // 入力リセット（任意）
+    if (quickHot) {
+      quickHot.setDataAtRowProp(0, 'am', '');
+      quickHot.setDataAtRowProp(0, 'pm', '');
+    }
+
+    // ★ 登録日付の月タブをアクティブにして再取得・再描画（タブが無ければ再構成）
+    await selectMonthAndReload(ym, { scrollToToday: false });
+
   } catch (e) {
     console.error(e);
     alert('保存に失敗しました：' + e.message);
   }
 }
+
 
 
 let myEmployeeId = null;
