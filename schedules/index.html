@@ -164,15 +164,34 @@ function renderQuickEntryHot() {
   const settings = {
     data,
     columns: [
-      { data: 'date', type: 'date', dateFormat: 'YYYY-MM-DD', correctFormat: true },
+      {
+        data: 'date',
+        type: 'date',
+        dateFormat: 'YYYY-MM-DD',
+        correctFormat: true,
+        // ▼ 2) 日付ピッカーを日本語化（Pikaday の i18n）
+        datePickerConfig: {
+          format: 'YYYY-MM-DD',
+          firstDay: 0, // 0:日曜, 1:月曜
+          i18n: {
+            previousMonth: '前月',
+            nextMonth: '翌月',
+            months: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+            weekdays: ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'],
+            weekdaysShort: ['日','月','火','水','木','金','土'],
+          },
+        },
+      },
       { data: 'am', type: 'text' },
-      { data: 'pm', type: 'text' }
+      { data: 'pm', type: 'text' },
     ],
     colHeaders: ['日付', '午前', '午後'],
     colWidths: [120, 200, 200],  // ★ここで列ごとの幅をピクセル指定
     stretchH: 'none',            // 自動伸縮をオフにする
     height: 80,
     licenseKey: 'non-commercial-and-evaluation'
+    // ▼ 1) Enter で右 / Shift+Enter で左
+    enterMoves: (e) => (e && e.shiftKey ? { row: 0, col: -1 } : { row: 0, col: 1 }),
   };
 
   if (quickHot) {
