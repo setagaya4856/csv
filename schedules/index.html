@@ -413,8 +413,14 @@ async function handleQuickSave({ date, am, pm }) {
     // { ok: true } を想定
     if (json?.ok) {
       out.textContent = `保存しました：${ymd} 午前="${amText}" 午後="${pmText}"`;
-      // 入力をクリアしたい場合は下記のように
-      if (quickHot) quickHot.setDataAtRowProp(0, 'am', ''), quickHot.setDataAtRowProp(0, 'pm', '');
+      if (quickHot) {
+        quickHot.setDataAtRowProp(0, 'am', '');
+        quickHot.setDataAtRowProp(0, 'pm', '');
+      }
+      // ★ ここから追加：該当月の再取得・再描画
+      const ym = ymd.slice(0, 7);        // "YYYY-MM"
+      monthCache.delete(ym);             // 月キャッシュを無効化
+      await loadMonth(ym, { scrollToToday: ym === ymOf(todayJST()) });
     } else {
       throw new Error('保存結果が想定外です');
     }
@@ -459,13 +465,19 @@ async function onMonthTabClick(btn){
   const isThisMonth = ym === ymOf(todayJST());
   await loadMonth(ym, { scrollToToday: isThisMonth });
 }
-    async function fetchMonthData(ym, token, url){
-  // すでにキャッシュあればそれを返す
+    
+async function fetchMonthData(ym, token, url){
+  // 既にキャッシュがあれば返す
   if (monthCache.has(ym)) return monthCache.get(ym);
 
-  const res = await fetch(`${url}/functions/v1/schedules-get?month=${encodeURIComponent(ym)}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const ts = Date.now(); // ★ キャッシュバスター
+  const res = await fetch(
+    `${url}/functions/v1/schedules-get?month=${encodeURIComponent(ym)}&_=${ts}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store' // ★ ブラウザキャッシュ使わない
+    }
+  );
   const json = await res.json();
   const items = normalizeSchedules(json);
   monthCache.set(ym, items);
