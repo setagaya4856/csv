@@ -626,7 +626,7 @@ function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
       const r = item.raw || {};
       return item.employee_name || r.employee_name || r.employee || r.user || r.name || r.assignee || '（未割当）';
     }
-    function buildMatrixAmPm(items, ym) {
+function buildMatrixAmPm(items, ym) {
   const [y, m] = ym.split('-').map(Number);
   const last = new Date(y, m, 0);
   const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
@@ -637,8 +637,13 @@ function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
     if (!byEmp.has(emp)) byEmp.set(emp, {});
     const d = it.baseDate.getDate();
     if (!byEmp.get(emp)[d]) byEmp.get(emp)[d] = { am: [], pm: [] };
+
+    // ★ slot 優先。なければ時間で判定
     const hour = it.start?.getHours() ?? 0;
-    const key = hour < 12 ? 'am' : 'pm';
+    const key = it.slot === 'am' || it.slot === 'pm'
+      ? it.slot
+      : (hour < 12 ? 'am' : 'pm');
+
     byEmp.get(emp)[d][key].push(it);
   }
 
@@ -648,20 +653,19 @@ function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
     for (const d of days) {
       const arrAm = perDay[d]?.am || [];
       const arrPm = perDay[d]?.pm || [];
-      row.push(arrAm.map(a => a.title).join('\n')); // 午前
-      row.push(arrPm.map(a => a.title).join('\n')); // 午後
+      row.push(arrAm.map(a => a.title).join('\n'));
+      row.push(arrPm.map(a => a.title).join('\n'));
     }
     data.push(row);
   }
 
   const colHeaders = ['名前'];
-  // 各列がどの日付かを保存（0列目は名前なので null）
   const colDates = [null];
   for (const d of days) {
     const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     colHeaders.push(`${m}/${d} 午前`);
     colHeaders.push(`${m}/${d} 午後`);
-    colDates.push(ds, ds); // 午前・午後とも同じ日付
+    colDates.push(ds, ds);
   }
 
   return { colHeaders, data, colDates };
@@ -673,76 +677,66 @@ function buildFullMatrixWithEmployees(items, ym) {
   const last = new Date(y, m, 0);
   const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
 
-  // 1) 既存 items を (employee_name or email or id) → {day→{am/pm}} に集約
-  // items は normalizeSchedules(json)の戻り。json.rows 由来なら raw に row情報が入っている。
-  const byEmpKey = new Map(); // key: employee_id など、value: { name, email, department, note, cells: {d: {am,pm}} }
+  const byEmpKey = new Map();
   for (const it of items) {
-    // 従業員IDを raw から拾えるよう、Edge側で rows[*] に employee_id, email, department, note を入れておくのがベスト
     const row = it.raw || {};
     const empId = row.employee_id || row.id || row.emp_id || null;
-    // フォールバックで名前突合も一応残す
     const name = it.employee_name || row.employee_name || row.name || '（未割当）';
     const email = row.email || '';
     const dep = row.department || '';
     const note = row.note || '';
 
-    const key = empId ?? `name:${name}`; // なるべく id を key に使う
+    const key = empId ?? `name:${name}`;
     if (!byEmpKey.has(key)) byEmpKey.set(key, { employee_id: empId, name, email, department: dep, note, cells: {} });
 
     const d = it.baseDate.getDate();
     if (!byEmpKey.get(key).cells[d]) byEmpKey.get(key).cells[d] = { am: [], pm: [] };
 
+    // ★ slot 優先。なければ時間で判定
     const hour = it.start?.getHours() ?? 0;
-    const slot = hour < 12 ? 'am' : 'pm';
+    const slot = (it.slot === 'am' || it.slot === 'pm') ? it.slot : (hour < 12 ? 'am' : 'pm');
+
     byEmpKey.get(key).cells[d][slot].push(it.title);
   }
 
-  // 2) 従業員フルリストを基準に "なければ空行" を作る
-  // employeesAll: [{id,name,email,department,note,row_index,is_admin}]
-  const rowsMeta = employeesAll.slice().sort((a,b)=>(a.row_index ?? 0)-(b.row_index ?? 0) || a.name.localeCompare(b.name,'ja'));
+  const rowsMeta = employeesAll.slice().sort(
+    (a,b)=>(a.row_index ?? 0)-(b.row_index ?? 0) || a.name.localeCompare(b.name,'ja')
+  );
 
-  // Handsontable 表示用データ
   const data = [];
-  const rowEmployees = []; // 各行に対応する従業員メタ
-  const colHeaders = ['名前', 'メモ'];   // ★ ノート列を追加
-  const colDates = [null, null];          // ★ 2列分は日付なし
+  const rowEmployees = [];
+  const colHeaders = ['名前', 'メモ'];
+  const colDates = [null, null];
+
   for (const d of days) {
-    colHeaders.push(`${m}/${d} 午前`);
-    colHeaders.push(`${m}/${d} 午後`);
+    colHeaders.push(`${m}/${d} 午前`, `${m}/${d} 午後`);
     const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     colDates.push(ds, ds);
   }
 
   for (const emp of rowsMeta) {
-    // 既存スケジュールがあるなら拾い、無ければ空
     const key = emp.id ?? `name:${emp.name}`;
     const agg = byEmpKey.get(key);
     const row = [];
+    row.push(emp.name);
+    row.push(emp.note || '');
 
-    row.push(emp.name);           // 名前列
-    row.push(emp.note || '');     // ★ ノート列（固定列2列目）
-
-    // 各日 AM/PM
     for (const d of days) {
       const am = agg?.cells?.[d]?.am?.join('\n') ?? '';
       const pm = agg?.cells?.[d]?.pm?.join('\n') ?? '';
-      row.push(am);
-      row.push(pm);
+      row.push(am, pm);
     }
 
     data.push(row);
     rowEmployees.push({
-      id: emp.id,
-      name: emp.name,
-      email: emp.email,
-      department: emp.department,
-      note: emp.note,
-      is_admin: !!emp.is_admin
+      id: emp.id, name: emp.name, email: emp.email,
+      department: emp.department, note: emp.note, is_admin: !!emp.is_admin
     });
   }
 
   return { colHeaders, data, colDates, rowEmployees };
 }
+
 
 // ==== 条件付き書式ルール群 ====
 // 追加：クラスを結合するユーティリティ
@@ -1000,89 +994,91 @@ if (opts.scrollToToday) {
 }
 
 
-    // ====== スケジュール：整形・表示（既存） ======
-    function normalizeSchedules(json) {
-      const arr0 = Array.isArray(json) ? json : (json?.items || json?.data || json?.schedules || null);
-      if (arr0) {
-        return arr0.map(x => {
-          const pick = (obj, keys) => {
-            for (const k of keys) {
-              if (obj[k] != null) return obj[k];
-              const lk = Object.keys(obj).find(t => t.toLowerCase() === k.toLowerCase());
-              if (lk && obj[lk] != null) return obj[lk];
-            }
-            return undefined;
-          };
-          const title = pick(x, ['title','summary','name','subject']) ?? '';
-          const date  = pick(x, ['date','day','dt']);
-          const start = pick(x, ['start','start_at','startAt','start_time','startTime','from']) || date;
-          const end   = pick(x, ['end','end_at','endAt','end_time','endTime','to']);
-          const location = pick(x, ['location','place','where']) || '';
-          const note = pick(x, ['note','notes','memo','description']) || '';
-
-          const toDate = v => {
-            if (!v) return null;
-            if (/^\d{4}-\d{2}$/.test(v)) return new Date(v + '-01T00:00:00+09:00');
-            if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return new Date(v + 'T00:00:00+09:00');
-            const n = Number(v);
-            if (!Number.isNaN(n) && String(v).length >= 10) return new Date(n);
-            const d = new Date(v);
-            return Number.isNaN(d.getTime()) ? null : d;
-          };
-
-          const dDate  = toDate(date);
-          const dStart = toDate(start) || dDate;
-          const dEnd   = toDate(end);
-
-          return {
-            raw: x,
-            title: String(title || '(無題)'),
-            start: dStart,
-            end: dEnd,
-            baseDate: dDate || dStart || null,
-            location,
-            note
-          };
-        }).filter(x => x.baseDate);
-      }
-
-      // ★ schedules-get の rows 形式を AM/PM 別の item に展開し、slot を付与
-      if (json && Array.isArray(json.rows)) {
-        const normDay = (s) => (String(s || '').trim().slice(0, 10));
-    
-        const items = [];
-        for (const row of json.rows) {
-          const emp = row.employee_name || row.name || '（未割当）';
-          const cells = row.cells || {};
-          for (const k of Object.keys(cells)) {
-            const d = normDay(k);
-            if (!d) continue;
-            const cell = cells[k] || {};
-    
-            const pushOne = (txt, slot, hour) => {
-              const t = (txt ?? '').toString().trim();
-              if (!t) return;
-              items.push({
-                raw: { ...row, date: d, cell },
-                employee_name: emp,
-                title: t,
-                slot,                                   // ★ 追加: 'am' | 'pm'
-                start: new Date(`${d}T${String(hour).padStart(2,'0')}:00:00+09:00`),
-                end: null,
-                baseDate: new Date(`${d}T00:00:00+09:00`),
-                location: '',
-                note: ''
-              });
-            };
-    
-            pushOne(cell.am, 'am', 9);
-            pushOne(cell.pm, 'pm', 13);
-          }
+// ====== スケジュール：整形・表示 ======
+function normalizeSchedules(json) {
+  const arr0 = Array.isArray(json) ? json : (json?.items || json?.data || json?.schedules || null);
+  if (arr0) {
+    return arr0.map(x => {
+      const pick = (obj, keys) => {
+        for (const k of keys) {
+          if (obj[k] != null) return obj[k];
+          const lk = Object.keys(obj).find(t => t.toLowerCase() === k.toLowerCase());
+          if (lk && obj[lk] != null) return obj[lk];
         }
-        return items;
+        return undefined;
+      };
+      const title = pick(x, ['title','summary','name','subject']) ?? '';
+      const date  = pick(x, ['date','day','dt']);
+      const start = pick(x, ['start','start_at','startAt','start_time','startTime','from']) || date;
+      const end   = pick(x, ['end','end_at','endAt','end_time','endTime','to']);
+      const location = pick(x, ['location','place','where']) || '';
+      const note = pick(x, ['note','notes','memo','description']) || '';
+
+      const toDate = v => {
+        if (!v) return null;
+        if (/^\d{4}-\d{2}$/.test(v)) return new Date(v + '-01T00:00:00+09:00');
+        if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return new Date(v + 'T00:00:00+09:00');
+        const n = Number(v);
+        if (!Number.isNaN(n) && String(v).length >= 10) return new Date(n);
+        const d = new Date(v);
+        return Number.isNaN(d.getTime()) ? null : d;
+      };
+
+      const dDate  = toDate(date);
+      const dStart = toDate(start) || dDate;
+      const dEnd   = toDate(end);
+
+      return {
+        raw: x,
+        title: String(title || '(無題)'),
+        start: dStart,
+        end: dEnd,
+        baseDate: dDate || dStart || null,
+        location,
+        note
+      };
+    }).filter(x => x.baseDate);
+  }
+
+  // ★ schedules-get の rows 形式を AM/PM 別の item に展開し、slot を付与
+  if (json && Array.isArray(json.rows)) {
+    const normDay = (s) => (String(s || '').trim().slice(0, 10));
+
+    const items = [];
+    for (const row of json.rows) {
+      const emp = row.employee_name || row.name || '（未割当）';
+      const cells = row.cells || {};
+      for (const k of Object.keys(cells)) {
+        const d = normDay(k);
+        if (!d) continue;
+        const cell = cells[k] || {};
+
+        const pushOne = (txt, slot, hour) => {
+          const t = (txt ?? '').toString().trim();
+          if (!t) return;
+          items.push({
+            raw: { ...row, date: d, cell },
+            employee_name: emp,
+            title: t,
+            slot,                                   // ★ 追加: 'am' | 'pm'
+            start: new Date(`${d}T${String(hour).padStart(2,'0')}:00:00+09:00`),
+            end: null,
+            baseDate: new Date(`${d}T00:00:00+09:00`),
+            location: '',
+            note: ''
+          });
+        };
+
+        pushOne(cell.am, 'am', 9);
+        pushOne(cell.pm, 'pm', 13);
       }
-      return [];
     }
+    return items;
+  }
+
+  return [];
+}
+
 
     function fmtDate(d) {
       if (!d) return '';
