@@ -154,7 +154,6 @@ function isValidDateYYYYMMDD(s) {
   return !Number.isNaN(d.getTime()) && s === `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
     
-let quickHot = null;
 // クイック登録用 HOT を描画
 function renderQuickEntryHot() {
   const container = document.getElementById('quickEntry');
@@ -187,18 +186,9 @@ document.getElementById('quickSaveBtn').addEventListener('click', async () => {
   if (!quickHot) return;
 
   const [date, am, pm] = quickHot.getDataAtRow(0).map(v => (v ?? '').toString().trim());
-
-  if (!isValidDateYYYYMMDD(date)) {
-    alert('日付は YYYY-MM-DD 形式で入力してください');
-    return;
-  }
-
-  // ここで upsert へ渡す
   await handleQuickSave({ date, am, pm });
-
-  console.log('登録データ:', { date, am, pm });
-  out.textContent = `登録データ: 日付=${date} / 午前="${am}" / 午後="${pm}"`;
 });
+
 
     // ===== テキスト幅に応じてフォントサイズを縮小するレンダラー =====
 const _measureCanvas = document.createElement('canvas');
@@ -405,7 +395,7 @@ async function handleQuickSave({ date, am, pm }) {
     if (json?.ok) {
       out.textContent = `保存しました：${ymd} 午前="${amText}" 午後="${pmText}"`;
       // 入力をクリアしたい場合は下記のように
-      // if (quickHot) quickHot.setDataAtRowProp(0, 'am', ''), quickHot.setDataAtRowProp(0, 'pm', '');
+      if (quickHot) quickHot.setDataAtRowProp(0, 'am', ''), quickHot.setDataAtRowProp(0, 'pm', '');
     } else {
       throw new Error('保存結果が想定外です');
     }
