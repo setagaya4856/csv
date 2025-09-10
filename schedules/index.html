@@ -357,78 +357,71 @@ function todayJST(){
 async function handleQuickSave({ date, am, pm }) {
   if (!supabase) return alert('先に「Supabase 初期化」を押してください');
 
-  // 1) 入力チェック
   const ymd = String(date || '').trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) {
     alert('日付は YYYY-MM-DD 形式で入力してください');
     return;
   }
-  const amText = String(am || '').trim();
-  const pmText = String(pm || '').trim();
 
-  if (!amText && !pmText) {
-    alert('午前・午後のどちらかは入力してください');
-    return;
-  }
+  const amText = String(am ?? '').trim();
+  const pmText = String(pm ?? '').trim();
 
-  // 2) 自分の従業員IDを取得
   const employee_id = await ensureMyEmployeeId();
 
-  // 3) Edge Function に投げるペイロード作成
-  const rows = [];
-  if (amText) rows.push({ employee_id, date: ymd, slot: 'am', place: amText });
-  if (pmText) rows.push({ employee_id, date: ymd, slot: 'pm', place: pmText });
+  // upsert対象・delete対象を仕分け
+  const upserts = [];
+  const deletes = [];
+  if (amText) upserts.push({ employee_id, date: ymd, slot: 'am', place: amText });
+  else deletes.push({ employee_id, date: ymd, slot: 'am' });
 
-  // 4) 認証トークン取得
+  if (pmText) upserts.push({ employee_id, date: ymd, slot: 'pm', place: pmText });
+  else deletes.push({ employee_id, date: ymd, slot: 'pm' });
+
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
-  if (!token) {
-    alert('アクセストークンが取得できません（未ログインの可能性）');
-    return;
-  }
+  if (!token) { alert('アクセストークンが取得できません（未ログインの可能性）'); return; }
 
-  // 5) エンドポイントURL
   const baseUrl = document.getElementById('url').value.trim();
-  const endpoint = `${baseUrl}/functions/v1/schedules-upsert`;
 
-  // 6) POST（Authorization: Bearer <JWT>）
   try {
-    const resp = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(rows)
-    });
-
-    const json = await resp.json().catch(() => ({}));
-
-    if (!resp.ok) {
-      // Edge Function 内の 400/405/500 など
-      const msg = json?.error || `HTTP ${resp.status}`;
-      throw new Error(msg);
-    }
-
-    // { ok: true } を想定
-    if (json?.ok) {
-      out.textContent = `保存しました：${ymd} 午前="${amText}" 午後="${pmText}"`;
-      if (quickHot) {
-        quickHot.setDataAtRowProp(0, 'am', '');
-        quickHot.setDataAtRowProp(0, 'pm', '');
+    // 1) 削除（空欄だったslot）
+    if (deletes.length) {
+      const delRes = await fetch(`${baseUrl}/functions/v1/schedules-delete`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(deletes)
+      });
+      const delJson = await delRes.json().catch(() => ({}));
+      if (!delRes.ok || !delJson?.ok) {
+        throw new Error(`削除失敗: ${delJson?.error || `HTTP ${delRes.status}`}`);
       }
-      // ★ ここから追加：該当月の再取得・再描画
-      const ym = ymd.slice(0, 7);        // "YYYY-MM"
-      monthCache.delete(ym);             // 月キャッシュを無効化
-      await loadMonth(ym, { scrollToToday: ym === ymOf(todayJST()) });
-    } else {
-      throw new Error('保存結果が想定外です');
     }
+
+    // 2) upsert（入力があったslot）
+    if (upserts.length) {
+      const upRes = await fetch(`${baseUrl}/functions/v1/schedules-upsert`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(upserts)
+      });
+      const upJson = await upRes.json().catch(() => ({}));
+      if (!upRes.ok || !upJson?.ok) {
+        throw new Error(`保存失敗: ${upJson?.error || `HTTP ${upRes.status}`}`);
+      }
+    }
+
+    // 表示反映：対象月だけキャッシュを捨てて再取得
+    const ym = ymd.slice(0, 7);
+    monthCache.delete(ym);
+    await loadMonth(ym, { scrollToToday: (ym === ymOf(todayJST())) });
+
+    out.textContent = `更新しました：${ymd} 午前="${amText}" 午後="${pmText}"`;
   } catch (e) {
     console.error(e);
     alert('保存に失敗しました：' + e.message);
   }
 }
+
 
 let myEmployeeId = null;
 let myEmail = null;
