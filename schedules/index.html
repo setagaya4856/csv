@@ -63,6 +63,18 @@
   cursor: pointer;
 }
 .hot-btn:hover { background: #f6f6f6; }
+      /* 見出しと各行の高さ次第ですが「3行分」目安の高さに */
+  #sched-list-wrap{
+    max-height: 140px;      /* 調整OK: 120〜160pxくらい */
+    overflow: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 6px 8px;
+    background: #fff;
+  }
+  /* 行間を少し詰めると3行に収まりやすい */
+  #sched-list h3 { margin: 6px 0; font-size: 14px; }
+  #sched-list li { margin: 2px 0; line-height: 1.2; }
   </style>
 </head>
 <body>
@@ -110,7 +122,9 @@
     <div class="row" style="gap:12px; width:100%; margin:0 auto;">
       <div style="flex:1 1 380px;min-width:320px">
         <h2 style="margin:8px 0">スケジュール一覧</h2>
-        <div id="sched-list"></div>
+        <div id="sched-list-wrap">
+          <div id="sched-list"></div>
+        </div>
       </div>
     </div>
     <div id="matrixGrid" style="height:520px;width:100%;"></div>
@@ -360,7 +374,25 @@ function buildMonthTabsFor(baseYm) {
   }
   return months;
 }
+async function fetchCompanyEventsForMonth(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const start = new Date(y, m - 1, 1);              // 当月1日
+  const end   = new Date(y, m, 1);                  // 翌月1日（< end）
 
+  // YYYY-MM-DD 文字列に
+  const d2 = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+  const { data, error } = await supabase
+    .from('company_events')
+    .select('id, date, timestart, timeend, event, memo')
+    .gte('date', d2(start))
+    .lt('date', d2(end))
+    .order('date', { ascending: true })
+    .order('timestart', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
 // 指定月のタブを active にしてロード
 async function selectMonthAndReload(ym, { scrollToToday=false } = {}) {
   // タブに存在するかチェック
@@ -539,7 +571,7 @@ async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
     const items = await fetchMonthData(ym, token, url);
     out.textContent = `OK: ${ym} / ${items.length}件`;
     // 一覧＆マトリクスを月単位で描画
-    renderSchedules(items, ym);        // ← 既存のまま（内部で month で絞る）
+    await renderCompanyEventList(ym);        // ← 既存のまま（内部で month で絞る）
     renderMatrixHot(items, ym, { scrollToToday }); // ← 次の手順で対応
   }catch(e){
     out.textContent = 'Fetchエラー: ' + e.message;
@@ -1210,15 +1242,50 @@ function normalizeSchedules(json) {
     function escapeHtml(s){ return String(s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-    function renderSchedules(json, ym) {
-      const itemsAll = normalizeSchedules(json);
-      const items = filterByMonth(itemsAll, ym);
-      const listEl = document.getElementById('sched-list');
-      const sumEl = document.getElementById('sched-summary');
+async function renderCompanyEventList(ym) {
+  const listEl = document.getElementById('sched-list');
+  const sumEl  = document.getElementById('sched-summary');
 
-      sumEl.textContent = `${ym} の予定: ${items.length}件（取得総数: ${itemsAll.length}件）`;
-      renderList(items, listEl);
+  try {
+    const events = await fetchCompanyEventsForMonth(ym);
+    sumEl.textContent = `${ym} の会社イベント: ${events.length}件`;
+
+    if (!events.length) {
+      listEl.innerHTML = '<p>該当なし</p>';
+      return;
     }
+
+    // 日付ごとにグルーピング
+    const groups = new Map();
+    for (const ev of events) {
+      const day = ev.date; // 'YYYY-MM-DD'
+      if (!groups.has(day)) groups.set(day, []);
+      groups.get(day).push(ev);
+    }
+
+    // 表示
+    let html = '';
+    for (const [day, arr] of groups) {
+      const d = new Date(`${day}T00:00:00`);
+      const wd = '日月火水木金土'[d.getDay()];
+      html += `<h3>${day}（${wd}）</h3><ul style="margin:0 0 8px 16px;padding:0">`;
+      for (const ev of arr) {
+        const tstart = ev.timestart ? ev.timestart.slice(0,5) : '';
+        const tend   = ev.timeend   ? ev.timeend.slice(0,5)   : '';
+        const time   = tstart && tend ? `${tstart}–${tend}` : (tstart || '');
+        const memo   = ev.memo ? `<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(ev.memo)}</div>` : '';
+        html += `<li><strong>${escapeHtml(ev.event)}</strong> ${time}${memo}</li>`;
+      }
+      html += `</ul>`;
+    }
+    listEl.innerHTML = html;
+
+  } catch (e) {
+    sumEl.textContent = '会社イベントの取得に失敗: ' + e.message;
+    listEl.innerHTML = '';
+  }
+}
+
   </script>
 </body>
 </html>
