@@ -136,28 +136,39 @@
 
   <script type="module">
     let quickHot = null;
-// 変更されたセルを覚えておく（"YM:row:col" をキーに）
-const dirtyCells = new Set();
-const dirtyKey = (ym, r, c) => `${ym}:${r}:${c}`;
+// === マトリクス編集の未保存管理 ===
+let dirtyCells = new Set(); // key: `${row}:${col}`
+function dirtyKey(row, col) { return `${row}:${col}`; }
 
-function markDirty(hot, ym, r, c) {
-  // 左の固定列（名前・メモ）は無視
-  if (c < 2) return;
-  dirtyCells.add(dirtyKey(ym, r, c));
-  // 既存クラスに dirty-cell を追加
-  const meta = hot.getCellMeta(r, c);
-  hot.setCellMeta(r, c, 'className', mergeClass(meta.className, 'dirty-cell'));
-}
-
-function isDirty(ym, r, c) {
-  return dirtyCells.has(dirtyKey(ym, r, c));
-}
-
-// YM の変更マークを全消し（保存後や月移動で捨てたい時に使う）
-function clearDirtyForMonth(ym) {
-  for (const k of Array.from(dirtyCells)) {
-    if (k.startsWith(`${ym}:`)) dirtyCells.delete(k);
+function markDirty(row, col, yes) {
+  const key = dirtyKey(row, col);
+  const td = hot?.getCell(row, col);
+  if (yes) {
+    dirtyCells.add(key);
+    if (td) td.classList.add('dirty-cell');
+  } else {
+    dirtyCells.delete(key);
+    if (td) td.classList.remove('dirty-cell');
   }
+  updateDirtyBadge();
+}
+
+function clearAllDirty() {
+  for (const k of dirtyCells) {
+    const [r,c] = k.split(':').map(Number);
+    const td = hot?.getCell(r,c);
+    td?.classList.remove('dirty-cell');
+  }
+  dirtyCells.clear();
+  updateDirtyBadge();
+}
+
+function hasDirty() { return dirtyCells.size > 0; }
+
+function updateDirtyBadge() {
+  const el = document.getElementById('dirtyBadge');
+  if (!el) return;
+  el.style.display = hasDirty() ? '' : 'none';
 }
 
 // きょうの YYYY-MM-DD を返す（JST）
@@ -978,11 +989,7 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
   const maxRows = data.length;
   const maxCols = colHeaders.length;
   const today = todayStrJST();
-// これを追加
-hot.currentYm = ym;
-hot.rowEmployees = rowEmployees;
-hot.colDates = colDates;
-    
+
   // ★ 編集可否の判定（自分 or 管理者）
   const canEditRow = (rowIdx) => {
     if (currentUser.is_admin) return true;
@@ -1081,23 +1088,23 @@ hot.colDates = colDates;
       if (isMyRow(row, rowEmployees, currentUser)) {
         props.className = mergeClass(props.className, 'my-row');
       }
-      // …既存の props.readOnly や classesByDate の処理の後に追加
-      if (col >= 2 && isDirty(hot.currentYm, row, col)) {
-        props.className = mergeClass(props.className, 'dirty-cell');
-      }
     },
 
 
-afterChange: (changes, source) => {
-  if (!changes || source === 'loadData') return;
-  for (const [row, col, _oldVal, newVal] of changes) {
-    // 値由来の色（"休"）を更新
-    applyValueRule(hot, row, col, newVal);
-    // ★ 変更マーク（赤枠）
-    if (col >= 2) markDirty(hot, hot.currentYm, row, col);
-  }
-  hot.render();
-},
+    // ▼ 条件付き書式：値（「休」）で決まるクラス
+    afterChange: (changes, source) => {
+      if (!changes) return;
+      // ユーザー操作のみを dirty 対象（初期ロードやAPI反映は除外）
+      const userSources = new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']);
+      const isUser = userSources.has(source);
+      for (const [row, col, _oldVal, newVal] of changes) {
+        applyValueRule(hot, row, col, newVal); // 既存の「休」色付け
+        if (isUser && col >= 2) {              // 固定列(0=名前,1=メモ)以外のみ
+          markDirty(row, col, true);
+        }
+      }
+      hot.render();
+    },
 
     stretchH: 'all',
     height: 520,
