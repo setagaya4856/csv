@@ -75,6 +75,8 @@
   /* 行間を少し詰めると3行に収まりやすい */
   #sched-list h3 { margin: 6px 0; font-size: 14px; }
   #sched-list li { margin: 2px 0; line-height: 1.2; }
+  /* 変更中セルの赤枠 */
+  .dirty-cell { outline: 2px solid #e53935 !important; outline-offset: -2px; }
   </style>
 </head>
 <body>
@@ -122,6 +124,8 @@
     <div class="row" style="gap:12px; width:100%; margin:0 auto;">
       <div style="flex:1 1 380px;min-width:320px">
         <h2 style="margin:8px 0">スケジュール一覧</h2>
+        <button id="saveMatrixBtn" class="hot-btn" title="マトリクスでの変更を保存">変更を保存</button>
+        <span id="dirtyBadge" style="display:none;color:#e53935;font-weight:600;">未保存の変更あり</span>
         <div id="sched-list-wrap">
           <div id="sched-list"></div>
         </div>
@@ -132,6 +136,40 @@
 
   <script type="module">
     let quickHot = null;
+// === マトリクス編集の未保存管理 ===
+let dirtyCells = new Set(); // key: `${row}:${col}`
+function dirtyKey(row, col) { return `${row}:${col}`; }
+
+function markDirty(row, col, yes) {
+  const key = dirtyKey(row, col);
+  const td = hot?.getCell(row, col);
+  if (yes) {
+    dirtyCells.add(key);
+    if (td) td.classList.add('dirty-cell');
+  } else {
+    dirtyCells.delete(key);
+    if (td) td.classList.remove('dirty-cell');
+  }
+  updateDirtyBadge();
+}
+
+function clearAllDirty() {
+  for (const k of dirtyCells) {
+    const [r,c] = k.split(':').map(Number);
+    const td = hot?.getCell(r,c);
+    td?.classList.remove('dirty-cell');
+  }
+  dirtyCells.clear();
+  updateDirtyBadge();
+}
+
+function hasDirty() { return dirtyCells.size > 0; }
+
+function updateDirtyBadge() {
+  const el = document.getElementById('dirtyBadge');
+  if (!el) return;
+  el.style.display = hasDirty() ? '' : 'none';
+}
 
 // きょうの YYYY-MM-DD を返す（JST）
 function todayYYYYMMDD() {
@@ -531,15 +569,21 @@ async function ensureMyEmployeeId() {
   myEmployeeId = data.id;
   return myEmployeeId;
 }
+    
 async function onMonthTabClick(btn){
-  // active切替
+  if (hasDirty()) {
+    const ok = confirm('未保存の変更があります。月を移動すると破棄されます。移動しますか？');
+    if (!ok) return; // 中止
+    // 破棄で良いなら消す
+    clearAllDirty();
+  }
   document.querySelectorAll('#month-tabs button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const ym = btn.dataset.month;
-  // 今月なら今日AMへスクロール、他の月は固定（1日AM）
   const isThisMonth = ym === ymOf(todayJST());
   await loadMonth(ym, { scrollToToday: isThisMonth });
 }
+
     
 async function fetchMonthData(ym, token, url){
   // 既にキャッシュがあれば返す
@@ -573,6 +617,7 @@ async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
     // 一覧＆マトリクスを月単位で描画
     await renderCompanyEventList(ym);        // ← 既存のまま（内部で month で絞る）
     renderMatrixHot(items, ym, { scrollToToday }); // ← 次の手順で対応
+    clearAllDirty();
   }catch(e){
     out.textContent = 'Fetchエラー: ' + e.message;
   }
@@ -1049,8 +1094,14 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
     // ▼ 条件付き書式：値（「休」）で決まるクラス
     afterChange: (changes, source) => {
       if (!changes) return;
+      // ユーザー操作のみを dirty 対象（初期ロードやAPI反映は除外）
+      const userSources = new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']);
+      const isUser = userSources.has(source);
       for (const [row, col, _oldVal, newVal] of changes) {
-        applyValueRule(hot, row, col, newVal);
+        applyValueRule(hot, row, col, newVal); // 既存の「休」色付け
+        if (isUser && col >= 2) {              // 固定列(0=名前,1=メモ)以外のみ
+          markDirty(row, col, true);
+        }
       }
       hot.render();
     },
@@ -1060,7 +1111,10 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
     // ★ 列幅調整：名前=180 / メモ=180 / 以降=110
     colWidths: (index) => (index === 0 ? 110 : index === 1 ? 180 : 110),
   };
-
+  // ★ 行メタ / 列→日付 を後で保存処理から参照できるよう持たせる
+  settings._rowEmployees = rowEmployees;
+  settings._colDates     = colDates;
+    
   const wasInit = !!hot;
   if (hot) {
     hot.updateSettings(settings);
@@ -1099,6 +1153,88 @@ if (opts.scrollToToday) {
   enableHorizontalWheel(container, hot);
 }
 
+// 保存ボタン
+document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => {
+  if (!hot) return;
+  if (!hasDirty()) { alert('未保存の変更はありません'); return; }
+
+  const settings = hot.getSettings();
+  const colDates = settings._colDates;      // 後述の埋め込み
+  const rowEmployees = settings._rowEmployees;
+
+  // トークン
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) { alert('未ログインです'); return; }
+  const baseUrl = document.getElementById('url').value.trim();
+
+  // 変更セルから upsert / delete を作成
+  const upserts = [];
+  const deletes = [];
+
+  for (const key of dirtyCells) {
+    const [row, col] = key.split(':').map(Number);
+    if (col < 2) continue; // 固定列は対象外
+
+    const emp = rowEmployees[row];
+    const ds  = colDates[col];  // "YYYY-MM-DD"
+    if (!emp?.id || !ds) continue;
+
+    // 固定列2本のあと、(am, pm) が繰り返される
+    const slot = ((col - 2) % 2 === 0) ? 'am' : 'pm';
+    const val  = (hot.getDataAtCell(row, col) ?? '').toString().trim();
+
+    if (val) {
+      upserts.push({ employee_id: emp.id, date: ds, slot, place: val });
+    } else {
+      deletes.push({ employee_id: emp.id, date: ds, slot });
+    }
+  }
+
+  try {
+    // 先に削除
+    if (deletes.length) {
+      const res = await fetch(`${baseUrl}/functions/v1/schedules-delete`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(deletes),
+        cache: 'no-store'
+      });
+      const j = await res.json().catch(()=>({}));
+      if (!res.ok || !j?.ok) throw new Error(j?.error || `delete HTTP ${res.status}`);
+    }
+
+    // 次に upsert
+    if (upserts.length) {
+      const res = await fetch(`${baseUrl}/functions/v1/schedules-upsert`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(upserts),
+        cache: 'no-store'
+      });
+      const j = await res.json().catch(()=>({}));
+      if (!res.ok || !j?.ok) throw new Error(j?.error || `upsert HTTP ${res.status}`);
+    }
+
+    // 成功：対象月だけ再取得
+    const ymSet = new Set(
+      [...dirtyCells].map(k => colDates[Number(k.split(':')[1])]?.slice(0,7)).filter(Boolean)
+    );
+    for (const ym of ymSet) monthCache.delete(ym);
+
+    clearAllDirty();
+
+    // アクティブ月があれば再描画
+    const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
+    if (activeYm) await loadMonth(activeYm, { scrollToToday: (activeYm === ymOf(todayJST())) });
+
+    out.textContent = `保存しました：upsert ${upserts.length} / delete ${deletes.length}`;
+
+  } catch (e) {
+    console.error(e);
+    alert('保存に失敗しました：' + e.message);
+  }
+});
 
 // ====== スケジュール：整形・表示 ======
 function normalizeSchedules(json) {
