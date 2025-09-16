@@ -136,7 +136,7 @@
 
   <script type="module">
     let quickHot = null;
-    
+    let companyHot = null;  // 全体スケジュール用 HOT
 // === マトリクス編集の未保存管理 ===
 let dirtyCells = new Set(); // key: `${row}:${col}`
 function dirtyKey(row, col) { return `${row}:${col}`; }
@@ -358,7 +358,126 @@ async function loadCurrentUserAndEmployees() {
     is_admin: !!me?.is_admin
   };
 }
+function ensureCompanyEntryUI() {
+  if (!currentUser?.is_admin) return;
 
+  // 既に作ってあれば何もしない
+  if (document.getElementById('companyEntry')) return;
+
+  // 既存「クイック登録」付近の下に差し込む
+  const host = document.querySelector('.quick-title')?.parentElement || document.body;
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `
+    <h3 style="margin:12px 0; display:flex; align-items:center; gap:8px;">
+      全体スケジュール（管理者）
+      <button id="companySaveBtn" class="hot-btn" title="全体スケジュールを追加">追加</button>
+    </h3>
+    <div id="companyEntry" style="max-width:820px;"></div>
+  `;
+  host.appendChild(wrap);
+
+  renderCompanyEntryHot(); // 初期描画
+}
+  function isValidTimeHHMM(s) {
+  if (!s) return true; // 空は許容（任意）
+  if (!/^\d{1,2}:\d{2}$/.test(s)) return false;
+  const [hh, mm] = s.split(':').map(n => Number(n));
+  return hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59;
+}
+
+function renderCompanyEntryHot() {
+  const container = document.getElementById('companyEntry');
+  if (!container) return;
+
+  const data = [{ date: todayStrJST(), start: '', end: '', title: '', memo: '' }];
+
+  const settings = {
+    data,
+    columns: [
+      { data: 'date', type: 'date', dateFormat: 'YYYY-MM-DD',
+        correctFormat: true,
+        datePickerConfig: {
+          format: 'YYYY-MM-DD', firstDay: 0,
+          i18n: {
+            previousMonth: '前月', nextMonth: '翌月',
+            months: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+            weekdays: ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'],
+            weekdaysShort: ['日','月','火','水','木','金','土'],
+          },
+        },
+      },
+      { data: 'start', type: 'text', validator: (v, cb)=>cb(isValidTimeHHMM(v)), allowInvalid: false },
+      { data: 'end',   type: 'text', validator: (v, cb)=>cb(isValidTimeHHMM(v)), allowInvalid: false },
+      { data: 'title', type: 'text' },
+      { data: 'memo',  type: 'text' },
+    ],
+    colHeaders: ['日付', '開始(HH:MM)', '終了(HH:MM)', '行事名', '備考'],
+    colWidths: [120, 120, 120, 260, 200],
+    height: 80,
+    stretchH: 'none',
+    licenseKey: 'non-commercial-and-evaluation',
+    enterMoves: (e) => (e && e.shiftKey ? { row: 0, col: -1 } : { row: 0, col: 1 }),
+  };
+
+  if (companyHot) companyHot.updateSettings(settings);
+  else companyHot = new Handsontable(container, settings);
+}
+  async function upsertCompanyEvent(payload) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) { alert('未ログインです'); return; }
+  const baseUrl = document.getElementById('url').value.trim();
+
+  // エッジ関数（作成済み想定）
+  const res = await fetch(`${baseUrl}/functions/v1/company-events-upsert`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    cache: 'no-store'
+  });
+  const j = await res.json().catch(()=> ({}));
+  if (!res.ok || j?.ok === false) {
+    throw new Error(j?.error || `HTTP ${res.status}`);
+  }
+  return j;
+}
+
+document.addEventListener('click', async (e) => {
+  if (!(e.target instanceof HTMLElement)) return;
+  if (e.target.id === 'companySaveBtn') {
+    if (!currentUser?.is_admin) { alert('権限がありません'); return; }
+    if (!companyHot) return;
+
+    // 1行目を取得
+    const [date, start, end, title, memo] = companyHot.getDataAtRow(0).map(v => (v ?? '').toString().trim());
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { alert('日付は YYYY-MM-DD で入力してください'); return; }
+    if (!title) { alert('行事名を入力してください'); return; }
+    if (!isValidTimeHHMM(start) || !isValidTimeHHMM(end)) { alert('開始/終了は HH:MM 形式で入力してください'); return; }
+
+    try {
+      // ★ 追加は delete を叩かず upsert のみ
+      await upsertCompanyEvent({ date, timestart: start || null, timeend: end || null, event: title, memo });
+
+      // 入力を維持したければ下の行をコメントアウト
+      // companyHot.setDataAtRowProp(0, 'start', '');
+      // companyHot.setDataAtRowProp(0, 'end', '');
+      // companyHot.setDataAtRowProp(0, 'title', '');
+      // companyHot.setDataAtRowProp(0, 'memo', '');
+
+      // 一覧を再描画（現在アクティブな月のみ）
+      const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
+      if (activeYm) {
+        await renderCompanyEventList(activeYm);
+      }
+      out.textContent = '全体スケジュールを追加しました';
+    } catch (err) {
+      console.error(err);
+      alert('追加に失敗しました：' + err.message);
+    }
+  }
+});
 // 部署文字列→安定色バケット（1..8）
 function bucketByDepartment(dep) {
   const s = String(dep || '');
@@ -721,6 +840,7 @@ $('#run').addEventListener('click', async () => {
     renderQuickEntryHot();
     out.textContent = '従業員情報を取得中...';
     await loadCurrentUserAndEmployees(); // ★ 先に従業員＆自分の権限をロード
+    ensureCompanyEntryUI();   // ★ これを追加
     await loadMonth(todayYm, { scrollToToday: true });
   } catch (e) {
     out.textContent = '従業員取得エラー: ' + e.message;
@@ -1427,13 +1547,22 @@ async function renderCompanyEventList(ym) {
       const d = new Date(`${day}T00:00:00`);
       const wd = '日月火水木金土'[d.getDay()];
       html += `<h3>${day}（${wd}）</h3><ul style="margin:0 0 8px 16px;padding:0">`;
-      for (const ev of arr) {
-        const tstart = ev.timestart ? ev.timestart.slice(0,5) : '';
-        const tend   = ev.timeend   ? ev.timeend.slice(0,5)   : '';
-        const time   = tstart && tend ? `${tstart}–${tend}` : (tstart || '');
-        const memo   = ev.memo ? `<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(ev.memo)}</div>` : '';
-        html += `<li><strong>${escapeHtml(ev.event)}</strong> ${time}${memo}</li>`;
-      }
+for (const ev of arr) {
+  const tstart = ev.timestart ? ev.timestart.slice(0,5) : '';
+  const tend   = ev.timeend   ? ev.timeend.slice(0,5)   : '';
+  const time   = tstart && tend ? `${tstart}–${tend}` : (tstart || '');
+  const memo   = ev.memo ? `<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(ev.memo)}</div>` : '';
+  const delBtn = currentUser?.is_admin
+    ? `<button class="ev-del hot-btn" data-ev-id="${ev.id}" style="margin-left:8px;">削除</button>`
+    : '';
+
+  html += `<li style="margin:4px 0; display:flex; align-items:center; gap:8px;">
+    <div style="flex:1 1 auto;">
+      <strong>${escapeHtml(ev.event)}</strong> ${time}${memo}
+    </div>
+    ${delBtn}
+  </li>`;
+}
       html += `</ul>`;
     }
     listEl.innerHTML = html;
@@ -1443,6 +1572,49 @@ async function renderCompanyEventList(ym) {
     listEl.innerHTML = '';
   }
 }
+async function deleteCompanyEventById(id) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) throw new Error('未ログインです');
+  const baseUrl = document.getElementById('url').value.trim();
+
+  // まずはエッジ関数を試す（存在するなら推奨）
+  try {
+    const res = await fetch(`${baseUrl}/functions/v1/company-events-delete`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+      cache: 'no-store'
+    });
+    if (res.ok) return;
+    // 失敗なら下にフォールバック
+  } catch (_) {}
+
+  // フォールバック：直接テーブル削除（RLSで管理者のみ許可されている前提）
+  const { error } = await supabase.from('company_events').delete().eq('id', id);
+  if (error) throw error;
+}
+
+document.getElementById('sched-list')?.addEventListener('click', async (e) => {
+  const btn = e.target instanceof HTMLElement ? e.target.closest('button.ev-del') : null;
+  if (!btn) return;
+  if (!currentUser?.is_admin) { alert('権限がありません'); return; }
+
+  const id = btn.getAttribute('data-ev-id');
+  if (!id) return;
+  if (!confirm('この全体スケジュールを削除します。よろしいですか？')) return;
+
+  try {
+    await deleteCompanyEventById(id);
+    // 再描画
+    const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
+    if (activeYm) await renderCompanyEventList(activeYm);
+    out.textContent = '削除しました';
+  } catch (err) {
+    console.error(err);
+    alert('削除に失敗しました：' + err.message);
+  }
+});
 
   </script>
 </body>
