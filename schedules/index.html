@@ -136,35 +136,57 @@
 
   <script type="module">
     let quickHot = null;
+    
 // === マトリクス編集の未保存管理 ===
 let dirtyCells = new Set(); // key: `${row}:${col}`
 function dirtyKey(row, col) { return `${row}:${col}`; }
 
 function markDirty(row, col, yes) {
   const key = dirtyKey(row, col);
-  const td = hot?.getCell(row, col);
   if (yes) {
     dirtyCells.add(key);
-    if (td) td.classList.add('dirty-cell');
+    if (hot) addClassMeta(hot, row, col, 'dirty-cell');  // ★ メタにも付与
   } else {
     dirtyCells.delete(key);
-    if (td) td.classList.remove('dirty-cell');
+    if (hot) removeClassMeta(hot, row, col, 'dirty-cell'); // ★ メタから除去
   }
+
+  // 目視反映（今描画されているセルにも付け外し）
+  const td = hot?.getCell(row, col);
+  if (td) td.classList.toggle('dirty-cell', !!yes);
+
   updateDirtyBadge();
 }
 
 function clearAllDirty() {
   for (const k of dirtyCells) {
-    const [r,c] = k.split(':').map(Number);
-    const td = hot?.getCell(r,c);
-    td?.classList.remove('dirty-cell');
+    const [r, c] = k.split(':').map(Number);
+    if (hot) removeClassMeta(hot, r, c, 'dirty-cell'); // ★ メタからも消す
+    const td = hot?.getCell(r, c);
+    if (td) td.classList.remove('dirty-cell');         // 画面上からも消す
   }
   dirtyCells.clear();
   updateDirtyBadge();
 }
 
 function hasDirty() { return dirtyCells.size > 0; }
+function addClassMeta(hot, row, col, cls) {
+  const meta = hot.getCellMeta(row, col);
+  const now = new Set(String(meta.className || '').split(/\s+/).filter(Boolean));
+  if (!now.has(cls)) {
+    now.add(cls);
+    hot.setCellMeta(row, col, 'className', Array.from(now).join(' '));
+  }
+}
 
+function removeClassMeta(hot, row, col, cls) {
+  const meta = hot.getCellMeta(row, col);
+  const next = String(meta.className || '')
+    .split(/\s+/)
+    .filter(c => c && c !== cls)
+    .join(' ');
+  hot.setCellMeta(row, col, 'className', next);
+}
 function updateDirtyBadge() {
   const el = document.getElementById('dirtyBadge');
   if (!el) return;
