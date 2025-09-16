@@ -8,26 +8,6 @@
   <!-- ▼ Handsontable（CDN） -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
 <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
-<!-- ログインモーダル（未ログイン時のみ表示） -->
-<div id="loginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.25); z-index: 9999;">
-  <div style="max-width:360px;margin:10vh auto;padding:16px;background:#fff;border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,.12);">
-    <h3 style="margin:0 0 8px">ログイン</h3>
-    <form id="loginForm" autocomplete="on">
-      <label for="email">メール</label>
-      <input id="email" name="email" type="email" placeholder="you@example.com"
-             autocomplete="username" inputmode="email" required style="width:100%">
-
-      <label for="password" style="margin-top:8px;display:block;">パスワード</label>
-      <input id="password" name="password" type="password" placeholder="8文字以上"
-             autocomplete="current-password" required style="width:100%">
-
-      <div class="row" style="margin-top:8px">
-        <button type="submit">メール＋パスワードでログイン</button>
-        <button type="button" id="login-otp">マジックリンク送信</button>
-      </div>
-    </form>
-  </div>
-</div>
   <style>
     /* 折り返しをやめて、縮小＋省略で表示 */
     .htCore td {
@@ -111,22 +91,29 @@
   </style>
 </head>
 <body>
+<!-- ログインモーダル（未ログイン時のみ表示） -->
+<div id="loginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.25); z-index: 9999;">
+  <div style="max-width:360px;margin:10vh auto;padding:16px;background:#fff;border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,.12);">
+    <h3 style="margin:0 0 8px">ログイン</h3>
+    <form id="loginForm" autocomplete="on">
+      <label for="email">メール</label>
+      <input id="email" name="email" type="email" placeholder="you@example.com"
+             autocomplete="username" inputmode="email" required style="width:100%">
+
+      <label for="password" style="margin-top:8px;display:block;">パスワード</label>
+      <input id="password" name="password" type="password" placeholder="8文字以上"
+             autocomplete="current-password" required style="width:100%">
+
+      <div class="row" style="margin-top:8px">
+        <button type="submit">メール＋パスワードでログイン</button>
+        <button type="button" id="login-otp">マジックリンク送信</button>
+      </div>
+    </form>
+  </div>
+</div>
   <h1>Supabase Edge Function テスト</h1>
 <!-- ▼▼▼ ログイン済みだけ表示される領域 ▼▼▼ -->
 <div id="appRoot" style="display:none">
-  <fieldset>
-    <legend>設定</legend>
-    <div class="row">
-      <label>SUPABASE_URL</label>
-      <input id="url" value="https://rqrgsytkxbhbrnrhqlca.supabase.co" />
-    </div>
-    <div class="row">
-      <label>ANON_KEY</label>
-      <input id="anon" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0" />
-    </div>
-    <button id="init">Supabase 初期化</button>
-  </fieldset>
-
   <fieldset>
     <legend>関数呼び出し</legend>
     <button id="run">/functions/v1/schedules-get を叩く</button>
