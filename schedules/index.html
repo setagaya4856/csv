@@ -383,11 +383,8 @@ async function loadCurrentUserAndEmployees() {
 }
 function ensureCompanyEntryUI() {
   if (!currentUser?.is_admin) return;
-
-  // 既に作ってあれば何もしない
   if (document.getElementById('companyEntry')) return;
 
-  // クイック登録ボックスの直前に挿入
   const quickEntry = document.getElementById('quickEntry');
   const host = quickEntry?.parentElement || document.body;
 
@@ -400,9 +397,12 @@ function ensureCompanyEntryUI() {
     <div id="companyEntry" style="max-width:820px;"></div>
   `;
 
-  // quickEntry の直前に差し込む（常に“クイック登録”の近くに表示）
-  if (quickEntry) host.insertBefore(wrap, quickEntry);
-  else host.appendChild(wrap);
+  // ▼ quickEntry の「直後」に挿入
+  if (quickEntry && quickEntry.parentNode) {
+    quickEntry.parentNode.insertBefore(wrap, quickEntry.nextSibling);
+  } else {
+    host.appendChild(wrap);
+  }
 
   renderCompanyEntryHot();
 }
