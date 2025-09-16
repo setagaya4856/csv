@@ -8,7 +8,26 @@
   <!-- ▼ Handsontable（CDN） -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
 <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
+<!-- ログインモーダル（未ログイン時のみ表示） -->
+<div id="loginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.25); z-index: 9999;">
+  <div style="max-width:360px;margin:10vh auto;padding:16px;background:#fff;border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,.12);">
+    <h3 style="margin:0 0 8px">ログイン</h3>
+    <form id="loginForm" autocomplete="on">
+      <label for="email">メール</label>
+      <input id="email" name="email" type="email" placeholder="you@example.com"
+             autocomplete="username" inputmode="email" required style="width:100%">
 
+      <label for="password" style="margin-top:8px;display:block;">パスワード</label>
+      <input id="password" name="password" type="password" placeholder="8文字以上"
+             autocomplete="current-password" required style="width:100%">
+
+      <div class="row" style="margin-top:8px">
+        <button type="submit">メール＋パスワードでログイン</button>
+        <button type="button" id="login-otp">マジックリンク送信</button>
+      </div>
+    </form>
+  </div>
+</div>
   <style>
     /* 折り返しをやめて、縮小＋省略で表示 */
     .htCore td {
@@ -93,7 +112,8 @@
 </head>
 <body>
   <h1>Supabase Edge Function テスト</h1>
-
+<!-- ▼▼▼ ログイン済みだけ表示される領域 ▼▼▼ -->
+<div id="appRoot" style="display:none">
   <fieldset>
     <legend>設定</legend>
     <div class="row">
@@ -105,21 +125,6 @@
       <input id="anon" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0" />
     </div>
     <button id="init">Supabase 初期化</button>
-  </fieldset>
-
-  <fieldset>
-    <legend>ログイン</legend>
-    <label>メールアドレス</label>
-    <input id="email" type="email" placeholder="you@example.com" />
-    <label>パスワード（パスワード方式で使う場合）</label>
-    <input id="password" type="password" placeholder="8文字以上" />
-    <div class="row">
-      <button id="login-pw">メール＋パスワードでログイン</button>
-      <button id="signup-pw">（初回）メール＋パスワードでサインアップ</button>
-      <button id="login-otp">マジックリンク送信（メールOTP）</button>
-      <button id="logout">ログアウト</button>
-    </div>
-    <div id="who" style="margin-top:6px;color:#333;"></div>
   </fieldset>
 
   <fieldset>
@@ -145,10 +150,20 @@
     </div>
     <div id="matrixGrid" style="height:520px;width:100%;"></div>
   </fieldset>
-
+</div>
   <script type="module">
-    async function fetchJsonStrict(url, opts) {
-  const res = await fetch(url, { cache: 'no-store', ...opts });
+    // ★ 直書きでOK（Anon Key はクライアント公開前提のキーなので問題なし）
+const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
+const SUPABASE_ANON_KEY = '＜あなたのanon key＞';
+    let quickHot = null;
+    let companyHot = null;  // 全体スケジュール用 HOT
+    // ★ 先頭付近の共通関数として追加
+function fnUrl(name) {
+  const baseUrl = document.getElementById('url').value.trim();
+  return `${baseUrl}/functions/v1/${name}`; // 例: company_events_delete / employee_note_update など
+}
+async function fetchJsonStrict(fnName, opts) {
+  const res = await fetch(fnUrl(fnName), { cache: 'no-store', ...opts });
   const text = await res.text();
   let json = null;
   try { json = JSON.parse(text); } catch (_) {}
@@ -158,8 +173,11 @@
   }
   return json ?? {};
 }
-    let quickHot = null;
-    let companyHot = null;  // 全体スケジュール用 HOT
+    // ★ 追加：ログイン状態でUI切替
+function toggleUIBySession(isLoggedIn) {
+  document.getElementById('appRoot').style.display = isLoggedIn ? '' : 'none';
+  document.getElementById('loginModal').style.display = isLoggedIn ? 'none' : '';
+}
 // === マトリクス編集の未保存管理 ===
 let dirtyCells = new Set(); // key: `${row}:${col}`
 function dirtyKey(row, col) { return `${row}:${col}`; }
@@ -480,13 +498,46 @@ async function upsertCompanyEvent(payload) {
   const baseUrl = document.getElementById('url').value.trim();
 
   // 関数名の綴り・パスを確認：/functions/v1/company-events-upsert
-  return await fetchJsonStrict(`${baseUrl}/functions/v1/company-events-upsert`, {
+  return await fetchJsonStrict(`company-events-upsert`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
 }
-
+// ★ 追加：フォーム送信でログイン
+document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  out.textContent = 'ログイン中...';
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) out.textContent = 'エラー: ' + error.message;
+  else out.textContent = 'ログイン成功';
+});
+document.getElementById('login-otp')?.addEventListener('click', async () => {
+  const email = document.getElementById('email').value.trim();
+  out.textContent = 'マジックリンク送信中...';
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: location.origin }
+  });
+  out.textContent = error ? ('エラー: ' + error.message) : 'メールを確認してリンクを開いてください';
+});
+document.getElementById('logout')?.addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  setUser(null);
+  out.textContent = 'ログアウトしました';
+});
+document.getElementById('run')?.addEventListener('click', async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { toggleUIBySession(false); return; }
+  const { months, todayYm } = buildMonthTabs();
+  renderQuickEntryHot();
+  out.textContent = '従業員情報を取得中...';
+  await loadCurrentUserAndEmployees();
+  ensureCompanyEntryUI();
+  await loadMonth(todayYm, { scrollToToday: true });
+});
 document.addEventListener('click', async (e) => {
   if (!(e.target instanceof HTMLElement)) return;
 if (e.target.id === 'companySaveBtn') {
@@ -676,7 +727,7 @@ async function handleQuickSave({ date, am, pm }) {
   try {
     // 5) 先に削除（空欄だった slot）
     if (deletes.length) {
-      const delRes = await fetch(`${baseUrl}/functions/v1/schedules-delete`, {
+      const delRes = await fetch(fnUrl('schedules-delete`), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(deletes)
@@ -689,7 +740,7 @@ async function handleQuickSave({ date, am, pm }) {
 
     // 6) 次に upsert（入力があった slot）
     if (upserts.length) {
-      const upRes = await fetch(`${baseUrl}/functions/v1/schedules-upsert`, {
+      const upRes = await await fetch(fnUrl('schedules-upsert`), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(upserts)
@@ -770,10 +821,10 @@ async function fetchMonthData(ym, token, url){
 
   const ts = Date.now(); // ★ キャッシュバスター
   const res = await fetch(
-    `${url}/functions/v1/schedules-get?month=${encodeURIComponent(ym)}&_=${ts}`,
+    `${fnUrl('schedules-get')}?month=${encodeURIComponent(ym)}&_=${ts}`,
     {
       headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store' // ★ ブラウザキャッシュ使わない
+      cache: 'no-store'
     }
   );
   const json = await res.json();
@@ -813,76 +864,46 @@ async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
       if (!url || !anon) { alert('SUPABASE_URL と ANON_KEY を入れてください'); return; }
       supabase = createClient(url, anon);
       out.textContent = 'Supabase 初期化完了';
-      supabase.auth.getSession().then(({ data: { session }}) => setUser(session?.user ?? null));
-      supabase.auth.onAuthStateChange((evt, session) => setUser(session?.user ?? null));
-    });
+ // ★ 初期セッション確認 → UI切り替え
+ supabase.auth.getSession().then(async ({ data: { session }}) => {
+   setUser(session?.user ?? null);
+   toggleUIBySession(!!session);
+   if (session) {
+     // ログイン済みなら従業員＆UI準備
+     await loadCurrentUserAndEmployees();
+     ensureCompanyEntryUI();
+   }
+ });
 
-    // パスワードでログイン
-    $('#login-pw').addEventListener('click', async () => {
-      if (!supabase) return alert('先に「Supabase 初期化」を押してください');
-      const email = $('#email').value.trim();
-      const password = $('#password').value;
-      out.textContent = 'ログイン中...';
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) out.textContent = 'エラー: ' + error.message;
-      else out.textContent = 'ログイン成功';
-      setUser(data.user);
+ // ★ セッション変化監視（TOKEN_REFRESHED / SIGNED_OUT を含む）
+ supabase.auth.onAuthStateChange(async (evt, session) => {
+   setUser(session?.user ?? null);
+   toggleUIBySession(!!session);
+   if (evt === 'TOKEN_REFRESHED') {
+     // 必要なら何かログ
+     // console.log('token refreshed');
+   }
+   if (evt === 'SIGNED_OUT') {
+     // 未ログインUIへ戻る（RLSで保護されているのでAPIも安全）
+     dirtyCells.clear();
+     updateDirtyBadge();
+   }
+   if (session) {
+     // ログイン直後・トークン更新時：UIの権限反映
+     await loadCurrentUserAndEmployees();
+     ensureCompanyEntryUI();
+   }
+ });
     });
-
-    // パスワードでサインアップ
-    $('#signup-pw').addEventListener('click', async () => {
-      if (!supabase) return alert('先に「Supーム゙ース 初期化」を押してください');
-      const email = $('#email').value.trim();
-      const password = $('#password').value;
-      out.textContent = 'サインアップ中...';
-      const { data, error } = await supabase.auth.signUp({ email, password,
-        options: { emailRedirectTo: 'https://setagaya4856.github.io/csv/schedules/' }
-      });
-      if (error) out.textContent = 'エラー: ' + error.message;
-      else out.textContent = 'サインアップ完了。メールの確認が必要な場合があります。';
-      setUser(data.user);
-    });
-
-    // マジックリンク（OTP）
-    $('#login-otp').addEventListener('click', async () => {
-      if (!supabase) return alert('先に「Supabase 初期化」を押してください');
-      const email = $('#email').value.trim();
-      out.textContent = 'マジックリンク送信中...';
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: location.origin }
-      });
-      out.textContent = error ? ('エラー: ' + error.message) : 'メールを確認してリンクを開いてください';
-    });
-
-    // ログアウト
-    $('#logout').addEventListener('click', async () => {
-      if (!supabase) return alert('先に「Supabase 初期化」を押してください');
-      await supabase.auth.signOut();
-      setUser(null);
-      out.textContent = 'ログアウトしました';
-    });
-
 
 // ====== 初期化（タブ生成→今日の月を表示） ======
 $('#run').addEventListener('click', async () => {
-  const { todayYm } = (() => {
-    const { months, todayYm } = buildMonthTabs();
-    return { todayYm };
+  const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
+  const ym = activeYm || (() => {
+    const { todayYm } = buildMonthTabs();
+    return todayYm;
   })();
-
-  if (!supabase) return alert('先に「Supabase 初期化」を押してください');
-
-  try {
-    // 1) クイック登録ミニ表を先に表示（従業員情報なしでも出せる）
-    renderQuickEntryHot();
-    out.textContent = '従業員情報を取得中...';
-    await loadCurrentUserAndEmployees(); // ★ 先に従業員＆自分の権限をロード
-    ensureCompanyEntryUI();   // ★ これを追加
-    await loadMonth(todayYm, { scrollToToday: true });
-  } catch (e) {
-    out.textContent = '従業員取得エラー: ' + e.message;
-  }
+  await loadMonth(ym, { scrollToToday: ym === ymOf(todayJST()) });
 });
 // 2D配列 → TSV
 const tsvFrom2D = (arr) =>
@@ -1402,7 +1423,7 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
     }
     // 先に削除
     if (deletes.length) {
-      const res = await fetch(`${baseUrl}/functions/v1/schedules-delete`, {
+      const res = await fetch(fnUrl('schedules-delete`), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(deletes),
@@ -1414,7 +1435,7 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
 
     // 次に upsert
     if (upserts.length) {
-      const res = await fetch(`${baseUrl}/functions/v1/schedules-upsert`, {
+      const res = await fetch(fnUrl('schedules-upsert`), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(upserts),
@@ -1651,7 +1672,7 @@ async function deleteCompanyEventById(id) {
   if (!token) throw new Error('未ログインです');
   const baseUrl = document.getElementById('url').value.trim();
 
-  const res = await fetch(`${baseUrl}/functions/v1/company-events-delete`, {
+  const res = await fetch(fnUrl('company-events-delete`), {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ id }),
