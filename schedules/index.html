@@ -140,10 +140,45 @@
 </div>
   <script type="module">
     // ★ 直書きでOK（Anon Key はクライアント公開前提のキーなので問題なし）
+    
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0';
+    
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let quickHot = null;
     let companyHot = null;  // 全体スケジュール用 HOT
+    // 初回：セッション確認してUI切替（ログインしてなければモーダル表示）
+(async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  toggleUIBySession(!!session);
+  if (session) {
+    await loadCurrentUserAndEmployees();
+    ensureCompanyEntryUI();
+    const { todayYm } = buildMonthTabs();
+    renderQuickEntryHot();
+    await loadMonth(todayYm, { scrollToToday: true });
+  }
+})();
+    // セッションの変化を監視（TOKEN_REFRESHED / SIGNED_OUT など）
+supabase.auth.onAuthStateChange(async (evt, session) => {
+  toggleUIBySession(!!session);
+  if (evt === 'SIGNED_OUT') {
+    dirtyCells.clear();
+    updateDirtyBadge();
+  }
+  if (session) {
+    await loadCurrentUserAndEmployees();
+    ensureCompanyEntryUI();
+    // ログイン直後にタブ＆初期表示が無ければセット
+    if (!document.querySelector('#month-tabs button')) {
+      const { todayYm } = buildMonthTabs();
+      renderQuickEntryHot();
+      await loadMonth(todayYm, { scrollToToday: true });
+    }
+  }
+});
     // ★ 先頭付近の共通関数として追加
  function fnUrl(name) {
    return `${SUPABASE_URL}/functions/v1/${name}`;
@@ -496,9 +531,25 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   out.textContent = 'ログイン中...';
+
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) out.textContent = 'エラー: ' + error.message;
-  else out.textContent = 'ログイン成功';
+  if (error) {
+    out.textContent = 'エラー: ' + error.message;
+    return;
+  }
+
+  out.textContent = 'ログイン成功';
+  // 成功したらモーダルを隠し、アプリを表示
+  toggleUIBySession(true);
+  await loadCurrentUserAndEmployees();
+  ensureCompanyEntryUI();
+
+  // まだタブが無ければ初期表示
+  if (!document.querySelector('#month-tabs button')) {
+    const { todayYm } = buildMonthTabs();
+    renderQuickEntryHot();
+    await loadMonth(todayYm, { scrollToToday: true });
+  }
 });
 document.getElementById('login-otp')?.addEventListener('click', async () => {
   const email = document.getElementById('email').value.trim();
@@ -559,9 +610,6 @@ function bucketByDepartment(dep) {
   let h = 0; for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
   return (h % 8) + 1;
 }
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
     const $ = (q) => document.querySelector(q);
     const out = $('#output');
     const who = $('#who');
@@ -842,38 +890,6 @@ async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
     function setUser(u){
       if (who) who.textContent = u ? `ログイン中: ${u.email}` : '未ログイン';
     }
-
-    // 初期化
-     // ★ 初期セッション確認 → UI切り替え
-     supabase.auth.getSession().then(async ({ data: { session }}) => {
-       setUser(session?.user ?? null);
-       toggleUIBySession(!!session);
-       if (session) {
-         // ログイン済みなら従業員＆UI準備
-         await loadCurrentUserAndEmployees();
-         ensureCompanyEntryUI();
-       }
-     });
-    
-     // ★ セッション変化監視（TOKEN_REFRESHED / SIGNED_OUT を含む）
-     supabase.auth.onAuthStateChange(async (evt, session) => {
-       setUser(session?.user ?? null);
-       toggleUIBySession(!!session);
-       if (evt === 'TOKEN_REFRESHED') {
-         // 必要なら何かログ
-         // console.log('token refreshed');
-       }
-       if (evt === 'SIGNED_OUT') {
-         // 未ログインUIへ戻る（RLSで保護されているのでAPIも安全）
-         dirtyCells.clear();
-         updateDirtyBadge();
-       }
-       if (session) {
-         // ログイン直後・トークン更新時：UIの権限反映
-         await loadCurrentUserAndEmployees();
-         ensureCompanyEntryUI();
-       }
-     });
 
 // ====== 初期化（タブ生成→今日の月を表示） ======
 $('#run').addEventListener('click', async () => {
