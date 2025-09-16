@@ -77,6 +77,18 @@
   #sched-list li { margin: 2px 0; line-height: 1.2; }
   /* 変更中セルの赤枠 */
   .dirty-cell { outline: 2px solid #e53935 !important; outline-offset: -2px; }
+    .ev-del {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: #e53935;
+  font: inherit;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.ev-del:hover { text-decoration: underline; }
+.ev-item { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0; }
+.ev-main { flex: 1 1 auto; }
   </style>
 </head>
 <body>
@@ -1552,16 +1564,19 @@ for (const ev of arr) {
   const tend   = ev.timeend   ? ev.timeend.slice(0,5)   : '';
   const time   = tstart && tend ? `${tstart}–${tend}` : (tstart || '');
   const memo   = ev.memo ? `<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(ev.memo)}</div>` : '';
+
   const delBtn = currentUser?.is_admin
-    ? `<button class="ev-del hot-btn" data-ev-id="${ev.id}" style="margin-left:8px;">削除</button>`
+    ? `<button class="ev-del" data-ev-id="${ev.id}" aria-label="この予定を削除">削除</button>`
     : '';
 
-  html += `<li style="margin:4px 0; display:flex; align-items:center; gap:8px;">
-    <div style="flex:1 1 auto;">
-      <strong>${escapeHtml(ev.event)}</strong> ${time}${memo}
-    </div>
-    ${delBtn}
-  </li>`;
+  html += `
+    <li class="ev-item">
+      ${delBtn}
+      <div class="ev-main">
+        <strong>${escapeHtml(ev.event)}</strong> ${time}
+        ${memo}
+      </div>
+    </li>`;
 }
       html += `</ul>`;
     }
