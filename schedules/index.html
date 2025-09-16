@@ -1386,7 +1386,7 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
   try {
     // 1) メモ更新（社員ごと）
     for (const [employee_id, note] of memoUpdates) {
-      const res = await fetch(fnUrl('employee_note_update'), {
+      const res = await fetch(fnUrl('employee-note-update'), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ employee_id, note }),
