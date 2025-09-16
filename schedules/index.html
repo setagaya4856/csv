@@ -571,11 +571,6 @@ document.getElementById('login-otp')?.addEventListener('click', async () => {
   });
   alert(error ? ('エラー: ' + error.message) : 'メールを確認してリンクを開いてください');
 });
-document.getElementById('logout')?.addEventListener('click', async () => {
-  await supabase.auth.signOut();
-  setUser(null);
-  alert('ログアウトしました');
-});
 document.getElementById('run')?.addEventListener('click', async () => {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) { toggleUIBySession(false); return; }
@@ -1703,7 +1698,10 @@ document.getElementById('sched-list')?.addEventListener('click', async (e) => {
     alert('削除に失敗しました：' + err.message);
   }
 });
-
+document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+  await supabase.auth.signOut();    // ← サインアウト
+  // UIは onAuthStateChange 内の toggleUIBySession(false) でモーダル表示に戻る
+});
   </script>
 </body>
 </html>
