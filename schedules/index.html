@@ -158,10 +158,9 @@ const SUPABASE_ANON_KEY = '＜あなたのanon key＞';
     let quickHot = null;
     let companyHot = null;  // 全体スケジュール用 HOT
     // ★ 先頭付近の共通関数として追加
-function fnUrl(name) {
-  const baseUrl = document.getElementById('url').value.trim();
-  return `${baseUrl}/functions/v1/${name}`; // 例: company_events_delete / employee_note_update など
-}
+ function fnUrl(name) {
+   return `${SUPABASE_URL}/functions/v1/${name}`;
+ }
 async function fetchJsonStrict(fnName, opts) {
   const res = await fetch(fnUrl(fnName), { cache: 'no-store', ...opts });
   const text = await res.text();
@@ -498,7 +497,7 @@ async function upsertCompanyEvent(payload) {
   const baseUrl = document.getElementById('url').value.trim();
 
   // 関数名の綴り・パスを確認：/functions/v1/company-events-upsert
-  return await fetchJsonStrict(`company-events-upsert`, {
+  return await fetchJsonStrict('company-events-upsert', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -727,7 +726,7 @@ async function handleQuickSave({ date, am, pm }) {
   try {
     // 5) 先に削除（空欄だった slot）
     if (deletes.length) {
-      const delRes = await fetch(fnUrl('schedules-delete`), {
+      const delRes = await fetch(fnUrl('schedules-delete'), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(deletes)
@@ -740,7 +739,7 @@ async function handleQuickSave({ date, am, pm }) {
 
     // 6) 次に upsert（入力があった slot）
     if (upserts.length) {
-      const upRes = await await fetch(fnUrl('schedules-upsert`), {
+      const upRes = await await fetch(fnUrl('schedules-upsert'), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(upserts)
@@ -1435,7 +1434,7 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
 
     // 次に upsert
     if (upserts.length) {
-      const res = await fetch(fnUrl('schedules-upsert`), {
+      const res = await fetch(fnUrl('schedules-upsert'), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(upserts),
@@ -1672,7 +1671,7 @@ async function deleteCompanyEventById(id) {
   if (!token) throw new Error('未ログインです');
   const baseUrl = document.getElementById('url').value.trim();
 
-  const res = await fetch(fnUrl('company-events-delete`), {
+  const res = await fetch(fnUrl('company-events-delete'), {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ id }),
