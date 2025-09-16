@@ -111,14 +111,14 @@
     </form>
   </div>
 </div>
-  <h1>Supabase Edge Function テスト</h1>
+  <h1 style="display:flex;align-items:center;gap:8px;">
+  Supabase Edge Function テスト
+    <button id="run">/functions/v1/schedules-get を叩く</button>
+  <button id="logoutBtn" style="padding:6px 10px;">ログアウト</button>
+</h1>
 <!-- ▼▼▼ ログイン済みだけ表示される領域 ▼▼▼ -->
 <div id="appRoot" style="display:none">
   <fieldset>
-    <legend>関数呼び出し</legend>
-    <button id="run">/functions/v1/schedules-get を叩く</button>
-    <pre id="output">ここに結果が出ます</pre>
-    <div id="sched-summary" style="margin:12px 0;color:#555;"></div>
     <h3 class="quick-title" style="margin:8px 0; display:flex; align-items:center; gap:8px;">
       クイック登録
       <button id="quickSaveBtn" style="padding:6px 12px; font-weight:600;">登録</button>
@@ -141,7 +141,6 @@
   <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const $ = (q) => document.querySelector(q);
-const out = $('#output');        // <pre id="output">
 const who = $('#who');           // （無ければそのまま null でも安全）
 const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0';
@@ -159,7 +158,7 @@ async function bootAppIfLoggedIn() {
   // ログイン済みならアプリを起動
   const { todayYm } = buildMonthTabs();
   renderQuickEntryHot();
-  out.textContent = '従業員情報を取得中...';
+  alert('従業員情報を取得中...');
   await loadCurrentUserAndEmployees();
   ensureCompanyEntryUI();
   await loadMonth(todayYm, { scrollToToday: true });
@@ -542,15 +541,15 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
-  out.textContent = 'ログイン中...';
+  alert('ログイン中...');
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    out.textContent = 'エラー: ' + error.message;
+    alert('エラー: ' + error.message);
     return;
   }
 
-  out.textContent = 'ログイン成功';
+  alert('ログイン成功');
   // 成功したらモーダルを隠し、アプリを表示
   toggleUIBySession(true);
   await loadCurrentUserAndEmployees();
@@ -565,24 +564,24 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
 });
 document.getElementById('login-otp')?.addEventListener('click', async () => {
   const email = document.getElementById('email').value.trim();
-  out.textContent = 'マジックリンク送信中...';
+  alert('マジックリンク送信中...');
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: location.origin }
   });
-  out.textContent = error ? ('エラー: ' + error.message) : 'メールを確認してリンクを開いてください';
+  alert(error ? ('エラー: ' + error.message) : 'メールを確認してリンクを開いてください');
 });
 document.getElementById('logout')?.addEventListener('click', async () => {
   await supabase.auth.signOut();
   setUser(null);
-  out.textContent = 'ログアウトしました';
+  alert('ログアウトしました');
 });
 document.getElementById('run')?.addEventListener('click', async () => {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) { toggleUIBySession(false); return; }
   const { months, todayYm } = buildMonthTabs();
   renderQuickEntryHot();
-  out.textContent = '従業員情報を取得中...';
+  alert('従業員情報を取得中...');
   await loadCurrentUserAndEmployees();
   ensureCompanyEntryUI();
   await loadMonth(todayYm, { scrollToToday: true });
@@ -609,7 +608,7 @@ if (e.target.id === 'companySaveBtn') {
     // 一覧を再描画（現在の月のみ）
     const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
     if (activeYm) await renderCompanyEventList(activeYm);
-    out.textContent = '全体スケジュールを追加しました';
+    alert('全体スケジュールを追加しました');
   } catch (err) {
     console.error(err);
     alert('追加に失敗しました：' + err.message);
@@ -738,7 +737,7 @@ function buildMonthTabs(baseDate = todayJST()) {
 }
 
 async function handleQuickSave({ date, am, pm }) {
-  if (!supabase) return alert('先に「Supabase 初期化」を押してください');
+  if (!supabase) return alert('初期化エラー');
 
   // 1) 入力チェック
   const ymd = String(date || '').trim();
@@ -796,7 +795,7 @@ async function handleQuickSave({ date, am, pm }) {
     // 7) 表示更新：対象月のキャッシュを捨てて、その月のタブを選択＆再取得
     const ym = ymFromYmd(ymd);
     monthCache.delete(ym); // schedules-get のキャッシュを無効化
-    out.textContent = `更新しました：${ymd} 午前="${amText}" 午後="${pmText}"`;
+    alert(`更新しました：${ymd} 午前="${amText}" 午後="${pmText}"`);
 
     // 入力リセット（任意）
     if (quickHot) {
@@ -876,21 +875,21 @@ async function fetchMonthData(ym, token){
 }
 
 async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
-  if (!supabase) return alert('先に「Supabase 初期化」を押してください');
+  if (!supabase) return alert('初期化エラー');
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) { out.textContent = '未ログインです'; return; }
+  if (!session) { alert('未ログインです'); return; }
   const token = session.access_token;
 
-  out.textContent = `読み込み中... (${ym})`;
+  alert(`読み込み中... (${ym})`);
   try{
     const items = await fetchMonthData(ym, token);
-    out.textContent = `OK: ${ym} / ${items.length}件`;
+    alert(`OK: ${ym} / ${items.length}件`);
     // 一覧＆マトリクスを月単位で描画
     await renderCompanyEventList(ym);        // ← 既存のまま（内部で month で絞る）
     renderMatrixHot(items, ym, { scrollToToday }); // ← 次の手順で対応
     clearAllDirty();
   }catch(e){
-    out.textContent = 'Fetchエラー: ' + e.message;
+    alert('Fetchエラー: ' + e.message);
   }
 }
 
@@ -1461,7 +1460,7 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
       // ★メモのみ更新の場合でも必ず再描画
       await loadMonth(activeYm, { scrollToToday: (activeYm === ymOf(todayJST())) });
     }
-    out.textContent = `保存しました：upsert ${upserts.length} / delete ${deletes.length}`;
+    alert(`保存しました：upsert ${upserts.length} / delete ${deletes.length}`);
 
   } catch (e) {
     console.error(e);
@@ -1613,11 +1612,9 @@ function normalizeSchedules(json) {
 
 async function renderCompanyEventList(ym) {
   const listEl = document.getElementById('sched-list');
-  const sumEl  = document.getElementById('sched-summary');
 
   try {
     const events = await fetchCompanyEventsForMonth(ym);
-    sumEl.textContent = `${ym} の会社イベント: ${events.length}件`;
 
     if (!events.length) {
       listEl.innerHTML = '<p>該当なし</p>';
@@ -1662,7 +1659,6 @@ for (const ev of arr) {
     listEl.innerHTML = html;
 
   } catch (e) {
-    sumEl.textContent = '会社イベントの取得に失敗: ' + e.message;
     listEl.innerHTML = '';
   }
 }
@@ -1701,7 +1697,7 @@ document.getElementById('sched-list')?.addEventListener('click', async (e) => {
     // 再描画
     const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
     if (activeYm) await renderCompanyEventList(activeYm);
-    out.textContent = '削除しました';
+    alert('削除しました');
   } catch (err) {
     console.error(err);
     alert('削除に失敗しました：' + err.message);
