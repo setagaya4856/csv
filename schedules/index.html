@@ -874,7 +874,6 @@ async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
 
   try{
     const items = await fetchMonthData(ym, token);
-    alert(`OK: ${ym} / ${items.length}件`);
     // 一覧＆マトリクスを月単位で描画
     await renderCompanyEventList(ym);        // ← 既存のまま（内部で month で絞る）
     renderMatrixHot(items, ym, { scrollToToday }); // ← 次の手順で対応
