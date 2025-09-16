@@ -140,7 +140,9 @@
 </div>
   <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
+const $ = (q) => document.querySelector(q);
+const out = $('#output');        // <pre id="output">
+const who = $('#who');           // （無ければそのまま null でも安全）
 const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0';
     
@@ -188,35 +190,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   });
-});
-(async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  toggleUIBySession(!!session);
-  if (session) {
-    await loadCurrentUserAndEmployees();
-    ensureCompanyEntryUI();
-    const { todayYm } = buildMonthTabs();
-    renderQuickEntryHot();
-    await loadMonth(todayYm, { scrollToToday: true });
-  }
-})();
-    // セッションの変化を監視（TOKEN_REFRESHED / SIGNED_OUT など）
-supabase.auth.onAuthStateChange(async (evt, session) => {
-  toggleUIBySession(!!session);
-  if (evt === 'SIGNED_OUT') {
-    dirtyCells.clear();
-    updateDirtyBadge();
-  }
-  if (session) {
-    await loadCurrentUserAndEmployees();
-    ensureCompanyEntryUI();
-    // ログイン直後にタブ＆初期表示が無ければセット
-    if (!document.querySelector('#month-tabs button')) {
-      const { todayYm } = buildMonthTabs();
-      renderQuickEntryHot();
-      await loadMonth(todayYm, { scrollToToday: true });
-    }
-  }
 });
     // ★ 先頭付近の共通関数として追加
  function fnUrl(name) {
@@ -556,7 +529,6 @@ async function upsertCompanyEvent(payload) {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   if (!token) throw new Error('未ログインです');
-  const baseUrl = document.getElementById('url').value.trim();
 
   // 関数名の綴り・パスを確認：/functions/v1/company-events-upsert
   return await fetchJsonStrict('company-events-upsert', {
@@ -650,9 +622,6 @@ function bucketByDepartment(dep) {
   let h = 0; for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
   return (h % 8) + 1;
 }
-    const $ = (q) => document.querySelector(q);
-    const out = $('#output');
-    const who = $('#who');
     function enableHorizontalWheel(container, hot) {
   // 多重登録防止
   if (container.dataset.hwBound === '1') return;
@@ -796,7 +765,6 @@ async function handleQuickSave({ date, am, pm }) {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   if (!token) { alert('アクセストークンが取得できません（未ログインの可能性）'); return; }
-  const baseUrl = document.getElementById('url').value.trim();
 
   try {
     // 5) 先に削除（空欄だった slot）
@@ -912,7 +880,6 @@ async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) { out.textContent = '未ログインです'; return; }
   const token = session.access_token;
-  const url = $('#url').value.trim();
 
   out.textContent = `読み込み中... (${ym})`;
   try{
