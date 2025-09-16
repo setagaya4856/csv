@@ -196,6 +196,7 @@ async function fetchJsonStrict(fnName, opts) {
 }
     // ★ 追加：ログイン状態でUI切替
 function toggleUIBySession(isLoggedIn) {
+  console.log('toggleUIBySession', { isLoggedIn });
   document.getElementById('appRoot').style.display = isLoggedIn ? '' : 'none';
   document.getElementById('loginModal').style.display = isLoggedIn ? 'none' : '';
 }
