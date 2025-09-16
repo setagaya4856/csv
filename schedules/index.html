@@ -1407,7 +1407,7 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
     }
     // 先に削除
     if (deletes.length) {
-      const res = await fetch(fnUrl('schedules-delete`), {
+      const res = await fetch(fnUrl('schedules-delete'), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(deletes),
