@@ -1281,7 +1281,7 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
       const isUser = userSources.has(source);
       for (const [row, col, _oldVal, newVal] of changes) {
         applyValueRule(hot, row, col, newVal); // 既存の「休」色付け
-        if (isUser && col >= 2) {              // 固定列(0=名前,1=メモ)以外のみ
+        if (isUser && col >= 1) {              // 固定列(0=名前,1=メモ)以外のみ
           markDirty(row, col, true);
         }
       }
