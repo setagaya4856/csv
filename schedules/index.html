@@ -1572,28 +1572,27 @@ for (const ev of arr) {
     listEl.innerHTML = '';
   }
 }
-async function deleteCompanyEventById(id) {
+  async function deleteCompanyEventById(id) {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   if (!token) throw new Error('未ログインです');
   const baseUrl = document.getElementById('url').value.trim();
 
-  // まずはエッジ関数を試す（存在するなら推奨）
-  try {
-    const res = await fetch(`${baseUrl}/functions/v1/company-events-delete`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-      cache: 'no-store'
-    });
-    if (res.ok) return;
-    // 失敗なら下にフォールバック
-  } catch (_) {}
-
-  // フォールバック：直接テーブル削除（RLSで管理者のみ許可されている前提）
-  const { error } = await supabase.from('company_events').delete().eq('id', id);
-  if (error) throw error;
+  const res = await fetch(`${baseUrl}/functions/v1/company-events-delete`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ id }),
+    cache: 'no-store'
+  });
+  const j = await res.json().catch(()=> ({}));
+  if (!res.ok || j?.ok === false) {
+    throw new Error(j?.error || `HTTP ${res.status}`);
+  }
 }
+
 
 document.getElementById('sched-list')?.addEventListener('click', async (e) => {
   const btn = e.target instanceof HTMLElement ? e.target.closest('button.ev-del') : null;
