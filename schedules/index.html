@@ -141,7 +141,7 @@
   <script type="module">
     // ★ 直書きでOK（Anon Key はクライアント公開前提のキーなので問題なし）
 const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
-const SUPABASE_ANON_KEY = '＜あなたのanon key＞';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0';
     let quickHot = null;
     let companyHot = null;  // 全体スケジュール用 HOT
     // ★ 先頭付近の共通関数として追加
@@ -560,7 +560,7 @@ function bucketByDepartment(dep) {
   return (h % 8) + 1;
 }
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-    let supabase = null;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (q) => document.querySelector(q);
     const out = $('#output');
@@ -844,43 +844,36 @@ async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
     }
 
     // 初期化
-    $('#init').addEventListener('click', () => {
-      const url = $('#url').value.trim();
-      const anon = $('#anon').value.trim();
-      if (!url || !anon) { alert('SUPABASE_URL と ANON_KEY を入れてください'); return; }
-      supabase = createClient(url, anon);
-      out.textContent = 'Supabase 初期化完了';
- // ★ 初期セッション確認 → UI切り替え
- supabase.auth.getSession().then(async ({ data: { session }}) => {
-   setUser(session?.user ?? null);
-   toggleUIBySession(!!session);
-   if (session) {
-     // ログイン済みなら従業員＆UI準備
-     await loadCurrentUserAndEmployees();
-     ensureCompanyEntryUI();
-   }
- });
-
- // ★ セッション変化監視（TOKEN_REFRESHED / SIGNED_OUT を含む）
- supabase.auth.onAuthStateChange(async (evt, session) => {
-   setUser(session?.user ?? null);
-   toggleUIBySession(!!session);
-   if (evt === 'TOKEN_REFRESHED') {
-     // 必要なら何かログ
-     // console.log('token refreshed');
-   }
-   if (evt === 'SIGNED_OUT') {
-     // 未ログインUIへ戻る（RLSで保護されているのでAPIも安全）
-     dirtyCells.clear();
-     updateDirtyBadge();
-   }
-   if (session) {
-     // ログイン直後・トークン更新時：UIの権限反映
-     await loadCurrentUserAndEmployees();
-     ensureCompanyEntryUI();
-   }
- });
-    });
+     // ★ 初期セッション確認 → UI切り替え
+     supabase.auth.getSession().then(async ({ data: { session }}) => {
+       setUser(session?.user ?? null);
+       toggleUIBySession(!!session);
+       if (session) {
+         // ログイン済みなら従業員＆UI準備
+         await loadCurrentUserAndEmployees();
+         ensureCompanyEntryUI();
+       }
+     });
+    
+     // ★ セッション変化監視（TOKEN_REFRESHED / SIGNED_OUT を含む）
+     supabase.auth.onAuthStateChange(async (evt, session) => {
+       setUser(session?.user ?? null);
+       toggleUIBySession(!!session);
+       if (evt === 'TOKEN_REFRESHED') {
+         // 必要なら何かログ
+         // console.log('token refreshed');
+       }
+       if (evt === 'SIGNED_OUT') {
+         // 未ログインUIへ戻る（RLSで保護されているのでAPIも安全）
+         dirtyCells.clear();
+         updateDirtyBadge();
+       }
+       if (session) {
+         // ログイン直後・トークン更新時：UIの権限反映
+         await loadCurrentUserAndEmployees();
+         ensureCompanyEntryUI();
+       }
+     });
 
 // ====== 初期化（タブ生成→今日の月を表示） ======
 $('#run').addEventListener('click', async () => {
@@ -1246,7 +1239,7 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
       const emp = rowEmployees[row];
 
       // 1列目（名前）は常に readOnly。部署色＋ノート表示用のクラス付与
-      if (col === 0　|| col === 1) {
+      if (col === 0 || col === 1) {
         const bucket = bucketByDepartment(emp?.department);
         props.className = mergeClass(props.className, `dep-${bucket}`);        
         if (col === 0) {
