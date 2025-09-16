@@ -814,7 +814,7 @@ async function onMonthTabClick(btn){
 }
 
     
-async function fetchMonthData(ym, token, url){
+async function fetchMonthData(ym, token){
   // 既にキャッシュがあれば返す
   if (monthCache.has(ym)) return monthCache.get(ym);
 
@@ -841,7 +841,7 @@ async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
 
   out.textContent = `読み込み中... (${ym})`;
   try{
-    const items = await fetchMonthData(ym, token, url);
+    const items = await fetchMonthData(ym, token);
     out.textContent = `OK: ${ym} / ${items.length}件`;
     // 一覧＆マトリクスを月単位で描画
     await renderCompanyEventList(ym);        // ← 既存のまま（内部で month で絞る）
@@ -853,7 +853,7 @@ async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
 }
 
     function setUser(u){
-      who.textContent = u ? `ログイン中: ${u.email}` : '未ログイン';
+      if (who) who.textContent = u ? `ログイン中: ${u.email}` : '未ログイン';
     }
 
     // 初期化
@@ -1368,8 +1368,6 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   if (!token) { alert('未ログインです'); return; }
-  const baseUrl = document.getElementById('url').value.trim();
-  const fnUrl = (name) => `${baseUrl}/functions/v1/${name}`;
 
   // 変更セルから upsert / delete を作成
   const upserts = [];
@@ -1669,8 +1667,6 @@ async function deleteCompanyEventById(id) {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   if (!token) throw new Error('未ログインです');
-  const baseUrl = document.getElementById('url').value.trim();
-
   const res = await fetch(fnUrl('company-events-delete'), {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
