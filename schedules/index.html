@@ -1243,8 +1243,10 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
         const bucket = bucketByDepartment(emp?.department);
         props.className = mergeClass(props.className, `dep-${bucket}`);        
         if (col === 0) {
-          props.readOnly = true;
-        }
+         props.readOnly = true;            // 名前は常に編集不可
+       } else { // col === 1 (メモ)
+         props.readOnly = !canEditRow(row); // ★ 管理者or本人のみ編集可
+       }
         // ★ 太枠は「自分の行」だけ（管理者でも全行太枠にはしない）
         if (isMyRow(row, rowEmployees, currentUser)) {
           props.className = mergeClass(props.className, 'my-row');
@@ -1347,13 +1349,23 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
   const token = session?.access_token;
   if (!token) { alert('未ログインです'); return; }
   const baseUrl = document.getElementById('url').value.trim();
+  const fnUrl = (name) => `${baseUrl}/functions/v1/${name}`;
 
   // 変更セルから upsert / delete を作成
   const upserts = [];
   const deletes = [];
+  const memoUpdates = new Map(); // key = employee_id, val = note
 
   for (const key of dirtyCells) {
     const [row, col] = key.split(':').map(Number);
+   if (col === 1) {
+     const emp = rowEmployees[row];
+     if (emp?.id) {
+       const note = (hot.getDataAtCell(row, 1) ?? '').toString();
+       memoUpdates.set(emp.id, note);
+     }
+     continue;
+   }
     if (col < 2) continue; // 固定列は対象外
 
     const emp = rowEmployees[row];
@@ -1372,6 +1384,17 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
   }
 
   try {
+    // 1) メモ更新（社員ごと）
+    for (const [employee_id, note] of memoUpdates) {
+      const res = await fetch(fnUrl('employee_note_update'), {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id, note }),
+        cache: 'no-store'
+      });
+      const txt = await res.text(); let j=null; try{j=JSON.parse(txt);}catch{}
+      if (!res.ok || (j && j.ok===false)) throw new Error(j?.error || txt || `HTTP ${res.status}`);
+    }
     // 先に削除
     if (deletes.length) {
       const res = await fetch(`${baseUrl}/functions/v1/schedules-delete`, {
