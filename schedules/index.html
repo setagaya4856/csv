@@ -1386,6 +1386,7 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
   try {
     // 1) メモ更新（社員ごと）
     for (const [employee_id, note] of memoUpdates) {
+      // 1) サーバーの DB を更新
       const res = await fetch(fnUrl('employee-note-update'), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -1394,6 +1395,10 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
       });
       const txt = await res.text(); let j=null; try{j=JSON.parse(txt);}catch{}
       if (!res.ok || (j && j.ok===false)) throw new Error(j?.error || txt || `HTTP ${res.status}`);
+      
+      // 2) ローカルキャッシュも即更新（UIにすぐ反映）
+      const emp = employeesAll.find(e => e.id === employee_id);
+      if (emp) emp.note = note;
     }
     // 先に削除
     if (deletes.length) {
@@ -1420,6 +1425,8 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
     }
 
     // 成功：対象月だけ再取得
+    // 成功：従業員情報を再取得（★メモの最新を反映）
+    await loadCurrentUserAndEmployees();
     const ymSet = new Set(
       [...dirtyCells].map(k => colDates[Number(k.split(':')[1])]?.slice(0,7)).filter(Boolean)
     );
@@ -1429,8 +1436,10 @@ document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => 
 
     // アクティブ月があれば再描画
     const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
-    if (activeYm) await loadMonth(activeYm, { scrollToToday: (activeYm === ymOf(todayJST())) });
-
+    if (activeYm) {
+      // ★メモのみ更新の場合でも必ず再描画
+      await loadMonth(activeYm, { scrollToToday: (activeYm === ymOf(todayJST())) });
+    }
     out.textContent = `保存しました：upsert ${upserts.length} / delete ${deletes.length}`;
 
   } catch (e) {
