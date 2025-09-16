@@ -139,9 +139,7 @@
   </fieldset>
 </div>
   <script type="module">
-    // ★ 直書きでOK（Anon Key はクライアント公開前提のキーなので問題なし）
-    
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0';
@@ -149,7 +147,48 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let quickHot = null;
     let companyHot = null;  // 全体スケジュール用 HOT
-    // 初回：セッション確認してUI切替（ログインしてなければモーダル表示）
+    // 初回：セッション確認してUI切替（ログインしてなければモーダル表示）//
+async function bootAppIfLoggedIn() {
+  const { data: { session } } = await supabase.auth.getSession();
+  toggleUIBySession(!!session);
+
+  if (!session) return;
+
+  // ログイン済みならアプリを起動
+  const { todayYm } = buildMonthTabs();
+  renderQuickEntryHot();
+  out.textContent = '従業員情報を取得中...';
+  await loadCurrentUserAndEmployees();
+  ensureCompanyEntryUI();
+  await loadMonth(todayYm, { scrollToToday: true });
+}
+    // ---- 起動時に必ず実行 ----
+document.addEventListener('DOMContentLoaded', async () => {
+  const FORCE_LOGIN = new URLSearchParams(location.search).get('forceLogin') === '1';
+  if (FORCE_LOGIN) await supabase.auth.signOut();
+
+  await bootAppIfLoggedIn();
+
+  supabase.auth.onAuthStateChange(async (evt, session) => {
+    toggleUIBySession(!!session);
+
+    if (evt === 'SIGNED_OUT') {
+      dirtyCells.clear();
+      updateDirtyBadge();
+      return;
+    }
+    if (session) {
+      await loadCurrentUserAndEmployees();
+      ensureCompanyEntryUI();
+
+      if (!document.querySelector('#month-tabs button')) {
+        const { todayYm } = buildMonthTabs();
+        renderQuickEntryHot();
+        await loadMonth(todayYm, { scrollToToday: true });
+      }
+    }
+  });
+});
 (async () => {
   const { data: { session } } = await supabase.auth.getSession();
   toggleUIBySession(!!session);
