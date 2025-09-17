@@ -124,7 +124,6 @@
 
   <h1 style="display:flex;align-items:center;gap:8px;">
     行動予定表
-    <button id="run">更新</button>
     <button id="logoutBtn">ログアウト</button>
     <!-- ▼ クイック登録の開閉トグル（常時表示） -->
     <button id="toggleQuickEntryBtn" class="icon-btn" aria-expanded="false">＋</button>
@@ -555,11 +554,6 @@
         window.__syncCompanyListToggle?.(); // ← ボタン表示（＋／−）と実際の開閉を同期
       }catch(e){ alert('Fetchエラー: '+e.message); }
     }
-
-    $('#run').addEventListener('click', async ()=>{
-      const activeYm = $('#month-tabs button.active')?.dataset.month; const ym = activeYm || buildMonthTabs().todayYm;
-      await loadMonth(ym, { scrollToToday: ym===ymOf(todayJST()) });
-    });
 
     /* ================================
        クリップボード（右クリメニュー用）
