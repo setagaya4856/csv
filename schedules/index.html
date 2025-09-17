@@ -362,9 +362,20 @@
 
     // 会社予定一覧の開閉（常設）
     (function(){
-      const key='open.companyList'; const btn=$('#toggleCompanyListBtn'); const listWrap=$('#sched-list-wrap');
-      let open = _LS.get(key, true); listWrap.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open));
-      btn.addEventListener('click', ()=>{ open=!open; listWrap.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open)); _LS.set(key, open); });
+      const key='open.companyList'; const btn=$('#toggleCompanyListBtn'); const wrap=$('#sched-list-wrap');
+      if (localStorage.getItem(key) === null) {
+       try { localStorage.setItem(key, 'true'); } catch {}
+      }
+      let open = _LS.get(key, true);
+      const sync = () => {
+        wrap.classList.toggle('is-hidden', !open);
+        btn.textContent = open ? '−' : '＋';
+        btn.setAttribute('aria-expanded', String(open));
+      };
+      sync();
+      listWrap.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open));
+      btn.addEventListener('click', ()=>{ open = !open; _LS.set(key, open); sync(); });
+      window.__syncCompanyListToggle = () => { open = _LS.get(key, true); sync(); };// 他所で表示状態が変わる場合に備えて公開関数に
     })();
 
     /* ================================
@@ -488,6 +499,7 @@
         await renderCompanyEventList(ym);
         renderMatrixHot(items, ym, { scrollToToday });
         clearAllDirty();
+        window.__syncCompanyListToggle?.(); // ← ボタン表示（＋／−）と実際の開閉を同期
       }catch(e){ alert('Fetchエラー: '+e.message); }
     }
 
@@ -708,6 +720,7 @@
                 <div class="ev-main"><strong>${escapeHtml(ev.event)}</strong> ${time} ${memo}</div>
               </li>`; } html+='</ul>'; }
         listEl.innerHTML = html;
+        window.__syncCompanyListToggle?.();
       }catch(e){ listEl.innerHTML=''; }
     }
 
