@@ -1262,10 +1262,17 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
     rowHeaders: true,
     licenseKey: 'non-commercial-and-evaluation',
     fixedColumnsStart: 2,
+    // ★ 自動行高をオフにして、固定値で揃える
+    autoRowSize: false,
+    rowHeights: 22,          // ← 好みで 22〜24
+    autoColumnSize: false,
     // Enterで右/Shift+Enterで左へ
     enterMoves: (e) => (e && e.shiftKey ? { row: 0, col: -1 } : { row: 0, col: 1 }),
     // 全セルに縮小レンダラーを適用
-    cells: (row, col) => ({ renderer: fitTextRenderer }),
+    cells: (row, col) => ({
+      renderer: fitTextRenderer,
+      className: 'one-line-cell'
+    }),
     // ① 右クリックはコピー/切り取り/貼り付け/Undo/Redo のみ（既存）
     contextMenu: {
       items: {
