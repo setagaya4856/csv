@@ -688,7 +688,7 @@
         },
         afterChange:(changes, source)=>{
           if(!changes) return; const userSources=new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']); const isUser=userSources.has(source);
-          for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=2){ markDirty(row,col,true); } }
+          for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ markDirty(row,col,true); } }
           hot.render();
         },
         stretchH:'all', height:1000,
