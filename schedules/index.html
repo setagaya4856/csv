@@ -181,8 +181,6 @@
     =================================*/
     const _LS = { get(k, d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch{ return d; }}, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} } };
     
-    window.__monthCache = window.__monthCache || new Map();
-    var monthCache = window.__monthCache; // ← var でTDZなし、再評価にも強い
     /* ================================
        汎用ユーティリティ
     =================================*/
@@ -383,6 +381,9 @@
     /* ================================
        月タブとロード
     =================================*/
+    window.__monthCache = window.__monthCache || new Map();
+    var monthCache = window.__monthCache; // ← var でTDZなし、再評価にも強い
+    
     function monthsAround(baseDate, back=3, forward=3){ const list=[]; const d=new Date(baseDate.getFullYear(), baseDate.getMonth()-back, 1); const end=new Date(baseDate.getFullYear(), baseDate.getMonth()+forward+1, 1); while(d<end){ list.push(ymOf(d)); d.setMonth(d.getMonth()+1,1);} return list; }
 
     function buildMonthTabs(baseDate = todayJST()){
