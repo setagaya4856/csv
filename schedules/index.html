@@ -33,9 +33,6 @@
     .tabs button{ padding:6px 10px; border:1px solid #ccc; background:#f6f6f6; border-radius:6px; }
     .tabs button.active{ background:#fff; border-color:#999; font-weight:600; box-shadow:0 1px 0 #ddd; }
 
-    /* 自分の行の強調（太枠） */
-    .my-row{ outline:2px solid #333 !important; outline-offset:-1px; }
-
     /* 部署色（8色バケット） */
     .dep-1{ background:#fff7e6 !important; }
     .dep-2{ background:#e6f7ff !important; }
@@ -45,6 +42,19 @@
     .dep-6{ background:#fff1f0 !important; }
     .dep-7{ background:#f0f5ff !important; }
     .dep-8{ background:#fefefe !important; }
+    
+    /* 部署ブロックの先頭行にだけ薄めの太線（自分の行 <-> 通常の中間） */
+    .dep-head{
+      box-shadow: inset 0 2px #888;   /* 自分の行(#333)より薄く、通常より濃く */
+    }
+    
+    /* 自分の行の強調（太枠） */
+    .my-row{
+      outline: none !important;                 /* 既存の太枠を無効化 */
+      box-shadow:
+        inset 0  2px #333,                      /* 上だけ太く */
+        inset 0 -2px #333;                      /* 下だけ太く */
+    }
 
     .name-note{ font-size:.85em; color:#666; white-space:pre-wrap; }
     .hot-btn{ padding:4px 10px; border:1px solid #bbb; border-radius:6px; background:#fff; }
@@ -84,6 +94,9 @@
     /* 管理者専用可視領域 */
     .admin-only{ display:none; }
     .admin-visible .admin-only{ display:inline-block; }
+    
+    /* 未保存バッジは赤＆太め */
+    #dirtyBadge { color:#d32f2f; font-weight:700; }
   </style>
 </head>
 <body>
@@ -572,9 +585,18 @@
         },
         afterGetCellMeta:(row,col,props)=>{
           const ds = colDates[col]; const emp=rowEmployees[row];
-          if(col===0 || col===1){ const bucket=bucketByDepartment(emp?.department); props.className = mergeClass(props.className, `dep-${bucket}`); if(col===0) props.readOnly=true; else props.readOnly = !canEditRow(row); if(isMyRow(row,rowEmployees,currentUser)) props.className = mergeClass(props.className,'my-row'); return; }
+          const prevDep = row>0 ? rowEmployees[row-1]?.department : null;
+          const isDeptHead = row===0 || (emp?.department !== prevDep);
+          if(col===0 || col===1){
+            const bucket=bucketByDepartment(emp?.department);
+            props.className = mergeClass(props.className, `dep-${bucket}`);
+            if(col===0) props.readOnly=true; else props.readOnly = !canEditRow(row);
+            if(isMyRow(row,rowEmployees,currentUser)) props.className = mergeClass(props.className,'my-row');
+            if(isDeptHead) props.className = mergeClass(props.className,'dep-head');
+            return;
+          }
           props.className = stripDateClasses(props.className); if(ds){ props.className = mergeClass(props.className, classesByDate(ds, today)); }
-          props.readOnly = !canEditRow(row); if(isMyRow(row,rowEmployees,currentUser)) props.className = mergeClass(props.className,'my-row');
+          props.readOnly = !canEditRow(row); if(isMyRow(row,rowEmployees,currentUser)) props.className = mergeClass(props.className,'my-row'); if(isDeptHead) props.className = mergeClass(props.className,'dep-head');
         },
         afterChange:(changes, source)=>{
           if(!changes) return; const userSources=new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']); const isUser=userSources.has(source);
@@ -612,7 +634,8 @@
         await loadCurrentUserAndEmployees();
         const ymSet=new Set([...dirtyCells].map(k=> colDates[Number(k.split(':')[1])]?.slice(0,7)).filter(Boolean)); for(const ym of ymSet) monthCache.delete(ym);
         clearAllDirty(); const activeYm=$('#month-tabs button.active')?.dataset.month; if(activeYm) await loadMonth(activeYm,{ scrollToToday: (activeYm===ymOf(todayJST())) });
-        alert(`保存しました：変更 ${upserts.length} / 削除 ${deletes.length}`);
+        const memoEdits = memoUpdates.size;
+        alert(`保存しました：メモ ${memoEdits} / 予定 変更 ${upserts.length} / 削除 ${deletes.length}`);
       }catch(e){ console.error(e); alert('保存に失敗しました：'+e.message); }
     });
 
