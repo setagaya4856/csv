@@ -63,26 +63,17 @@
 }
 .hot-btn:hover { background: #f6f6f6; }
       /* 見出しと各行の高さ次第ですが「3行分」目安の高さに */
-#sched-list-wrap{
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 6px 8px;
-  background: #fff;
-}
+  #sched-list-wrap{
+    max-height: 140px;      /* 調整OK: 120〜160pxくらい */
+    overflow: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 6px 8px;
+    background: #fff;
+  }
   /* 行間を少し詰めると3行に収まりやすい */
   #sched-list h3 { margin: 6px 0; font-size: 14px; }
   #sched-list li { margin: 2px 0; line-height: 1.2; }
-    #quickRow {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  flex-wrap: wrap;          /* 画面幅が狭い時は折り返す */
-  margin: 6px 0 8px;
-}
-#quickEntry, #companyEntry {
-  flex: 1 1 360px;          /* 横並び2カラム想定、最小幅 320〜360px */
-  min-width: 320px;
-}
   /* 変更中セルの赤枠 */
   .dirty-cell { outline: 2px solid #e53935 !important; outline-offset: -2px; }
     .ev-del {
@@ -99,35 +90,6 @@
 .ev-main { flex: 1 1 auto; }
 .tabsbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:space-between; margin:8px 0 12px; }
 .tabs-ctrl { display:flex; align-items:center; gap:8px; }
-/* ページ基本 */
-body { margin: 12px auto; }
-
-/* fieldset 内側の余白を少し削減 */
-fieldset { margin: 8px 0; padding: 8px 10px; }
-
-/* 月切替タブまわり（上下のマージン圧縮） */
-.tabsbar { margin: 4px 0 6px; }   /* 以前: 8px 0 12px */
-.tabs { gap: 4px; }               /* タブ同士の間隔も少し詰める */
-.tabs button { padding: 4px 8px; }/* タブ自体の上下パディングを控えめに */
-
-/* 「クイック登録」タイトル行の余白 */
-.quick-title { margin: 4px 0; }
-
-/* クイック登録と全体スケジュール入力を横並びにしている行 */
-#quickRow { gap: 8px; margin: 4px 0 6px; }
-
-/* スケジュール一覧（会社イベント）見出しと項目の間隔 */
-#sched-list h3 { margin: 4px 0; font-size: 13px; }
-#sched-list li { margin: 1px 0; line-height: 1.15; }
-
-/* 「変更を保存」ボタンまわり（タブ右側ブロック） */
-.tabs-ctrl { gap: 6px; }
-
-/* Handsontable のセルの行高を気持ち低く（=縦を詰める） */
-.htCore td { line-height: 1.15; padding-top: 1px; padding-bottom: 1px; }
-
-/* ヘッダーも少し詰める */
-.handsontable th { padding-top: 2px; padding-bottom: 2px; }
   </style>
 </head>
 <body>
@@ -155,7 +117,7 @@ fieldset { margin: 8px 0; padding: 8px 10px; }
   行動予定表
     <button id="run">更新</button>
   <button id="logoutBtn" style="padding:6px 10px;">ログアウト</button>
-      <button id="quickSaveBtn" style="padding:6px 10px;">クイック登録</button>
+      <button id="quickSaveBtn" style="padding:6px 12px; font-weight:600;">クイック登録</button>
 </h1>
 <!-- ▼▼▼ ログイン済みだけ表示される領域 ▼▼▼ -->
 <div id="appRoot" style="display:none">
@@ -163,7 +125,7 @@ fieldset { margin: 8px 0; padding: 8px 10px; }
     <div id="quickEntry" style="flex:1; min-width:360px"></div>
     <div class="tabsbar">
       <div id="matrixCtrl" class="tabs-ctrl">
-        <button id="saveMatrixBtn" title="マトリクスでの変更を保存">変更を保存</button>
+        <button id="saveMatrixBtn" class="hot-btn" title="マトリクスでの変更を保存">変更を保存</button>
         <span id="dirtyBadge" style="display:none;color:#e53935;font-weight:600;">未保存の変更あり</span>
       <div id="month-tabs" class="tabs"></div>
       </div>
@@ -245,12 +207,6 @@ async function fetchJsonStrict(fnName, opts) {
   }
   return json ?? {};
 }
-    function calcMatrixHeight(rowCount) {
-  const rowH = 24;  // 行高の目安（必要なら22〜26で微調整）
-  const head = 32;  // ヘッダ高の目安
-  const pad  = 12;  // 余白
-  return head + rowH * rowCount + pad; // ← 上限なし。画面からはみ出してOK
-}
     // ★ 追加：ログイン状態でUI切替
 function toggleUIBySession(isLoggedIn) {
   console.log('toggleUIBySession', { isLoggedIn });
@@ -320,6 +276,25 @@ function todayYYYYMMDD() {
   const m = String(dt.getMonth() + 1).padStart(2, '0');
   const d = String(dt.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+// Handsontable のカラム: 登録ボタン用レンダラー
+function buttonRenderer(instance, td, row, col, prop, value, cellProperties) {
+  td.innerHTML = '';
+  const btn = document.createElement('button');
+  btn.className = 'hot-btn';
+  btn.textContent = '登録';
+  btn.addEventListener('click', () => {
+    const r = instance.getDataAtRow(row);
+    // r[0]=日付, r[1]=午前, r[2]=午後
+    const payload = {
+      date: (r[0] || '').trim(),
+      am: (r[1] || '').trim(),
+      pm: (r[2] || '').trim(),
+    };
+    handleQuickSave(payload); // 後述のハンドラに渡す
+  });
+  td.appendChild(btn);
 }
 
 // 入力バリデーション（YYYY-MM-DD）
@@ -462,34 +437,32 @@ async function loadCurrentUserAndEmployees() {
 function ensureCompanyEntryUI() {
   if (!currentUser?.is_admin) return;
 
+  // すでに #companyEntry があれば何もしない
+  if (document.getElementById('companyEntry')) {
+    // ただしボタンの移設は都度チェック
+    ensureCompanyAddButtonPlaced();
+    return;
+  }
+
+  // quickEntry の直後に companyEntry だけを差し込む（見出しは作らない）
   const quickEntry = document.getElementById('quickEntry');
-  if (!quickEntry) return;
+  const host = quickEntry?.parentElement || document.body;
 
-  // 横並びラッパーを用意（なければ作成）
-  let quickRow = document.getElementById('quickRow');
-  if (!quickRow) {
-    quickRow = document.createElement('div');
-    quickRow.id = 'quickRow';
-    // quickEntry の直前に quickRow を挿入し、quickEntry を中に移動
-    quickEntry.parentNode.insertBefore(quickRow, quickEntry);
-    quickRow.appendChild(quickEntry);
+  const div = document.createElement('div');
+  div.id = 'companyEntry';
+  div.style.maxWidth = '820px';
+
+  if (quickEntry && quickEntry.parentNode) {
+    quickEntry.parentNode.insertBefore(div, quickEntry.nextSibling);
   } else {
-    // 既にあるなら quickEntry が中にいるか確認（他の更新で動いた場合に備える）
-    if (quickEntry.parentElement !== quickRow) quickRow.appendChild(quickEntry);
+    host.appendChild(div);
   }
 
-  // companyEntry を用意（なければ生成）
-  let companyEntry = document.getElementById('companyEntry');
-  if (!companyEntry) {
-    companyEntry = document.createElement('div');
-    companyEntry.id = 'companyEntry';
-    quickRow.appendChild(companyEntry);
-  } else if (companyEntry.parentElement !== quickRow) {
-    quickRow.appendChild(companyEntry);
-  }
-
-  // HOT を描画/更新
+  // 表を描画
   renderCompanyEntryHot();
+
+  // 管理者なら “追加” ボタンをクイック登録の隣へ
+  ensureCompanyAddButtonPlaced();
 }
     
 function ensureCompanyAddButtonPlaced() {
@@ -504,8 +477,9 @@ function ensureCompanyAddButtonPlaced() {
     if (!btn) {
       btn = document.createElement('button');
       btn.id = 'companySaveBtn';
+      btn.className = 'hot-btn';
       btn.title = '全体スケジュールを追加';
-      btn.textContent = '全体スケジュール追加';
+      btn.textContent = '追加';
       // 見た目の余白
       btn.style.marginLeft = '6px';
       // quickSaveBtn の直後へ
@@ -1245,8 +1219,6 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
   function renderMatrixHot(items, ym, opts = {}) {
   const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
   const container = document.getElementById('matrixGrid');
-  const heightPx = calcMatrixHeight(data.length);
-  container.style.height = heightPx + 'px';
   const maxRows = data.length;
   const maxCols = colHeaders.length;
   const today = todayStrJST();
@@ -1370,7 +1342,7 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
     },
 
     stretchH: 'all',
-    height: heightPx,
+    height: 520,
     // ★ 列幅調整：名前=180 / メモ=180 / 以降=110
     colWidths: (index) => (index === 0 ? 110 : index === 1 ? 180 : 110),
   };
@@ -1765,13 +1737,6 @@ document.getElementById('sched-list')?.addEventListener('click', async (e) => {
 document.getElementById('logoutBtn')?.addEventListener('click', async () => {
   await supabase.auth.signOut();    // ← サインアウト
   // UIは onAuthStateChange 内の toggleUIBySession(false) でモーダル表示に戻る
-});
-    window.addEventListener('resize', () => {
-  if (!hot) return;
-  const h = calcMatrixHeight(hot.countRows());
-  document.getElementById('matrixGrid').style.height = h + 'px';
-  hot.updateSettings({ height: h });
-  hot.render();
 });
   </script>
 </body>
