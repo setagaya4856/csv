@@ -243,7 +243,7 @@ async function fetchJsonStrict(fnName, opts) {
   return json ?? {};
 }
     function calcMatrixHeight(rowCount) {
-  const rowH = 24;  // 行高の目安（必要なら22〜26で微調整）
+  const rowH = 22;  // 行高の目安（必要なら22〜26で微調整）
   const head = 32;  // ヘッダ高の目安
   const pad  = 12;  // 余白
   return head + rowH * rowCount + pad; // ← 上限なし。画面からはみ出してOK
