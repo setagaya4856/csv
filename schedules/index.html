@@ -210,6 +210,17 @@
       const tgl = $('#toggleCompanyAddBtn');
       if(tgl){ tgl.setAttribute('aria-expanded', entry && !entry.classList.contains('is-hidden') ? 'true':'false'); }
     }
+    function setQuickEntryVisibility(isActive) {
+      const quickBtn = document.getElementById('quickSaveBtn');
+      const quickToggle = document.getElementById('toggleQuickEntryBtn');
+      if (!isActive) {
+        if (quickBtn) quickBtn.style.display = 'none';
+        if (quickToggle) quickToggle.style.display = 'none';
+      } else {
+        if (quickBtn) quickBtn.style.display = '';
+        if (quickToggle) quickToggle.style.display = '';
+      }
+    }
 
     /* ================================
        ログイン状態で UI 切替
@@ -222,7 +233,7 @@
     /* ================================
        従業員＆権限
     =================================*/
-    let currentUser = { email:null, employee_id:null, is_admin:false };
+    let currentUser = { email:null, employee_id:null, is_admin:false , is_active:false };
     let employeesAll = [];
     let employeesVisible = []; // 表示用（is_active !== false のみ）
     async function loadCurrentUserAndEmployees(){
@@ -237,8 +248,9 @@
       employeesAll = emps ?? [];
       employeesVisible = employeesAll.filter(e => e.is_active !== false);
       const me = employeesAll.find(e => (e.email||'').toLowerCase() === (email||'').toLowerCase());
-      currentUser = { email, employee_id: me?.id ?? null, is_admin: !!me?.is_admin };
+      currentUser = { email, employee_id: me?.id ?? null, is_admin: !!me?.is_admin , is_active: me?.is_active !== false};
       setAdminVisibility(currentUser.is_admin);
+      setQuickEntryVisibility(currentUser.is_active);
       return currentUser;
     }
 
