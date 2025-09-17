@@ -128,7 +128,7 @@
   行動予定表
     <button id="run">更新</button>
   <button id="logoutBtn" style="padding:6px 10px;">ログアウト</button>
-      <button id="quickSaveBtn" style="padding:6px 12px; font-weight:600;">クイック登録</button>
+      <button id="quickSaveBtn" style="padding:6px 12px;">クイック登録</button>
 </h1>
 <!-- ▼▼▼ ログイン済みだけ表示される領域 ▼▼▼ -->
 <div id="appRoot" style="display:none">
@@ -136,7 +136,7 @@
     <div id="quickEntry" style="flex:1; min-width:360px"></div>
     <div class="tabsbar">
       <div id="matrixCtrl" class="tabs-ctrl">
-        <button id="saveMatrixBtn" class="hot-btn" title="マトリクスでの変更を保存">変更を保存</button>
+        <button id="saveMatrixBtn" title="マトリクスでの変更を保存">変更を保存</button>
         <span id="dirtyBadge" style="display:none;color:#e53935;font-weight:600;">未保存の変更あり</span>
       <div id="month-tabs" class="tabs"></div>
       </div>
@@ -287,25 +287,6 @@ function todayYYYYMMDD() {
   const m = String(dt.getMonth() + 1).padStart(2, '0');
   const d = String(dt.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
-}
-
-// Handsontable のカラム: 登録ボタン用レンダラー
-function buttonRenderer(instance, td, row, col, prop, value, cellProperties) {
-  td.innerHTML = '';
-  const btn = document.createElement('button');
-  btn.className = 'hot-btn';
-  btn.textContent = '登録';
-  btn.addEventListener('click', () => {
-    const r = instance.getDataAtRow(row);
-    // r[0]=日付, r[1]=午前, r[2]=午後
-    const payload = {
-      date: (r[0] || '').trim(),
-      am: (r[1] || '').trim(),
-      pm: (r[2] || '').trim(),
-    };
-    handleQuickSave(payload); // 後述のハンドラに渡す
-  });
-  td.appendChild(btn);
 }
 
 // 入力バリデーション（YYYY-MM-DD）
@@ -490,7 +471,6 @@ function ensureCompanyAddButtonPlaced() {
     if (!btn) {
       btn = document.createElement('button');
       btn.id = 'companySaveBtn';
-      btn.className = 'hot-btn';
       btn.title = '全体スケジュールを追加';
       btn.textContent = '追加';
       // 見た目の余白
