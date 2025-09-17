@@ -160,6 +160,7 @@ async function bootAppIfLoggedIn() {
   renderQuickEntryHot();
   await loadCurrentUserAndEmployees();
   ensureCompanyEntryUI();
+  ensureCompanyAddButtonPlaced();
   await loadMonth(todayYm, { scrollToToday: true });
 }
     // ---- 起動時に必ず実行 ----
@@ -180,7 +181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (session) {
       await loadCurrentUserAndEmployees();
       ensureCompanyEntryUI();
-
+      ensureCompanyAddButtonPlaced();
       if (!document.querySelector('#month-tabs button')) {
         const { todayYm } = buildMonthTabs();
         renderQuickEntryHot();
@@ -433,29 +434,67 @@ async function loadCurrentUserAndEmployees() {
 }
 function ensureCompanyEntryUI() {
   if (!currentUser?.is_admin) return;
-  if (document.getElementById('companyEntry')) return;
 
+  // すでに #companyEntry があれば何もしない
+  if (document.getElementById('companyEntry')) {
+    // ただしボタンの移設は都度チェック
+    ensureCompanyAddButtonPlaced();
+    return;
+  }
+
+  // quickEntry の直後に companyEntry だけを差し込む（見出しは作らない）
   const quickEntry = document.getElementById('quickEntry');
   const host = quickEntry?.parentElement || document.body;
 
-  const wrap = document.createElement('div');
-  wrap.innerHTML = `
-    <h3 style="margin:12px 0; display:flex; align-items:center; gap:8px;">
-      全体スケジュール（管理者）
-      <button id="companySaveBtn" class="hot-btn" title="全体スケジュールを追加">追加</button>
-    </h3>
-    <div id="companyEntry" style="max-width:820px;"></div>
-  `;
+  const div = document.createElement('div');
+  div.id = 'companyEntry';
+  div.style.maxWidth = '820px';
 
-  // ▼ quickEntry の「直後」に挿入
   if (quickEntry && quickEntry.parentNode) {
-    quickEntry.parentNode.insertBefore(wrap, quickEntry.nextSibling);
+    quickEntry.parentNode.insertBefore(div, quickEntry.nextSibling);
   } else {
-    host.appendChild(wrap);
+    host.appendChild(div);
   }
 
+  // 表を描画
   renderCompanyEntryHot();
+
+  // 管理者なら “追加” ボタンをクイック登録の隣へ
+  ensureCompanyAddButtonPlaced();
 }
+    
+function ensureCompanyAddButtonPlaced() {
+  const isAdmin = !!currentUser?.is_admin;
+  const quickBtn = document.getElementById('quickSaveBtn');
+  if (!quickBtn) return;
+
+  let btn = document.getElementById('companySaveBtn');
+
+  if (isAdmin) {
+    // なければ作る
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'companySaveBtn';
+      btn.className = 'hot-btn';
+      btn.title = '全体スケジュールを追加';
+      btn.textContent = '追加';
+      // 見た目の余白
+      btn.style.marginLeft = '6px';
+      // quickSaveBtn の直後へ
+      quickBtn.insertAdjacentElement('afterend', btn);
+    } else {
+      // 既にあるなら、位置だけ念のため補正（UI変更の影響に備える）
+      if (btn.previousElementSibling !== quickBtn) {
+        quickBtn.insertAdjacentElement('afterend', btn);
+      }
+      btn.style.display = '';
+    }
+  } else {
+    // 非管理者はボタンを隠す（あっても非表示に）
+    if (btn) btn.style.display = 'none';
+  }
+}
+
   function normalizeHHMM(raw) {
   const s = String(raw || '').trim();
   if (!s) return null; // 空は許容
