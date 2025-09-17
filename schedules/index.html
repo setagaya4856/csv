@@ -761,60 +761,99 @@
       if(error) throw error; return data||[];
     }
 
-    async function renderCompanyEventList(ym){
-      const listEl = $('#sched-list'); const toggleBtn = $('#toggleCompanyListBtn');
-      try{
+    async function renderCompanyEventList(ym) {
+      const listEl   = $('#sched-list');
+      const toggleBtn = $('#toggleCompanyListBtn');
+    
+      try {
         const events = await fetchCompanyEventsForMonth(ym);
-        // トグルボタンの活性/非活性（イベント無しでもボタン自体は表示）
-        if(toggleBtn){ toggleBtn.disabled = false; toggleBtn.title = events.length ? '会社予定を開閉' : 'この月は会社予定がありません（開閉可）'; }
-        if(!events.length){ listEl.innerHTML = '<p>該当なし</p>'; const wrap = document.getElementById('sched-list-wrap');
+    
+        // トグルの状態ヒント
+        if (toggleBtn) {
+          toggleBtn.disabled = false;
+          toggleBtn.title = events.length ? '会社予定を開閉' : 'この月は会社予定がありません（開閉可）';
+        }
+    
+        // 0件時：該当なし＋強制的に開く（初回オン維持のため）
+        if (!events.length) {
+          listEl.innerHTML = '<p>該当なし</p>';
+          const wrap = document.getElementById('sched-list-wrap');
           if (wrap) {
             wrap.classList.remove('is-hidden');
             try { localStorage.setItem('open.companyList', 'true'); } catch {}
           }
+          window.__syncCompanyListToggle?.();
           return;
         }
-        // ★ notice を先に、続いて event（同一種内は日付→開始時間で昇順）
+    
+        // ★ notice を先（優先表示）、ついでに event
         const notices = events.filter(ev => ev.kind === 'notice');
         const normals = events.filter(ev => ev.kind !== 'notice');
-        let html='';
-        // 1) お知らせ：個別に日付見出しなしで列挙（優先表示）
+    
+        // 日付/時間で並べ替え（安定ソート）
+        notices.sort((a, b) =>
+          (a.date || '').localeCompare(b.date || '') ||
+          (a.date_end || '').localeCompare(b.date_end || '') ||
+          (a.event || '').localeCompare(b.event || '', 'ja')
+        );
+        normals.sort((a, b) =>
+          (a.date || '').localeCompare(b.date || '') ||
+          (a.timestart || '').localeCompare(b.timestart || '') ||
+          (a.event || '').localeCompare(b.event || '', 'ja')
+        );
+    
+        let html = '';
+    
+        // 1) お知らせ（見出しなし、上に固めて表示）
         for (const ev of notices) {
           const range = ev.date_end ? `${ev.date} 〜 ${ev.date_end}` : `${ev.date}`;
-          const memo  = ev.memo ? `<div style="color:#333; font-size:.9em; white-space:pre-wrap; margin-top:2px;">${escapeHtml(ev.memo)}</div>` : '';
-          const delBtn = currentUser?.is_admin ? `<button class="ev-del admin-only" data-ev-id="${ev.id}">削除</button>` : '';
+          const memo  = ev.memo
+            ? `<div style="color:#333; font-size:.9em; white-space:pre-wrap; margin-top:2px;">${escapeHtml(ev.memo)}</div>`
+            : '';
+          const delBtn = currentUser?.is_admin
+            ? `<button class="ev-del admin-only" data-ev-id="${ev.id}">削除</button>`
+            : '';
           html += `
             <div class="ev-item" style="border-left:4px solid #9c27b0; padding-left:8px; margin:6px 0;">
               ${delBtn}
               <div class="ev-main">
-               <div style="font-weight:700; white-space:pre-wrap;">${escapeHtml(ev.event)}</div>
-               ${ev.date_end ? `<div style="color:#555; font-size:.9em;">${range}</div>` : ''} <!-- 単日なら期間は任意 -->
-               ${memo}
-             </div>
-           </div>`;
+                <div style="font-weight:700; white-space:pre-wrap;">${escapeHtml(ev.event)}</div>
+                ${ev.date_end ? `<div style="color:#555; font-size:.9em;">${range}</div>` : ''}
+                ${memo}
+              </div>
+            </div>`;
         }
-        // 2) 通常イベント：日付見出しごとに列挙
+    
+        // 2) 通常イベント：日付ごとに見出し
         const groups = new Map();
         for (const ev of normals) {
           const day = ev.date;
           if (!groups.has(day)) groups.set(day, []);
           groups.get(day).push(ev);
         }
+    
         for (const [day, arr] of groups) {
           const d  = new Date(`${day}T00:00:00`);
           const wd = '日月火水木金土'[d.getDay()];
-          html += `<h3>${day}（${wd}）</h3><ul style="margin:0 0 8px 16px;padding:0">`;
-          // 時刻→タイトル（日本語）で昇順
-          arr.sort((a,b) =>
-           (a.timestart || '').localeCompare(b.timestart || '') ||
-           (a.event     || '').localeCompare(b.event     || '', 'ja')
+          html += `<h3>${day}（${wd}）</h3><ul style="margin:0 0 8px 16px; padding:0">`;
+    
+          // 同日内は時刻→タイトル
+          arr.sort((a, b) =>
+            (a.timestart || '').localeCompare(b.timestart || '') ||
+            (a.event     || '').localeCompare(b.event     || '', 'ja')
           );
+    
           for (const ev of arr) {
-            const tstart = ev.timestart ? ev.timestart.slice(0,5) : '';
-            const tend   = ev.timeend   ? ev.timeend.slice(0,5)   : '';
+            const tstart = ev.timestart ? ev.timestart.slice(0, 5) : '';
+            const tend   = ev.timeend   ? ev.timeend.slice(0, 5)   : '';
             const time   = tstart && tend ? `${tstart}–${tend}` : (tstart || '');
-            const memo   = ev.memo ? `<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(ev.memo)}</div>` : '';
-            const delBtn = currentUser?.is_admin ? `<button class="ev-del admin-only" data-ev-id="${ev.id}">削除</button>` : '';
+            const memo   = ev.memo
+              ? `<div style="color:#666; font-size:.9em; white-space:pre-wrap">${escapeHtml(ev.memo)}</div>`
+              : '';
+            const delBtn = currentUser?.is_admin
+              ? `<button class="ev-del admin-only" data-ev-id="${ev.id}">削除</button>`
+              : '';
+    
             html += `
               <li class="ev-item">
                 ${delBtn}
@@ -826,9 +865,15 @@
           }
           html += `</ul>`;
         }
+    
         listEl.innerHTML = html;
         window.__syncCompanyListToggle?.();
-      }catch(e){ listEl.innerHTML=''; }
+    
+      } catch (e) {
+        // フェイルセーフ：空にして落ちないように
+        listEl.innerHTML = '';
+        console.error(e);
+      }
     }
 
     async function deleteCompanyEventById(id){ const { data:{ session } } = await supabase.auth.getSession(); const token=session?.access_token; if(!token) throw new Error('未ログインです'); const res=await fetch(fnUrl('company-events-delete'),{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify({ id }), cache:'no-store' }); const text=await res.text(); let json=null; try{ json=JSON.parse(text);}catch{} if(!res.ok || (json&&json.ok===false)) throw new Error(json?.error||text||`HTTP ${res.status}`); return json??{}; }
