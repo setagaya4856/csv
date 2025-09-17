@@ -804,22 +804,35 @@
     });
 
     // 会社予定の追加ボタン（常設・管理者のみ可視）
-    document.addEventListener('click', async (e)=>{
-      const t = e.target; if(!(t instanceof HTMLElement)) return;
-      if(t.id==='companySaveBtn'){
-        if(!currentUser?.is_admin) return alert('権限がありません'); if(!companyHot) return;
-        const [kind, date, date_end, startRaw, endRaw, title, body, memo] = companyHot.getDataAtRow(0).map(v => (v ?? '').toString().trim());
-        if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return alert('日付は YYYY-MM-DD で入力してください');
-        if(!title) return alert('行事名を入力してください');
-        const start = kind==='event' ? normalizeHHMM(startRaw) : null;
-        const end   = kind==='event' ? normalizeHHMM(endRaw)   : null;
-        if (kind==='event') {
+    document.addEventListener('click', async (e) => {
+      const t = e.target as HTMLElement;
+      if (!(t instanceof HTMLElement)) return;
+      if (t.id !== 'companySaveBtn') return;
+      if (!currentUser?.is_admin) { alert('権限がありません'); return; }
+      if (!companyHot) return;
+      try {
+        const [kind, date, date_end, startRaw, endRaw, title, body, memo] =
+        companyHot.getDataAtRow(0).map(v => (v ?? '').toString().trim());
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { alert('日付は YYYY-MM-DD で入力してください'); return; }
+        if (!title) { alert('行事名を入力してください'); return; }
+        const start = (kind === 'event') ? normalizeHHMM(startRaw) : null;
+        const end   = (kind === 'event') ? normalizeHHMM(endRaw)   : null;
+        if (kind === 'event') {
           if (startRaw && !start) { alert('開始は 0930 または 09:30 の形式で入力してください'); return; }
           if (endRaw   && !end)   { alert('終了は 1730 または 17:30 の形式で入力してください'); return; }
         }
-        const dateEndIso = date_end && /^\d{4}-\d{2}-\d{2}$/.test(date_end) ? date_end : null;
-        await upsertCompanyEvent({ kind, date, date_end: dateEndIso, timestart: start, timeend: end, event: title, body, memo }); const activeYm=$('#month-tabs button.active')?.dataset.month; if(activeYm) await renderCompanyEventList(activeYm); alert('全体スケジュールを追加しました'); }
-        catch(err){ console.error(err); alert('追加に失敗しました：'+err.message); }
+        const dateEndIso = (date_end && /^\d{4}-\d{2}-\d{2}$/.test(date_end)) ? date_end : null;
+        await upsertCompanyEvent({
+          kind, date, date_end: dateEndIso,
+          timestart: start, timeend: end,
+          event: title, body, memo
+        });
+        const activeYm = document.querySelector<HTMLButtonElement>('#month-tabs button.active')?.dataset.month;
+        if (activeYm) await renderCompanyEventList(activeYm);
+        alert('全体スケジュールを追加しました');
+      } catch (err:any) {
+        console.error(err);
+        alert('追加に失敗しました：' + err.message);
       }
     });
   </script>
