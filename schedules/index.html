@@ -109,6 +109,26 @@
   height: auto;
   overflow: visible;   /* はみ出し禁止しない＝中身の高さで外枠が伸びる */
 }
+    /* 追記：アイコン風の小さな＋／−ボタン */
+.icon-btn {
+  appearance: none;
+  border: 1px solid #bbb;
+  background: #fff;
+  border-radius: 6px;
+  padding: 2px 8px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.icon-btn:hover { background:#f6f6f6; }
+
+/* 折りたたみ対象の既定は非表示にしたい場合は .is-hidden を付け外し */
+.is-hidden { display: none !important; }
+
+/* 配置のちょい詰め（任意） */
+#quickEntry { margin: 2px 0 4px; }
+#companyEntry { margin: 2px 0 4px; }
+#sched-list { margin: 2px 0 4px; }
+
   </style>
 </head>
 <body>
@@ -176,6 +196,8 @@ async function bootAppIfLoggedIn() {
   await loadCurrentUserAndEmployees();
   ensureCompanyEntryUI();
   ensureCompanyAddButtonPlaced();
+  ensureQuickToggleButton();
+ensureCompanyAddToggleButton();
   await loadMonth(todayYm, { scrollToToday: true });
 }
     // ---- 起動時に必ず実行 ----
@@ -205,6 +227,138 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 });
+    // ▼ 状態を保存（ページ再読込後も覚えておきたい場合）
+const _LS = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+// ▼ セクション表示切替（display の付け外し）
+function setSectionVisible(el, visible) {
+  if (!el) return;
+  el.classList.toggle('is-hidden', !visible);
+}
+
+// ▼ ボタンのラベル（＋／−）切替
+function setPlusMinus(btn, open) {
+  if (!btn) return;
+  btn.textContent = open ? '−' : '＋';
+  btn.setAttribute('aria-expanded', String(open));
+}
+
+// ▼ クイック登録：＋ボタンを「登録」の左に差し込んで #quickEntry を開閉
+function ensureQuickToggleButton() {
+  const targetBtn = document.getElementById('quickSaveBtn');
+  const entry = document.getElementById('quickEntry');
+  if (!targetBtn || !entry) return;
+
+  let btn = document.getElementById('toggleQuickEntryBtn');
+  const key = 'open.quickEntry';
+  let open = _LS.get(key, false);   // 既定で閉じる
+
+  // 初期表示
+  setSectionVisible(entry, open);
+
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'toggleQuickEntryBtn';
+    btn.className = 'icon-btn';
+    btn.type = 'button';
+    btn.style.marginRight = '6px';
+    setPlusMinus(btn, open);
+    targetBtn.insertAdjacentElement('beforebegin', btn);
+
+    btn.addEventListener('click', () => {
+      open = !open;
+      setPlusMinus(btn, open);
+      setSectionVisible(entry, open);
+      _LS.set(key, open);
+    });
+  } else {
+    // 既にある場合でもラベルだけ同期
+    setPlusMinus(btn, open);
+  }
+}
+
+// ▼ 会社スケジュール「追加」欄：追加ボタン左に＋を置く（管理者のみ）
+function ensureCompanyAddToggleButton() {
+  const isAdmin = !!(window.currentUser && currentUser.is_admin);
+  const addBtn = document.getElementById('companySaveBtn');
+  const entry = document.getElementById('companyEntry');
+
+  // 管理者以外 or まだ UI が無いときは何もしない
+  if (!isAdmin || !addBtn || !entry) return;
+
+  let btn = document.getElementById('toggleCompanyAddBtn');
+  const key = 'open.companyEntry';
+  let open = _LS.get(key, false);   // 既定で閉じる
+
+  setSectionVisible(entry, open);
+
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'toggleCompanyAddBtn';
+    btn.className = 'icon-btn';
+    btn.type = 'button';
+    btn.style.marginRight = '6px';
+    setPlusMinus(btn, open);
+    addBtn.insertAdjacentElement('beforebegin', btn);
+
+    btn.addEventListener('click', () => {
+      open = !open;
+      setPlusMinus(btn, open);
+      setSectionVisible(entry, open);
+      _LS.set(key, open);
+    });
+  } else {
+    setPlusMinus(btn, open);
+  }
+}
+
+// ▼ 会社スケジュール“表示”欄（会社イベント一覧）：イベントがある月だけ＋を出す
+//   置き場所は「月タブバー右側のコントロール（#matrixCtrl）」の先頭に置きます。
+function ensureCompanyListToggleButton(showButton) {
+  const ctrl = document.getElementById('matrixCtrl');
+  const list = document.getElementById('sched-list');
+  if (!ctrl || !list) return;
+
+  let btn = document.getElementById('toggleCompanyListBtn');
+  const key = 'open.companyList';
+  let open = _LS.get(key, true);    // 既定で開く
+
+  // ボタンの表示・非表示を切替
+  if (!showButton) {
+    if (btn) btn.remove();
+    // イベントがない月は一覧自体を閉じる
+    setSectionVisible(list, false);
+    _LS.set(key, false);
+    return;
+  }
+
+  // 初期表示
+  setSectionVisible(list, open);
+
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'toggleCompanyListBtn';
+    btn.className = 'icon-btn';
+    btn.type = 'button';
+    // ラベル例："会社予定" の文字付きでもOK。ここでは＋／−だけにします。
+    setPlusMinus(btn, open);
+    // 右側コントロールの先頭に置く（保存ボタンの左）
+    ctrl.insertAdjacentElement('afterbegin', btn);
+
+    btn.addEventListener('click', () => {
+      open = !open;
+      setPlusMinus(btn, open);
+      setSectionVisible(list, open);
+      _LS.set(key, open);
+    });
+  } else {
+    setPlusMinus(btn, open);
+  }
+}
+
     // ★ 先頭付近の共通関数として追加
  function fnUrl(name) {
    return `${SUPABASE_URL}/functions/v1/${name}`;
@@ -456,9 +610,9 @@ function ensureCompanyEntryUI() {
   } else if (companyEntry.parentElement !== quickRow) {
     quickRow.appendChild(companyEntry);
   }
-
   // HOT を描画/更新
   renderCompanyEntryHot();
+  ensureCompanyAddToggleButton();
 }
     
 function ensureCompanyAddButtonPlaced() {
@@ -914,6 +1068,8 @@ async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
     await renderCompanyEventList(ym);        // ← 既存のまま（内部で month で絞る）
     renderMatrixHot(items, ym, { scrollToToday }); // ← 次の手順で対応
     clearAllDirty();
+    ensureQuickToggleButton();
+ensureCompanyAddToggleButton();
   }catch(e){
     alert('Fetchエラー: ' + e.message);
   }
@@ -1684,6 +1840,8 @@ for (const ev of arr) {
     }
     listEl.innerHTML = html;
 
+    // ★ ここを追加：イベントが 1 件以上ならボタンを出す／無ければ隠す
+    ensureCompanyListToggleButton((events?.length || 0) > 0);
   } catch (e) {
     listEl.innerHTML = '';
   }
