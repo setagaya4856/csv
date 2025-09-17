@@ -367,6 +367,93 @@
       $('#month-tabs button.active')?.classList.remove('active'); btn.classList.add('active');
       const ym = btn.dataset.month; const isThisMonth = ym === ymOf(todayJST()); await loadMonth(ym, { scrollToToday:isThisMonth });
     }
+    
+    function normalizeSchedules(json) {
+      const arr0 = Array.isArray(json)
+        ? json
+        : (json?.items || json?.data || json?.schedules || null);
+    
+      if (arr0) {
+        return arr0
+          .map(x => {
+            const pick = (obj, keys) => {
+              for (const k of keys) {
+                if (obj[k] != null) return obj[k];
+                const lk = Object.keys(obj).find(t => t.toLowerCase() === k.toLowerCase());
+                if (lk && obj[lk] != null) return obj[lk];
+              }
+              return undefined;
+            };
+            const title = pick(x, ['title','summary','name','subject']) ?? '';
+            const date  = pick(x, ['date','day','dt']);
+            const start = pick(x, ['start','start_at','startAt','start_time','startTime','from']) || date;
+            const end   = pick(x, ['end','end_at','endAt','end_time','endTime','to']);
+            const location = pick(x, ['location','place','where']) || '';
+            const note = pick(x, ['note','notes','memo','description']) || '';
+    
+            const toDate = v => {
+              if (!v) return null;
+              if (/^\d{4}-\d{2}$/.test(v)) return new Date(v + '-01T00:00:00+09:00');
+              if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return new Date(v + 'T00:00:00+09:00');
+              const n = Number(v);
+              if (!Number.isNaN(n) && String(v).length >= 10) return new Date(n);
+              const d = new Date(v);
+              return Number.isNaN(d.getTime()) ? null : d;
+            };
+    
+            const dDate  = toDate(date);
+            const dStart = toDate(start) || dDate;
+            const dEnd   = toDate(end);
+    
+            return {
+              raw: x,
+              title: String(title || '(無題)'),
+              start: dStart,
+              end: dEnd,
+              baseDate: dDate || dStart || null,
+              location,
+              note
+            };
+          })
+          .filter(x => x.baseDate);
+      }
+      // schedules-get が { rows: [...] } を返すケース（AM/PM分割）
+      if (json && Array.isArray(json.rows)) {
+        const normDay = (s) => (String(s || '').trim().slice(0, 10));
+        const items = [];
+        for (const row of json.rows) {
+          const emp = row.employee_name || row.name || '（未割当）';
+          const cells = row.cells || {};
+          for (const k of Object.keys(cells)) {
+            const d = normDay(k);
+            if (!d) continue;
+            const cell = cells[k] || {};
+    
+            const pushOne = (txt, slot, hour) => {
+              const t = (txt ?? '').toString().trim();
+              if (!t) return;
+              items.push({
+                raw: { ...row, date: d, cell },
+                employee_name: emp,
+                title: t,
+                slot,                                   // 'am' | 'pm'
+                start: new Date(`${d}T${String(hour).padStart(2,'0')}:00:00+09:00`),
+                end: null,
+                baseDate: new Date(`${d}T00:00:00+09:00`),
+                location: '',
+                note: ''
+              });
+            };
+    
+            pushOne(cell.am, 'am', 9);
+            pushOne(cell.pm, 'pm', 13);
+          }
+        }
+        return items;
+      }
+    
+      return [];
+    }
 
     async function fetchMonthData(ym, token){
       if(monthCache.has(ym)) return monthCache.get(ym);
