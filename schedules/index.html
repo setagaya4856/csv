@@ -99,6 +99,35 @@
 .ev-main { flex: 1 1 auto; }
 .tabsbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:space-between; margin:8px 0 12px; }
 .tabs-ctrl { display:flex; align-items:center; gap:8px; }
+/* ページ基本 */
+body { margin: 12px auto; }
+
+/* fieldset 内側の余白を少し削減 */
+fieldset { margin: 8px 0; padding: 8px 10px; }
+
+/* 月切替タブまわり（上下のマージン圧縮） */
+.tabsbar { margin: 4px 0 6px; }   /* 以前: 8px 0 12px */
+.tabs { gap: 4px; }               /* タブ同士の間隔も少し詰める */
+.tabs button { padding: 4px 8px; }/* タブ自体の上下パディングを控えめに */
+
+/* 「クイック登録」タイトル行の余白 */
+.quick-title { margin: 4px 0; }
+
+/* クイック登録と全体スケジュール入力を横並びにしている行 */
+#quickRow { gap: 8px; margin: 4px 0 6px; }
+
+/* スケジュール一覧（会社イベント）見出しと項目の間隔 */
+#sched-list h3 { margin: 4px 0; font-size: 13px; }
+#sched-list li { margin: 1px 0; line-height: 1.15; }
+
+/* 「変更を保存」ボタンまわり（タブ右側ブロック） */
+.tabs-ctrl { gap: 6px; }
+
+/* Handsontable のセルの行高を気持ち低く（=縦を詰める） */
+.htCore td { line-height: 1.15; padding-top: 1px; padding-bottom: 1px; }
+
+/* ヘッダーも少し詰める */
+.handsontable th { padding-top: 2px; padding-bottom: 2px; }
   </style>
 </head>
 <body>
