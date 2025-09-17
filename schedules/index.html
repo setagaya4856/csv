@@ -162,20 +162,17 @@ fieldset { margin: 8px 0; padding: 8px 10px; }
   <fieldset>
     <div id="quickEntry" style="flex:1; min-width:360px"></div>
     <div class="tabsbar">
+      <div id="month-tabs" class="tabs"></div>
       <div id="matrixCtrl" class="tabs-ctrl">
         <button id="saveMatrixBtn" title="マトリクスでの変更を保存">変更を保存</button>
         <span id="dirtyBadge" style="display:none;color:#e53935;font-weight:600;">未保存の変更あり</span>
-      <div id="month-tabs" class="tabs"></div>
       </div>
     </div>
-    <div class="row" style="gap:12px; width:100%; margin:0 auto;">
-      <div style="flex:1 1 380px;min-width:320px">
-        <div id="sched-list-wrap">
-          <div id="sched-list"></div>
-        </div>
-      </div>
-    </div>
-    <div id="matrixGrid" style="height:520px;width:100%;"></div>
+    <!-- 会社イベント一覧：ラッパを簡素化（枠不要なら直置き） -->
+    <div id="sched-list"></div>
+
+    <!-- マトリクス -->
+    <div id="matrixGrid" style="width:100%;"></div>
   </fieldset>
 </div>
   <script type="module">
