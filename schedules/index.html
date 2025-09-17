@@ -5,1935 +5,616 @@
   <title>行動予定表</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- ▼ Handsontable（CDN） -->
+  <!-- Handsontable（CDN） -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
-<script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
+
   <style>
-    /* 折り返しをやめて、縮小＋省略で表示 */
-    .htCore td {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: 1.2;
-      vertical-align: middle; /* ★ 追加 */
-    }
-    body{
-      font-family:system-ui, sans-serif;
-      /* 画面の95%まで広げる（上限もかけておく場合は 1200px などに調整可） */
-      width:95vw;
-      margin:24px auto;
-      padding:0 12px;
-    }
-    fieldset{margin:12px 0; padding:12px;}
-    label{display:block; margin:6px 0 2px;}
-    input{padding:6px; width:100%; max-width:360px;}
-    button{margin:6px 6px 0 0; padding:6px 12px;}
-    pre{background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto;}
-    .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
-  .ht-today  { background:#fff9db !important; }  /* 今日: 薄い黄 */
-  .ht-sat    { background:#e6ffed !important; }  /* 土曜: 緑 */
-  .ht-sun    { background:#ffe5e5 !important; }  /* 日曜: ピンク */
-  .ht-holiday{ background:#ffe5e5 !important; }  /* 「休」含む: ピンク */
-  .tabs{display:flex;gap:6px;margin:8px 0 12px}
-  .tabs button{padding:6px 10px;border:1px solid #ccc;background:#f6f6f6;cursor:pointer;border-radius:6px}
-  .tabs button.active{background:#fff;border-color:#999;font-weight:600;box-shadow:0 1px 0 #ddd}
-    /* ★ 自分の行の強調（太枠） */
-.my-row {
-  outline: 2px solid #333 !important;
-  outline-offset: -1px;
-}
+    /* ====== 基本 ====== */
+    body{ font-family:system-ui, sans-serif; width:95vw; margin:24px auto; padding:0 12px; }
+    fieldset{ margin:12px 0; padding:12px; }
+    label{ display:block; margin:6px 0 2px; }
+    input{ padding:6px; width:100%; max-width:360px; }
+    button{ margin:6px 6px 0 0; padding:6px 12px; cursor:pointer; }
+    pre{ background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto; }
+    .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
-/* ★ department 色バケット（8色） */
-.dep-1  { background: #fff7e6 !important; } /* orange-ish */
-.dep-2  { background: #e6f7ff !important; } /* blue-ish */
-.dep-3  { background: #f9f0ff !important; } /* purple-ish */
-.dep-4  { background: #e6fffb !important; } /* cyan-ish */
-.dep-5  { background: #f6ffed !important; } /* green-ish */
-.dep-6  { background: #fff1f0 !important; } /* red-ish */
-.dep-7  { background: #f0f5ff !important; } /* indigo-ish */
-.dep-8  { background: #fefefe !important; } /* neutral */
+    /* Handsontable: 折返し禁止＋省略＋縦中央 */
+    .htCore td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; vertical-align:middle; }
 
-.name-note { font-size: 0.85em; color:#666; white-space: pre-wrap; }
-    .hot-btn {
-  padding: 4px 10px;
-  border: 1px solid #bbb;
-  border-radius: 6px;
-  background: #fff;
-  cursor: pointer;
-}
-.hot-btn:hover { background: #f6f6f6; }
-      /* 見出しと各行の高さ次第ですが「3行分」目安の高さに */
-  #sched-list-wrap{
-    max-height: 140px;      /* 調整OK: 120〜160pxくらい */
-    overflow: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 6px 8px;
-    background: #fff;
-  }
-  /* 行間を少し詰めると3行に収まりやすい */
-  #sched-list h3 { margin: 6px 0; font-size: 14px; }
-  #sched-list li { margin: 2px 0; line-height: 1.2; }
-  /* 変更中セルの赤枠 */
-  .dirty-cell { outline: 2px solid #e53935 !important; outline-offset: -2px; }
-    .ev-del {
-  appearance: none;
-  background: transparent;
-  border: none;
-  color: #e53935;
-  font: inherit;
-  padding: 2px 6px;
-  cursor: pointer;
-}
-.ev-del:hover { text-decoration: underline; }
-.ev-item { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0; }
-.ev-main { flex: 1 1 auto; }
-.tabsbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:space-between; margin:8px 0 12px; }
-.tabs-ctrl { display:flex; align-items:center; gap:8px; }
-    #quickRow {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  flex-wrap: wrap;          /* 画面幅が狭い時は折り返す */
-  margin: 6px 0 8px;
-}
-#quickEntry, #companyEntry {
-  flex: 1 1 360px;          /* 横並び2カラム想定、最小幅 320〜360px */
-  min-width: 320px;
-}
-    .panel {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 10px;
-  /* ここが重要：外枠は中身に合わせて伸びる */
-  height: auto;
-  overflow: visible;   /* はみ出し禁止しない＝中身の高さで外枠が伸びる */
-}
-    /* 追記：アイコン風の小さな＋／−ボタン */
-.icon-btn {
-  appearance: none;
-  border: 1px solid #bbb;
-  background: #fff;
-  border-radius: 6px;
-  padding: 2px 8px;
-  line-height: 1.2;
-  cursor: pointer;
-}
-.icon-btn:hover { background:#f6f6f6; }
+    /* 祝土日＆今日の強調 */
+    .ht-today  { background:#fff9db !important; }
+    .ht-sat    { background:#e6ffed !important; }
+    .ht-sun    { background:#ffe5e5 !important; }
+    .ht-holiday{ background:#ffe5e5 !important; }
 
-/* 折りたたみ対象の既定は非表示にしたい場合は .is-hidden を付け外し */
-.is-hidden { display: none !important; }
+    /* タブ風ボタン */
+    .tabs{ display:flex; gap:6px; margin:8px 0 12px; }
+    .tabs button{ padding:6px 10px; border:1px solid #ccc; background:#f6f6f6; border-radius:6px; }
+    .tabs button.active{ background:#fff; border-color:#999; font-weight:600; box-shadow:0 1px 0 #ddd; }
 
-/* 配置のちょい詰め（任意） */
-#quickEntry { margin: 2px 0 4px; }
-#companyEntry { margin: 2px 0 4px; }
-#sched-list { margin: 2px 0 4px; }
+    /* 自分の行の強調（太枠） */
+    .my-row{ outline:2px solid #333 !important; outline-offset:-1px; }
 
+    /* 部署色（8色バケット） */
+    .dep-1{ background:#fff7e6 !important; }
+    .dep-2{ background:#e6f7ff !important; }
+    .dep-3{ background:#f9f0ff !important; }
+    .dep-4{ background:#e6fffb !important; }
+    .dep-5{ background:#f6ffed !important; }
+    .dep-6{ background:#fff1f0 !important; }
+    .dep-7{ background:#f0f5ff !important; }
+    .dep-8{ background:#fefefe !important; }
+
+    .name-note{ font-size:.85em; color:#666; white-space:pre-wrap; }
+    .hot-btn{ padding:4px 10px; border:1px solid #bbb; border-radius:6px; background:#fff; }
+    .hot-btn:hover{ background:#f6f6f6; }
+
+    /* 会社予定一覧ラッパ */
+    #sched-list-wrap{ max-height:140px; overflow:auto; border:1px solid #ddd; border-radius:6px; padding:6px 8px; background:#fff; }
+    #sched-list h3{ margin:6px 0; font-size:14px; }
+    #sched-list li{ margin:2px 0; line-height:1.2; }
+
+    /* 変更中セルの赤枠 */
+    .dirty-cell{ outline:2px solid #e53935 !important; outline-offset:-2px; }
+
+    /* イベント削除ボタン（管理者のみ可視） */
+    .ev-item{ display:flex; align-items:flex-start; gap:8px; margin:4px 0; }
+    .ev-main{ flex:1 1 auto; }
+    .ev-del{ appearance:none; background:transparent; border:none; color:#e53935; font:inherit; padding:2px 6px; cursor:pointer; }
+    .ev-del:hover{ text-decoration:underline; }
+
+    /* 上部ツールバー */
+    .tabsbar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:space-between; margin:8px 0 12px; }
+    .tabs-ctrl{ display:flex; align-items:center; gap:8px; }
+
+    /* 入力エリア（クイック＋会社） */
+    #quickRow{ display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin:6px 0 8px; }
+    #quickEntry, #companyEntry{ flex:1 1 360px; min-width:320px; }
+
+    .panel{ border:1px solid #ddd; border-radius:8px; padding:10px; height:auto; overflow:visible; background:#fff; }
+
+    /* 汎用の＋／−ボタン */
+    .icon-btn{ appearance:none; border:1px solid #bbb; background:#fff; border-radius:6px; padding:2px 8px; line-height:1.2; }
+    .icon-btn:hover{ background:#f6f6f6; }
+
+    /* 折り畳み用 */
+    .is-hidden{ display:none !important; }
+
+    /* 管理者専用可視領域 */
+    .admin-only{ display:none; }
+    .admin-visible .admin-only{ display:inline-block; }
   </style>
 </head>
 <body>
-<!-- ログインモーダル（未ログイン時のみ表示） -->
-<div id="loginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.25); z-index: 9999;">
-  <div style="max-width:360px;margin:10vh auto;padding:16px;background:#fff;border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,.12);">
-    <h3 style="margin:0 0 8px">ログイン</h3>
-    <form id="loginForm" autocomplete="on">
-      <label for="email">メール</label>
-      <input id="email" name="email" type="email" placeholder="you@example.com"
-             autocomplete="username" inputmode="email" required style="width:100%">
-
-      <label for="password" style="margin-top:8px;display:block;">パスワード</label>
-      <input id="password" name="password" type="password" placeholder="8文字以上"
-             autocomplete="current-password" required style="width:100%">
-
-      <div class="row" style="margin-top:8px">
-        <button type="submit">メール＋パスワードでログイン</button>
-        <button type="button" id="login-otp">マジックリンク送信</button>
-      </div>
-    </form>
-  </div>
-</div>
-  <h1 style="display:flex;align-items:center;gap:8px;">
-  行動予定表
-    <button id="run">更新</button>
-  <button id="logoutBtn" style="padding:6px 10px;">ログアウト</button>
-      <button id="quickSaveBtn" style="padding:6px 10px;">クイック登録</button>
-</h1>
-<!-- ▼▼▼ ログイン済みだけ表示される領域 ▼▼▼ -->
-<div id="appRoot" style="display:none">
-  <div id="mainPanel" class="panel">   <!-- ← 外枠はここに -->
-    <div id="quickEntry" style="flex:1; min-width:360px"></div>
-    <div class="tabsbar">
-      <div id="matrixCtrl" class="tabs-ctrl">
-        <button id="saveMatrixBtn" title="マトリクスでの変更を保存">変更を保存</button>
-        <span id="dirtyBadge" style="display:none;color:#e53935;font-weight:600;">未保存の変更あり</span>
-        <div id="month-tabs" class="tabs"></div>
-      </div>
+  <!-- ログインモーダル（未ログイン時のみ表示） -->
+  <div id="loginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.25); z-index:9999;">
+    <div style="max-width:360px;margin:10vh auto;padding:16px;background:#fff;border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,.12);">
+      <h3 style="margin:0 0 8px">ログイン</h3>
+      <form id="loginForm" autocomplete="on">
+        <label for="email">メール</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="username" inputmode="email" required>
+        <label for="password" style="margin-top:8px;">パスワード</label>
+        <input id="password" name="password" type="password" placeholder="8文字以上" autocomplete="current-password" required>
+        <div class="row" style="margin-top:8px">
+          <button type="submit">メール＋パスワードでログイン</button>
+          <button type="button" id="login-otp">マジックリンク送信</button>
+        </div>
+      </form>
     </div>
-    <div id="sched-list"></div>
-    <div id="matrixGrid" style="width:100%;"></div>
   </div>
-</div>
-  <script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-const $ = (q) => document.querySelector(q);
-const who = $('#who');           // （無ければそのまま null でも安全）
-const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0';
-    
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    let quickHot = null;
-    let companyHot = null;  // 全体スケジュール用 HOT
-    // 初回：セッション確認してUI切替（ログインしてなければモーダル表示）//
-async function bootAppIfLoggedIn() {
-  const { data: { session } } = await supabase.auth.getSession();
-  toggleUIBySession(!!session);
 
-  if (!session) return;
-
-  // ログイン済みならアプリを起動
-  const { todayYm } = buildMonthTabs();
-  renderQuickEntryHot();
-  await loadCurrentUserAndEmployees();
-  ensureCompanyEntryUI();
-  ensureCompanyAddButtonPlaced();
-  ensureQuickToggleButton();
-  ensureCompanyAddToggleButton();
-  await loadMonth(todayYm, { scrollToToday: true });
-}
-    // ---- 起動時に必ず実行 ----
-document.addEventListener('DOMContentLoaded', async () => {
-  const FORCE_LOGIN = new URLSearchParams(location.search).get('forceLogin') === '1';
-  if (FORCE_LOGIN) await supabase.auth.signOut();
-
-  await bootAppIfLoggedIn();
-
-  supabase.auth.onAuthStateChange(async (evt, session) => {
-    toggleUIBySession(!!session);
-
-    if (evt === 'SIGNED_OUT') {
-      dirtyCells.clear();
-      updateDirtyBadge();
-      return;
-    }
-    if (session) {
-      await loadCurrentUserAndEmployees();
-      ensureCompanyEntryUI();
-      ensureCompanyAddButtonPlaced();
-      if (!document.querySelector('#month-tabs button')) {
-        const { todayYm } = buildMonthTabs();
-        renderQuickEntryHot();
-        await loadMonth(todayYm, { scrollToToday: true });
-      }
-    }
-  });
-});
-    // ▼ 状態を保存（ページ再読込後も覚えておきたい場合）
-const _LS = {
-  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-};
-
-// ▼ セクション表示切替（display の付け外し）
-function setSectionVisible(el, visible) {
-  if (!el) return;
-  el.classList.toggle('is-hidden', !visible);
-}
-
-// ▼ ボタンのラベル（＋／−）切替
-function setPlusMinus(btn, open) {
-  if (!btn) return;
-  btn.textContent = open ? '−' : '＋';
-  btn.setAttribute('aria-expanded', String(open));
-}
-
-// ▼ クイック登録：＋ボタンを「登録」の左に差し込んで #quickEntry を開閉
-function ensureQuickToggleButton() {
-  const targetBtn = document.getElementById('quickSaveBtn');
-  const entry = document.getElementById('quickEntry');
-  if (!targetBtn || !entry) return;
-
-  let btn = document.getElementById('toggleQuickEntryBtn');
-  const key = 'open.quickEntry';
-  let open = _LS.get(key, false);   // 既定で閉じる
-
-  // 初期表示
-  setSectionVisible(entry, open);
-
-  if (!btn) {
-    btn = document.createElement('button');
-    btn.id = 'toggleQuickEntryBtn';
-    btn.className = 'icon-btn';
-    btn.type = 'button';
-    btn.style.marginRight = '6px';
-    setPlusMinus(btn, open);
-    targetBtn.insertAdjacentElement('beforebegin', btn);
-
-    btn.addEventListener('click', () => {
-      open = !open;
-      setPlusMinus(btn, open);
-      setSectionVisible(entry, open);
-      _LS.set(key, open);
-    });
-  } else {
-    // 既にある場合でもラベルだけ同期
-    setPlusMinus(btn, open);
-  }
-}
-
-// ▼ 会社スケジュール「追加」欄：追加ボタン左に＋を置く（管理者のみ）
-function ensureCompanyAddToggleButton() {
-  const isAdmin = !!(window.currentUser && currentUser.is_admin);
-  const quickBtn = document.getElementById('quickSaveBtn');
-  const addBtn   = document.getElementById('companySaveBtn'); // 追加ボタン（管理者のみ想定）
-
-  // 管理者でなければボタンを消す
-  let toggle = document.getElementById('toggleCompanyAddBtn');
-  if (!isAdmin) { if (toggle) toggle.remove(); return; }
-
-  // 追加ボタンがまだ無い場合でも「＋」は見せたい
-  // quickSaveBtn の右隣に置く（addBtn があればその直前に差し替える）
-  const insertTarget = addBtn || quickBtn;
-  if (!insertTarget) return; // まれに起動順の関係で未描画なら次の機会に
-
-  if (!toggle) {
-    toggle = document.createElement('button');
-    toggle.id = 'toggleCompanyAddBtn';
-    toggle.className = 'icon-btn';
-    toggle.type = 'button';
-    toggle.style.marginRight = '6px';
-    insertTarget.insertAdjacentElement('beforebegin', toggle);
-  } else {
-    // 位置補正（addBtn が出現したら addBtn の直前へ移動）
-    if (addBtn && toggle.nextElementSibling !== addBtn) {
-      addBtn.insertAdjacentElement('beforebegin', toggle);
-    }
-  }
-
-  // 収納対象のコンテナを用意（無ければ作る・隠す）
-  let entry = document.getElementById('companyEntry');
-  if (!entry) {
-    // quickEntry の横に置く（quickRow を使っている場合はそこへ）
-    const quickEntry = document.getElementById('quickEntry');
-    let quickRow = document.getElementById('quickRow');
-    if (!quickRow && quickEntry && quickEntry.parentNode) {
-      quickRow = document.createElement('div');
-      quickRow.id = 'quickRow';
-      quickRow.style.display = 'flex';
-      quickRow.style.gap = '12px';
-      quickRow.style.alignItems = 'flex-start';
-      quickEntry.parentNode.insertBefore(quickRow, quickEntry);
-      quickRow.appendChild(quickEntry);
-    }
-    entry = document.createElement('div');
-    entry.id = 'companyEntry';
-    (quickRow || quickEntry?.parentNode || document.body).appendChild(entry);
-  }
-
-  // 初期開閉状態（既定は閉）
-  const key = 'open.companyEntry';
-  let open = (() => { try { return JSON.parse(localStorage.getItem(key)) ?? false; } catch { return false; } })();
-  entry.classList.toggle('is-hidden', !open);
-  toggle.textContent = open ? '−' : '＋';
-  toggle.setAttribute('aria-expanded', String(open));
-
-  // 初回だけ遅延レンダ（HOT生成）
-  if (open && !entry.dataset._rendered) {
-    renderCompanyEntryHot();
-    entry.dataset._rendered = '1';
-  }
-
-  toggle.onclick = () => {
-    open = !open;
-    toggle.textContent = open ? '−' : '＋';
-    toggle.setAttribute('aria-expanded', String(open));
-    entry.classList.toggle('is-hidden', !open);
-    if (open && !entry.dataset._rendered) {
-      renderCompanyEntryHot();
-      entry.dataset._rendered = '1';
-    }
-    try { localStorage.setItem(key, JSON.stringify(open)); } catch {}
-  };
-}
-
-
-// ▼ 会社スケジュール“表示”欄（会社イベント一覧）：イベントがある月だけ＋を出す
-//   置き場所は「月タブバー右側のコントロール（#matrixCtrl）」の先頭に置きます。
-function ensureCompanyListToggleButton(showButton) {
-  const ctrl = document.getElementById('matrixCtrl');
-  const list = document.getElementById('sched-list');
-  if (!ctrl || !list) return;
-
-  let btn = document.getElementById('toggleCompanyListBtn');
-  const key = 'open.companyList';
-  let open = _LS.get(key, true);    // 既定で開く
-
-  // ボタンの表示・非表示を切替
-  if (!showButton) {
-    if (btn) btn.remove();
-    // イベントがない月は一覧自体を閉じる
-    setSectionVisible(list, false);
-    _LS.set(key, false);
-    return;
-  }
-
-  // 初期表示
-  setSectionVisible(list, open);
-
-  if (!btn) {
-    btn = document.createElement('button');
-    btn.id = 'toggleCompanyListBtn';
-    btn.className = 'icon-btn';
-    btn.type = 'button';
-    // ラベル例："会社予定" の文字付きでもOK。ここでは＋／−だけにします。
-    setPlusMinus(btn, open);
-    // 右側コントロールの先頭に置く（保存ボタンの左）
-    ctrl.insertAdjacentElement('afterbegin', btn);
-
-    btn.addEventListener('click', () => {
-      open = !open;
-      setPlusMinus(btn, open);
-      setSectionVisible(list, open);
-      _LS.set(key, open);
-    });
-  } else {
-    setPlusMinus(btn, open);
-  }
-}
-
-    // ★ 先頭付近の共通関数として追加
- function fnUrl(name) {
-   return `${SUPABASE_URL}/functions/v1/${name}`;
- }
-async function fetchJsonStrict(fnName, opts) {
-  const res = await fetch(fnUrl(fnName), { cache: 'no-store', ...opts });
-  const text = await res.text();
-  let json = null;
-  try { json = JSON.parse(text); } catch (_) {}
-  if (!res.ok || (json && json.ok === false)) {
-    const msg = (json?.error || text || `HTTP ${res.status}`);
-    throw new Error(msg);
-  }
-  return json ?? {};
-}
-    // ★ 追加：ログイン状態でUI切替
-function toggleUIBySession(isLoggedIn) {
-  console.log('toggleUIBySession', { isLoggedIn });
-  document.getElementById('appRoot').style.display = isLoggedIn ? '' : 'none';
-  document.getElementById('loginModal').style.display = isLoggedIn ? 'none' : '';
-}
-// === マトリクス編集の未保存管理 ===
-let dirtyCells = new Set(); // key: `${row}:${col}`
-function dirtyKey(row, col) { return `${row}:${col}`; }
-
-function markDirty(row, col, yes) {
-  const key = dirtyKey(row, col);
-  if (yes) {
-    dirtyCells.add(key);
-    if (hot) addClassMeta(hot, row, col, 'dirty-cell');  // ★ メタにも付与
-  } else {
-    dirtyCells.delete(key);
-    if (hot) removeClassMeta(hot, row, col, 'dirty-cell'); // ★ メタから除去
-  }
-
-  // 目視反映（今描画されているセルにも付け外し）
-  const td = hot?.getCell(row, col);
-  if (td) td.classList.toggle('dirty-cell', !!yes);
-
-  updateDirtyBadge();
-}
-
-function clearAllDirty() {
-  for (const k of dirtyCells) {
-    const [r, c] = k.split(':').map(Number);
-    if (hot) removeClassMeta(hot, r, c, 'dirty-cell'); // ★ メタからも消す
-    const td = hot?.getCell(r, c);
-    if (td) td.classList.remove('dirty-cell');         // 画面上からも消す
-  }
-  dirtyCells.clear();
-  updateDirtyBadge();
-}
-
-function hasDirty() { return dirtyCells.size > 0; }
-function addClassMeta(hot, row, col, cls) {
-  const meta = hot.getCellMeta(row, col);
-  const now = new Set(String(meta.className || '').split(/\s+/).filter(Boolean));
-  if (!now.has(cls)) {
-    now.add(cls);
-    hot.setCellMeta(row, col, 'className', Array.from(now).join(' '));
-  }
-}
-
-function removeClassMeta(hot, row, col, cls) {
-  const meta = hot.getCellMeta(row, col);
-  const next = String(meta.className || '')
-    .split(/\s+/)
-    .filter(c => c && c !== cls)
-    .join(' ');
-  hot.setCellMeta(row, col, 'className', next);
-}
-function updateDirtyBadge() {
-  const el = document.getElementById('dirtyBadge');
-  if (!el) return;
-  el.style.display = hasDirty() ? '' : 'none';
-}
-
-// きょうの YYYY-MM-DD を返す（JST）
-function todayYYYYMMDD() {
-  const dt = todayJST();
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, '0');
-  const d = String(dt.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-// 入力バリデーション（YYYY-MM-DD）
-function isValidDateYYYYMMDD(s) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-  const d = new Date(s + 'T00:00:00');
-  return !Number.isNaN(d.getTime()) && s === `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-    
-// クイック登録用 HOT を描画
-function renderQuickEntryHot() {
-  const container = document.getElementById('quickEntry');
-  const data = [
-    { date: todayStrJST(), am: '', pm: '' }
-  ];
-
-  const settings = {
-    data,
-    columns: [
-      {
-        data: 'date',
-        type: 'date',
-        dateFormat: 'YYYY-MM-DD',
-        correctFormat: true,
-        // ▼ 2) 日付ピッカーを日本語化（Pikaday の i18n）
-        datePickerConfig: {
-          format: 'YYYY-MM-DD',
-          firstDay: 0, // 0:日曜, 1:月曜
-          i18n: {
-            previousMonth: '前月',
-            nextMonth: '翌月',
-            months: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
-            weekdays: ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'],
-            weekdaysShort: ['日','月','火','水','木','金','土'],
-          },
-        },
-      },
-      { data: 'am', type: 'text' },
-      { data: 'pm', type: 'text' },
-    ],
-    colHeaders: ['日付', '午前', '午後'],
-    colWidths: [120, 200, 200],  // ★ここで列ごとの幅をピクセル指定
-    stretchH: 'none',            // 自動伸縮をオフにする
-    height: 80,
-    licenseKey: 'non-commercial-and-evaluation',
-    // ▼ 1) Enter で右 / Shift+Enter で左
-    enterMoves: (e) => (e && e.shiftKey ? { row: 0, col: -1 } : { row: 0, col: 1 }),
-  };
-
-  if (quickHot) {
-    quickHot.updateSettings(settings);
-  } else {
-    quickHot = new Handsontable(container, settings);
-  }
-}
-
-document.getElementById('quickSaveBtn').addEventListener('click', async () => {
-  if (!quickHot) return;
-
-  const [date, am, pm] = quickHot.getDataAtRow(0).map(v => (v ?? '').toString().trim());
-  await handleQuickSave({ date, am, pm });
-});
-
-
-    // ===== テキスト幅に応じてフォントサイズを縮小するレンダラー =====
-const _measureCanvas = document.createElement('canvas');
-const _ctx = _measureCanvas.getContext('2d');
-
-function measureTextWidth(text, font) {
-  _ctx.font = font;
-  return _ctx.measureText(text).width;
-}
-
-function fitTextRenderer(instance, td, row, col, prop, value, cellProperties) {
-  // 既定のテキスト描画
-  Handsontable.renderers.TextRenderer.apply(this, arguments);
-
-  // 折り返しオフ＋省略
-  td.style.whiteSpace = 'nowrap';
-  td.style.overflow = 'hidden';
-  td.style.textOverflow = 'ellipsis';
-
-  // 表示文字列（改行は1行にまとめる）
-  const raw = (value == null ? '' : String(value));
-  const show = raw.replace(/\r?\n/g, ' / ');
-
-  // 基準フォントサイズと最小フォントサイズ
-  const basePx = 14;     // 好みで調整
-  const minPx  = 10;     // 下限
-  let fontPx = basePx;
-
-  // セルの横幅（余白分を差し引く）
-  const padding = 14; // 左右の内余白相当
-  const colWidth = (instance.getColWidth(col) || td.clientWidth || 100) - padding;
-
-  // 現在のフォント（太字やクラスがある前提は簡易化）
-  const fontFamily = getComputedStyle(td).fontFamily || 'system-ui,sans-serif';
-  const fontWeight = getComputedStyle(td).fontWeight || 'normal';
-
-  // 収まるまでフォントサイズを下げる（簡易）
-  while (fontPx > minPx) {
-    const font = `${fontWeight} ${fontPx}px ${fontFamily}`;
-    const w = measureTextWidth(show, font);
-    if (w <= colWidth) break;
-    fontPx -= 1;
-  }
-  td.style.fontSize = `${fontPx}px`;
-
-  // cell の実テキストを差し替える（1行化）
-  td.textContent = show;
-}
-    // ===== 従業員メタ & 権限 =====
-let currentUser = { email: null, employee_id: null, is_admin: false };
-let employeesAll = []; // [{id,name,email,department,note,row_index,is_admin}, ...]
-
-async function loadCurrentUserAndEmployees() {
-  // 1) ログインユーザー
-  const { data: { session } } = await supabase.auth.getSession();
-  const email = session?.user?.email ?? null;
-
-  // 2) 従業員一覧（全員）
-  const { data: emps, error } = await supabase
-    .from('employees')
-    .select('id,name,email,department,note,row_index,is_admin')
-    .order('row_index', { ascending: true })
-    .order('name', { ascending: true });
-
-  if (error) throw error;
-
-  employeesAll = emps ?? [];
-
-  // 3) 自分の従業員レコード & 権限
-  const me = employeesAll.find(e => (e.email || '').toLowerCase() === (email || '').toLowerCase());
-  currentUser = {
-    email,
-    employee_id: me?.id ?? null,
-    is_admin: !!me?.is_admin
-  };
-}
-function ensureCompanyEntryUI() {
-  if (!currentUser?.is_admin) return;
-
-  const quickEntry = document.getElementById('quickEntry');
-  if (!quickEntry) return;
-
-  // 横並びラッパーを用意（なければ作成）
-  let quickRow = document.getElementById('quickRow');
-  if (!quickRow) {
-    quickRow = document.createElement('div');
-    quickRow.id = 'quickRow';
-    // quickEntry の直前に quickRow を挿入し、quickEntry を中に移動
-    quickEntry.parentNode.insertBefore(quickRow, quickEntry);
-    quickRow.appendChild(quickEntry);
-  } else {
-    // 既にあるなら quickEntry が中にいるか確認（他の更新で動いた場合に備える）
-    if (quickEntry.parentElement !== quickRow) quickRow.appendChild(quickEntry);
-  }
-
-  // companyEntry を用意（なければ生成）
-  let companyEntry = document.getElementById('companyEntry');
-  if (!companyEntry) {
-    companyEntry = document.createElement('div');
-    companyEntry.id = 'companyEntry';
-    quickRow.appendChild(companyEntry);
-  } else if (companyEntry.parentElement !== quickRow) {
-    quickRow.appendChild(companyEntry);
-  }
-  // HOT を描画/更新
-  renderCompanyEntryHot();
-  ensureCompanyAddToggleButton();
-}
-    
-function ensureCompanyAddButtonPlaced() {
-  const isAdmin = !!currentUser?.is_admin;
-  const quickBtn = document.getElementById('quickSaveBtn');
-  if (!quickBtn) return;
-
-  let btn = document.getElementById('companySaveBtn');
-
-  if (isAdmin) {
-    // なければ作る
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.id = 'companySaveBtn';
-      btn.title = '全体スケジュールを追加';
-      btn.textContent = '追加';
-      // 見た目の余白
-      btn.style.marginLeft = '6px';
-      // quickSaveBtn の直後へ
-      quickBtn.insertAdjacentElement('afterend', btn);
-    } else {
-      // 既にあるなら、位置だけ念のため補正（UI変更の影響に備える）
-      if (btn.previousElementSibling !== quickBtn) {
-        quickBtn.insertAdjacentElement('afterend', btn);
-      }
-      btn.style.display = '';
-    }
-  } else {
-    // 非管理者はボタンを隠す（あっても非表示に）
-    if (btn) btn.style.display = 'none';
-  }
-}
-
-  function normalizeHHMM(raw) {
-  const s = String(raw || '').trim();
-  if (!s) return null; // 空は許容
-
-  // 4桁 → HH:MM
-  if (/^\d{4}$/.test(s)) {
-    const hh = Number(s.slice(0, 2));
-    const mm = Number(s.slice(2, 4));
-    if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
-      return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-    }
-    return null;
-  }
-
-  // HH:MM
-  if (/^\d{1,2}:\d{2}$/.test(s)) {
-    const [h, m] = s.split(':').map(Number);
-    if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
-      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    }
-    return null;
-  }
-
-  return null;
-}
-function isValidTimeHHMM(s) {
-  if (!s) return true;         // 空は許容
-  return normalizeHHMM(s) != null;
-}
-
-function renderCompanyEntryHot() {
-  const container = document.getElementById('companyEntry');
-  if (!container) return;
-
-  const data = [{ date: todayStrJST(), start: '', end: '', title: '', memo: '' }];
-
-  const settings = {
-    data,
-    columns: [
-      { data: 'date', type: 'date', dateFormat: 'YYYY-MM-DD',
-        correctFormat: true,
-        datePickerConfig: {
-          format: 'YYYY-MM-DD', firstDay: 0,
-          i18n: {
-            previousMonth: '前月', nextMonth: '翌月',
-            months: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
-            weekdays: ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'],
-            weekdaysShort: ['日','月','火','水','木','金','土'],
-          },
-        },
-      },
-      { data: 'start', type: 'text', validator: (v, cb)=>cb(isValidTimeHHMM(v)), allowInvalid: false },
-      { data: 'end',   type: 'text', validator: (v, cb)=>cb(isValidTimeHHMM(v)), allowInvalid: false },
-      { data: 'title', type: 'text' },
-      { data: 'memo',  type: 'text' },
-    ],
-    colHeaders: ['日付', '開始(HH:MM)', '終了(HH:MM)', '行事名', '備考'],
-    colWidths: [120, 120, 120, 260, 200],
-    height: 80,
-    stretchH: 'none',
-    licenseKey: 'non-commercial-and-evaluation',
-    enterMoves: (e) => (e && e.shiftKey ? { row: 0, col: -1 } : { row: 0, col: 1 }),
-  };
-
-  if (companyHot) companyHot.updateSettings(settings);
-  else companyHot = new Handsontable(container, settings);
-}
-async function upsertCompanyEvent(payload) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) throw new Error('未ログインです');
-
-  // 関数名の綴り・パスを確認：/functions/v1/company-events-upsert
-  return await fetchJsonStrict('company-events-upsert', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-}
-// ★ 追加：フォーム送信でログイン
-document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-  alert('ログイン中...');
-
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    alert('エラー: ' + error.message);
-    return;
-  }
-
-  // 成功したらモーダルを隠し、アプリを表示
-  toggleUIBySession(true);
-  await loadCurrentUserAndEmployees();
-  ensureCompanyEntryUI();
-  ensureCompanyAddToggleButton();        // ← ここで必ず「＋」を出す
-
-  // まだタブが無ければ初期表示
-  if (!document.querySelector('#month-tabs button')) {
-    const { todayYm } = buildMonthTabs();
-    renderQuickEntryHot();
-    await loadMonth(todayYm, { scrollToToday: true });
-  }
-});
-document.getElementById('login-otp')?.addEventListener('click', async () => {
-  const email = document.getElementById('email').value.trim();
-  alert('マジックリンク送信中...');
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: location.origin }
-  });
-  alert(error ? ('エラー: ' + error.message) : 'メールを確認してリンクを開いてください');
-});
-document.getElementById('run')?.addEventListener('click', async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) { toggleUIBySession(false); return; }
-  const { months, todayYm } = buildMonthTabs();
-  renderQuickEntryHot();
-  await loadCurrentUserAndEmployees();
-  ensureCompanyEntryUI();
-  ensureCompanyAddToggleButton();        // ← ここで必ず「＋」を出す
-  await loadMonth(todayYm, { scrollToToday: true });
-});
-document.addEventListener('click', async (e) => {
-  if (!(e.target instanceof HTMLElement)) return;
-if (e.target.id === 'companySaveBtn') {
-  if (!currentUser?.is_admin) { alert('権限がありません'); return; }
-  if (!companyHot) return;
-
-  const [date, startRaw, endRaw, title, memo] = companyHot.getDataAtRow(0).map(v => (v ?? '').toString().trim());
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { alert('日付は YYYY-MM-DD で入力してください'); return; }
-  if (!title) { alert('行事名を入力してください'); return; }
-
-  const start = normalizeHHMM(startRaw); // null許容
-  const end   = normalizeHHMM(endRaw);   // null許容
-  if (startRaw && !start) { alert('開始は 0930 または 09:30 の形式で入力してください'); return; }
-  if (endRaw   && !end)   { alert('終了は 1730 または 17:30 の形式で入力してください'); return; }
-
-  try {
-    await upsertCompanyEvent({ date, timestart: start, timeend: end, event: title, memo });
-
-    // 一覧を再描画（現在の月のみ）
-    const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
-    if (activeYm) await renderCompanyEventList(activeYm);
-    alert('全体スケジュールを追加しました');
-  } catch (err) {
-    console.error(err);
-    alert('追加に失敗しました：' + err.message);
-  }
-}
-});
-// 部署文字列→安定色バケット（1..8）
-function bucketByDepartment(dep) {
-  const s = String(dep || '');
-  let h = 0; for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
-  return (h % 8) + 1;
-}
-    function enableHorizontalWheel(container, hot) {
-  // 多重登録防止
-  if (container.dataset.hwBound === '1') return;
-  container.dataset.hwBound = '1';
-
-  const holder = container.querySelector('.ht_master .wtHolder');
-  if (!holder) return;
-
-  holder.addEventListener('wheel', (e) => {
-    // セル選択がある時だけ横スクロールに変換
-    const hasSelection = !!hot?.getSelectedRangeLast?.();
-    if (!hasSelection) return;
-
-    // 縦スクロール量を横スクロールへ
-    if (Math.abs(e.deltaY) >= Math.abs(e.deltaX)) {
-      holder.scrollLeft += e.deltaY; // 下(+)→右 / 上(-)→左
-      e.preventDefault();            // 既定の縦スクロールを止める
-    }
-  }, { passive: false });
-}
-// ==== タブ＆月ユーティリティ ====
-// 月キャッシュ: Map<"YYYY-MM", Array<item>>
-const monthCache = new Map();
-
-function ymOf(d){
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-}
-function monthsAround(baseDate, back=3, forward=3){
-  const list = [];
-  const d = new Date(baseDate.getFullYear(), baseDate.getMonth()-back, 1);
-  const end = new Date(baseDate.getFullYear(), baseDate.getMonth()+forward+1, 1);
-  while (d < end){
-    list.push(ymOf(d));
-    d.setMonth(d.getMonth()+1, 1);
-  }
-  return list; // 昇順、計 back+forward+1 個
-}
-function todayJST(){
-  const now = new Date();
-  return new Date(now.getTime() + (9*60 + now.getTimezoneOffset())*60000);
-}
-    
-// "YYYY-MM-DD" -> "YYYY-MM"
-function ymFromYmd(ymd) {
-  return String(ymd || '').slice(0, 7);
-}
-
-// 指定月を中心にタブを作り直す
-function buildMonthTabsFor(baseYm) {
-  const [y, m] = baseYm.split('-').map(Number);
-  const base = new Date(y, m - 1, 1);
-  const months = monthsAround(base, 3, 3); // 既存ロジックを再利用
-  const wrap = document.getElementById('month-tabs');
-  wrap.innerHTML = '';
-  for (const ym of months) {
-    const btn = document.createElement('button');
-    btn.textContent = ym;
-    btn.dataset.month = ym;
-    btn.addEventListener('click', () => onMonthTabClick(btn));
-    wrap.appendChild(btn);
-  }
-  return months;
-}
-async function fetchCompanyEventsForMonth(ym) {
-  const [y, m] = ym.split('-').map(Number);
-  const start = new Date(y, m - 1, 1);              // 当月1日
-  const end   = new Date(y, m, 1);                  // 翌月1日（< end）
-
-  // YYYY-MM-DD 文字列に
-  const d2 = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-
-  const { data, error } = await supabase
-    .from('company_events')
-    .select('id, date, timestart, timeend, event, memo')
-    .gte('date', d2(start))
-    .lt('date', d2(end))
-    .order('date', { ascending: true })
-    .order('timestart', { ascending: true });
-
-  if (error) throw error;
-  return data || [];
-}
-// 指定月のタブを active にしてロード
-async function selectMonthAndReload(ym, { scrollToToday=false } = {}) {
-  // タブに存在するかチェック
-  let targetBtn = document.querySelector(`#month-tabs button[data-month="${ym}"]`);
-  if (!targetBtn) {
-    // なければタブをその月で再構成
-    buildMonthTabsFor(ym);
-    targetBtn = document.querySelector(`#month-tabs button[data-month="${ym}"]`);
-  }
-  // active 切り替え
-  document.querySelectorAll('#month-tabs button').forEach(b => b.classList.remove('active'));
-  if (targetBtn) targetBtn.classList.add('active');
-
-  // 読み直し
-  await loadMonth(ym, { scrollToToday });
-}
-
-function buildMonthTabs(baseDate = todayJST()) {
-  const months = monthsAround(baseDate, 3, 3);
-  const todayYm = ymOf(baseDate);
-  const wrap = document.getElementById('month-tabs');
-  wrap.innerHTML = '';
-  for (const ym of months) {
-    const btn = document.createElement('button');
-    btn.textContent = ym;
-    btn.dataset.month = ym;
-    if (ym === todayYm) btn.classList.add('active');
-    btn.addEventListener('click', () => onMonthTabClick(btn));
-    wrap.appendChild(btn);
-  }
-  return { months, todayYm };
-}
-
-async function handleQuickSave({ date, am, pm }) {
-  if (!supabase) return alert('初期化エラー');
-
-  // 1) 入力チェック
-  const ymd = String(date || '').trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) {
-    alert('日付は YYYY-MM-DD 形式で入力してください');
-    return;
-  }
-  const amText = String(am ?? '').trim();
-  const pmText = String(pm ?? '').trim();
-
-  // 2) 自分の従業員ID
-  const employee_id = await ensureMyEmployeeId();
-
-  // 3) upsert対象・delete対象を仕分け
-  const upserts = [];
-  const deletes = [];
-  if (amText) upserts.push({ employee_id, date: ymd, slot: 'am', place: amText });
-  else       deletes.push({ employee_id, date: ymd, slot: 'am' });
-
-  if (pmText) upserts.push({ employee_id, date: ymd, slot: 'pm', place: pmText });
-  else       deletes.push({ employee_id, date: ymd, slot: 'pm' });
-
-  // 4) トークン & エンドポイント
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) { alert('アクセストークンが取得できません（未ログインの可能性）'); return; }
-
-  try {
-    // 5) 先に削除（空欄だった slot）
-    if (deletes.length) {
-      const delRes = await fetch(fnUrl('schedules-delete'), {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(deletes)
-      });
-      const delJson = await delRes.json().catch(() => ({}));
-      if (!delRes.ok || !delJson?.ok) {
-        throw new Error(`削除失敗: ${delJson?.error || `HTTP ${delRes.status}`}`);
-      }
-    }
-
-    // 6) 次に upsert（入力があった slot）
-    if (upserts.length) {
-      const upRes = await await fetch(fnUrl('schedules-upsert'), {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(upserts)
-      });
-      const upJson = await upRes.json().catch(() => ({}));
-      if (!upRes.ok || !upJson?.ok) {
-        throw new Error(`保存失敗: ${upJson?.error || `HTTP ${upRes.status}`}`);
-      }
-    }
-
-    // 7) 表示更新：対象月のキャッシュを捨てて、その月のタブを選択＆再取得
-    const ym = ymFromYmd(ymd);
-    monthCache.delete(ym); // schedules-get のキャッシュを無効化
-    alert(`更新しました`);
-
-    // 入力リセット（任意）
-    if (quickHot) {
-      // quickHot.setDataAtRowProp(0, 'am', '');
-      // quickHot.setDataAtRowProp(0, 'pm', '');
-    }
-
-    // ★ 登録日付の月タブをアクティブにして再取得・再描画（タブが無ければ再構成）
-    await selectMonthAndReload(ym, { scrollToToday: false });
-
-  } catch (e) {
-    console.error(e);
-    alert('保存に失敗しました：' + e.message);
-  }
-}
-
-
-
-let myEmployeeId = null;
-let myEmail = null;
-
-async function ensureMyEmployeeId() {
-  if (myEmployeeId) return myEmployeeId;
-  if (!supabase) throw new Error('supabase 未初期化');
-
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('未ログインです');
-
-  myEmail = session.user?.email || null;
-  if (!myEmail) throw new Error('メールが取得できません');
-
-  // employees から email で引く（RLSで公開 SELECT 可としている前提）
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id,email')
-    .eq('email', myEmail)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!data) throw new Error(`employees に email=${myEmail} が見つかりません`);
-
-  myEmployeeId = data.id;
-  return myEmployeeId;
-}
-    
-async function onMonthTabClick(btn){
-  if (hasDirty()) {
-    const ok = confirm('未保存の変更があります。月を移動すると破棄されます。移動しますか？');
-    if (!ok) return; // 中止
-    // 破棄で良いなら消す
-    clearAllDirty();
-  }
-  document.querySelectorAll('#month-tabs button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const ym = btn.dataset.month;
-  const isThisMonth = ym === ymOf(todayJST());
-  await loadMonth(ym, { scrollToToday: isThisMonth });
-}
-
-    
-async function fetchMonthData(ym, token){
-  // 既にキャッシュがあれば返す
-  if (monthCache.has(ym)) return monthCache.get(ym);
-
-  const ts = Date.now(); // ★ キャッシュバスター
-  const res = await fetch(
-    `${fnUrl('schedules-get')}?month=${encodeURIComponent(ym)}&_=${ts}`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store'
-    }
-  );
-  const json = await res.json();
-  const items = normalizeSchedules(json);
-  monthCache.set(ym, items);
-  return items;
-}
-
-async function loadMonth(ym, { scrollToToday } = { scrollToToday:false }) {
-  if (!supabase) return alert('初期化エラー');
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) { alert('未ログインです'); return; }
-  const token = session.access_token;
-
-  try{
-    const items = await fetchMonthData(ym, token);
-    // 一覧＆マトリクスを月単位で描画
-    await renderCompanyEventList(ym);        // ← 既存のまま（内部で month で絞る）
-    renderMatrixHot(items, ym, { scrollToToday }); // ← 次の手順で対応
-    clearAllDirty();
-    ensureQuickToggleButton();
-ensureCompanyAddToggleButton();
-  }catch(e){
-    alert('Fetchエラー: ' + e.message);
-  }
-}
-
-    function setUser(u){
-      if (who) who.textContent = u ? `ログイン中: ${u.email}` : '未ログイン';
-    }
-
-// ====== 初期化（タブ生成→今日の月を表示） ======
-$('#run').addEventListener('click', async () => {
-  const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
-  const ym = activeYm || (() => {
-    const { todayYm } = buildMonthTabs();
-    return todayYm;
-  })();
-  await loadMonth(ym, { scrollToToday: ym === ymOf(todayJST()) });
-});
-// 2D配列 → TSV
-const tsvFrom2D = (arr) =>
-  arr.map(row => row.map(v => (v == null ? '' : String(v))).join('\t')).join('\n');
-
-const getSelectionBounds = (hot) => {
-  const rng = hot.getSelectedRangeLast?.();
-  if (!rng) return null;
-  const r1 = Math.min(rng.from.row, rng.to.row);
-  const r2 = Math.max(rng.from.row, rng.to.row);
-  const c1 = Math.min(rng.from.col, rng.to.col);
-  const c2 = Math.max(rng.from.col, rng.to.col);
-  return { r1, r2, c1, c2 };
-};
-
-async function copySelection(hot) {
-  const b = getSelectionBounds(hot);
-  if (!b) return;
-  const data = hot.getData(b.r1, b.c1, b.r2, b.c2);
-  await navigator.clipboard.writeText(tsvFrom2D(data));
-}
-
-async function cutSelection(hot) {
-  const b = getSelectionBounds(hot);
-  if (!b) return;
-  const data = hot.getData(b.r1, b.c1, b.r2, b.c2);
-  await navigator.clipboard.writeText(tsvFrom2D(data));
-  // 空文字でクリア
-  for (let r = b.r1; r <= b.r2; r++) {
-    for (let c = b.c1; c <= b.c2; c++) hot.setDataAtCell(r, c, '');
-  }
-}
-
-async function pasteFromClipboard(hot) {
-  const text = await navigator.clipboard.readText();
-  if (!text) return;
-
-  const rows = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-                   .split('\n').map(line => line.split('\t'));
-
-  const rng = hot.getSelectedRangeLast?.();
-  if (!rng) { alert('貼り付け先のセルを選択してください'); return; }
-
-  const startRow = Math.min(rng.from.row, rng.to.row);
-  const startCol = Math.min(rng.from.col, rng.to.col);
-  const endRow   = startRow + rows.length - 1;
-  const endCol   = startCol + (rows[0]?.length ?? 1) - 1;
-
-  // ★ readOnly を含むなら中止
-  if (containsReadOnlyInRange(hot, startRow, startCol, endRow, endCol)) {
-    alert('貼り付け先に読み取り専用セルが含まれているため、貼り付けできません。');
-    return;
-  }
-
-  // 貼り付け実行
-  rows.forEach((r, i) => r.forEach((val, j) => {
-    hot.setDataAtCell(startRow + i, startCol + j, val);
-  }));
-}
-    
-function containsReadOnlyInRange(hot, r1, c1, r2, c2) {
-  for (let r = r1; r <= r2; r++) {
-    for (let c = c1; c <= c2; c++) {
-      if (hot.getCellMeta(r, c)?.readOnly) return true;
-    }
-  }
-  return false;
-}
-    // ====== マトリクス（Handsontable） ======
-    // 既存 buildMatrix を活かしつつ、2次元配列に詰め替え
-    function extractEmployeeName(item) {
-      const r = item.raw || {};
-      return item.employee_name || r.employee_name || r.employee || r.user || r.name || r.assignee || '（未割当）';
-    }
-function buildMatrixAmPm(items, ym) {
-  const [y, m] = ym.split('-').map(Number);
-  const last = new Date(y, m, 0);
-  const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
-
-  const byEmp = new Map();
-  for (const it of items) {
-    const emp = extractEmployeeName(it);
-    if (!byEmp.has(emp)) byEmp.set(emp, {});
-    const d = it.baseDate.getDate();
-    if (!byEmp.get(emp)[d]) byEmp.get(emp)[d] = { am: [], pm: [] };
-
-    // ★ slot 優先。なければ時間で判定
-    const hour = it.start?.getHours() ?? 0;
-    const key = it.slot === 'am' || it.slot === 'pm'
-      ? it.slot
-      : (hour < 12 ? 'am' : 'pm');
-
-    byEmp.get(emp)[d][key].push(it);
-  }
-
-  const data = [];
-  for (const [emp, perDay] of byEmp) {
-    const row = [emp];
-    for (const d of days) {
-      const arrAm = perDay[d]?.am || [];
-      const arrPm = perDay[d]?.pm || [];
-      row.push(arrAm.map(a => a.title).join('\n'));
-      row.push(arrPm.map(a => a.title).join('\n'));
-    }
-    data.push(row);
-  }
-
-  const colHeaders = ['名前'];
-  const colDates = [null];
-  for (const d of days) {
-    const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    colHeaders.push(`${m}/${d} 午前`);
-    colHeaders.push(`${m}/${d} 午後`);
-    colDates.push(ds, ds);
-  }
-
-  return { colHeaders, data, colDates };
-}
-
-    // ★ 従業員フルリストと月のスケジュール(items)から "必ず全従業員を出す" マトリクスを作る
-function buildFullMatrixWithEmployees(items, ym) {
-  const [y, m] = ym.split('-').map(Number);
-  const last = new Date(y, m, 0);
-  const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
-
-  const byEmpKey = new Map();
-  for (const it of items) {
-    const row = it.raw || {};
-    const empId = row.employee_id || row.id || row.emp_id || null;
-    const name = it.employee_name || row.employee_name || row.name || '（未割当）';
-    const email = row.email || '';
-    const dep = row.department || '';
-    const note = row.note || '';
-
-    const key = empId ?? `name:${name}`;
-    if (!byEmpKey.has(key)) byEmpKey.set(key, { employee_id: empId, name, email, department: dep, note, cells: {} });
-
-    const d = it.baseDate.getDate();
-    if (!byEmpKey.get(key).cells[d]) byEmpKey.get(key).cells[d] = { am: [], pm: [] };
-
-    // ★ slot 優先。なければ時間で判定
-    const hour = it.start?.getHours() ?? 0;
-    const slot = (it.slot === 'am' || it.slot === 'pm') ? it.slot : (hour < 12 ? 'am' : 'pm');
-
-    byEmpKey.get(key).cells[d][slot].push(it.title);
-  }
-
-  const rowsMeta = employeesAll.slice().sort(
-    (a,b)=>(a.row_index ?? 0)-(b.row_index ?? 0) || a.name.localeCompare(b.name,'ja')
-  );
-
-  const data = [];
-  const rowEmployees = [];
-  const colHeaders = ['名前', 'メモ'];
-  const colDates = [null, null];
-
-  for (const d of days) {
-    colHeaders.push(`${m}/${d} 午前`, `${m}/${d} 午後`);
-    const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    colDates.push(ds, ds);
-  }
-
-  for (const emp of rowsMeta) {
-    const key = emp.id ?? `name:${emp.name}`;
-    const agg = byEmpKey.get(key);
-    const row = [];
-    row.push(emp.name);
-    row.push(emp.note || '');
-
-    for (const d of days) {
-      const am = agg?.cells?.[d]?.am?.join('\n') ?? '';
-      const pm = agg?.cells?.[d]?.pm?.join('\n') ?? '';
-      row.push(am, pm);
-    }
-
-    data.push(row);
-    rowEmployees.push({
-      id: emp.id, name: emp.name, email: emp.email,
-      department: emp.department, note: emp.note, is_admin: !!emp.is_admin
-    });
-  }
-
-  return { colHeaders, data, colDates, rowEmployees };
-}
-
-
-// ==== 条件付き書式ルール群 ====
-// 追加：クラスを結合するユーティリティ
-function mergeClass(existing, add) {
-  const arr = Array.isArray(add) ? add : [add];
-  const set = new Set(String(existing || '').split(' ').filter(Boolean));
-  for (const c of arr) if (c) set.add(c);
-  return Array.from(set).join(' ');
-}
-    
-// JST 今日 (YYYY-MM-DD) はそのまま（Intlで安定）
-function todayStrJST() {
-  const dt = new Date();
-  const f = new Intl.DateTimeFormat('ja-JP', {
-    timeZone: 'Asia/Tokyo',
-    year: 'numeric', month: '2-digit', day: '2-digit'
-  });
-  const parts = Object.fromEntries(f.formatToParts(dt).map(p => [p.type, p.value]));
-  return `${parts.year}-${parts.month}-${parts.day}`;
-}
-    
-// ★置き換え：曜日/今日の色付け（タイムゾーンに依らない）
-function classesByDate(ds, today) {
-  if (!ds) return [];
-  const [y, m, d] = ds.split('-').map(Number);
-  const wd = weekdayOf(y, m, d); // 0=Sun ... 6=Sat
-  const classes = [];
-  if (ds === today) classes.push('ht-today');
-  if (wd === 6) classes.push('ht-sat');
-  if (wd === 0) classes.push('ht-sun');
-  return classes;
-}
-    
-// 0=Sun,1=Mon,...6=Sat を返す（タイムゾーン非依存）
-function weekdayOf(y, m, d) {
-  // Tomohiko Sakamoto’s algorithm
-  const t = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
-  if (m < 3) y -= 1;
-  return (y + Math.floor(y/4) - Math.floor(y/100) + Math.floor(y/400) + t[m-1] + d) % 7;
-}
-// 値に応じたクラス（内容に「休」を含む）
-function classesByValue(value) {
-  const v = String(value ?? '');
-  return v.includes('休') ? ['ht-holiday'] : [];
-}
-
-// afterChange 用: 値で変わるクラス（ht-holiday）だけ付け外しする
-function applyValueRule(hot, row, col, value) {
-  if (col === 0) return; // 名前列は対象外
-  const meta = hot.getCellMeta(row, col);
-  const keep = (meta.className || '')
-    .split(' ')
-    .filter(Boolean)
-    // 日付ベースの色は維持、値ベースの 'ht-holiday' だけ付け外し
-    .filter(c => c !== 'ht-holiday');
-
-  const add = classesByValue(value);
-  const next = keep.concat(add);
-  hot.setCellMeta(row, col, 'className', next.join(' '));
-}
-  function stripDateClasses(className) {
-  return String(className || '')
-    .split(/\s+/)
-    .filter(c => c && c !== 'ht-today' && c !== 'ht-sat' && c !== 'ht-sun')
-    .join(' ');
-}
-// ★固定列を考慮しつつ、目的列を左端にピタッと合わせる
-function scrollColumnToLeft(hot, container, colIndex) {
-  const holder = container.querySelector('.ht_master .wtHolder');
-  if (!holder) return;
-
-  const fixed = hot.getSettings().fixedColumnsStart || 0;
-
-  // まず、目的列がDOMに描画されるように可視領域へスクロール
-  hot.scrollViewportTo(0, colIndex);
-
-  // 描画が落ち着いた後に“幅の総和”でスクロール量を決定
-  requestAnimationFrame(() => {
-    let offset = 0;
-    // master側は fixedColumnsStart 以降がスクロール対象
-    // → 左固定列の幅は除外し、[fixed .. colIndex-1] の幅を積算
-    for (let c = fixed; c < colIndex; c++) {
-      offset += hot.getColWidth(c) || 0;
-    }
-    // ほんの少し余白（任意）
-    holder.scrollLeft = Math.max(0, offset - 4);
-  });
-}
-    // ★ 自分の行かどうか（太枠用、編集可否とは独立）
-const isMyRow = (rowIdx, rowEmployees, currentUser) => {
-  const emp = rowEmployees[rowIdx];
-  if (!emp || !currentUser?.email) return false;
-  return (emp.email || '').toLowerCase() === currentUser.email.toLowerCase();
-};
-    let hot = null;
-  function renderMatrixHot(items, ym, opts = {}) {
-  const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
-  const container = document.getElementById('matrixGrid');
-  const maxRows = data.length;
-  const maxCols = colHeaders.length;
-  const today = todayStrJST();
-
-  // ★ 編集可否の判定（自分 or 管理者）
-  const canEditRow = (rowIdx) => {
-    if (currentUser.is_admin) return true;
-    const emp = rowEmployees[rowIdx];
-    if (!emp) return false;
-    return (currentUser.email && emp.email && currentUser.email.toLowerCase() === emp.email.toLowerCase());
-  };
-    
-  const settings = {
-    data,
-    colHeaders,
-    rowHeaders: true,
-    licenseKey: 'non-commercial-and-evaluation',
-    fixedColumnsStart: 2,
-    // Enterで右/Shift+Enterで左へ
-    enterMoves: (e) => (e && e.shiftKey ? { row: 0, col: -1 } : { row: 0, col: 1 }),
-    // 全セルに縮小レンダラーを適用
-    cells: (row, col) => ({ renderer: fitTextRenderer }),
-    // ① 右クリックはコピー/切り取り/貼り付け/Undo/Redo のみ（既存）
-    contextMenu: {
-      items: {
-        copyCustom: {
-          name: 'コピー',
-          callback: () => copySelection(hot),
-          disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
-        },
-        cutCustom: {
-          name: '切り取り',
-          callback: () => cutSelection(hot),
-          disabled: () => !hot.getSelectedRangeLast?.() || !navigator.clipboard?.writeText
-        },
-        pasteCustom: {
-          name: '貼り付け',
-          callback: () => pasteFromClipboard(hot),
-          disabled: () => !navigator.clipboard?.readText
-        },
-        '--------': Handsontable.plugins.ContextMenu.SEPARATOR,
-        undo: { name: '元に戻す' },
-        redo: { name: 'やり直す' },
-      }
-    },
-    maxRows,
-    maxCols,
-    fillHandle: { autoInsertRow: false },
-    copyPaste: true,
-    selectionMode: 'multiple',
-    beforeCreateRow: () => false,
-    beforeRemoveRow: () => false,
-    beforeCreateCol: () => false,
-    beforeRemoveCol: () => false,
-    beforePaste: (data, coords) => {
-      for (const sel of coords || []) {
-        const { startRow, startCol, endRow, endCol } = sel;
-        // ★ 貼り付け先が編集不可行を含むなら拒否
-        for (let r = startRow; r <= endRow; r++) {
-          if (!canEditRow(r)) return false;
-        }
-        if (containsReadOnlyInRange(hot, startRow, startCol, endRow, endCol)) {
-          alert('貼り付け先に読み取り専用セルが含まれているため、貼り付けできません。');
-          return false;
-        }
-      }
-    },
-    
-    afterGetCellMeta: (row, col, props) => {
-      const ds = colDates[col]; // YYYY-MM-DD (1列目は null)
-      const emp = rowEmployees[row];
-
-      // 1列目（名前）は常に readOnly。部署色＋ノート表示用のクラス付与
-      if (col === 0 || col === 1) {
-        const bucket = bucketByDepartment(emp?.department);
-        props.className = mergeClass(props.className, `dep-${bucket}`);        
-        if (col === 0) {
-         props.readOnly = true;            // 名前は常に編集不可
-       } else { // col === 1 (メモ)
-         props.readOnly = !canEditRow(row); // ★ 管理者or本人のみ編集可
-       }
-        // ★ 太枠は「自分の行」だけ（管理者でも全行太枠にはしない）
-        if (isMyRow(row, rowEmployees, currentUser)) {
-          props.className = mergeClass(props.className, 'my-row');
-        }
-        return;
-      }
-
-      // 日付ベースの色（今日/土日）
-      props.className = stripDateClasses(props.className);
-      if (ds) {
-        const add = classesByDate(ds, today);
-        props.className = mergeClass(props.className, add);
-      }
-
-      // 値によるハイライト（「休」）
-      // → 値変更時は afterChange で別途付け外し（既存）
-
-      // ★ 編集可否：自分の行だけ編集可（管理者は全行可）
-      props.readOnly = !canEditRow(row);
-      // ★ 太枠は「自分の行」だけ
-      if (isMyRow(row, rowEmployees, currentUser)) {
-        props.className = mergeClass(props.className, 'my-row');
-      }
-    },
-
-
-    // ▼ 条件付き書式：値（「休」）で決まるクラス
-    afterChange: (changes, source) => {
-      if (!changes) return;
-      // ユーザー操作のみを dirty 対象（初期ロードやAPI反映は除外）
-      const userSources = new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']);
-      const isUser = userSources.has(source);
-      for (const [row, col, _oldVal, newVal] of changes) {
-        applyValueRule(hot, row, col, newVal); // 既存の「休」色付け
-        if (isUser && col >= 1) {              // 固定列(0=名前,1=メモ)以外のみ
-          markDirty(row, col, true);
-        }
-      }
-      hot.render();
-    },
-
-    stretchH: 'all',
-    height: 1000,
-    // ★ 列幅調整：名前=180 / メモ=180 / 以降=110
-    colWidths: (index) => (index === 0 ? 110 : index === 1 ? 180 : 110),
-  };
-  // ★ 行メタ / 列→日付 を後で保存処理から参照できるよう持たせる
-  settings._rowEmployees = rowEmployees;
-  settings._colDates     = colDates;
-    
-  const wasInit = !!hot;
-  if (hot) {
-    hot.updateSettings(settings);
-    hot.render();
-  } else {
-    hot = new Handsontable(container, settings);
-  }
-
-  // 初期データにも値ベースのクラス（ht-holiday）を一括適用
-  for (let r = 0; r < data.length; r++) {
-    for (let c = 1; c < colHeaders.length; c++) {
-      applyValueRule(hot, r, c, data[r][c]);
-    }
-  }
-  hot.render();
-  
-// ▼ スクロール：要求があれば「今日のAM」へ、そうでなければ「1日AM」
-if (opts.scrollToToday) {
-  const base = todayJST();
-  const d = base.getDate();                     // 1..31
-  const amCol = 1 + 2 * (d - 1);                // 1列目=1日AM → 2列ずつ進む
-  const col = Math.min(amCol, colHeaders.length - 1);
-  hot.addHookOnce('afterRender', () => {
-    scrollColumnToLeft(hot, container, col);
-  });
-  // ★ フック直後に再レンダで必ず afterRender を発火
-  hot.render();
-} else {
-  // 他タブ：常に「1日AM(=col 1)」へ
-  hot.addHookOnce('afterRender', () => {
-    scrollColumnToLeft(hot, container, 1);
-  });
-  hot.render(); // ★ 同上
-}
-  // マウスホイール横変換（セル選択中のみ有効）
-  enableHorizontalWheel(container, hot);
-}
-
-// 保存ボタン
-document.getElementById('saveMatrixBtn')?.addEventListener('click', async () => {
-  if (!hot) return;
-  if (!hasDirty()) { alert('未保存の変更はありません'); return; }
-
-  const settings = hot.getSettings();
-  const colDates = settings._colDates;      // 後述の埋め込み
-  const rowEmployees = settings._rowEmployees;
-
-  // トークン
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) { alert('未ログインです'); return; }
-
-  // 変更セルから upsert / delete を作成
-  const upserts = [];
-  const deletes = [];
-  const memoUpdates = new Map(); // key = employee_id, val = note
-
-  for (const key of dirtyCells) {
-    const [row, col] = key.split(':').map(Number);
-   if (col === 1) {
-     const emp = rowEmployees[row];
-     if (emp?.id) {
-       const note = (hot.getDataAtCell(row, 1) ?? '').toString();
-       memoUpdates.set(emp.id, note);
-     }
-     continue;
-   }
-    if (col < 2) continue; // 固定列は対象外
-
-    const emp = rowEmployees[row];
-    const ds  = colDates[col];  // "YYYY-MM-DD"
-    if (!emp?.id || !ds) continue;
-
-    // 固定列2本のあと、(am, pm) が繰り返される
-    const slot = ((col - 2) % 2 === 0) ? 'am' : 'pm';
-    const val  = (hot.getDataAtCell(row, col) ?? '').toString().trim();
-
-    if (val) {
-      upserts.push({ employee_id: emp.id, date: ds, slot, place: val });
-    } else {
-      deletes.push({ employee_id: emp.id, date: ds, slot });
-    }
-  }
-
-  try {
-    // 1) メモ更新（社員ごと）
-    for (const [employee_id, note] of memoUpdates) {
-      // 1) サーバーの DB を更新
-      const res = await fetch(fnUrl('employee-note-update'), {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employee_id, note }),
-        cache: 'no-store'
-      });
-      const txt = await res.text(); let j=null; try{j=JSON.parse(txt);}catch{}
-      if (!res.ok || (j && j.ok===false)) throw new Error(j?.error || txt || `HTTP ${res.status}`);
-      
-      // 2) ローカルキャッシュも即更新（UIにすぐ反映）
-      const emp = employeesAll.find(e => e.id === employee_id);
-      if (emp) emp.note = note;
-    }
-    // 先に削除
-    if (deletes.length) {
-      const res = await fetch(fnUrl('schedules-delete'), {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(deletes),
-        cache: 'no-store'
-      });
-      const j = await res.json().catch(()=>({}));
-      if (!res.ok || !j?.ok) throw new Error(j?.error || `delete HTTP ${res.status}`);
-    }
-
-    // 次に upsert
-    if (upserts.length) {
-      const res = await fetch(fnUrl('schedules-upsert'), {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(upserts),
-        cache: 'no-store'
-      });
-      const j = await res.json().catch(()=>({}));
-      if (!res.ok || !j?.ok) throw new Error(j?.error || `upsert HTTP ${res.status}`);
-    }
-
-    // 成功：対象月だけ再取得
-    // 成功：従業員情報を再取得（★メモの最新を反映）
-    await loadCurrentUserAndEmployees();
-    const ymSet = new Set(
-      [...dirtyCells].map(k => colDates[Number(k.split(':')[1])]?.slice(0,7)).filter(Boolean)
-    );
-    for (const ym of ymSet) monthCache.delete(ym);
-
-    clearAllDirty();
-
-    // アクティブ月があれば再描画
-    const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
-    if (activeYm) {
-      // ★メモのみ更新の場合でも必ず再描画
-      await loadMonth(activeYm, { scrollToToday: (activeYm === ymOf(todayJST())) });
-    }
-    alert(`保存しました：変更 ${upserts.length} / 削除 ${deletes.length}`);
-
-  } catch (e) {
-    console.error(e);
-    alert('保存に失敗しました：' + e.message);
-  }
-});
-
-// ====== スケジュール：整形・表示 ======
-function normalizeSchedules(json) {
-  const arr0 = Array.isArray(json) ? json : (json?.items || json?.data || json?.schedules || null);
-  if (arr0) {
-    return arr0.map(x => {
-      const pick = (obj, keys) => {
-        for (const k of keys) {
-          if (obj[k] != null) return obj[k];
-          const lk = Object.keys(obj).find(t => t.toLowerCase() === k.toLowerCase());
-          if (lk && obj[lk] != null) return obj[lk];
-        }
-        return undefined;
-      };
-      const title = pick(x, ['title','summary','name','subject']) ?? '';
-      const date  = pick(x, ['date','day','dt']);
-      const start = pick(x, ['start','start_at','startAt','start_time','startTime','from']) || date;
-      const end   = pick(x, ['end','end_at','endAt','end_time','endTime','to']);
-      const location = pick(x, ['location','place','where']) || '';
-      const note = pick(x, ['note','notes','memo','description']) || '';
-
-      const toDate = v => {
-        if (!v) return null;
-        if (/^\d{4}-\d{2}$/.test(v)) return new Date(v + '-01T00:00:00+09:00');
-        if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return new Date(v + 'T00:00:00+09:00');
-        const n = Number(v);
-        if (!Number.isNaN(n) && String(v).length >= 10) return new Date(n);
-        const d = new Date(v);
-        return Number.isNaN(d.getTime()) ? null : d;
-      };
-
-      const dDate  = toDate(date);
-      const dStart = toDate(start) || dDate;
-      const dEnd   = toDate(end);
-
-      return {
-        raw: x,
-        title: String(title || '(無題)'),
-        start: dStart,
-        end: dEnd,
-        baseDate: dDate || dStart || null,
-        location,
-        note
-      };
-    }).filter(x => x.baseDate);
-  }
-
-  // ★ schedules-get の rows 形式を AM/PM 別の item に展開し、slot を付与
-  if (json && Array.isArray(json.rows)) {
-    const normDay = (s) => (String(s || '').trim().slice(0, 10));
-
-    const items = [];
-    for (const row of json.rows) {
-      const emp = row.employee_name || row.name || '（未割当）';
-      const cells = row.cells || {};
-      for (const k of Object.keys(cells)) {
-        const d = normDay(k);
-        if (!d) continue;
-        const cell = cells[k] || {};
-
-        const pushOne = (txt, slot, hour) => {
-          const t = (txt ?? '').toString().trim();
-          if (!t) return;
-          items.push({
-            raw: { ...row, date: d, cell },
-            employee_name: emp,
-            title: t,
-            slot,                                   // ★ 追加: 'am' | 'pm'
-            start: new Date(`${d}T${String(hour).padStart(2,'0')}:00:00+09:00`),
-            end: null,
-            baseDate: new Date(`${d}T00:00:00+09:00`),
-            location: '',
-            note: ''
-          });
-        };
-
-        pushOne(cell.am, 'am', 9);
-        pushOne(cell.pm, 'pm', 13);
-      }
-    }
-    return items;
-  }
-
-  return [];
-}
-
-
-    function fmtDate(d) {
-      if (!d) return '';
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,'0');
-      const da = String(d.getDate()).padStart(2,'0');
-      const wd = '日月火水木金土'[d.getDay()];
-      return `${y}-${m}-${da}（${wd}）`;
-    }
-    function fmtTime(d) {
-      if (!d) return '';
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      return `${hh}:${mm}`;
-    }
-
-    function filterByMonth(items, ym) {
-      const [y,m] = ym.split('-').map(Number);
-      return items.filter(x => {
-        const d = x.baseDate;
-        return d && d.getFullYear() === y && (d.getMonth()+1) === m;
-      });
-    }
-
-    function renderList(items, mount) {
-      if (!items.length) { mount.innerHTML = '<p>該当なし</p>'; return; }
-      const groups = new Map();
-      for (const it of items) {
-        const k = fmtDate(it.baseDate);
-        if (!groups.has(k)) groups.set(k, []);
-        groups.get(k).push(it);
-      }
-      for (const arr of groups.values()) {
-        arr.sort((a,b) => (a.start?.getTime()||0) - (b.start?.getTime()||0)
-          || a.title.localeCompare(b.title,'ja'));
-      }
-      let html = '';
-      for (const [day, arr] of groups) {
-        html += `<h3 style="margin:12px 0 6px">${day}</h3>`;
-        html += `<ul style="margin:0 0 12px 16px;padding:0">`;
-        for (const it of arr) {
-          const timePart = it.start ? (it.end ? `${fmtTime(it.start)}–${fmtTime(it.end)}` : `${fmtTime(it.start)}`) : '';
-          const loc = it.location ? ` <span style="color:#666">＠${escapeHtml(it.location)}</span>` : '';
-          const note = it.note ? `<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(it.note)}</div>` : '';
-          html += `<li style="margin:4px 0">
-            <strong>${escapeHtml(it.title)}</strong> ${timePart}${loc}
-            ${note}
-          </li>`;
-        }
-        html += `</ul>`;
-      }
-      mount.innerHTML = html;
-    }
-
-    function escapeHtml(s){ return String(s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-async function renderCompanyEventList(ym) {
-  const listEl = document.getElementById('sched-list');
-
-  try {
-    const events = await fetchCompanyEventsForMonth(ym);
-
-    if (!events.length) {
-      listEl.innerHTML = '<p>該当なし</p>';
-      return;
-    }
-
-    // 日付ごとにグルーピング
-    const groups = new Map();
-    for (const ev of events) {
-      const day = ev.date; // 'YYYY-MM-DD'
-      if (!groups.has(day)) groups.set(day, []);
-      groups.get(day).push(ev);
-    }
-
-    // 表示
-    let html = '';
-    for (const [day, arr] of groups) {
-      const d = new Date(`${day}T00:00:00`);
-      const wd = '日月火水木金土'[d.getDay()];
-      html += `<h3>${day}（${wd}）</h3><ul style="margin:0 0 8px 16px;padding:0">`;
-for (const ev of arr) {
-  const tstart = ev.timestart ? ev.timestart.slice(0,5) : '';
-  const tend   = ev.timeend   ? ev.timeend.slice(0,5)   : '';
-  const time   = tstart && tend ? `${tstart}–${tend}` : (tstart || '');
-  const memo   = ev.memo ? `<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(ev.memo)}</div>` : '';
-
-  const delBtn = currentUser?.is_admin
-    ? `<button class="ev-del" data-ev-id="${ev.id}" aria-label="この予定を削除">削除</button>`
-    : '';
-
-  html += `
-    <li class="ev-item">
-      ${delBtn}
-      <div class="ev-main">
-        <strong>${escapeHtml(ev.event)}</strong> ${time}
-        ${memo}
+  <h1 style="display:flex;align-items:center;gap:8px;">
+    行動予定表
+    <button id="run">更新</button>
+    <button id="logoutBtn">ログアウト</button>
+    <!-- ▼ クイック登録の開閉トグル（常時表示） -->
+    <button id="toggleQuickEntryBtn" class="icon-btn" aria-expanded="false">＋</button>
+    <button id="quickSaveBtn">クイック登録</button>
+    <!-- ▼ 会社スケジュール追加のトグル＆追加ボタン（HTMLに常設, 管理者のみ可視） -->
+    <button id="toggleCompanyAddBtn" class="icon-btn admin-only" aria-expanded="false">＋</button>
+    <button id="companySaveBtn" class="admin-only" title="全体スケジュールを追加">追加</button>
+  </h1>
+
+  <!-- ログイン後エリア -->
+  <div id="appRoot" style="display:none">
+    <div id="mainPanel" class="panel">
+      <div id="quickRow">
+        <div id="quickEntry"></div>
+        <div id="companyEntry" class="is-hidden"></div>
       </div>
-    </li>`;
-}
-      html += `</ul>`;
+
+      <div class="tabsbar">
+        <div id="matrixCtrl" class="tabs-ctrl">
+          <button id="saveMatrixBtn" title="マトリクスでの変更を保存">変更を保存</button>
+          <span id="dirtyBadge" style="display:none;color:#e53935;font-weight:600;">未保存の変更あり</span>
+          <div id="month-tabs" class="tabs"></div>
+        </div>
+        <!-- 会社予定の表示トグル（常時表示。イベント無しの月は disabled） -->
+        <div class="tabs-ctrl">
+          <button id="toggleCompanyListBtn" class="icon-btn" aria-expanded="true">−</button>
+        </div>
+      </div>
+
+      <div id="sched-list-wrap">
+        <div id="sched-list"></div>
+      </div>
+
+      <div id="matrixGrid" style="width:100%;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    /* ================================
+       設定
+    =================================*/
+    const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    /* ================================
+       DOM ショートカット
+    =================================*/
+    const $ = (q) => document.querySelector(q);
+
+    /* ================================
+       ローカルストレージラッパ
+    =================================*/
+    const _LS = { get(k, d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch{ return d; }}, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} } };
+
+    /* ================================
+       汎用ユーティリティ
+    =================================*/
+    function fnUrl(name){ return `${SUPABASE_URL}/functions/v1/${name}`; }
+    async function fetchJsonStrict(fnName, opts){
+      const res = await fetch(fnUrl(fnName), { cache:'no-store', ...opts });
+      const text = await res.text();
+      let json=null; try{ json = JSON.parse(text); }catch{}
+      if(!res.ok || (json && json.ok===false)) throw new Error(json?.error || text || `HTTP ${res.status}`);
+      return json ?? {};
     }
-    listEl.innerHTML = html;
 
-    // ★ ここを追加：イベントが 1 件以上ならボタンを出す／無ければ隠す
-    ensureCompanyListToggleButton((events?.length || 0) > 0);
-  } catch (e) {
-    listEl.innerHTML = '';
-  }
-}
-async function deleteCompanyEventById(id) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) throw new Error('未ログインです');
-  const res = await fetch(fnUrl('company-events-delete'), {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id }),
-    cache: 'no-store',
-  });
+    function todayJST(){ const now = new Date(); return new Date(now.getTime() + (9*60 + now.getTimezoneOffset())*60000); }
+    function ymOf(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+    function todayStrJST(){ const dt = new Date(); const f = new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}); const parts = Object.fromEntries(f.formatToParts(dt).map(p=>[p.type,p.value])); return `${parts.year}-${parts.month}-${parts.day}`; }
 
-  const text = await res.text();
-  let json = null; try { json = JSON.parse(text); } catch {}
+    /* ================================
+       権限表示切り替え（★新設）
+       - .admin-only を一括で可視/不可視
+       - 会社追加欄の開閉状態を保持
+    =================================*/
+    function setAdminVisibility(isAdmin){
+      document.body.classList.toggle('admin-visible', !!isAdmin);
+      // 管理者でなければ会社追加欄は常に閉
+      const entry = $('#companyEntry');
+      if(!isAdmin && entry) entry.classList.add('is-hidden');
+      const tgl = $('#toggleCompanyAddBtn');
+      if(tgl){ tgl.setAttribute('aria-expanded', entry && !entry.classList.contains('is-hidden') ? 'true':'false'); }
+    }
 
-  if (!res.ok || (json && json.ok === false)) {
-    throw new Error(json?.error || text || `HTTP ${res.status}`);
-  }
-  return json ?? {};
-}
+    /* ================================
+       ログイン状態で UI 切替
+    =================================*/
+    function toggleUIBySession(isLoggedIn){
+      $('#appRoot').style.display = isLoggedIn ? '' : 'none';
+      $('#loginModal').style.display = isLoggedIn ? 'none' : '';
+    }
 
+    /* ================================
+       従業員＆権限
+    =================================*/
+    let currentUser = { email:null, employee_id:null, is_admin:false };
+    let employeesAll = [];
+    async function loadCurrentUserAndEmployees(){
+      const { data:{ session } } = await supabase.auth.getSession();
+      const email = session?.user?.email ?? null;
+      const { data: emps, error } = await supabase
+        .from('employees')
+        .select('id,name,email,department,note,row_index,is_admin')
+        .order('row_index', { ascending:true })
+        .order('name', { ascending:true });
+      if(error) throw error;
+      employeesAll = emps ?? [];
+      const me = employeesAll.find(e => (e.email||'').toLowerCase() === (email||'').toLowerCase());
+      currentUser = { email, employee_id: me?.id ?? null, is_admin: !!me?.is_admin };
+      setAdminVisibility(currentUser.is_admin);
+      return currentUser;
+    }
 
-document.getElementById('sched-list')?.addEventListener('click', async (e) => {
-  const btn = e.target instanceof HTMLElement ? e.target.closest('button.ev-del') : null;
-  if (!btn) return;
-  if (!currentUser?.is_admin) { alert('権限がありません'); return; }
+    /* ================================
+       クイック登録 HOT
+    =================================*/
+    let quickHot=null, companyHot=null, hot=null; // companyHot: 会社予定追加, hot: マトリクス本体
 
-  const id = btn.getAttribute('data-ev-id');
-  if (!id) return;
-  if (!confirm('この全体スケジュールを削除します。よろしいですか？')) return;
+    function renderQuickEntryHot(){
+      const container = $('#quickEntry');
+      const data = [{ date: todayStrJST(), am:'', pm:'' }];
+      const settings = {
+        data,
+        columns:[
+          { data:'date', type:'date', dateFormat:'YYYY-MM-DD', correctFormat:true, datePickerConfig:{ format:'YYYY-MM-DD', firstDay:0, i18n:{ previousMonth:'前月', nextMonth:'翌月', months:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], weekdays:['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'], weekdaysShort:['日','月','火','水','木','金','土'] } } },
+          { data:'am', type:'text' },
+          { data:'pm', type:'text' },
+        ],
+        colHeaders:['日付','午前','午後'], colWidths:[120,200,200], stretchH:'none', height:80,
+        licenseKey:'non-commercial-and-evaluation',
+        enterMoves:(e)=> (e && e.shiftKey ? {row:0,col:-1}:{row:0,col:1}),
+      };
+      if(quickHot) quickHot.updateSettings(settings); else quickHot = new Handsontable(container, settings);
+    }
 
-  try {
-    await deleteCompanyEventById(id);
-    // 再描画
-    const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
-    if (activeYm) await renderCompanyEventList(activeYm);
-    alert('削除しました');
-  } catch (err) {
-    console.error(err);
-    alert('削除に失敗しました：' + err.message);
-  }
-});
-document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-  await supabase.auth.signOut();    // ← サインアウト
-  // UIは onAuthStateChange 内の toggleUIBySession(false) でモーダル表示に戻る
-});
+    $('#quickSaveBtn').addEventListener('click', async ()=>{
+      if(!quickHot) return;
+      const [date, am, pm] = quickHot.getDataAtRow(0).map(v => (v??'').toString().trim());
+      await handleQuickSave({ date, am, pm });
+    });
+
+    /* ================================
+       会社予定 追加 HOT
+    =================================*/
+    function normalizeHHMM(raw){ const s=String(raw||'').trim(); if(!s) return null; if(/^\d{4}$/.test(s)){ const hh=+s.slice(0,2), mm=+s.slice(2,4); if(hh>=0&&hh<=23&&mm>=0&&mm<=59) return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; return null; } if(/^\d{1,2}:\d{2}$/.test(s)){ const [h,m]=s.split(':').map(Number); if(h>=0&&h<=23&&m>=0&&m<=59) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; return null; } return null; }
+    function isValidTimeHHMM(s){ return !s || normalizeHHMM(s)!=null; }
+
+    function renderCompanyEntryHot(){
+      const container = $('#companyEntry'); if(!container) return;
+      const data = [{ date: todayStrJST(), start:'', end:'', title:'', memo:'' }];
+      const settings = {
+        data,
+        columns:[
+          { data:'date', type:'date', dateFormat:'YYYY-MM-DD', correctFormat:true, datePickerConfig:{ format:'YYYY-MM-DD', firstDay:0, i18n:{ previousMonth:'前月', nextMonth:'翌月', months:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], weekdays:['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'], weekdaysShort:['日','月','火','水','木','金','土'] } } },
+          { data:'start', type:'text', validator:(v,cb)=>cb(isValidTimeHHMM(v)), allowInvalid:false },
+          { data:'end',   type:'text', validator:(v,cb)=>cb(isValidTimeHHMM(v)), allowInvalid:false },
+          { data:'title', type:'text' },
+          { data:'memo',  type:'text' },
+        ],
+        colHeaders:['日付','開始(HH:MM)','終了(HH:MM)','行事名','備考'], colWidths:[120,120,120,260,200], height:80, stretchH:'none',
+        licenseKey:'non-commercial-and-evaluation', enterMoves:(e)=>(e&&e.shiftKey?{row:0,col:-1}:{row:0,col:1}),
+      };
+      if(companyHot) companyHot.updateSettings(settings); else companyHot = new Handsontable(container, settings);
+    }
+
+    async function upsertCompanyEvent(payload){
+      const { data:{ session } } = await supabase.auth.getSession();
+      const token = session?.access_token; if(!token) throw new Error('未ログインです');
+      return await fetchJsonStrict('company-events-upsert', {
+        method:'POST', headers:{ 'Authorization':`Bearer ${token}`, 'Content-Type':'application/json' }, body:JSON.stringify(payload)
+      });
+    }
+
+    /* ================================
+       ログイン／ログアウト
+    =================================*/
+    $('#loginForm')?.addEventListener('submit', async (e)=>{
+      e.preventDefault(); const email=$('#email').value.trim(); const password=$('#password').value; alert('ログイン中...');
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if(error) return alert('エラー: '+error.message);
+      toggleUIBySession(true);
+      await loadCurrentUserAndEmployees();
+      // 初期構築
+      if(!$('#month-tabs button')){ const { todayYm } = buildMonthTabs(); renderQuickEntryHot(); renderCompanyEntryHot(); await loadMonth(todayYm, { scrollToToday:true }); }
+    });
+
+    $('#login-otp')?.addEventListener('click', async ()=>{
+      const email = $('#email').value.trim(); alert('マジックリンク送信中...');
+      const { error } = await supabase.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.origin } });
+      alert(error ? ('エラー: '+error.message) : 'メールを確認してリンクを開いてください');
+    });
+
+    $('#logoutBtn')?.addEventListener('click', async ()=>{ await supabase.auth.signOut(); });
+
+    /* ================================
+       起動
+    =================================*/
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const FORCE_LOGIN = new URLSearchParams(location.search).get('forceLogin') === '1';
+      if(FORCE_LOGIN) await supabase.auth.signOut();
+      await bootAppIfLoggedIn();
+      supabase.auth.onAuthStateChange(async (evt, session)=>{
+        toggleUIBySession(!!session);
+        if(evt==='SIGNED_OUT') { dirtyCells.clear(); updateDirtyBadge(); return; }
+        if(session){ await loadCurrentUserAndEmployees(); if(!$('#month-tabs button')){ const { todayYm } = buildMonthTabs(); renderQuickEntryHot(); renderCompanyEntryHot(); await loadMonth(todayYm, { scrollToToday:true }); } }
+      });
+    });
+
+    async function bootAppIfLoggedIn(){
+      const { data:{ session } } = await supabase.auth.getSession();
+      toggleUIBySession(!!session); if(!session) return;
+      const { todayYm } = buildMonthTabs(); renderQuickEntryHot(); renderCompanyEntryHot(); await loadCurrentUserAndEmployees(); await loadMonth(todayYm, { scrollToToday:true });
+    }
+
+    /* ================================
+       ＋／− トグル（HTML常設版）
+    =================================*/
+    // クイック登録
+    (function(){
+      const key='open.quickEntry'; const btn=$('#toggleQuickEntryBtn'); const entry=$('#quickEntry');
+      let open = _LS.get(key, false); // 既定は閉
+      entry.classList.toggle('is-hidden', !open); btn.textContent = open?'−':'＋'; btn.setAttribute('aria-expanded', String(open));
+      btn.addEventListener('click', ()=>{ open=!open; entry.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open)); _LS.set(key, open); });
+    })();
+
+    // 会社追加（管理者のみ可視だがボタン自体は常設）
+    (function(){
+      const key='open.companyEntry'; const btn=$('#toggleCompanyAddBtn'); const entry=$('#companyEntry');
+      let open = _LS.get(key, false);
+      entry.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open));
+      btn.addEventListener('click', ()=>{ open=!open; entry.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open)); _LS.set(key, open); if(open && !companyHot) renderCompanyEntryHot(); });
+    })();
+
+    // 会社予定一覧の開閉（常設）
+    (function(){
+      const key='open.companyList'; const btn=$('#toggleCompanyListBtn'); const listWrap=$('#sched-list-wrap');
+      let open = _LS.get(key, true); listWrap.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open));
+      btn.addEventListener('click', ()=>{ open=!open; listWrap.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open)); _LS.set(key, open); });
+    })();
+
+    /* ================================
+       月タブとロード
+    =================================*/
+    const monthCache = new Map();
+    function monthsAround(baseDate, back=3, forward=3){ const list=[]; const d=new Date(baseDate.getFullYear(), baseDate.getMonth()-back, 1); const end=new Date(baseDate.getFullYear(), baseDate.getMonth()+forward+1, 1); while(d<end){ list.push(ymOf(d)); d.setMonth(d.getMonth()+1,1);} return list; }
+
+    function buildMonthTabs(baseDate = todayJST()){
+      const months = monthsAround(baseDate, 3, 3); const todayYm = ymOf(baseDate); const wrap = $('#month-tabs'); wrap.innerHTML='';
+      for(const ym of months){ const btn=document.createElement('button'); btn.textContent=ym; btn.dataset.month=ym; if(ym===todayYm) btn.classList.add('active'); btn.addEventListener('click', ()=>onMonthTabClick(btn)); wrap.appendChild(btn); }
+      return { months, todayYm };
+    }
+
+    async function onMonthTabClick(btn){
+      if(hasDirty()){ const ok = confirm('未保存の変更があります。月を移動すると破棄されます。移動しますか？'); if(!ok) return; clearAllDirty(); }
+      $('#month-tabs button.active')?.classList.remove('active'); btn.classList.add('active');
+      const ym = btn.dataset.month; const isThisMonth = ym === ymOf(todayJST()); await loadMonth(ym, { scrollToToday:isThisMonth });
+    }
+
+    async function fetchMonthData(ym, token){
+      if(monthCache.has(ym)) return monthCache.get(ym);
+      const ts = Date.now();
+      const res = await fetch(`${fnUrl('schedules-get')}?month=${encodeURIComponent(ym)}&_=${ts}`, { headers:{ Authorization:`Bearer ${token}` }, cache:'no-store' });
+      const json = await res.json();
+      const items = normalizeSchedules(json);
+      monthCache.set(ym, items); return items;
+    }
+
+    async function loadMonth(ym, { scrollToToday }={}){
+      const { data:{ session } } = await supabase.auth.getSession(); if(!session){ alert('未ログインです'); return; }
+      try{
+        const items = await fetchMonthData(ym, session.access_token);
+        await renderCompanyEventList(ym);
+        renderMatrixHot(items, ym, { scrollToToday });
+        clearAllDirty();
+      }catch(e){ alert('Fetchエラー: '+e.message); }
+    }
+
+    $('#run').addEventListener('click', async ()=>{
+      const activeYm = $('#month-tabs button.active')?.dataset.month; const ym = activeYm || buildMonthTabs().todayYm;
+      await loadMonth(ym, { scrollToToday: ym===ymOf(todayJST()) });
+    });
+
+    /* ================================
+       クリップボード（右クリメニュー用）
+    =================================*/
+    const tsvFrom2D = (arr)=> arr.map(row=>row.map(v=> (v==null?'':String(v))).join('\t')).join('\n');
+    const getSelectionBounds = (hot)=>{ const rng=hot.getSelectedRangeLast?.(); if(!rng) return null; const r1=Math.min(rng.from.row, rng.to.row), r2=Math.max(rng.from.row, rng.to.row), c1=Math.min(rng.from.col, rng.to.col), c2=Math.max(rng.from.col, rng.to.col); return { r1,r2,c1,c2 }; };
+    async function copySelection(h){ const b=getSelectionBounds(h); if(!b) return; const data=h.getData(b.r1,b.c1,b.r2,b.c2); await navigator.clipboard.writeText(tsvFrom2D(data)); }
+    async function cutSelection(h){ const b=getSelectionBounds(h); if(!b) return; const data=h.getData(b.r1,b.c1,b.r2,b.c2); await navigator.clipboard.writeText(tsvFrom2D(data)); for(let r=b.r1;r<=b.r2;r++){ for(let c=b.c1;c<=b.c2;c++) h.setDataAtCell(r,c,''); } }
+    async function pasteFromClipboard(h){ const text=await navigator.clipboard.readText(); if(!text) return; const rows=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').map(line=>line.split('\t')); const rng=h.getSelectedRangeLast?.(); if(!rng){ alert('貼り付け先のセルを選択してください'); return; } const startRow=Math.min(rng.from.row, rng.to.row), startCol=Math.min(rng.from.col, rng.to.col); const endRow=startRow+rows.length-1, endCol=startCol+(rows[0]?.length??1)-1; if(containsReadOnlyInRange(h,startRow,startCol,endRow,endCol)){ alert('貼り付け先に読み取り専用セルが含まれているため、貼り付けできません。'); return; } rows.forEach((r,i)=> r.forEach((val,j)=> h.setDataAtCell(startRow+i, startCol+j, val))); }
+    function containsReadOnlyInRange(h,r1,c1,r2,c2){ for(let r=r1;r<=r2;r++){ for(let c=c1;c<=c2;c++){ if(h.getCellMeta(r,c)?.readOnly) return true; } } return false; }
+
+    /* ================================
+       マトリクス構築（従業員全員／AMPM）
+    =================================*/
+    function buildFullMatrixWithEmployees(items, ym){
+      const [y,m] = ym.split('-').map(Number); const last=new Date(y,m,0); const days=Array.from({length:last.getDate()},(_,i)=>i+1);
+      const byEmpKey = new Map();
+      for(const it of items){
+        const row = it.raw || {}; const empId = row.employee_id || row.id || row.emp_id || null;
+        const name = it.employee_name || row.employee_name || row.name || '（未割当）';
+        const email = row.email || ''; const dep = row.department || ''; const note = row.note || '';
+        const key = empId ?? `name:${name}`; if(!byEmpKey.has(key)) byEmpKey.set(key,{ employee_id:empId, name, email, department:dep, note, cells:{} });
+        const d = it.baseDate.getDate(); if(!byEmpKey.get(key).cells[d]) byEmpKey.get(key).cells[d] = { am:[], pm:[] };
+        const hour = it.start?.getHours() ?? 0; const slot = (it.slot==='am'||it.slot==='pm')?it.slot:(hour<12?'am':'pm');
+        byEmpKey.get(key).cells[d][slot].push(it.title);
+      }
+      const rowsMeta = employeesAll.slice().sort((a,b)=>(a.row_index??0)-(b.row_index??0) || a.name.localeCompare(b.name,'ja'));
+      const data=[], rowEmployees=[], colHeaders=['名前','メモ'], colDates=[null,null];
+      for(const d of days){ colHeaders.push(`${m}/${d} 午前`, `${m}/${d} 午後`); const ds=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; colDates.push(ds, ds); }
+      for(const emp of rowsMeta){ const key = emp.id ?? `name:${emp.name}`; const agg = byEmpKey.get(key); const row=[]; row.push(emp.name); row.push(emp.note||''); for(const d of days){ const am = agg?.cells?.[d]?.am?.join('\n') ?? ''; const pm = agg?.cells?.[d]?.pm?.join('\n') ?? ''; row.push(am, pm); } data.push(row); rowEmployees.push({ id:emp.id, name:emp.name, email:emp.email, department:emp.department, note:emp.note, is_admin:!!emp.is_admin }); }
+      return { colHeaders, data, colDates, rowEmployees };
+    }
+
+    /* ================================
+       条件付き書式 / レンダラー
+    =================================*/
+    const _measureCanvas = document.createElement('canvas');
+    const _ctx = _measureCanvas.getContext('2d');
+    function measureTextWidth(text, font){ _ctx.font = font; return _ctx.measureText(text).width; }
+    function fitTextRenderer(instance, td, row, col, prop, value){
+      Handsontable.renderers.TextRenderer.apply(this, arguments);
+      td.style.whiteSpace='nowrap'; td.style.overflow='hidden'; td.style.textOverflow='ellipsis';
+      const raw = (value==null?'':String(value)); const show = raw.replace(/\r?\n/g, ' / ');
+      const basePx=14, minPx=10; let fontPx=basePx; const padding=14; const colWidth=(instance.getColWidth(col)||td.clientWidth||100)-padding; const fontFamily=getComputedStyle(td).fontFamily||'system-ui,sans-serif'; const fontWeight=getComputedStyle(td).fontWeight||'normal';
+      while(fontPx>minPx){ const font=`${fontWeight} ${fontPx}px ${fontFamily}`; const w=measureTextWidth(show,font); if(w<=colWidth) break; fontPx-=1; }
+      td.style.fontSize=`${fontPx}px`; td.textContent=show;
+    }
+
+    function weekdayOf(y,m,d){ const t=[0,3,2,5,0,3,5,1,4,6,2,4]; if(m<3) y-=1; return (y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)+t[m-1]+d)%7; }
+    function stripDateClasses(className){ return String(className||'').split(/\s+/).filter(c=> c && c!=='ht-today' && c!=='ht-sat' && c!=='ht-sun').join(' '); }
+    function classesByDate(ds, today){ if(!ds) return []; const [y,m,d]=ds.split('-').map(Number); const wd=weekdayOf(y,m,d); const arr=[]; if(ds===today) arr.push('ht-today'); if(wd===6) arr.push('ht-sat'); if(wd===0) arr.push('ht-sun'); return arr; }
+    function classesByValue(value){ return String(value??'').includes('休') ? ['ht-holiday'] : []; }
+    function applyValueRule(h,row,col,value){ if(col===0) return; const meta=h.getCellMeta(row,col); const keep=(meta.className||'').split(' ').filter(Boolean).filter(c=> c!=='ht-holiday'); const add=classesByValue(value); h.setCellMeta(row,col,'className', keep.concat(add).join(' ')); }
+    function mergeClass(existing, add){ const arr=Array.isArray(add)?add:[add]; const set=new Set(String(existing||'').split(' ').filter(Boolean)); for(const c of arr) if(c) set.add(c); return Array.from(set).join(' '); }
+
+    /* ================================
+       ホイール横スクロール
+    =================================*/
+    function enableHorizontalWheel(container, h){ if(container.dataset.hwBound==='1') return; container.dataset.hwBound='1'; const holder=container.querySelector('.ht_master .wtHolder'); if(!holder) return; holder.addEventListener('wheel',(e)=>{ const hasSel=!!h?.getSelectedRangeLast?.(); if(!hasSel) return; if(Math.abs(e.deltaY)>=Math.abs(e.deltaX)){ holder.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive:false }); }
+
+    /* ================================
+       行編集権限 / スクロール
+    =================================*/
+    const isMyRow = (rowIdx, rowEmployees, currentUser)=>{ const emp=rowEmployees[rowIdx]; if(!emp||!currentUser?.email) return false; return (emp.email||'').toLowerCase()===currentUser.email.toLowerCase(); };
+    function scrollColumnToLeft(h, container, colIndex){ const holder=container.querySelector('.ht_master .wtHolder'); if(!holder) return; const fixed=h.getSettings().fixedColumnsStart||0; h.scrollViewportTo(0,colIndex); requestAnimationFrame(()=>{ let offset=0; for(let c=fixed; c<colIndex; c++){ offset += h.getColWidth(c) || 0; } holder.scrollLeft=Math.max(0, offset-4); }); }
+
+    /* ================================
+       未保存管理
+    =================================*/
+    let dirtyCells = new Set();
+    const dirtyKey=(r,c)=>`${r}:${c}`;
+    function addClassMeta(h,r,c,cls){ const meta=h.getCellMeta(r,c); const now=new Set(String(meta.className||'').split(/\s+/).filter(Boolean)); if(!now.has(cls)){ now.add(cls); h.setCellMeta(r,c,'className', Array.from(now).join(' ')); } }
+    function removeClassMeta(h,r,c,cls){ const meta=h.getCellMeta(r,c); const next=String(meta.className||'').split(/\s+/).filter(x=>x&&x!==cls).join(' '); h.setCellMeta(r,c,'className', next); }
+    function markDirty(row,col,yes){ const key=dirtyKey(row,col); if(yes){ dirtyCells.add(key); if(hot) addClassMeta(hot,row,col,'dirty-cell'); } else { dirtyCells.delete(key); if(hot) removeClassMeta(hot,row,col,'dirty-cell'); } const td=hot?.getCell(row,col); if(td) td.classList.toggle('dirty-cell', !!yes); updateDirtyBadge(); }
+    function clearAllDirty(){ for(const k of dirtyCells){ const [r,c]=k.split(':').map(Number); if(hot) removeClassMeta(hot,r,c,'dirty-cell'); const td=hot?.getCell(r,c); if(td) td.classList.remove('dirty-cell'); } dirtyCells.clear(); updateDirtyBadge(); }
+    function hasDirty(){ return dirtyCells.size>0; }
+    function updateDirtyBadge(){ const el=$('#dirtyBadge'); if(!el) return; el.style.display = hasDirty()? '':'none'; }
+
+    /* ================================
+       マトリクス描画
+    =================================*/
+    function renderMatrixHot(items, ym, opts={}){
+      const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
+      const container = $('#matrixGrid'); const today = todayStrJST();
+      const canEditRow = (rowIdx)=> currentUser.is_admin || ((rowEmployees[rowIdx]?.email||'').toLowerCase() === (currentUser.email||'').toLowerCase());
+      const settings = {
+        data, colHeaders, rowHeaders:true, licenseKey:'non-commercial-and-evaluation', fixedColumnsStart:2,
+        enterMoves:(e)=>(e&&e.shiftKey?{row:0,col:-1}:{row:0,col:1}),
+        cells:(row,col)=>({ renderer:fitTextRenderer }),
+        contextMenu:{ items:{ copyCustom:{ name:'コピー', callback:()=>copySelection(hot), disabled:()=>!hot.getSelectedRangeLast?.()||!navigator.clipboard?.writeText }, cutCustom:{ name:'切り取り', callback:()=>cutSelection(hot), disabled:()=>!hot.getSelectedRangeLast?.()||!navigator.clipboard?.writeText }, pasteCustom:{ name:'貼り付け', callback:()=>pasteFromClipboard(hot), disabled:()=>!navigator.clipboard?.readText }, '--------': Handsontable.plugins.ContextMenu.SEPARATOR, undo:{name:'元に戻す'}, redo:{name:'やり直す'} } },
+        maxRows:data.length, maxCols:colHeaders.length, fillHandle:{ autoInsertRow:false }, copyPaste:true, selectionMode:'multiple',
+        beforeCreateRow:()=>false, beforeRemoveRow:()=>false, beforeCreateCol:()=>false, beforeRemoveCol:()=>false,
+        beforePaste:(data, coords)=>{ for(const sel of coords||[]){ const { startRow,startCol,endRow,endCol }=sel; for(let r=startRow;r<=endRow;r++){ if(!canEditRow(r)) return false; } if(containsReadOnlyInRange(hot,startRow,startCol,endRow,endCol)){ alert('貼り付け先に読み取り専用セルが含まれているため、貼り付けできません。'); return false; } }
+        },
+        afterGetCellMeta:(row,col,props)=>{
+          const ds = colDates[col]; const emp=rowEmployees[row];
+          if(col===0 || col===1){ const bucket=bucketByDepartment(emp?.department); props.className = mergeClass(props.className, `dep-${bucket}`); if(col===0) props.readOnly=true; else props.readOnly = !canEditRow(row); if(isMyRow(row,rowEmployees,currentUser)) props.className = mergeClass(props.className,'my-row'); return; }
+          props.className = stripDateClasses(props.className); if(ds){ props.className = mergeClass(props.className, classesByDate(ds, today)); }
+          props.readOnly = !canEditRow(row); if(isMyRow(row,rowEmployees,currentUser)) props.className = mergeClass(props.className,'my-row');
+        },
+        afterChange:(changes, source)=>{
+          if(!changes) return; const userSources=new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']); const isUser=userSources.has(source);
+          for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ markDirty(row,col,true); } }
+          hot.render();
+        },
+        stretchH:'all', height:1000,
+        colWidths:(i)=> (i===0?110:(i===1?180:110)),
+      };
+      settings._rowEmployees=rowEmployees; settings._colDates=colDates;
+      if(hot){ hot.updateSettings(settings); hot.render(); } else { hot = new Handsontable(container, settings); }
+      for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
+      hot.render();
+      // スクロール
+      if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, col)); hot.render(); }
+      else { hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, 1)); hot.render(); }
+      enableHorizontalWheel(container, hot);
+    }
+
+    function bucketByDepartment(dep){ const s=String(dep||''); let h=0; for(let i=0;i<s.length;i++) h=(h*31 + s.charCodeAt(i))>>>0; return (h%8)+1; }
+
+    /* ================================
+       保存
+    =================================*/
+    $('#saveMatrixBtn')?.addEventListener('click', async ()=>{
+      if(!hot) return; if(!hasDirty()) return alert('未保存の変更はありません');
+      const settings=hot.getSettings(); const colDates=settings._colDates; const rowEmployees=settings._rowEmployees;
+      const { data:{ session } } = await supabase.auth.getSession(); const token=session?.access_token; if(!token) return alert('未ログインです');
+      const upserts=[], deletes=[]; const memoUpdates=new Map();
+      for(const key of dirtyCells){ const [row,col]=key.split(':').map(Number); if(col===1){ const emp=rowEmployees[row]; if(emp?.id){ const note=(hot.getDataAtCell(row,1)??'').toString(); memoUpdates.set(emp.id, note); } continue; } if(col<2) continue; const emp=rowEmployees[row]; const ds=colDates[col]; if(!emp?.id || !ds) continue; const slot=((col-2)%2===0)?'am':'pm'; const val=(hot.getDataAtCell(row,col)??'').toString().trim(); if(val){ upserts.push({ employee_id:emp.id, date:ds, slot, place:val }); } else { deletes.push({ employee_id:emp.id, date:ds, slot }); } }
+      try{
+        for(const [employee_id,note] of memoUpdates){ const res=await fetch(fnUrl('employee-note-update'),{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify({ employee_id, note }), cache:'no-store' }); const txt=await res.text(); let j=null; try{ j=JSON.parse(txt);}catch{} if(!res.ok || (j&&j.ok===false)) throw new Error(j?.error||txt||`HTTP ${res.status}`); const emp=employeesAll.find(e=>e.id===employee_id); if(emp) emp.note=note; }
+        if(deletes.length){ const r=await fetch(fnUrl('schedules-delete'),{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(deletes), cache:'no-store' }); const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) throw new Error(j?.error||`delete HTTP ${r.status}`); }
+        if(upserts.length){ const r=await fetch(fnUrl('schedules-upsert'),{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(upserts), cache:'no-store' }); const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) throw new Error(j?.error||`upsert HTTP ${r.status}`); }
+        await loadCurrentUserAndEmployees();
+        const ymSet=new Set([...dirtyCells].map(k=> colDates[Number(k.split(':')[1])]?.slice(0,7)).filter(Boolean)); for(const ym of ymSet) monthCache.delete(ym);
+        clearAllDirty(); const activeYm=$('#month-tabs button.active')?.dataset.month; if(activeYm) await loadMonth(activeYm,{ scrollToToday: (activeYm===ymOf(todayJST())) });
+        alert(`保存しました：変更 ${upserts.length} / 削除 ${deletes.length}`);
+      }catch(e){ console.error(e); alert('保存に失敗しました：'+e.message); }
+    });
+
+    /* ================================
+       クイック登録 保存
+    =================================*/
+    let myEmployeeId=null, myEmail=null;
+    async function ensureMyEmployeeId(){ if(myEmployeeId) return myEmployeeId; const { data:{ session } } = await supabase.auth.getSession(); if(!session) throw new Error('未ログインです'); myEmail=session.user?.email||null; if(!myEmail) throw new Error('メールが取得できません'); const { data, error } = await supabase.from('employees').select('id,email').eq('email', myEmail).maybeSingle(); if(error) throw error; if(!data) throw new Error(`employees に email=${myEmail} が見つかりません`); myEmployeeId=data.id; return myEmployeeId; }
+
+    function ymFromYmd(ymd){ return String(ymd||'').slice(0,7); }
+
+    async function handleQuickSave({ date, am, pm }){
+      const ymd=String(date||'').trim(); if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return alert('日付は YYYY-MM-DD 形式で入力してください');
+      const amText=String(am??'').trim(), pmText=String(pm??'').trim(); const employee_id = await ensureMyEmployeeId();
+      const upserts=[], deletes=[]; if(amText) upserts.push({ employee_id, date:ymd, slot:'am', place:amText }); else deletes.push({ employee_id, date:ymd, slot:'am' }); if(pmText) upserts.push({ employee_id, date:ymd, slot:'pm', place:pmText }); else deletes.push({ employee_id, date:ymd, slot:'pm' });
+      const { data:{ session } } = await supabase.auth.getSession(); const token=session?.access_token; if(!token) return alert('アクセストークンが取得できません（未ログインの可能性）');
+      try{
+        if(deletes.length){ const r=await fetch(fnUrl('schedules-delete'),{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(deletes) }); const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) throw new Error(`削除失敗: ${j?.error||`HTTP ${r.status}`}`); }
+        if(upserts.length){ const r=await fetch(fnUrl('schedules-upsert'),{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(upserts) }); const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) throw new Error(`保存失敗: ${j?.error||`HTTP ${r.status}`}`); }
+        const ym = ymFromYmd(ymd); monthCache.delete(ym); alert('更新しました'); await selectMonthAndReload(ym, { scrollToToday:false });
+      }catch(e){ console.error(e); alert('保存に失敗しました：'+e.message); }
+    }
+
+    async function selectMonthAndReload(ym, { scrollToToday=false }={}){
+      let btn = document.querySelector(`#month-tabs button[data-month="${ym}"]`); if(!btn){ buildMonthTabsFor(ym); btn = document.querySelector(`#month-tabs button[data-month="${ym}"]`); }
+      document.querySelectorAll('#month-tabs button').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); await loadMonth(ym, { scrollToToday });
+    }
+
+    function buildMonthTabsFor(baseYm){ const [y,m]=baseYm.split('-').map(Number); const base=new Date(y,m-1,1); const months=monthsAround(base,3,3); const wrap=$('#month-tabs'); wrap.innerHTML=''; for(const ym of months){ const b=document.createElement('button'); b.textContent=ym; b.dataset.month=ym; b.addEventListener('click', ()=>onMonthTabClick(b)); wrap.appendChild(b); } return months; }
+
+    /* ================================
+       会社予定一覧（削除ボタンは常に描画→CSSで admin-only）
+    =================================*/
+    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    async function fetchCompanyEventsForMonth(ym){
+      const [y,m]=ym.split('-').map(Number); const start=new Date(y,m-1,1); const end=new Date(y,m,1);
+      const d2=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const { data, error } = await supabase
+        .from('company_events')
+        .select('id, date, timestart, timeend, event, memo')
+        .gte('date', d2(start)).lt('date', d2(end))
+        .order('date',{ascending:true}).order('timestart',{ascending:true});
+      if(error) throw error; return data||[];
+    }
+
+    async function renderCompanyEventList(ym){
+      const listEl = $('#sched-list'); const toggleBtn = $('#toggleCompanyListBtn');
+      try{
+        const events = await fetchCompanyEventsForMonth(ym);
+        // トグルボタンの活性/非活性（イベント無しでもボタン自体は表示）
+        if(toggleBtn){ toggleBtn.disabled = events.length===0; toggleBtn.title = events.length? '会社予定を開閉':'この月は会社予定がありません'; }
+        if(!events.length){ listEl.innerHTML = '<p>該当なし</p>'; return; }
+        const groups=new Map(); for(const ev of events){ const day=ev.date; if(!groups.has(day)) groups.set(day, []); groups.get(day).push(ev); }
+        let html='';
+        for(const [day,arr] of groups){ const d=new Date(`${day}T00:00:00`); const wd='日月火水木金土'[d.getDay()]; html+=`<h3>${day}（${wd}）</h3><ul style="margin:0 0 8px 16px;padding:0">`; for(const ev of arr){ const ts=ev.timestart?ev.timestart.slice(0,5):''; const te=ev.timeend?ev.timeend.slice(0,5):''; const time=(ts&&te)?`${ts}–${te}`:(ts||''); const memo=ev.memo?`<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(ev.memo)}</div>`:''; html+=`
+              <li class="ev-item">
+                <button class="ev-del admin-only" data-ev-id="${ev.id}" aria-label="この予定を削除">削除</button>
+                <div class="ev-main"><strong>${escapeHtml(ev.event)}</strong> ${time} ${memo}</div>
+              </li>`; } html+='</ul>'; }
+        listEl.innerHTML = html;
+      }catch(e){ listEl.innerHTML=''; }
+    }
+
+    async function deleteCompanyEventById(id){ const { data:{ session } } = await supabase.auth.getSession(); const token=session?.access_token; if(!token) throw new Error('未ログインです'); const res=await fetch(fnUrl('company-events-delete'),{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify({ id }), cache:'no-store' }); const text=await res.text(); let json=null; try{ json=JSON.parse(text);}catch{} if(!res.ok || (json&&json.ok===false)) throw new Error(json?.error||text||`HTTP ${res.status}`); return json??{}; }
+
+    $('#sched-list')?.addEventListener('click', async (e)=>{
+      const btn = e.target instanceof HTMLElement ? e.target.closest('button.ev-del') : null; if(!btn) return;
+      if(!currentUser?.is_admin) return alert('権限がありません');
+      const id = btn.getAttribute('data-ev-id'); if(!id) return; if(!confirm('この全体スケジュールを削除します。よろしいですか？')) return;
+      try{ await deleteCompanyEventById(id); const activeYm=$('#month-tabs button.active')?.dataset.month; if(activeYm) await renderCompanyEventList(activeYm); alert('削除しました'); }catch(err){ console.error(err); alert('削除に失敗しました：'+err.message); }
+    });
+
+    // 会社予定の追加ボタン（常設・管理者のみ可視）
+    document.addEventListener('click', async (e)=>{
+      const t = e.target; if(!(t instanceof HTMLElement)) return;
+      if(t.id==='companySaveBtn'){
+        if(!currentUser?.is_admin) return alert('権限がありません'); if(!companyHot) return;
+        const [date,startRaw,endRaw,title,memo] = companyHot.getDataAtRow(0).map(v=>(v??'').toString().trim());
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return alert('日付は YYYY-MM-DD で入力してください');
+        if(!title) return alert('行事名を入力してください');
+        const start=normalizeHHMM(startRaw), end=normalizeHHMM(endRaw);
+        if(startRaw && !start) return alert('開始は 0930 または 09:30 の形式で入力してください');
+        if(endRaw   && !end)   return alert('終了は 1730 または 17:30 の形式で入力してください');
+        try{ await upsertCompanyEvent({ date, timestart:start, timeend:end, event:title, memo }); const activeYm=$('#month-tabs button.active')?.dataset.month; if(activeYm) await renderCompanyEventList(activeYm); alert('全体スケジュールを追加しました'); }
+        catch(err){ console.error(err); alert('追加に失敗しました：'+err.message); }
+      }
+    });
   </script>
 </body>
 </html>
