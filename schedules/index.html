@@ -124,17 +124,15 @@
         <div id="companyEntry" class="is-hidden"></div>
       </div>
 
-      <div class="tabsbar">
-        <div id="matrixCtrl" class="tabs-ctrl">
-          <button id="saveMatrixBtn" title="マトリクスでの変更を保存">変更を保存</button>
-          <span id="dirtyBadge" style="display:none;color:#e53935;font-weight:600;">未保存の変更あり</span>
-          <div id="month-tabs" class="tabs"></div>
-        </div>
-        <!-- 会社予定の表示トグル（常時表示。イベント無しの月は disabled） -->
-        <div class="tabs-ctrl">
-          <button id="toggleCompanyListBtn" class="icon-btn" aria-expanded="true">−</button>
-        </div>
-      </div>
+       <div class="tabsbar">
+         <div id="matrixCtrl" class="tabs-ctrl">
+           <button id="saveMatrixBtn" ...>変更を保存</button>
+           <span id="dirtyBadge" ...>未保存の変更あり</span>
+           <div id="month-tabs" class="tabs"></div>
+           <!-- ←ここに置くと常に視界に入る -->
+           <button id="toggleCompanyListBtn" class="icon-btn" aria-expanded="true">−</button>
+         </div>
+       </div>
 
       <div id="sched-list-wrap">
         <div id="sched-list"></div>
@@ -665,8 +663,14 @@
       try{
         const events = await fetchCompanyEventsForMonth(ym);
         // トグルボタンの活性/非活性（イベント無しでもボタン自体は表示）
-        if(toggleBtn){ toggleBtn.disabled = events.length===0; toggleBtn.title = events.length? '会社予定を開閉':'この月は会社予定がありません'; }
-        if(!events.length){ listEl.innerHTML = '<p>該当なし</p>'; return; }
+        if(toggleBtn){ toggleBtn.disabled = false; toggleBtn.title = events.length ? '会社予定を開閉' : 'この月は会社予定がありません（開閉可）'; }
+        if(!events.length){ listEl.innerHTML = '<p>該当なし</p>'; const wrap = document.getElementById('sched-list-wrap');
+          if (wrap) {
+            wrap.classList.remove('is-hidden');
+            try { localStorage.setItem('open.companyList', 'true'); } catch {}
+          }
+          return;
+        }
         const groups=new Map(); for(const ev of events){ const day=ev.date; if(!groups.has(day)) groups.set(day, []); groups.get(day).push(ev); }
         let html='';
         for(const [day,arr] of groups){ const d=new Date(`${day}T00:00:00`); const wd='日月火水木金土'[d.getDay()]; html+=`<h3>${day}（${wd}）</h3><ul style="margin:0 0 8px 16px;padding:0">`; for(const ev of arr){ const ts=ev.timestart?ev.timestart.slice(0,5):''; const te=ev.timeend?ev.timeend.slice(0,5):''; const time=(ts&&te)?`${ts}–${te}`:(ts||''); const memo=ev.memo?`<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(ev.memo)}</div>`:''; html+=`
