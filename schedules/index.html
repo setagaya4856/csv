@@ -90,6 +90,17 @@
 .ev-main { flex: 1 1 auto; }
 .tabsbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:space-between; margin:8px 0 12px; }
 .tabs-ctrl { display:flex; align-items:center; gap:8px; }
+    #quickRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;          /* 画面幅が狭い時は折り返す */
+  margin: 6px 0 8px;
+}
+#quickEntry, #companyEntry {
+  flex: 1 1 360px;          /* 横並び2カラム想定、最小幅 320〜360px */
+  min-width: 320px;
+}
   </style>
 </head>
 <body>
@@ -437,32 +448,34 @@ async function loadCurrentUserAndEmployees() {
 function ensureCompanyEntryUI() {
   if (!currentUser?.is_admin) return;
 
-  // すでに #companyEntry があれば何もしない
-  if (document.getElementById('companyEntry')) {
-    // ただしボタンの移設は都度チェック
-    ensureCompanyAddButtonPlaced();
-    return;
-  }
-
-  // quickEntry の直後に companyEntry だけを差し込む（見出しは作らない）
   const quickEntry = document.getElementById('quickEntry');
-  const host = quickEntry?.parentElement || document.body;
+  if (!quickEntry) return;
 
-  const div = document.createElement('div');
-  div.id = 'companyEntry';
-  div.style.maxWidth = '820px';
-
-  if (quickEntry && quickEntry.parentNode) {
-    quickEntry.parentNode.insertBefore(div, quickEntry.nextSibling);
+  // 横並びラッパーを用意（なければ作成）
+  let quickRow = document.getElementById('quickRow');
+  if (!quickRow) {
+    quickRow = document.createElement('div');
+    quickRow.id = 'quickRow';
+    // quickEntry の直前に quickRow を挿入し、quickEntry を中に移動
+    quickEntry.parentNode.insertBefore(quickRow, quickEntry);
+    quickRow.appendChild(quickEntry);
   } else {
-    host.appendChild(div);
+    // 既にあるなら quickEntry が中にいるか確認（他の更新で動いた場合に備える）
+    if (quickEntry.parentElement !== quickRow) quickRow.appendChild(quickEntry);
   }
 
-  // 表を描画
-  renderCompanyEntryHot();
+  // companyEntry を用意（なければ生成）
+  let companyEntry = document.getElementById('companyEntry');
+  if (!companyEntry) {
+    companyEntry = document.createElement('div');
+    companyEntry.id = 'companyEntry';
+    quickRow.appendChild(companyEntry);
+  } else if (companyEntry.parentElement !== quickRow) {
+    quickRow.appendChild(companyEntry);
+  }
 
-  // 管理者なら “追加” ボタンをクイック登録の隣へ
-  ensureCompanyAddButtonPlaced();
+  // HOT を描画/更新
+  renderCompanyEntryHot();
 }
     
 function ensureCompanyAddButtonPlaced() {
