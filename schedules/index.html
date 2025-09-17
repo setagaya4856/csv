@@ -147,8 +147,8 @@
        <div class="tabsbar">
          <div id="matrixCtrl" class="tabs-ctrl">
            <button id="toggleCompanyListBtn" class="icon-btn" aria-expanded="true">−</button>
-           <button id="saveMatrixBtn" ...>保存</button>
-           <span id="dirtyBadge" ...>未保存の変更あり</span>
+           <button id="saveMatrixBtn">保存</button>
+           <span id="dirtyBadge">未保存の変更あり</span>
            <div id="month-tabs" class="tabs"></div>
          </div>
        </div>
@@ -373,7 +373,6 @@
         btn.setAttribute('aria-expanded', String(open));
       };
       sync();
-      listWrap.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open));
       btn.addEventListener('click', ()=>{ open = !open; _LS.set(key, open); sync(); });
       window.__syncCompanyListToggle = () => { open = _LS.get(key, true); sync(); };// 他所で表示状態が変わる場合に備えて公開関数に
     })();
@@ -563,7 +562,11 @@
     function classesByValue(value){ return String(value??'').includes('休') ? ['ht-holiday'] : []; }
     function applyValueRule(h,row,col,value){ if(col===0) return; const meta=h.getCellMeta(row,col); const keep=(meta.className||'').split(' ').filter(Boolean).filter(c=> c!=='ht-holiday'); const add=classesByValue(value); h.setCellMeta(row,col,'className', keep.concat(add).join(' ')); }
     function mergeClass(existing, add){ const arr=Array.isArray(add)?add:[add]; const set=new Set(String(existing||'').split(' ').filter(Boolean)); for(const c of arr) if(c) set.add(c); return Array.from(set).join(' '); }
-
+    function isMyRow(rowIdx, rowEmployees, currentUser) {
+      const emp = rowEmployees[rowIdx];
+      if (!emp || !currentUser?.email) return false;
+      return (emp.email || '').toLowerCase() === currentUser.email.toLowerCase();
+    }
     /* ================================
        ホイール横スクロール
     =================================*/
@@ -572,7 +575,6 @@
     /* ================================
        行編集権限 / スクロール
     =================================*/
-    const isMyRow = (rowIdx, rowEmployees, currentUser)=>{ const emp=rowEmployees[rowIdx]; if(!emp||!currentUser?.email) return false; return (emp.email||'').toLowerCase()===currentUser.email.toLowerCase(); };
     function scrollColumnToLeft(h, container, colIndex){ const holder=container.querySelector('.ht_master .wtHolder'); if(!holder) return; const fixed=h.getSettings().fixedColumnsStart||0; h.scrollViewportTo(0,colIndex); requestAnimationFrame(()=>{ let offset=0; for(let c=fixed; c<colIndex; c++){ offset += h.getColWidth(c) || 0; } holder.scrollLeft=Math.max(0, offset-4); }); }
 
     /* ================================
@@ -620,7 +622,7 @@
         },
         afterChange:(changes, source)=>{
           if(!changes) return; const userSources=new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']); const isUser=userSources.has(source);
-          for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ markDirty(row,col,true); } }
+          for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=2){ markDirty(row,col,true); } }
           hot.render();
         },
         stretchH:'all', height:1000,
