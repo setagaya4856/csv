@@ -381,7 +381,8 @@
     /* ================================
        月タブとロード
     =================================*/
-    const monthCache = new Map();
+    window.__monthCache = window.__monthCache || new Map();
+    const monthCache = window.__monthCache;
     function monthsAround(baseDate, back=3, forward=3){ const list=[]; const d=new Date(baseDate.getFullYear(), baseDate.getMonth()-back, 1); const end=new Date(baseDate.getFullYear(), baseDate.getMonth()+forward+1, 1); while(d<end){ list.push(ymOf(d)); d.setMonth(d.getMonth()+1,1);} return list; }
 
     function buildMonthTabs(baseDate = todayJST()){
