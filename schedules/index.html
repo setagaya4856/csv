@@ -128,9 +128,6 @@ fieldset { margin: 8px 0; padding: 8px 10px; }
 
 /* ヘッダーも少し詰める */
 .handsontable th { padding-top: 2px; padding-bottom: 2px; }
-    #matrixGrid .ht_master .wtHolder {
-  overflow-y: visible !important;
-}
   </style>
 </head>
 <body>
@@ -171,8 +168,14 @@ fieldset { margin: 8px 0; padding: 8px 10px; }
       <div id="month-tabs" class="tabs"></div>
       </div>
     </div>
-    <div id="sched-list"></div>
-    <div id="matrixGrid" style="width:100%;"></div>
+    <div class="row" style="gap:12px; width:100%; margin:0 auto;">
+      <div style="flex:1 1 380px;min-width:320px">
+        <div id="sched-list-wrap">
+          <div id="sched-list"></div>
+        </div>
+      </div>
+    </div>
+    <div id="matrixGrid" style="height:520px;width:100%;"></div>
   </fieldset>
 </div>
   <script type="module">
@@ -243,7 +246,7 @@ async function fetchJsonStrict(fnName, opts) {
   return json ?? {};
 }
     function calcMatrixHeight(rowCount) {
-  const rowH = 22;  // 行高の目安（必要なら22〜26で微調整）
+  const rowH = 24;  // 行高の目安（必要なら22〜26で微調整）
   const head = 32;  // ヘッダ高の目安
   const pad  = 12;  // 余白
   return head + rowH * rowCount + pad; // ← 上限なし。画面からはみ出してOK
@@ -1262,17 +1265,10 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
     rowHeaders: true,
     licenseKey: 'non-commercial-and-evaluation',
     fixedColumnsStart: 2,
-    // ★ 自動行高をオフにして、固定値で揃える
-    autoRowSize: false,
-    rowHeights: 22,          // ← 好みで 22〜24
-    autoColumnSize: false,
     // Enterで右/Shift+Enterで左へ
     enterMoves: (e) => (e && e.shiftKey ? { row: 0, col: -1 } : { row: 0, col: 1 }),
     // 全セルに縮小レンダラーを適用
-    cells: (row, col) => ({
-      renderer: fitTextRenderer,
-      className: 'one-line-cell'
-    }),
+    cells: (row, col) => ({ renderer: fitTextRenderer }),
     // ① 右クリックはコピー/切り取り/貼り付け/Undo/Redo のみ（既存）
     contextMenu: {
       items: {
