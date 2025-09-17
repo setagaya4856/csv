@@ -794,18 +794,21 @@
            </div>`;
         }
         // 2) 通常イベント：日付見出しごとに列挙
-        const groups = new Map<string, any[]>();
+        const groups = new Map();
         for (const ev of normals) {
           const day = ev.date;
           if (!groups.has(day)) groups.set(day, []);
-          groups.get(day)!.push(ev);
+          groups.get(day).push(ev);
         }
         for (const [day, arr] of groups) {
           const d  = new Date(`${day}T00:00:00`);
           const wd = '日月火水木金土'[d.getDay()];
           html += `<h3>${day}（${wd}）</h3><ul style="margin:0 0 8px 16px;padding:0">`;
-          // 時刻順（timestart→timeend）
-          arr.sort((a,b) => (a.timestart||'').localeCompare(b.timestart||'') || (a.event||'').localeCompare(b.event||'ja'));
+          // 時刻→タイトル（日本語）で昇順
+          arr.sort((a,b) =>
+           (a.timestart || '').localeCompare(b.timestart || '') ||
+           (a.event     || '').localeCompare(b.event     || '', 'ja')
+          );
           for (const ev of arr) {
             const tstart = ev.timestart ? ev.timestart.slice(0,5) : '';
             const tend   = ev.timeend   ? ev.timeend.slice(0,5)   : '';
