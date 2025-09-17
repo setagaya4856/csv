@@ -395,6 +395,7 @@
           const e2 = document.getElementById('companyEntry');
           if (b2 && e2 && !e2.classList.contains('is-hidden')) { b2.click(); }
         }
+      });
     })();
 
     // 会社追加（管理者のみ可視だがボタン自体は常設）
@@ -408,12 +409,13 @@
         btn.textContent=open?'−':'＋';
         btn.setAttribute('aria-expanded', String(open));
         _LS.set(key, open);
-        if(open && !companyHot) renderCompanyEntryHot(); });
+        if(open && !companyHot) renderCompanyEntryHot();
         if (open) {  // ★ 片方を開いたらクイック登録は閉じる
           const b1 = document.getElementById('toggleQuickEntryBtn');
           const e1 = document.getElementById('quickEntry');
           if (b1 && e1 && !e1.classList.contains('is-hidden')) { b1.click(); }
         }
+      });
     })();
 
     // 会社予定一覧の開閉（常設）
