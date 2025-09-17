@@ -197,7 +197,7 @@ async function bootAppIfLoggedIn() {
   ensureCompanyEntryUI();
   ensureCompanyAddButtonPlaced();
   ensureQuickToggleButton();
-ensureCompanyAddToggleButton();
+  ensureCompanyAddToggleButton();
   await loadMonth(todayYm, { scrollToToday: true });
 }
     // ---- 起動時に必ず実行 ----
@@ -283,37 +283,78 @@ function ensureQuickToggleButton() {
 // ▼ 会社スケジュール「追加」欄：追加ボタン左に＋を置く（管理者のみ）
 function ensureCompanyAddToggleButton() {
   const isAdmin = !!(window.currentUser && currentUser.is_admin);
-  const addBtn = document.getElementById('companySaveBtn');
-  const entry = document.getElementById('companyEntry');
+  const quickBtn = document.getElementById('quickSaveBtn');
+  const addBtn   = document.getElementById('companySaveBtn'); // 追加ボタン（管理者のみ想定）
 
-  // 管理者以外 or まだ UI が無いときは何もしない
-  if (!isAdmin || !addBtn || !entry) return;
+  // 管理者でなければボタンを消す
+  let toggle = document.getElementById('toggleCompanyAddBtn');
+  if (!isAdmin) { if (toggle) toggle.remove(); return; }
 
-  let btn = document.getElementById('toggleCompanyAddBtn');
-  const key = 'open.companyEntry';
-  let open = _LS.get(key, false);   // 既定で閉じる
+  // 追加ボタンがまだ無い場合でも「＋」は見せたい
+  // quickSaveBtn の右隣に置く（addBtn があればその直前に差し替える）
+  const insertTarget = addBtn || quickBtn;
+  if (!insertTarget) return; // まれに起動順の関係で未描画なら次の機会に
 
-  setSectionVisible(entry, open);
-
-  if (!btn) {
-    btn = document.createElement('button');
-    btn.id = 'toggleCompanyAddBtn';
-    btn.className = 'icon-btn';
-    btn.type = 'button';
-    btn.style.marginRight = '6px';
-    setPlusMinus(btn, open);
-    addBtn.insertAdjacentElement('beforebegin', btn);
-
-    btn.addEventListener('click', () => {
-      open = !open;
-      setPlusMinus(btn, open);
-      setSectionVisible(entry, open);
-      _LS.set(key, open);
-    });
+  if (!toggle) {
+    toggle = document.createElement('button');
+    toggle.id = 'toggleCompanyAddBtn';
+    toggle.className = 'icon-btn';
+    toggle.type = 'button';
+    toggle.style.marginRight = '6px';
+    insertTarget.insertAdjacentElement('beforebegin', toggle);
   } else {
-    setPlusMinus(btn, open);
+    // 位置補正（addBtn が出現したら addBtn の直前へ移動）
+    if (addBtn && toggle.nextElementSibling !== addBtn) {
+      addBtn.insertAdjacentElement('beforebegin', toggle);
+    }
   }
+
+  // 収納対象のコンテナを用意（無ければ作る・隠す）
+  let entry = document.getElementById('companyEntry');
+  if (!entry) {
+    // quickEntry の横に置く（quickRow を使っている場合はそこへ）
+    const quickEntry = document.getElementById('quickEntry');
+    let quickRow = document.getElementById('quickRow');
+    if (!quickRow && quickEntry && quickEntry.parentNode) {
+      quickRow = document.createElement('div');
+      quickRow.id = 'quickRow';
+      quickRow.style.display = 'flex';
+      quickRow.style.gap = '12px';
+      quickRow.style.alignItems = 'flex-start';
+      quickEntry.parentNode.insertBefore(quickRow, quickEntry);
+      quickRow.appendChild(quickEntry);
+    }
+    entry = document.createElement('div');
+    entry.id = 'companyEntry';
+    (quickRow || quickEntry?.parentNode || document.body).appendChild(entry);
+  }
+
+  // 初期開閉状態（既定は閉）
+  const key = 'open.companyEntry';
+  let open = (() => { try { return JSON.parse(localStorage.getItem(key)) ?? false; } catch { return false; } })();
+  entry.classList.toggle('is-hidden', !open);
+  toggle.textContent = open ? '−' : '＋';
+  toggle.setAttribute('aria-expanded', String(open));
+
+  // 初回だけ遅延レンダ（HOT生成）
+  if (open && !entry.dataset._rendered) {
+    renderCompanyEntryHot();
+    entry.dataset._rendered = '1';
+  }
+
+  toggle.onclick = () => {
+    open = !open;
+    toggle.textContent = open ? '−' : '＋';
+    toggle.setAttribute('aria-expanded', String(open));
+    entry.classList.toggle('is-hidden', !open);
+    if (open && !entry.dataset._rendered) {
+      renderCompanyEntryHot();
+      entry.dataset._rendered = '1';
+    }
+    try { localStorage.setItem(key, JSON.stringify(open)); } catch {}
+  };
 }
+
 
 // ▼ 会社スケジュール“表示”欄（会社イベント一覧）：イベントがある月だけ＋を出す
 //   置き場所は「月タブバー右側のコントロール（#matrixCtrl）」の先頭に置きます。
@@ -742,6 +783,7 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
   toggleUIBySession(true);
   await loadCurrentUserAndEmployees();
   ensureCompanyEntryUI();
+  ensureCompanyAddToggleButton();        // ← ここで必ず「＋」を出す
 
   // まだタブが無ければ初期表示
   if (!document.querySelector('#month-tabs button')) {
@@ -766,6 +808,7 @@ document.getElementById('run')?.addEventListener('click', async () => {
   renderQuickEntryHot();
   await loadCurrentUserAndEmployees();
   ensureCompanyEntryUI();
+  ensureCompanyAddToggleButton();        // ← ここで必ず「＋」を出す
   await loadMonth(todayYm, { scrollToToday: true });
 });
 document.addEventListener('click', async (e) => {
