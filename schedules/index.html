@@ -248,7 +248,13 @@
       employeesAll = emps ?? [];
       employeesVisible = employeesAll.filter(e => e.is_active !== false);
       const me = employeesAll.find(e => (e.email||'').toLowerCase() === (email||'').toLowerCase());
-      currentUser = { email, employee_id: me?.id ?? null, is_admin: !!me?.is_admin , is_active: me?.is_active !== false};
+      currentUser = {
+        email,
+        employee_id: me?.id ?? null,
+        is_admin: !!me?.is_admin,
+        // employees に無い or is_active === false なら false
+        is_active: !!me && me.is_active !== false
+      };
       setAdminVisibility(currentUser.is_admin);
       setQuickEntryVisibility(currentUser.is_active);
       return currentUser;
