@@ -101,6 +101,14 @@
   flex: 1 1 360px;          /* 横並び2カラム想定、最小幅 320〜360px */
   min-width: 320px;
 }
+    .panel {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  /* ここが重要：外枠は中身に合わせて伸びる */
+  height: auto;
+  overflow: visible;   /* はみ出し禁止しない＝中身の高さで外枠が伸びる */
+}
   </style>
 </head>
 <body>
@@ -132,24 +140,18 @@
 </h1>
 <!-- ▼▼▼ ログイン済みだけ表示される領域 ▼▼▼ -->
 <div id="appRoot" style="display:none">
-  <fieldset>
+  <div id="mainPanel" class="panel">   <!-- ← 外枠はここに -->
     <div id="quickEntry" style="flex:1; min-width:360px"></div>
     <div class="tabsbar">
       <div id="matrixCtrl" class="tabs-ctrl">
         <button id="saveMatrixBtn" title="マトリクスでの変更を保存">変更を保存</button>
         <span id="dirtyBadge" style="display:none;color:#e53935;font-weight:600;">未保存の変更あり</span>
-      <div id="month-tabs" class="tabs"></div>
+        <div id="month-tabs" class="tabs"></div>
       </div>
     </div>
-    <div class="row" style="gap:12px; width:100%; margin:0 auto;">
-      <div style="flex:1 1 380px;min-width:320px">
-        <div id="sched-list-wrap">
-          <div id="sched-list"></div>
-        </div>
-      </div>
-    </div>
+    <div id="sched-list"></div>
     <div id="matrixGrid" style="width:100%;"></div>
-  </fieldset>
+  </div>
 </div>
   <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
