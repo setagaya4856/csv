@@ -217,14 +217,10 @@ async function fetchJsonStrict(fnName, opts) {
   return json ?? {};
 }
     function calcMatrixHeight(rowCount) {
-  const rowH = 24;     // 1行の目安（お好みで 22〜26 くらい）
-  const head = 32;     // ヘッダ部の目安
-  const pad  = 12;     // 余白
-  const wanted = head + rowH * rowCount + pad;
-
-  // 画面に収まる上限（タブやタイトルのぶん少し引く）
-  const maxH = Math.max(220, Math.floor(window.innerHeight * 0.7));
-  return Math.min(wanted, maxH);
+  const rowH = 24;  // 行高の目安（必要なら22〜26で微調整）
+  const head = 32;  // ヘッダ高の目安
+  const pad  = 12;  // 余白
+  return head + rowH * rowCount + pad; // ← 上限なし。画面からはみ出してOK
 }
     // ★ 追加：ログイン状態でUI切替
 function toggleUIBySession(isLoggedIn) {
