@@ -216,6 +216,16 @@ async function fetchJsonStrict(fnName, opts) {
   }
   return json ?? {};
 }
+    function calcMatrixHeight(rowCount) {
+  const rowH = 24;     // 1行の目安（お好みで 22〜26 くらい）
+  const head = 32;     // ヘッダ部の目安
+  const pad  = 12;     // 余白
+  const wanted = head + rowH * rowCount + pad;
+
+  // 画面に収まる上限（タブやタイトルのぶん少し引く）
+  const maxH = Math.max(220, Math.floor(window.innerHeight * 0.7));
+  return Math.min(wanted, maxH);
+}
     // ★ 追加：ログイン状態でUI切替
 function toggleUIBySession(isLoggedIn) {
   console.log('toggleUIBySession', { isLoggedIn });
@@ -1210,6 +1220,8 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
   function renderMatrixHot(items, ym, opts = {}) {
   const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
   const container = document.getElementById('matrixGrid');
+  const heightPx = calcMatrixHeight(data.length);
+  container.style.height = heightPx + 'px';
   const maxRows = data.length;
   const maxCols = colHeaders.length;
   const today = todayStrJST();
@@ -1333,7 +1345,7 @@ const isMyRow = (rowIdx, rowEmployees, currentUser) => {
     },
 
     stretchH: 'all',
-    height: 520,
+    height: heightPx,
     // ★ 列幅調整：名前=180 / メモ=180 / 以降=110
     colWidths: (index) => (index === 0 ? 110 : index === 1 ? 180 : 110),
   };
@@ -1728,6 +1740,13 @@ document.getElementById('sched-list')?.addEventListener('click', async (e) => {
 document.getElementById('logoutBtn')?.addEventListener('click', async () => {
   await supabase.auth.signOut();    // ← サインアウト
   // UIは onAuthStateChange 内の toggleUIBySession(false) でモーダル表示に戻る
+});
+    window.addEventListener('resize', () => {
+  if (!hot) return;
+  const h = calcMatrixHeight(hot.countRows());
+  document.getElementById('matrixGrid').style.height = h + 'px';
+  hot.updateSettings({ height: h });
+  hot.render();
 });
   </script>
 </body>
