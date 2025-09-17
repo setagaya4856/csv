@@ -68,7 +68,7 @@
     .hot-btn:hover{ background:#f6f6f6; }
 
     /* 会社予定一覧ラッパ */
-    #sched-list-wrap{ max-height:140px; overflow:auto; border:1px solid #ddd; border-radius:6px; padding:6px 8px; background:#fff; }
+    #sched-list-wrap{ max-height:420px; overflow:auto; border:1px solid #ddd; border-radius:6px; padding:6px 8px; background:#fff; }
     #sched-list h3{ margin:6px 0; font-size:14px; }
     #sched-list li{ margin:2px 0; line-height:1.2; }
 
@@ -134,6 +134,9 @@
     <!-- ▼ 会社スケジュール追加のトグル＆追加ボタン（HTMLに常設, 管理者のみ可視） -->
     <button id="toggleCompanyAddBtn" class="icon-btn admin-only" aria-expanded="false">＋</button>
     <button id="companySaveBtn" class="admin-only" title="全体スケジュールを追加">全体表示登録</button>
+    <p style="color:#666; font-size:.85em; margin:4px 0 0;">
+  　　備考/内容で改行するときは <kbd>Alt</kbd>+<kbd>Enter</kbd> を使ってください
+　　</p>
   </h1>
 
   <!-- ログイン後エリア -->
@@ -283,7 +286,6 @@
         start: '', 
         end: '', 
         title: '',                  // 表示名（通達タイトル）
-        body: '',                   // 通達本文（改行OK）
         memo: ''                    // 既存の補足
       }];
       const settings = {
@@ -317,11 +319,10 @@
           { data:'start', type:'text', validator:(v,cb)=>cb(isValidTimeHHMM(v)), allowInvalid:false },
           { data:'end',   type:'text', validator:(v,cb)=>cb(isValidTimeHHMM(v)), allowInvalid:false },
           { data:'title', type:'text' },
-          { data: 'body',  type: 'text' },   
           { data:'memo',  type:'text' },
         ],
-        colHeaders: ['種別','開始日','終了日','開始(HH:MM)','終了(HH:MM)','行事名/タイトル','本文','備考'],
-        colWidths:   [ 80,   120,    120,     120,          120,         240,            260,   200],
+        colHeaders: ['種別','開始日','終了日','開始(HH:MM)','終了(HH:MM)','行事名/タイトル','備考/内容'],
+        colWidths:   [ 80,   120,    120,     120,          120,         240,            1000],
       };
       if(companyHot) companyHot.updateSettings(settings); else companyHot = new Handsontable(container, settings);
     }
@@ -383,7 +384,17 @@
       const key='open.quickEntry'; const btn=$('#toggleQuickEntryBtn'); const entry=$('#quickEntry');
       let open = _LS.get(key, false); // 既定は閉
       entry.classList.toggle('is-hidden', !open); btn.textContent = open?'−':'＋'; btn.setAttribute('aria-expanded', String(open));
-      btn.addEventListener('click', ()=>{ open=!open; entry.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open)); _LS.set(key, open); });
+      btn.addEventListener('click', ()=>{
+        open=!open;
+        entry.classList.toggle('is-hidden', !open);
+        btn.textContent=open?'−':'＋';
+        btn.setAttribute('aria-expanded', String(open));
+        _LS.set(key, open); 
+        if (open) {  // ★ 片方を開いたら会社追加は閉じる
+          const b2 = document.getElementById('toggleCompanyAddBtn');
+          const e2 = document.getElementById('companyEntry');
+          if (b2 && e2 && !e2.classList.contains('is-hidden')) { b2.click(); }
+        }
     })();
 
     // 会社追加（管理者のみ可視だがボタン自体は常設）
@@ -391,7 +402,18 @@
       const key='open.companyEntry'; const btn=$('#toggleCompanyAddBtn'); const entry=$('#companyEntry');
       let open = _LS.get(key, false);
       entry.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open));
-      btn.addEventListener('click', ()=>{ open=!open; entry.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open)); _LS.set(key, open); if(open && !companyHot) renderCompanyEntryHot(); });
+      btn.addEventListener('click', ()=>{
+        open=!open;
+        entry.classList.toggle('is-hidden', !open);
+        btn.textContent=open?'−':'＋';
+        btn.setAttribute('aria-expanded', String(open));
+        _LS.set(key, open);
+        if(open && !companyHot) renderCompanyEntryHot(); });
+        if (open) {  // ★ 片方を開いたらクイック登録は閉じる
+          const b1 = document.getElementById('toggleQuickEntryBtn');
+          const e1 = document.getElementById('quickEntry');
+          if (b1 && e1 && !e1.classList.contains('is-hidden')) { b1.click(); }
+        }
     })();
 
     // 会社予定一覧の開閉（常設）
@@ -731,7 +753,7 @@
       const d2=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       const { data, error } = await supabase
         .from('company_events')
-        .select('id, kind, date, date_end, timestart, timeend, event, body, memo')
+        .select('id, kind, date, date_end, timestart, timeend, event, memo')
         // 期間が当月と交差するもの（date_end NULL は単日とみなす）
         .or(`and(date.gte.${d2(start)},date.lt.${d2(end)}),and(date.lte.${d2(end)},date_end.gte.${d2(start)})`)
         .order('date', { ascending: true })
@@ -752,42 +774,54 @@
           }
           return;
         }
-        const groups=new Map(); for(const ev of events){ const day=ev.date; if(!groups.has(day)) groups.set(day, []); groups.get(day).push(ev); }
+        // ★ notice を先に、続いて event（同一種内は日付→開始時間で昇順）
+        const notices = events.filter(ev => ev.kind === 'notice');
+        const normals = events.filter(ev => ev.kind !== 'notice');
         let html='';
-        for(const [day,arr] of groups){ const d=new Date(`${day}T00:00:00`); const wd='日月火水木金土'[d.getDay()]; html+=`<h3>${day}（${wd}）</h3><ul style="margin:0 0 8px 16px;padding:0">`;
-          for(const ev of arr){
-            const isNotice = ev.kind === 'notice';
+        // 1) お知らせ：個別に日付見出しなしで列挙（優先表示）
+        for (const ev of notices) {
+          const range = ev.date_end ? `${ev.date} 〜 ${ev.date_end}` : `${ev.date}`;
+          const memo  = ev.memo ? `<div style="color:#333; font-size:.9em; white-space:pre-wrap; margin-top:2px;">${escapeHtml(ev.memo)}</div>` : '';
+          const delBtn = currentUser?.is_admin ? `<button class="ev-del admin-only" data-ev-id="${ev.id}">削除</button>` : '';
+          html += `
+            <div class="ev-item" style="border-left:4px solid #9c27b0; padding-left:8px; margin:6px 0;">
+              ${delBtn}
+              <div class="ev-main">
+               <div style="font-weight:700; white-space:pre-wrap;">${escapeHtml(ev.event)}</div>
+               ${ev.date_end ? `<div style="color:#555; font-size:.9em;">${range}</div>` : ''} <!-- 単日なら期間は任意 -->
+               ${memo}
+             </div>
+           </div>`;
+        }
+        // 2) 通常イベント：日付見出しごとに列挙
+        const groups = new Map<string, any[]>();
+        for (const ev of normals) {
+          const day = ev.date;
+          if (!groups.has(day)) groups.set(day, []);
+          groups.get(day)!.push(ev);
+        }
+        for (const [day, arr] of groups) {
+          const d  = new Date(`${day}T00:00:00`);
+          const wd = '日月火水木金土'[d.getDay()];
+          html += `<h3>${day}（${wd}）</h3><ul style="margin:0 0 8px 16px;padding:0">`;
+          // 時刻順（timestart→timeend）
+          arr.sort((a,b) => (a.timestart||'').localeCompare(b.timestart||'') || (a.event||'').localeCompare(b.event||'ja'));
+          for (const ev of arr) {
+            const tstart = ev.timestart ? ev.timestart.slice(0,5) : '';
+            const tend   = ev.timeend   ? ev.timeend.slice(0,5)   : '';
+            const time   = tstart && tend ? `${tstart}–${tend}` : (tstart || '');
+            const memo   = ev.memo ? `<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(ev.memo)}</div>` : '';
             const delBtn = currentUser?.is_admin ? `<button class="ev-del admin-only" data-ev-id="${ev.id}">削除</button>` : '';
-            if (isNotice) {
-              // 通達：タイトル改行OK＋本文（body）＋期間表示
-              const range = ev.date_end ? `${ev.date} 〜 ${ev.date_end}` : `${ev.date}`;
-              const body = ev.body ? `<div style="white-space:pre-wrap; color:#333; margin-top:2px;">${escapeHtml(ev.body)}</div>` : '';
-              html += `
-                <li class="ev-item" style="border-left:4px solid #9c27b0; padding-left:8px;">
+            html += `
+              <li class="ev-item">
                 ${delBtn}
                 <div class="ev-main">
-                <div style="font-weight:700; white-space:pre-wrap;">${escapeHtml(ev.event)}</div>
-                <div style="color:#555; font-size:.9em;">${range}</div>
-                ${body}
+                  <strong style="white-space:pre-wrap">${escapeHtml(ev.event)}</strong> ${time}
+                  ${memo}
                 </div>
-                </li>`;
-            } else {
-              // 通常イベント：従来表示
-              const tstart = ev.timestart ? ev.timestart.slice(0,5) : '';
-              const tend   = ev.timeend   ? ev.timeend.slice(0,5)   : '';
-              const time   = tstart && tend ? `${tstart}–${tend}` : (tstart || '');
-              const memo   = ev.memo ? `<div style="color:#666;font-size:.9em;white-space:pre-wrap">${escapeHtml(ev.memo)}</div>` : '';
-              html += `
-                <li class="ev-item">
-                ${delBtn}
-                <div class="ev-main">
-                <strong>${escapeHtml(ev.event)}</strong> ${time}
-                ${memo}
-                </div>
-                </li>`;
-            }
+              </li>`;
           }
-          html+='</ul>';
+          html += `</ul>`;
         }
         listEl.innerHTML = html;
         window.__syncCompanyListToggle?.();
@@ -813,7 +847,7 @@
       if (!companyHot) return;
     
       try {
-        const [kind, date, date_end, startRaw, endRaw, title, body, memo] =
+        const [kind, date, date_end, startRaw, endRaw, title, memo] =
           companyHot.getDataAtRow(0).map(v => (v ?? '').toString().trim());
     
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { alert('日付は YYYY-MM-DD で入力してください'); return; }
@@ -830,7 +864,7 @@
         await upsertCompanyEvent({
           kind, date, date_end: dateEndIso,
           timestart: start, timeend: end,
-          event: title, body, memo
+          event: title, memo
         });
     
         const activeYm = document.querySelector('#month-tabs button.active')?.dataset.month;
