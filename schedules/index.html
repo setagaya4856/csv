@@ -196,7 +196,65 @@
     function todayJST(){ const now = new Date(); return new Date(now.getTime() + (9*60 + now.getTimezoneOffset())*60000); }
     function ymOf(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
     function todayStrJST(){ const dt = new Date(); const f = new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}); const parts = Object.fromEntries(f.formatToParts(dt).map(p=>[p.type,p.value])); return `${parts.year}-${parts.month}-${parts.day}`; }
-
+   
+    /* ================================
+       描画範囲取得ユーティリティ
+    =================================*/
+    function getViewportHeight(){
+      if (window.visualViewport && typeof window.visualViewport.height === 'number') {
+        return Math.floor(window.visualViewport.height);
+      }
+      return Math.floor(document.documentElement.clientHeight || window.innerHeight || 800);
+    }
+    
+    // 要素のページ上端からのY位置（スクロールを加味）
+    function pageOffsetTop(el){
+      const r = el.getBoundingClientRect();
+      return Math.floor(r.top + window.scrollY);
+    }
+    
+    // matrixの高さを計算して反映
+    function resizeMatrixHeight(extraBottom = 12){
+      const container = document.getElementById('matrixGrid');
+      if (!container) return;
+      const vp = getViewportHeight();
+      const top = Math.floor(container.getBoundingClientRect().top); // 画面内の“今の”上端
+      // 上の行で getBoundingClientRect().top を使うことで、スクロール中でも正確に残り高さを取れる
+      let h = vp - top - extraBottom; // ちょい下余白
+      const MIN = 260, MAX = 2000;    // 好みで
+      h = Math.max(MIN, Math.min(MAX, h));
+      // Handsontable に反映
+      if (window.hot) {
+        hot.updateSettings({ height: h });
+        hot.render();
+      }
+      // ついでに外側divも明示しておくと再レイアウトが安定
+      container.style.height = h + 'px';
+    }
+    
+    /* ================================
+       描画範囲変更取得
+    =================================*/
+    // 画面/ズーム/モバイルアドレスバー変化
+    window.addEventListener('resize', () => requestAnimationFrame(resizeMatrixHeight));
+    window.visualViewport?.addEventListener('resize', () => requestAnimationFrame(resizeMatrixHeight));
+    window.addEventListener('orientationchange', () => setTimeout(resizeMatrixHeight, 50));
+    
+    // あなたのUIトグル（クイック登録・会社追加・一覧の開閉）後にも再計算
+    ['toggleQuickEntryBtn','toggleCompanyAddBtn','toggleCompanyListBtn'].forEach(id=>{
+      document.getElementById(id)?.addEventListener('click', ()=>{
+        // 開閉アニメや再レイアウト完了後に
+        setTimeout(resizeMatrixHeight, 80);
+      });
+    });
+    
+    // 月タブ切替や、会社予定一覧の再描画後にも
+    document.getElementById('month-tabs')?.addEventListener('click', ()=>{
+      setTimeout(resizeMatrixHeight, 80);
+    });
+    
+    // ログイン直後、初期化後
+    document.addEventListener('DOMContentLoaded', ()=> setTimeout(resizeMatrixHeight, 80));
     /* ================================
        権限表示切り替え（★新設）
        - .admin-only を一括で可視/不可視
@@ -691,13 +749,14 @@
           for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ markDirty(row,col,true); } }
           hot.render();
         },
-        stretchH:'all', height:1000,
+        stretchH:'all', height:500,
         colWidths:(i)=> (i===0?110:(i===1?180:110)),
       };
       settings._rowEmployees=rowEmployees; settings._colDates=colDates;
       if(hot){ hot.updateSettings(settings); hot.render(); } else { hot = new Handsontable(container, settings); }
       for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
       hot.render();
+      requestAnimationFrame(() => resizeMatrixHeight());
       // スクロール
       if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, col)); hot.render(); }
       else { hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, 1)); hot.render(); }
