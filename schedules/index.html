@@ -213,19 +213,31 @@
        描画範囲取得ユーティリティ
     =================================*/
     // 親(#matrixGrid)サイズに合わせて HOT の高さを追従させる
-    function bindHotToGridHeight(){
+    function bindHotToGridHeight(extraBottom = 12) {
       const gridEl = document.getElementById('matrixGrid');
       if (!gridEl) return;
+      // リサイズの連発を抑える小さなデバウンス
+      let rafId = null;
       const apply = () => {
         if (!hot) return;
-        const h = Math.max(260, gridEl.clientHeight);
+        let h = gridEl.clientHeight - extraBottom;   // ★ 下余白ぶんを引く
+        // スクロールバーが出る環境での見切れが気になるなら微小補正
+        const holder = gridEl.querySelector('.wtHolder');
+        const sbH = holder ? (holder.offsetHeight - holder.clientHeight) : 0;
+        h -= sbH;
+        h = Math.max(260, h); // 最小値はお好みで
         hot.updateSettings({ height: h });
         hot.render();
+        rafId = null;
       };
-      // 初期1回
-      requestAnimationFrame(apply);
-      // 以後、親のサイズ変化を監視
-      const ro = new ResizeObserver(apply);
+      const schedule = () => {
+        if (rafId != null) return;
+        rafId = requestAnimationFrame(apply);
+      };
+      // 初回
+      schedule();
+      // 親のサイズ変化を監視（上部UI開閉・ウィンドウサイズ変更などすべて拾える）
+      const ro = new ResizeObserver(schedule);
       ro.observe(gridEl);
     }
     
@@ -730,7 +742,7 @@
       if(hot){ hot.updateSettings(settings); hot.render(); } else { hot = new Handsontable(container, settings); }
       for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
       hot.render();
-      bindHotToGridHeight();
+      bindHotToGridHeight(24);
       // スクロール
       if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, col)); hot.render(); }
       else { hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, 1)); hot.render(); }
