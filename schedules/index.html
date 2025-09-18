@@ -218,8 +218,6 @@
       const container = document.getElementById('matrixGrid');
       if (!container) return;
       const vp = getViewportHeight();
-      const top = Math.floor(container.getBoundingClientRect().top); // 画面内の“今の”上端
-      // 上の行で getBoundingClientRect().top を使うことで、スクロール中でも正確に残り高さを取れる
       let h = vp  - extraBottom; // ちょい下余白
       const MIN = 260, MAX = 2000;    // 好みで
       h = Math.max(MIN, Math.min(MAX, h));
