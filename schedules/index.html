@@ -68,8 +68,21 @@
     .hot-btn:hover{ background:#f6f6f6; }
 
     /* 会社予定一覧ラッパ */
-    #sched-list-wrap{ max-height:420px; overflow:auto; border:1px solid #ddd; border-radius:6px; padding:6px 8px; background:#fff; }
-    #sched-list h3{ margin:6px 0; font-size:14px; }
+    #sched-list-wrap{
+      position: relative;              /* stickyの基準になるスクロール親 */
+      max-height:420px;
+      overflow:auto;
+    }
+    #sched-list h3{
+      position: sticky;
+      top: 0;                          /* リストの上端に吸着 */
+      margin: 0;                       /* ずれ防止 */
+      padding: 6px 0;
+      background: #fff;                /* スクロール時に下の文字が透けないように */
+      z-index: 2;
+      border-bottom: 1px solid #eee;   /* 見切れ防止の罫線（任意） */
+      box-shadow: 0 1px 0 rgba(0,0,0,.04); /* ほんのり区切り（任意） */
+    }
     #sched-list li{ margin:2px 0; line-height:1.2; }
 
     /* 変更中セルの赤枠 */
