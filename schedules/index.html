@@ -224,7 +224,7 @@
       const MIN = 260, MAX = 2000;    // 好みで
       h = Math.max(MIN, Math.min(MAX, h));
       // Handsontable に反映
-      if (window.hot) {
+      if (hot) {
         hot.updateSettings({ height: h });
         hot.render();
       }
@@ -749,7 +749,7 @@
           for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ markDirty(row,col,true); } }
           hot.render();
         },
-        stretchH:'all', height:500,
+        stretchH:'all', height:300,
         colWidths:(i)=> (i===0?110:(i===1?180:110)),
       };
       settings._rowEmployees=rowEmployees; settings._colDates=colDates;
