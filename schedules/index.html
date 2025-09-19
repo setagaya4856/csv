@@ -586,57 +586,79 @@
     /* ================================
        マトリクス構築（従業員全員／AMPM）
     =================================*/
-    function isPlainPrintableKey(e){
-      if (!e) return false;
-      if (e.key && e.key.length === 1) return true; // 'a', 'あ', '1', ' ' など
-      if (e.key === 'Enter') return true;
-      return false;
+// ---- 共有ヘルパー（1回だけ定義）----
+function isPlainPrintableKey(e){
+  if (!e) return false;
+  if (e.ctrlKey || e.metaKey || e.altKey) return false;
+  // 1文字キー（スペース含む）を印字キーとみなす
+  return typeof e.key === 'string' && e.key.length === 1;
+}
+
+function installArrowAndImeGuards(hot){
+  if (!hot || hot.__imeGuardsInstalled) return;
+  hot.__imeGuardsInstalled = true;
+
+  let composing = false;
+
+  // エディタの textarea に composition フラグを張る
+  hot.addHook('afterBeginEditing', () => {
+    const ta = hot.getActiveEditor()?.TEXTAREA;
+    if (!ta || ta.__imeBound) return;
+    ta.__imeBound = true;
+    ta.addEventListener('compositionstart', () => { composing = true; });
+    ta.addEventListener('compositionend',   () => { composing = false; });
+  });
+
+  // IME合成中は Handsontable のキー処理を止める
+  hot.addHook('beforeKeyDown', (e) => {
+    if (!e) return;
+    if (composing || e.isComposing || e.keyCode === 229 || e.key === 'Process') {
+      // IME入力はブラウザに任せたいので HOT のショートカット/移動だけ止める
+      e.stopImmediatePropagation();
+      // preventDefault は基本しない（IMEの既定動作を殺さない）
     }
-    
-    // IME開始のキー（Windowsだと key === 'Process' / keyCode === 229）
-    function isImeStartKey(e){
-      return !!(e && (e.isComposing || e.key === 'Process' || e.keyCode === 229));
-    }function installOpenEditorOnFirstKey(hot){
+  });
+}
+
+function installOpenEditorOnFirstKey(hot){
   if (!hot || hot.__openEditorCaptureInstalled) return;
   hot.__openEditorCaptureInstalled = true;
 
   const root = hot.rootElement;
 
   const handler = (e) => {
-    // --- デバッグ ---
-    console.debug('[DBG keydown]', e.key, { isComposing: e.isComposing, code: e.code });
-
-    // 既にエディタ開いてたら何もしない
+    // 既にエディタが開いていれば何もしない
     const ed = hot.getActiveEditor?.();
     const isOpen = ed && ed.isOpened && ed.isOpened();
     if (isOpen) return;
 
-    // 選択セルがない / 編集不可セルはスキップ
+    // セル選択がない／編集不可セルは無視
     const sel = hot.getSelectedLast?.();
     if (!sel) return;
     const [r, c] = sel;
     const meta = hot.getCellMeta(r, c);
     if (meta.readOnly || meta.type === 'dropdown' || meta.type === 'checkbox') return;
 
-    // 矢印やTabなどのナビゲーションキーはスキップ
-    const navKeys = new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab','PageUp','PageDown','Home','End']);
+    // 矢印/Tab/ページ系はナビ用 → エディタ開かない
+    const navKeys = new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab','PageUp','PageDown','Home','End','Escape']);
     if (navKeys.has(e.key)) return;
 
-    // 印字キー or IME開始トリガっぽいキーだけ拾う
-    if (isPlainPrintableKey(e) || isImeStartKey(e)) {
-      console.debug('[DBG] beginEditing via active editor');
-      // ★ ここがポイント：インスタンスではなくアクティブエディタに対して beginEditing
+    // 印字キー or IME開始トリガっぽいキー
+    const imeStart = (e.key === 'Process' || e.keyCode === 229);
+    if (isPlainPrintableKey(e) || imeStart) {
       const editor = hot.getActiveEditor?.();
-      editor?.beginEditing?.('', e);   // 初期値は空、イベントを渡しておく
+      // 最初のキーを捨てずに、そのまま textarea に届くように editor だけ先に開く
+      editor?.beginEditing?.('', e);
       editor?.TEXTAREA?.focus();
 
-      // HOT 側の keydown を止める（IMEは止めないので preventDefault しない）
+      // HOT の keydown リスナーより先に動いているので、HOT 側の処理は止める
       e.stopPropagation();
       e.stopImmediatePropagation();
+      // preventDefault はしない（IME既定動作は生かす）
     }
   };
 
-  // Handsontable のリスナより先に動くよう capture で登録
+  // Handsontable の内部より先に処理したいので capture:true
   root.addEventListener('keydown', handler, { capture: true, passive: false });
 
   hot.addHook('afterDestroy', () => {
