@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -614,12 +615,6 @@
     const _ctx = _measureCanvas.getContext('2d');
     function measureTextWidth(text, font){ _ctx.font = font; return _ctx.measureText(text).width; }
     function fitTextRenderer(instance, td, row, col, prop, value){
-      // 編集中のセルには触らない（オーバーレイに任せる）
-      const ed = instance.getActiveEditor?.();
-      if (ed && ed.isOpened && ed.isOpened() &&
-          ed.cellProperties?.row === row && ed.cellProperties?.col === col) {
-        return;
-      }
       Handsontable.renderers.TextRenderer.apply(this, arguments);
       td.style.whiteSpace='nowrap'; td.style.overflow='hidden'; td.style.textOverflow='ellipsis';
       const raw = (value==null?'':String(value)); const show = raw.replace(/\r?\n/g, ' / ');
@@ -656,161 +651,20 @@
     const dirtyKey=(r,c)=>`${r}:${c}`;
     function addClassMeta(h,r,c,cls){ const meta=h.getCellMeta(r,c); const now=new Set(String(meta.className||'').split(/\s+/).filter(Boolean)); if(!now.has(cls)){ now.add(cls); h.setCellMeta(r,c,'className', Array.from(now).join(' ')); } }
     function removeClassMeta(h,r,c,cls){ const meta=h.getCellMeta(r,c); const next=String(meta.className||'').split(/\s+/).filter(x=>x&&x!==cls).join(' '); h.setCellMeta(r,c,'className', next); }
-    function safeRenderIfIdle(h){
-      const ed = h?.getActiveEditor?.();
-      const open = ed && ed.isOpened && ed.isOpened();
-      if (!open) {
-        // 編集を邪魔しないよう次フレームで反映
-        requestAnimationFrame(()=> h?.render());
-      }
-    }
-    function markDirty(row,col,yes){ const key=dirtyKey(row,col); if(yes){ dirtyCells.add(key); if(hot) addClassMeta(hot,row,col,'dirty-cell'); } else { dirtyCells.delete(key); if(hot) removeClassMeta(hot,row,col,'dirty-cell'); } updateDirtyBadge(); safeRenderIfIdle(hot);}
-    function clearAllDirty(){ for(const k of dirtyCells){ const [r,c]=k.split(':').map(Number); if(hot) removeClassMeta(hot,r,c,'dirty-cell'); } dirtyCells.clear(); updateDirtyBadge(); safeRenderIfIdle(hot);}
+    function markDirty(row,col,yes){ const key=dirtyKey(row,col); if(yes){ dirtyCells.add(key); if(hot) addClassMeta(hot,row,col,'dirty-cell'); } else { dirtyCells.delete(key); if(hot) removeClassMeta(hot,row,col,'dirty-cell'); } const td=hot?.getCell(row,col); if(td) td.classList.toggle('dirty-cell', !!yes); updateDirtyBadge(); }
+    function clearAllDirty(){ for(const k of dirtyCells){ const [r,c]=k.split(':').map(Number); if(hot) removeClassMeta(hot,r,c,'dirty-cell'); const td=hot?.getCell(r,c); if(td) td.classList.remove('dirty-cell'); } dirtyCells.clear(); updateDirtyBadge(); }
     function hasDirty(){ return dirtyCells.size>0; }
     function updateDirtyBadge(){ const el=$('#dirtyBadge'); if(!el) return; el.style.display = hasDirty()? '':'none'; }
 
     /* ================================
        マトリクス描画
     =================================*/
-function installImeGuards(hot, container){
-  if(!hot || hot.__imeGuardsInstalled) return;
-  hot.__imeGuardsInstalled = true;
-
-  // ─────────────────────────────────────
-  // 共通ユーティリティ
-  const getSel = () => hot.getSelectedLast?.();
-  const getEd  = () => hot.getActiveEditor?.();
-  const canEditSel = () => {
-    const s = getSel(); if(!s) return false;
-    const [r,c] = [s[0], s[1]];
-    const meta = hot.getCellMeta(r,c);
-    return !meta?.readOnly;
-  };
-
-  // IME/合成の「兆候」を判定
-  const isImeKeydown = (e) => {
-    // Chrome系: key === "Process" / keyCode === 229 / isComposing
-    if (e.key === 'Process' || e.keyCode === 229 || e.isComposing === true) return true;
-    // 一部環境で key が "Unidentified" になるケース
-    if (e.key === 'Unidentified') return true;
-    return false;
-  };
-  const isPlainChar = (e) => (
-    typeof e.key === 'string' &&
-    e.key.length === 1 &&
-    !e.ctrlKey && !e.metaKey && !e.altKey
-  );
-
-  // グローバルちょい短寿命フラグ：IME開始直後の「誤1文字」を beforeChange で握り潰すため
-  let imeGuardWindow = 0;
-  const openImeWindow = () => { imeGuardWindow = Date.now(); };
-  const inImeWindow   = () => (Date.now() - imeGuardWindow) < 400; // 0.4秒程度
-
-  // ─────────────────────────────────────
-  // バリア①：DOM キャプチャ段階で先に奪う（Handsontable より前）
-  // 対象はホルダとドキュメント双方（環境差を潰す）
-  const holder = container.querySelector('.ht_master .wtHolder') || container;
-  const captureKeydown = (e) => {
-    const ed = getEd();
-    const isOpen = ed && ed.isOpened && ed.isOpened();
-
-    if (isOpen || !canEditSel()) return;
-
-    if (isImeKeydown(e) || isPlainChar(e)) {
-      // 最初の1発を Handsontable に渡さない
-      e.preventDefault();
-      e.stopImmediatePropagation?.();
-
-      // 先に空でエディタを開く
-      ed?.beginEditing?.('');
-
-      // IMEでなければ打鍵1文字を流し込む
-      if (!isImeKeydown(e) && isPlainChar(e) && ed?.TEXTAREA) {
-        const ta = ed.TEXTAREA;
-        ta.value = (ta.value || '') + e.key;
-        ta.dispatchEvent(new Event('input', { bubbles:true }));
-      } else {
-        openImeWindow();
-        ed?.TEXTAREA?.focus();
-      }
-    }
-  };
-  holder.addEventListener('keydown', captureKeydown, { capture:true });
-  document.addEventListener('keydown', captureKeydown, { capture:true });
-
-  // ─────────────────────────────────────
-  // バリア②：Handsontable の beforeKeyDown でも同じことを実施（取りこぼし保険）
-  hot.addHook('beforeKeyDown', (e) => {
-    const ed = getEd();
-    const isOpen = ed && ed.isOpened && ed.isOpened();
-    if (isOpen || !canEditSel()) return;
-
-    if (isImeKeydown(e) || isPlainChar(e)) {
-      e.preventDefault();
-      e.stopImmediatePropagation?.();
-      ed?.beginEditing?.('');
-
-      if (!isImeKeydown(e) && isPlainChar(e) && ed?.TEXTAREA) {
-        const ta = ed.TEXTAREA;
-        ta.value = (ta.value || '') + e.key;
-        ta.dispatchEvent(new Event('input', { bubbles:true }));
-      } else {
-        openImeWindow();
-        ed?.TEXTAREA?.focus();
-      }
-    }
-  });
-
-  // ─────────────────────────────────────
-  // バリア③：それでも差し込まれた「最初の半角1文字」を beforeChange で無効化
-  // 条件：
-  //  - ソースが edit / CopyPaste.paste（稀にedit扱いされない環境向け）
-  //  - oldVal が空 or null（最初の1文字）
-  //  - newVal が ASCII 1文字
-  //  - 直前に IME ガードウィンドウが開いていた
-  const isAscii1 = (s) => typeof s === 'string' && s.length === 1 && /^[\x00-\x7F]$/.test(s);
-  hot.addHook('beforeChange', (changes, source) => {
-    if (!changes || !changes.length) return;
-    if (!['edit','CopyPaste.paste','Autofill.fill'].includes(source)) return;
-
-    for (let i=changes.length-1; i>=0; i--) {
-      const [row, col, oldVal, newVal] = changes[i];
-      if (col <= 0) continue; // 名前/メモ列などは除外したければ調整
-      const wasEmpty = oldVal == null || String(oldVal) === '';
-      if (wasEmpty && isAscii1(String(newVal)) && inImeWindow()) {
-        // この変更は「誤爆の最初の半角」っぽいので捨てる
-        changes.splice(i, 1);
-      }
-    }
-    // changes を空にすると HOT は何もしない（キャンセル扱い）
-  });
-
-  // ─────────────────────────────────────
-  // 文字入力フィールドの属性を日本語向けに
-  hot.addHook('afterBeginEditing', () => {
-    const ed = getEd();
-    const ta = ed?.TEXTAREA;
-    if (!ta) return;
-    // 入力ヒントの英数化を抑止
-    ta.setAttribute('lang', 'ja');
-    ta.setAttribute('inputmode', 'text');
-    ta.autocapitalize = 'off';
-    ta.spellcheck = false;
-  });
-
-  // クリーンアップ（必要なら）
-  hot.addHook('afterDestroy', () => {
-    holder.removeEventListener('keydown', captureKeydown, { capture:true });
-    document.removeEventListener('keydown', captureKeydown, { capture:true });
-  });
-}
-
     function renderMatrixHot(items, ym, opts={}){
       const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
       const container = $('#matrixGrid'); const today = todayStrJST();
       const canEditRow = (rowIdx)=> currentUser.is_admin || ((rowEmployees[rowIdx]?.email||'').toLowerCase() === (currentUser.email||'').toLowerCase());
       const settings = {
-        data, colHeaders, rowHeaders:true, licenseKey:'non-commercial-and-evaluation', fixedColumnsStart:2,theme: 'modern', 
+        data, colHeaders, rowHeaders:true, licenseKey:'non-commercial-and-evaluation', fixedColumnsStart:2,
         enterMoves:(e)=>(e&&e.shiftKey?{row:0,col:-1}:{row:0,col:1}),
         cells:(row,col)=>({ renderer:fitTextRenderer }),
         contextMenu:{ items:{ copyCustom:{ name:'コピー', callback:()=>copySelection(hot), disabled:()=>!hot.getSelectedRangeLast?.()||!navigator.clipboard?.writeText }, cutCustom:{ name:'切り取り', callback:()=>cutSelection(hot), disabled:()=>!hot.getSelectedRangeLast?.()||!navigator.clipboard?.writeText }, pasteCustom:{ name:'貼り付け', callback:()=>pasteFromClipboard(hot), disabled:()=>!navigator.clipboard?.readText }, '--------': Handsontable.plugins.ContextMenu.SEPARATOR, undo:{name:'元に戻す'}, redo:{name:'やり直す'} } },
@@ -835,22 +689,18 @@ function installImeGuards(hot, container){
         },
         afterChange:(changes, source)=>{
           if(!changes) return; const userSources=new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']); const isUser=userSources.has(source);
-          for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ markDirty(row,col,true);} }
+          for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ markDirty(row,col,true); } }
+          hot.render();
         },
         stretchH:'all', height:650,
         colWidths:(i)=> (i===0?110:(i===1?180:110)),
       };
       settings._rowEmployees=rowEmployees; settings._colDates=colDates;
-      if(hot){ hot.updateSettings(settings);} else { hot = new Handsontable(container, settings);  installImeGuards(hot, container); }
-      hot.suspendRender();
-      for(let r=0;r<data.length;r++){
-        for(let c=1;c<colHeaders.length;c++){
-          applyValueRule(hot,r,c,data[r][c]);
-        }
-      }
-      hot.resumeRender(); // 1回だけ描画
+      if(hot){ hot.updateSettings(settings); hot.render(); } else { hot = new Handsontable(container, settings); }
+      for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
+      hot.render();
       // スクロール
-      if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, col));}
+      if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, col)); }
       else { hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, 1)); }
       enableHorizontalWheel(container, hot);
     }
