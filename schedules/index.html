@@ -586,6 +586,79 @@
     /* ================================
        マトリクス構築（従業員全員／AMPM）
     =================================*/
+    function isPlainPrintableKey(e){
+      if (!e) return false;
+      if (e.key && e.key.length === 1) return true; // 'a', 'あ', '1', ' ' など
+      if (e.key === 'Enter') return true;
+      return false;
+    }
+    
+    // IME開始のキー（Windowsだと key === 'Process' / keyCode === 229）
+    function isImeStartKey(e){
+      return !!(e && (e.isComposing || e.key === 'Process' || e.keyCode === 229));
+    }
+    function installOpenEditorOnFirstKey(hot){
+      if (!hot || hot.__openEditorCaptureInstalled) return;
+      hot.__openEditorCaptureInstalled = true;
+    
+      const root = hot.rootElement; // ← #matrixGrid の直下にある Handsontable のルート
+      const handler = (e) => {
+        // すでにエディタ開いているなら何もしない
+        const ed = hot.getActiveEditor?.();
+        const isOpen = ed && ed.isOpened && ed.isOpened();
+        if (isOpen) return;
+    
+        // 選択が無い・読み取り専用セル等なら何もしない
+        const sel = hot.getSelectedLast?.();
+        if (!sel) return;
+        const [r, c] = sel;
+        const meta = hot.getCellMeta(r, c);
+        if (meta.readOnly || meta.type === 'dropdown' || meta.type === 'checkbox') return;
+    
+        // 矢印・Tab・PageUp/Down・Home/End などは移動用 → ここでは編集を開かない
+        const navKeys = new Set([
+          'ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab','PageUp','PageDown','Home','End'
+        ]);
+        if (navKeys.has(e.key)) return;
+    
+        // 「印字キー」または「IME開始キー」なら、HoTより先に editor を開く
+        if (isPlainPrintableKey(e) || isImeStartKey(e)) {
+          // 選択が変わっていないか念のため再確認
+          const selNow = hot.getSelectedLast?.();
+          if (!selNow || selNow[0] !== r || selNow[1] !== c) return;
+    
+          // ここで同期的に beginEditing() を呼ぶのがポイント
+          // 引数は渡さず（＝キーは捨てない）、IMEの合成はブラウザに任せる
+          hot.beginEditing();
+    
+          // HoTの beforeKeyDown などへ伝播させない（あの「a」確定を止める）
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          // ★ preventDefault はしない：ブラウザのIME合成を活かす
+          // e.preventDefault(); ← 呼ばない
+        }
+      };
+    
+      // ルート要素で "capture: true" を使う（HoT内部より先に介入）
+      root.addEventListener('keydown', handler, { capture: true, passive: false });
+    
+      // お掃除
+      hot.addHook('afterDestroy', () => {
+        root.removeEventListener('keydown', handler, { capture: true });
+      });
+    }
+    function installArrowAndImeGuards(hot){
+      if (!hot || hot.__arrowImeGuardsInstalled) return;
+      hot.__arrowImeGuardsInstalled = true;
+    
+      // IME 合成中は HoT のナビゲーションを止める
+      hot.addHook('beforeKeyDown', (e) => {
+        if (e && (e.isComposing || e.key === 'Process' || e.keyCode === 229)) {
+          e.stopImmediatePropagation();
+          // preventDefault は基本不要（IME合成の既定を活かす）
+        }
+      });
+    }
     function buildFullMatrixWithEmployees(items, ym){
       const [y,m] = ym.split('-').map(Number); const last=new Date(y,m,0); const days=Array.from({length:last.getDate()},(_,i)=>i+1);
       const byEmpKey = new Map();
@@ -695,9 +768,16 @@
         colWidths:(i)=> (i===0?110:(i===1?180:110)),
       };
       settings._rowEmployees=rowEmployees; settings._colDates=colDates;
-      if(hot){ hot.updateSettings(settings); hot.render(); } else { hot = new Handsontable(container, settings); }
-      for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
-      hot.render();
+      if(hot){ hot.updateSettings(settings);} else { hot = new Handsontable(container, settings); }
+      installOpenEditorOnFirstKey(hot);
+      installArrowAndImeGuards(hot);
+      hot.suspendRender();
+      for(let r=0;r<data.length;r++){
+        for(let c=1;c<colHeaders.length;c++){
+          applyValueRule(hot,r,c,data[r][c]);
+        }
+      }
+      hot.resumeRender(); // 1回だけ描画
       // スクロール
       if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, col)); hot.render(); }
       else { hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, 1)); hot.render(); }
