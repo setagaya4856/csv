@@ -739,13 +739,34 @@
       if(hot){ hot.updateSettings(settings);
       } else { 
         hot = new Handsontable(container, settings);
-        installOpenEditorOnFirstKey(hot, container); // ← これを追加
       }
-      for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
-      hot.render();
-      // スクロール
-      if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, col)); hot.render(); }
-      else { hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, 1)); }
+      // 条件付きクラスの適用は一括で
+      hot.suspendRender();
+      for (let r = 0; r < data.length; r++) {
+        for (let c = 1; c < colHeaders.length; c++) {
+          applyValueRule(hot, r, c, data[r][c]);
+        }
+      }
+      hot.resumeRender(); // ← ここで1回だけ描画
+      installOpenEditorOnFirstKey(hot, container);
+      // ★ wtHolder は afterRender で生えるので、そのタイミングで付ける
+      hot.addHookOnce('afterRender', () => {
+        const holder = container.querySelector('.ht_master .wtHolder');
+        if (holder) installOpenEditorOnFirstKey(hot, holder);
+      });
+      
+      // スクロール（追加レンダーはさせない）
+      if (opts.scrollToToday) {
+        const base = todayJST();
+        const d = base.getDate();
+        const amCol = 1 + 2 * (d - 1);
+        const col = Math.min(amCol, colHeaders.length - 1);
+        hot.addHookOnce('afterRender', () => scrollColumnToLeft(hot, container, col));
+      } else {
+        hot.addHookOnce('afterRender', () => scrollColumnToLeft(hot, container, 1));
+      }
+      
+      enableHorizontalWheel(container, hot);
       enableHorizontalWheel(container, hot);
     }
 
