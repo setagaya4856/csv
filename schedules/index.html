@@ -658,47 +658,70 @@
     /* ================================
        マトリクス描画
     =================================*/
-    function isPlainPrintableKey(e){
-      if (!e || e.ctrlKey || e.metaKey) return false;
-      if (e.key === 'Process' || e.keyCode === 229) return true; // IMEキー
-      return (typeof e.key === 'string' && e.key.length === 1);
+    // 1. 素の印字キー判定（修飾や非文字キーを除外。IME開始は除外）
+function isPlainPrintableKey(e){
+  if (e.ctrlKey || e.metaKey) return false;
+  // AltGr は地域によって必要なので: Alt 単体は printable を邪魔するので除外
+  if (e.altKey && !e.ctrlKey) return false;
+  if (e.isComposing || e.key === 'Process' || e.keyCode === 229) return false;
+  // 1文字だけの key を「印字」とみなす（Enter/Tab/矢印などは長い/記号名になる）
+  return typeof e.key === 'string' && e.key.length === 1;
+}
+
+// 2. 最初のキーで editor を開き、必要ならそのキーを textarea に“再送”する
+function installOpenEditorOnFirstKey(hot, container){
+  if (!hot || !container || container.__openEditorCaptureInstalled) return;
+  container.__openEditorCaptureInstalled = true;
+
+  const handler = (e) => {
+    // すでに編集中なら何もしない
+    const ed = hot.getActiveEditor?.();
+    if (ed && ed.isOpened && ed.isOpened()) return;
+
+    // 選択なしなら何もしない
+    if (!hot.getSelectedLast?.()) return;
+
+    // ここは capture。HoT 本体より前に走る
+    // まず editor を開く（空で）
+    hot.beginEditing('');
+
+    // textarea 取得
+    const ta = hot.getActiveEditor?.()?.TEXTAREA;
+    if (!ta) return;
+
+    // フォーカスを移す
+    ta.focus();
+
+    // --- キーは捨てない方針 ---
+    // 印字キーなら、その1文字を textarea に手動で差し込む
+    // （IME開始キーは差し込まない → 合成に任せる）
+    if (isPlainPrintableKey(e)) {
+      const key = e.key; // 1文字
+      const start = ta.selectionStart ?? ta.value.length;
+      const end   = ta.selectionEnd ?? ta.value.length;
+      ta.value = ta.value.slice(0, start) + key + ta.value.slice(end);
+      const pos = start + key.length;
+      try { ta.setSelectionRange(pos, pos); } catch {}
+
+      // React系の onChange を拾う場合にも効くように input を発火
+      ta.dispatchEvent(new InputEvent('input', { bubbles: true, data: key, inputType: 'insertText' }));
+      // このキーは既に自前で反映したのでブラウザ既定は抑止
+      e.preventDefault();
     }
-    // ★ コンテナ（#matrixGrid）で “キャプチャ段階” に先取りして editor を開く
-    function installOpenEditorOnFirstKey(hot, container){
-      if (!hot || !container || hot.__openEditorCaptureInstalled) return;
-      hot.__openEditorCaptureInstalled = true;
-    
-      const handler = (e) => {
-        // すでにエディタが開いていれば何もしない
-        const ed = hot.getActiveEditor?.();
-        const isOpen = ed && ed.isOpened && ed.isOpened();
-        if (isOpen) return;
-    
-        // セル選択なし / 印字系じゃない → 何もしない
-        if (!hot.getSelectedLast?.()) return;
-        if (!isPlainPrintableKey(e)) return;
-    
-        // ここは "capture" フェーズ。既定動作の前に editor を開いて textarea へフォーカス
-        ed?.beginEditing?.('');
-        const ta = ed?.TEXTAREA;
-        if (!ta) return;
-        ta.focus();
-    
-        // ★ 伝播は止める（HOTの keydown が走らないように）が、
-        // ★ preventDefault はしない（IME の既定動作を生かす）
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        // e.preventDefault(); // ← これは呼ばない！
-      };
-    
-      // ★ コンテナでキャプチャ登録（HOTの document 監視より先に入る）
-      container.addEventListener('keydown', handler, { capture: true, passive: false });
-    
-      // 掃除
-      hot.addHook('afterDestroy', () => {
-        container.removeEventListener('keydown', handler, { capture: true });
-      });
-    }
+
+    // HoT のナビゲーション等へは流さない
+    e.stopImmediatePropagation();
+    e.stopPropagation();
+  };
+
+  container.addEventListener('keydown', handler, { capture: true });
+
+  // 後片付け
+  hot.addHook('afterDestroy', () => {
+    container.removeEventListener('keydown', handler, { capture: true });
+  });
+}
+
     function renderMatrixHot(items, ym, opts={}){
       const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
       const container = $('#matrixGrid'); const today = todayStrJST();
@@ -765,8 +788,6 @@
       } else {
         hot.addHookOnce('afterRender', () => scrollColumnToLeft(hot, container, 1));
       }
-      
-      enableHorizontalWheel(container, hot);
       enableHorizontalWheel(container, hot);
     }
 
