@@ -659,47 +659,55 @@
        マトリクス描画
     =================================*/
     function installImeFix(hot){
-      let composing = false;
+      // 直近の「印字キーでエディタが開いた」情報
+      let openFromPrintable = null; // { ch, t }
     
-      // HOT のスクロールホルダー（キャプチャフェーズで拾う）
-      const holder =
-        hot.rootElement.querySelector('.ht_master .wtHolder') || hot.rootElement;
+      // 印字キー判定（修飾なし・一文字キー）
+      const isPrintable = (e) =>
+        !e.ctrlKey && !e.metaKey && !e.altKey &&
+        e.key && e.key.length === 1 && !e.repeat;
     
-      // IME開始：合成フラグON & まだ編集してなければ開く
-      holder.addEventListener('compositionstart', () => {
-        composing = true;
-        const ed = hot.getActiveEditor?.();
-        // 選択中セルがある前提。未オープンなら開いておく（初打ち落ち対策）
-        if (ed && !ed.isOpened()) {
-          ed.beginEditing(''); // ここでエディタを開く（空スタート）
-        }
-      }, true);
-    
-      // IME終了：合成フラグOFF
-      holder.addEventListener('compositionend', () => {
-        composing = false;
-      }, true);
-    
-      // IME合成中は HOT のナビゲーション/ショートカットを完全停止
       hot.addHook('beforeKeyDown', (e) => {
-        const imeKey = e?.isComposing || e?.keyCode === 229 || e?.key === 'Process';
-        if (composing || imeKey) {
-          // ナビゲーションやHOTのショートカットを止める
-          e.stopImmediatePropagation();
+        const ed = hot.getActiveEditor?.();
+        const isOpen = !!(ed && ed.isOpened && ed.isOpened());
+        // 編集前に印字キーで開くなら記録
+        if (!isOpen && isPrintable(e)) {
+          openFromPrintable = { ch: e.key, t: performance.now() };
+        } else if (!isOpen) {
+          openFromPrintable = null;
+        }
     
-          // まだエディタが開いてないなら、このkeydownで移動されないように抑止
-          const ed = hot.getActiveEditor?.();
-          if (!ed || !ed.isOpened()) {
-            e.preventDefault();
-          }
-          // ※ エディタが開いていれば preventDefault は不要（ブラウザのIME入力を通す）
+        // 合成中は HOT のキー処理だけ止める（IMEには流す）
+        if (e.isComposing || e.key === 'Process' || e.keyCode === 229) {
+          e.stopImmediatePropagation();
         }
       });
     
-      // 念のため：テキストエディタに IME を積極ON（非標準だけど Win で効く）
-      const style = document.createElement('style');
-      style.textContent = `.handsontableInput{ ime-mode:auto; }`;
-      document.head.appendChild(style);
+      hot.addHook('afterBeginEditing', () => {
+        const ed = hot.getActiveEditor();
+        const ta = ed && ed.TEXTAREA;
+        if (!ta || ta.__imePatched) return;
+        ta.__imePatched = true;
+    
+        const ref = openFromPrintable; // 開始直前の記録を捕まえる
+        openFromPrintable = null;
+    
+        ta.addEventListener('compositionstart', () => {
+          // 編集開始直後に IME が始まったか？
+          const dt = performance.now() - (ref?.t ?? 0);
+          const justOpened = ref && dt < 150; // 調整可: 100〜200ms
+          // 初期値がその1文字だけの英字か？
+          const isJustThatChar =
+            ta.value.length === 1 && ta.value === ref?.ch && /^[a-zA-Z]$/.test(ref.ch);
+    
+          if (justOpened && isJustThatChar) {
+            ta.value = '';                              // ← 1字だけを消す
+            // HOTの内部状態も同期
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+            try { ta.setSelectionRange(0, 0); } catch {}
+          }
+        });
+      });
     }
     function renderMatrixHot(items, ym, opts={}){
       const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
