@@ -659,75 +659,44 @@
        マトリクス描画
     =================================*/
     function isPlainPrintableKey(e){
-      if (!e) return false;
-      if (e.ctrlKey || e.metaKey) return false;
-      // 1 文字キー or IMEのProcessキー
-      if (e.key === 'Process' || e.keyCode === 229) return true;
+      if (!e || e.ctrlKey || e.metaKey) return false;
+      if (e.key === 'Process' || e.keyCode === 229) return true; // IMEキー
       return (typeof e.key === 'string' && e.key.length === 1);
     }
-    
-    // 追加: “最初の一打” を HOT より先に横取りして、エディタへリダイレクト
-    function installImeKeyRedirect(hot){
-      if (!hot || hot.__imeKeyRedirectInstalled) return;
-      hot.__imeKeyRedirectInstalled = true;
-    
-      // HOT が使っている document を取得（iframe対策）
-      const doc = hot.rootDocument || document;
+    // ★ コンテナ（#matrixGrid）で “キャプチャ段階” に先取りして editor を開く
+    function installOpenEditorOnFirstKey(hot, container){
+      if (!hot || !container || hot.__openEditorCaptureInstalled) return;
+      hot.__openEditorCaptureInstalled = true;
     
       const handler = (e) => {
-        // 既にエディタ開いていれば何もしない（通常処理へ）
+        // すでにエディタが開いていれば何もしない
         const ed = hot.getActiveEditor?.();
         const isOpen = ed && ed.isOpened && ed.isOpened();
         if (isOpen) return;
     
-        // セル選択が無い or 印字系じゃない → 何もしない
+        // セル選択なし / 印字系じゃない → 何もしない
         if (!hot.getSelectedLast?.()) return;
         if (!isPlainPrintableKey(e)) return;
     
-        // ここで HOT 本体のキーハンドラより先に止める（キャプチャ段階）
-        e.stopImmediatePropagation();
-        e.preventDefault();
-    
-        // 先にエディタを開いて textarea にフォーカス
+        // ここは "capture" フェーズ。既定動作の前に editor を開いて textarea へフォーカス
         ed?.beginEditing?.('');
         const ta = ed?.TEXTAREA;
         if (!ta) return;
+        ta.focus();
     
-        // 次のマイクロタスクで “同じキー” を textarea に投げる
-        queueMicrotask(() => {
-          ta.focus();
-          try{
-            // keydown を再発火（IME ON なら 'Process'/229 が飛ぶので英字は入らない）
-            const evt = new KeyboardEvent('keydown', {
-              key: e.key,
-              code: e.code,
-              keyCode: e.keyCode,
-              which: e.which,
-              bubbles: true,
-              cancelable: true,
-              composed: true
-            });
-            ta.dispatchEvent(evt);
-          }catch{
-            // KeyboardEvent の制約が厳しい環境用：フォールバックで直接文字を差す
-            if (e.key && e.key.length === 1) {
-              const pos = ta.selectionStart ?? ta.value.length;
-              const v = ta.value;
-              ta.value = v.slice(0, pos) + e.key + v.slice(pos);
-              ta.setSelectionRange(pos + 1, pos + 1);
-              // Handsontable のエディタに値変更を知らせる
-              ta.dispatchEvent(new Event('input', { bubbles:true }));
-            }
-          }
-        });
+        // ★ 伝播は止める（HOTの keydown が走らないように）が、
+        // ★ preventDefault はしない（IME の既定動作を生かす）
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        // e.preventDefault(); // ← これは呼ばない！
       };
     
-      // ★★ 重要：capture = true で登録（HOTのハンドラより先に動く）
-      doc.addEventListener('keydown', handler, true);
+      // ★ コンテナでキャプチャ登録（HOTの document 監視より先に入る）
+      container.addEventListener('keydown', handler, { capture: true, passive: false });
     
-      // HOT 破棄時の掃除（画面遷移等）
+      // 掃除
       hot.addHook('afterDestroy', () => {
-        doc.removeEventListener('keydown', handler, true);
+        container.removeEventListener('keydown', handler, { capture: true });
       });
     }
     function renderMatrixHot(items, ym, opts={}){
