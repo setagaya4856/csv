@@ -697,7 +697,7 @@
       settings._rowEmployees=rowEmployees; settings._colDates=colDates;
       if(hot){ hot.updateSettings(settings);
       } else { 
-        hot = new Handsontable(container, settings); // ★ IME開始キーは HOT 側の処理だけ止める（ブラウザには流す＝キーは捨てない）
+        hot = new Handsontable(container, settings);
         hot.addHook('beforeKeyDown', (e) => {
           if (!e) return;
           const isImeStart = e.isComposing || e.key === 'Process' || e.keyCode === 229;
