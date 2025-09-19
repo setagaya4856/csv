@@ -688,6 +688,58 @@ function installOpenEditorOnCompositionStart(hot, container){
     container.removeEventListener('compositionstart', handler, { capture: true });
   });
 }
+    // ★ 最初の半角が入る問題の根治：keydown を先に握って editor を開く
+function installImeSafeKeydown(hot, container){
+  if (!hot || hot.__imeSafeInstalled) return;
+  hot.__imeSafeInstalled = true;
+
+  hot.addHook('beforeKeyDown', (e) => {
+    // 選択セル / 権限チェック
+    const sel = hot.getSelectedLast?.();
+    if (!sel) return;
+    const [r, c] = [sel[0], sel[1]];
+    const meta = hot.getCellMeta(r, c);
+    if (meta?.readOnly) return;
+
+    const editor = hot.getActiveEditor?.();
+    const isOpen = editor && editor.isOpened && editor.isOpened();
+
+    // IME 関連の keydown 判定
+    const isProcess = (e.key === 'Process') || (e.keyCode === 229);
+    const isChar    = (typeof e.key === 'string' && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey);
+    const willCompose = isProcess || e.isComposing === true;
+
+    // まだ editor が開いていない状態で、IME開始 or 1文字入力のkeydownが来たら先に開く
+    if (!isOpen && (willCompose || isChar)) {
+      // Handsontable 側に渡さない
+      e.preventDefault();
+      // 一部ブラウザで必要
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+
+      // まず空で開く（ここで focus は editor に移る）
+      editor?.beginEditing?.('');
+
+      // IME では最初の key を流さない（compositionstart→input に任せる）
+      if (!willCompose && isChar && editor?.TEXTAREA) {
+        // 物理1文字タイプだった場合のみ、手で一文字流す
+        const ta = editor.TEXTAREA;
+        ta.value = (ta.value || '') + e.key;
+        // Handsontable に変更を知らせる
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+      } else {
+        editor?.TEXTAREA?.focus();
+      }
+    }
+  });
+
+  // お好みで：compositionstart でも二重保険
+  container.addEventListener('compositionstart', () => {
+    const ed = hot.getActiveEditor?.();
+    const open = ed && ed.isOpened && ed.isOpened();
+    if (!open) { ed?.beginEditing?.(''); ed?.TEXTAREA?.focus(); }
+  }, { capture: true });
+}
+
     function renderMatrixHot(items, ym, opts={}){
       const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
       const container = $('#matrixGrid'); const today = todayStrJST();
@@ -724,7 +776,7 @@ function installOpenEditorOnCompositionStart(hot, container){
         colWidths:(i)=> (i===0?110:(i===1?180:110)),
       };
       settings._rowEmployees=rowEmployees; settings._colDates=colDates;
-      if(hot){ hot.updateSettings(settings);} else { hot = new Handsontable(container, settings); installOpenEditorOnCompositionStart(hot, container);}
+      if(hot){ hot.updateSettings(settings);} else { hot = new Handsontable(container, settings); installImeSafeKeydown(hot, container); }
       hot.suspendRender();
       for(let r=0;r<data.length;r++){
         for(let c=1;c<colHeaders.length;c++){
