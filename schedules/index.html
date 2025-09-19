@@ -658,56 +658,26 @@
     /* ================================
        マトリクス描画
     =================================*/
-    function installImeFix(hot){
-      // 直近の「印字キーでエディタが開いた」情報
-      let openFromPrintable = null; // { ch, t }
+    let __imeComposing = false;
     
-      // 印字キー判定（修飾なし・一文字キー）
-      const isPrintable = (e) =>
-        !e.ctrlKey && !e.metaKey && !e.altKey &&
-        e.key && e.key.length === 1 && !e.repeat;
-    
-      hot.addHook('beforeKeyDown', (e) => {
-        const ed = hot.getActiveEditor?.();
-        const isOpen = !!(ed && ed.isOpened && ed.isOpened());
-        // 編集前に印字キーで開くなら記録
-        if (!isOpen && isPrintable(e)) {
-          openFromPrintable = { ch: e.key, t: performance.now() };
-        } else if (!isOpen) {
-          openFromPrintable = null;
-        }
-    
-        // 合成中は HOT のキー処理だけ止める（IMEには流す）
-        if (e.isComposing || e.key === 'Process' || e.keyCode === 229) {
-          e.stopImmediatePropagation();
-        }
-      });
-    
+    // エディタが開いたら、テキストエリアで composition を監視
+    function installCompositionFlag(hot){
       hot.addHook('afterBeginEditing', () => {
-        const ed = hot.getActiveEditor();
-        const ta = ed && ed.TEXTAREA;
-        if (!ta || ta.__imePatched) return;
-        ta.__imePatched = true;
-    
-        const ref = openFromPrintable; // 開始直前の記録を捕まえる
-        openFromPrintable = null;
-    
-        ta.addEventListener('compositionstart', () => {
-          // 編集開始直後に IME が始まったか？
-          const dt = performance.now() - (ref?.t ?? 0);
-          const justOpened = ref && dt < 200; // 調整可: 100〜200ms
-          // 初期値がその1文字だけの英字か？
-          const isJustThatChar =
-            ta.value.length === 1 && ta.value === ref?.ch && /^[a-zA-Z]$/.test(ref.ch);
-    
-          if (justOpened && isJustThatChar) {
-            ta.value = '';                              // ← 1字だけを消す
-            // HOTの内部状態も同期
-            ta.dispatchEvent(new Event('input', { bubbles: true }));
-            try { ta.setSelectionRange(0, 0); } catch {}
-          }
-        });
+        const ta = hot.getActiveEditor()?.TEXTAREA;
+        if (!ta || ta.__imeFlagPatched) return;
+        ta.__imeFlagPatched = true;
+        ta.addEventListener('compositionstart', () => { __imeComposing = true; });
+        ta.addEventListener('compositionend',   () => { __imeComposing = false; });
       });
+    }
+    function safeRender(hot){
+      if (!hot) return;
+      const ed = hot.getActiveEditor?.();
+      const editing = ed && ed.isOpened && ed.isOpened();
+      if (!editing && !__imeComposing) {
+        // 編集していなくて IME 合成中でもないときだけ再描画
+        safeRender(hot);
+      }
     }
     function renderMatrixHot(items, ym, opts={}){
       const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
@@ -740,7 +710,6 @@
         afterChange:(changes, source)=>{
           if(!changes) return; const userSources=new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']); const isUser=userSources.has(source);
           for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ markDirty(row,col,true); } }
-          hot.render();
         },
         stretchH:'all', height:650,
         colWidths:(i)=> (i===0?110:(i===1?180:110)),
@@ -750,14 +719,14 @@
         hot.updateSettings(settings);
       } else {
         hot = new Handsontable(container, settings);
-        installImeFix(hot); // ← 初回生成時だけ入れる
+        installCompositionFlag(hot);
       }
       hot.suspendRender();
       for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
       hot.resumeRender(); // ← ここで1回だけ描画
       // スクロール
-      if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, col)); hot.render(); }
-      else { hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, 1)); hot.render(); }
+      if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, col)); safeRender(hot); }
+      else { hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, 1)); safeRender(hot); }
       enableHorizontalWheel(container, hot);
     }
 
