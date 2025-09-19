@@ -658,6 +658,32 @@
     /* ================================
        マトリクス描画
     =================================*/
+    function installImeFix(hot){
+      // 合成中のHOTショートカット無効化（移動/確定を止める）
+      hot.addHook('beforeKeyDown', (e) => {
+        if (e?.isComposing || e?.keyCode === 229 || e?.key === 'Process') {
+          e.stopImmediatePropagation();
+        }
+      });
+    
+      // IME開始で、最初にプリセットされた英字1文字を消す
+      hot.addHook('afterBeginEditing', () => {
+        const ed = hot.getActiveEditor();
+        const ta = ed && ed.TEXTAREA;
+        if (!ta || ta.__imePatched) return;
+        ta.__imePatched = true;
+    
+        // 空セルからの入力のみ対象（不要ならこの条件を外す）
+        const originalEmpty = (ed.originalValue == null || ed.originalValue === '');
+    
+        ta.addEventListener('compositionstart', () => {
+          if (originalEmpty && ta.value && ta.value.length === 1 && /^[A-Za-z]$/.test(ta.value)) {
+            ta.value = '';
+            try { ta.setSelectionRange(0, 0); } catch {}
+          }
+        }, { passive: true });
+      });
+    }
     function renderMatrixHot(items, ym, opts={}){
       const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
       const container = $('#matrixGrid'); const today = todayStrJST();
@@ -696,21 +722,14 @@
       };
       settings._rowEmployees=rowEmployees; settings._colDates=colDates;
       if(hot){
-        hot.updateSettings(settings); hot.render(); 
+        hot.updateSettings(settings);
       } else {
         hot = new Handsontable(container, settings);
-        // ★ IMEガード：合成中はHOTのキー処理（ナビゲーション/確定）を止める
-        hot.addHook('beforeKeyDown', (e) => {
-          // e.isComposing: 標準フラグ / 229: IME処理中の汎用コード / 'Process': macなど
-          if (e?.isComposing || e?.keyCode === 229 || e?.key === 'Process') {
-            // ここで HOT 側のショートカットや移動処理を止める
-            e.stopImmediatePropagation();
-            // preventDefault() は基本しない（ブラウザのIME入力は通す）
-          }
-        });
+        installImeFix(hot); // ← 初回生成時だけ入れる
       }
+      hot.suspendRender();
       for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
-      hot.render();
+      hot.resumeRender(); // ← ここで1回だけ描画
       // スクロール
       if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, col)); hot.render(); }
       else { hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, 1)); hot.render(); }
