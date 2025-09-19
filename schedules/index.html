@@ -743,7 +743,7 @@ function installOpenEditorOnFirstKey(hot){
       const container = $('#matrixGrid'); const today = todayStrJST();
       const canEditRow = (rowIdx)=> currentUser.is_admin || ((rowEmployees[rowIdx]?.email||'').toLowerCase() === (currentUser.email||'').toLowerCase());
       const settings = {
-        data, colHeaders, rowHeaders:true, licenseKey:'non-commercial-and-evaluation', fixedColumnsStart:2,
+        data, colHeaders, rowHeaders:true, licenseKey:'non-commercial-and-evaluation', fixedColumnsStart:2,theme: 'modern', 
         enterMoves:(e)=>(e&&e.shiftKey?{row:0,col:-1}:{row:0,col:1}),
         cells:(row,col)=>({ renderer:fitTextRenderer }),
         contextMenu:{ items:{ copyCustom:{ name:'コピー', callback:()=>copySelection(hot), disabled:()=>!hot.getSelectedRangeLast?.()||!navigator.clipboard?.writeText }, cutCustom:{ name:'切り取り', callback:()=>cutSelection(hot), disabled:()=>!hot.getSelectedRangeLast?.()||!navigator.clipboard?.writeText }, pasteCustom:{ name:'貼り付け', callback:()=>pasteFromClipboard(hot), disabled:()=>!navigator.clipboard?.readText }, '--------': Handsontable.plugins.ContextMenu.SEPARATOR, undo:{name:'元に戻す'}, redo:{name:'やり直す'} } },
