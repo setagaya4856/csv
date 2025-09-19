@@ -163,7 +163,17 @@
 
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
+    const DBG = {
+      enabled: true,
+      c: new Map(),
+      log(tag, info = {}) {
+        if (!this.enabled) return;
+        const n = (this.c.get(tag) || 0) + 1;
+        this.c.set(tag, n);
+        const t = new Date().toISOString().slice(11,19) + '.' + String(performance.now().toFixed(1)).padStart(5,'0');
+        console.log(`[DBG ${t}] ${tag} #${n}`, info);
+      }
+    };
     /* ================================
        設定
     =================================*/
@@ -563,6 +573,10 @@
     }
 
     async function loadMonth(ym, { scrollToToday }={}){
+      if (isEditing(hot) || __imeComposing) {
+        DBG.log('loadMonth:blocked(editing/composing)', { ym });
+        return;
+      }
       const { data:{ session } } = await supabase.auth.getSession(); if(!session){ alert('未ログインです'); return; }
       try{
         const items = await fetchMonthData(ym, session.access_token);
@@ -570,6 +584,7 @@
         renderMatrixHot(items, ym, { scrollToToday });
         clearAllDirty();
         window.__syncCompanyListToggle?.(); // ← ボタン表示（＋／−）と実際の開閉を同期
+        DBG.log('loadMonth:end', { ym });
       }catch(e){ alert('Fetchエラー: '+e.message); }
     }
 
@@ -679,6 +694,14 @@
       hot.render();                                  // ← 1回だけ描画
     }
     function renderMatrixHot(items, ym, opts={}){
+      DBG.log('renderMatrixHot:enter', { ym, len: items?.length || 0, editing: isEditing(hot), composing: __imeComposing });
+      if (isEditing(hot) || __imeComposing) {
+        if (!window.__onceTraceRMH) {
+         window.__onceTraceRMH = true;
+         console.warn('renderMatrixHot called while editing/composing; stack follows once:');
+         console.trace();
+       }
+     }
       const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
       const container = $('#matrixGrid'); const today = todayStrJST();
       const canEditRow = (rowIdx)=> currentUser.is_admin || ((rowEmployees[rowIdx]?.email||'').toLowerCase() === (currentUser.email||'').toLowerCase());
