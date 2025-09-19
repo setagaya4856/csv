@@ -163,17 +163,7 @@
 
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-    const DBG = {
-      enabled: true,
-      c: new Map(),
-      log(tag, info = {}) {
-        if (!this.enabled) return;
-        const n = (this.c.get(tag) || 0) + 1;
-        this.c.set(tag, n);
-        const t = new Date().toISOString().slice(11,19) + '.' + String(performance.now().toFixed(1)).padStart(5,'0');
-        console.log(`[DBG ${t}] ${tag} #${n}`, info);
-      }
-    };
+
     /* ================================
        設定
     =================================*/
@@ -573,10 +563,6 @@
     }
 
     async function loadMonth(ym, { scrollToToday }={}){
-      if (isEditing(hot) || __imeComposing) {
-        DBG.log('loadMonth:blocked(editing/composing)', { ym });
-        return;
-      }
       const { data:{ session } } = await supabase.auth.getSession(); if(!session){ alert('未ログインです'); return; }
       try{
         const items = await fetchMonthData(ym, session.access_token);
@@ -584,7 +570,6 @@
         renderMatrixHot(items, ym, { scrollToToday });
         clearAllDirty();
         window.__syncCompanyListToggle?.(); // ← ボタン表示（＋／−）と実際の開閉を同期
-        DBG.log('loadMonth:end', { ym });
       }catch(e){ alert('Fetchエラー: '+e.message); }
     }
 
@@ -673,35 +658,7 @@
     /* ================================
        マトリクス描画
     =================================*/
-    let __imeComposing = false;
-    function isEditing(h = hot){
-      const ed = h?.getActiveEditor?.();
-      return !!(ed && ed.isOpened && ed.isOpened());
-    }
-    // エディタが開いたら、テキストエリアで composition を監視
-    function installCompositionFlag(hot){
-      hot.addHook('afterBeginEditing', () => {
-        const ta = hot.getActiveEditor()?.TEXTAREA;
-        if (!ta || ta.__imeFlagPatched) return;
-        ta.__imeFlagPatched = true;
-        ta.addEventListener('compositionstart', () => { __imeComposing = true; });
-        ta.addEventListener('compositionend',   () => { __imeComposing = false; });
-      });
-    }
-    function safeRender(hot){
-      if (!hot) return;
-      if (isEditing(hot) || __imeComposing) return; // 編集中 or IME合成中は描画しない
-      hot.render();                                  // ← 1回だけ描画
-    }
     function renderMatrixHot(items, ym, opts={}){
-      DBG.log('renderMatrixHot:enter', { ym, len: items?.length || 0, editing: isEditing(hot), composing: __imeComposing });
-      if (isEditing(hot) || __imeComposing) {
-        if (!window.__onceTraceRMH) {
-         window.__onceTraceRMH = true;
-         console.warn('renderMatrixHot called while editing/composing; stack follows once:');
-         console.trace();
-       }
-     }
       const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
       const container = $('#matrixGrid'); const today = todayStrJST();
       const canEditRow = (rowIdx)=> currentUser.is_admin || ((rowEmployees[rowIdx]?.email||'').toLowerCase() === (currentUser.email||'').toLowerCase());
@@ -732,28 +689,18 @@
         afterChange:(changes, source)=>{
           if(!changes) return; const userSources=new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']); const isUser=userSources.has(source);
           for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ markDirty(row,col,true); } }
+          hot.render();
         },
         stretchH:'all', height:650,
         colWidths:(i)=> (i===0?110:(i===1?180:110)),
       };
       settings._rowEmployees=rowEmployees; settings._colDates=colDates;
-      if(hot){
-        if (!isEditing(hot)) {
-          hot.updateSettings(settings);
-        } else {
-          // 編集が終わるまでテーブル再設定は保留（IMEの確定潰れ対策）
-          console.debug('skip updateSettings during editing');
-        }
-      } else {
-        hot = new Handsontable(container, settings);
-        installCompositionFlag(hot);
-      }
-      hot.suspendRender();
+      if(hot){ hot.updateSettings(settings); hot.render(); } else { hot = new Handsontable(container, settings); }
       for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
-      hot.resumeRender(); // ← ここで1回だけ描画
+      hot.render();
       // スクロール
-      if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>{ requestAnimationFrame(()=>scrollColumnToLeft(hot, container, col)); }); safeRender(hot); }
-      else { hot.addHookOnce('afterRender', ()=>{ requestAnimationFrame(()=>scrollColumnToLeft(hot, container, 1)); }); safeRender(hot); }
+      if(opts.scrollToToday){ const base=todayJST(); const d=base.getDate(); const amCol=1+2*(d-1); const col=Math.min(amCol, colHeaders.length-1); hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, col)); hot.render(); }
+      else { hot.addHookOnce('afterRender', ()=>scrollColumnToLeft(hot, container, 1)); hot.render(); }
       enableHorizontalWheel(container, hot);
     }
 
