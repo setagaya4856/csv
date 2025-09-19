@@ -658,86 +658,137 @@
     /* ================================
        マトリクス描画
     =================================*/
-function installOpenEditorOnCompositionStart(hot, container){
-  if (!hot || !container || hot.__imeOpenOnCompStartInstalled) return;
-  hot.__imeOpenOnCompStartInstalled = true;
+function installImeGuards(hot, container){
+  if(!hot || hot.__imeGuardsInstalled) return;
+  hot.__imeGuardsInstalled = true;
 
-  const handler = (e) => {
-    // 既に編集中なら何もしない
-    const ed = hot.getActiveEditor?.();
-    const isOpen = ed && ed.isOpened && ed.isOpened();
-    if (isOpen) return;
-
-    // セル選択が無い／読み取り専用は対象外
-    const sel = hot.getSelectedLast?.();
-    if (!sel) return;
-    const [r, c] = [sel[0], sel[1]];
-    const meta = hot.getCellMeta(r, c);
-    if (meta?.readOnly) return;
-
-    // エディタを開いてテキストエリアにフォーカス（キーは捨てない）
-    ed?.beginEditing?.('');
-    ed?.TEXTAREA?.focus();
-    console.debug('[IME] compositionstart -> beginEditing');
+  // ─────────────────────────────────────
+  // 共通ユーティリティ
+  const getSel = () => hot.getSelectedLast?.();
+  const getEd  = () => hot.getActiveEditor?.();
+  const canEditSel = () => {
+    const s = getSel(); if(!s) return false;
+    const [r,c] = [s[0], s[1]];
+    const meta = hot.getCellMeta(r,c);
+    return !meta?.readOnly;
   };
 
-  // Handsontable のドキュメント捕捉より前に取るため capture:true
-  container.addEventListener('compositionstart', handler, { capture: true });
+  // IME/合成の「兆候」を判定
+  const isImeKeydown = (e) => {
+    // Chrome系: key === "Process" / keyCode === 229 / isComposing
+    if (e.key === 'Process' || e.keyCode === 229 || e.isComposing === true) return true;
+    // 一部環境で key が "Unidentified" になるケース
+    if (e.key === 'Unidentified') return true;
+    return false;
+  };
+  const isPlainChar = (e) => (
+    typeof e.key === 'string' &&
+    e.key.length === 1 &&
+    !e.ctrlKey && !e.metaKey && !e.altKey
+  );
 
-  hot.addHook?.('afterDestroy', () => {
-    container.removeEventListener('compositionstart', handler, { capture: true });
-  });
-}
-    // ★ 最初の半角が入る問題の根治：keydown を先に握って editor を開く
-function installImeSafeKeydown(hot, container){
-  if (!hot || hot.__imeSafeInstalled) return;
-  hot.__imeSafeInstalled = true;
+  // グローバルちょい短寿命フラグ：IME開始直後の「誤1文字」を beforeChange で握り潰すため
+  let imeGuardWindow = 0;
+  const openImeWindow = () => { imeGuardWindow = Date.now(); };
+  const inImeWindow   = () => (Date.now() - imeGuardWindow) < 400; // 0.4秒程度
 
-  hot.addHook('beforeKeyDown', (e) => {
-    // 選択セル / 権限チェック
-    const sel = hot.getSelectedLast?.();
-    if (!sel) return;
-    const [r, c] = [sel[0], sel[1]];
-    const meta = hot.getCellMeta(r, c);
-    if (meta?.readOnly) return;
+  // ─────────────────────────────────────
+  // バリア①：DOM キャプチャ段階で先に奪う（Handsontable より前）
+  // 対象はホルダとドキュメント双方（環境差を潰す）
+  const holder = container.querySelector('.ht_master .wtHolder') || container;
+  const captureKeydown = (e) => {
+    const ed = getEd();
+    const isOpen = ed && ed.isOpened && ed.isOpened();
 
-    const editor = hot.getActiveEditor?.();
-    const isOpen = editor && editor.isOpened && editor.isOpened();
+    if (isOpen || !canEditSel()) return;
 
-    // IME 関連の keydown 判定
-    const isProcess = (e.key === 'Process') || (e.keyCode === 229);
-    const isChar    = (typeof e.key === 'string' && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey);
-    const willCompose = isProcess || e.isComposing === true;
-
-    // まだ editor が開いていない状態で、IME開始 or 1文字入力のkeydownが来たら先に開く
-    if (!isOpen && (willCompose || isChar)) {
-      // Handsontable 側に渡さない
+    if (isImeKeydown(e) || isPlainChar(e)) {
+      // 最初の1発を Handsontable に渡さない
       e.preventDefault();
-      // 一部ブラウザで必要
-      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+      e.stopImmediatePropagation?.();
 
-      // まず空で開く（ここで focus は editor に移る）
-      editor?.beginEditing?.('');
+      // 先に空でエディタを開く
+      ed?.beginEditing?.('');
 
-      // IME では最初の key を流さない（compositionstart→input に任せる）
-      if (!willCompose && isChar && editor?.TEXTAREA) {
-        // 物理1文字タイプだった場合のみ、手で一文字流す
-        const ta = editor.TEXTAREA;
+      // IMEでなければ打鍵1文字を流し込む
+      if (!isImeKeydown(e) && isPlainChar(e) && ed?.TEXTAREA) {
+        const ta = ed.TEXTAREA;
         ta.value = (ta.value || '') + e.key;
-        // Handsontable に変更を知らせる
-        ta.dispatchEvent(new Event('input', { bubbles: true }));
+        ta.dispatchEvent(new Event('input', { bubbles:true }));
       } else {
-        editor?.TEXTAREA?.focus();
+        openImeWindow();
+        ed?.TEXTAREA?.focus();
+      }
+    }
+  };
+  holder.addEventListener('keydown', captureKeydown, { capture:true });
+  document.addEventListener('keydown', captureKeydown, { capture:true });
+
+  // ─────────────────────────────────────
+  // バリア②：Handsontable の beforeKeyDown でも同じことを実施（取りこぼし保険）
+  hot.addHook('beforeKeyDown', (e) => {
+    const ed = getEd();
+    const isOpen = ed && ed.isOpened && ed.isOpened();
+    if (isOpen || !canEditSel()) return;
+
+    if (isImeKeydown(e) || isPlainChar(e)) {
+      e.preventDefault();
+      e.stopImmediatePropagation?.();
+      ed?.beginEditing?.('');
+
+      if (!isImeKeydown(e) && isPlainChar(e) && ed?.TEXTAREA) {
+        const ta = ed.TEXTAREA;
+        ta.value = (ta.value || '') + e.key;
+        ta.dispatchEvent(new Event('input', { bubbles:true }));
+      } else {
+        openImeWindow();
+        ed?.TEXTAREA?.focus();
       }
     }
   });
 
-  // お好みで：compositionstart でも二重保険
-  container.addEventListener('compositionstart', () => {
-    const ed = hot.getActiveEditor?.();
-    const open = ed && ed.isOpened && ed.isOpened();
-    if (!open) { ed?.beginEditing?.(''); ed?.TEXTAREA?.focus(); }
-  }, { capture: true });
+  // ─────────────────────────────────────
+  // バリア③：それでも差し込まれた「最初の半角1文字」を beforeChange で無効化
+  // 条件：
+  //  - ソースが edit / CopyPaste.paste（稀にedit扱いされない環境向け）
+  //  - oldVal が空 or null（最初の1文字）
+  //  - newVal が ASCII 1文字
+  //  - 直前に IME ガードウィンドウが開いていた
+  const isAscii1 = (s) => typeof s === 'string' && s.length === 1 && /^[\x00-\x7F]$/.test(s);
+  hot.addHook('beforeChange', (changes, source) => {
+    if (!changes || !changes.length) return;
+    if (!['edit','CopyPaste.paste','Autofill.fill'].includes(source)) return;
+
+    for (let i=changes.length-1; i>=0; i--) {
+      const [row, col, oldVal, newVal] = changes[i];
+      if (col <= 0) continue; // 名前/メモ列などは除外したければ調整
+      const wasEmpty = oldVal == null || String(oldVal) === '';
+      if (wasEmpty && isAscii1(String(newVal)) && inImeWindow()) {
+        // この変更は「誤爆の最初の半角」っぽいので捨てる
+        changes.splice(i, 1);
+      }
+    }
+    // changes を空にすると HOT は何もしない（キャンセル扱い）
+  });
+
+  // ─────────────────────────────────────
+  // 文字入力フィールドの属性を日本語向けに
+  hot.addHook('afterBeginEditing', () => {
+    const ed = getEd();
+    const ta = ed?.TEXTAREA;
+    if (!ta) return;
+    // 入力ヒントの英数化を抑止
+    ta.setAttribute('lang', 'ja');
+    ta.setAttribute('inputmode', 'text');
+    ta.autocapitalize = 'off';
+    ta.spellcheck = false;
+  });
+
+  // クリーンアップ（必要なら）
+  hot.addHook('afterDestroy', () => {
+    holder.removeEventListener('keydown', captureKeydown, { capture:true });
+    document.removeEventListener('keydown', captureKeydown, { capture:true });
+  });
 }
 
     function renderMatrixHot(items, ym, opts={}){
@@ -776,7 +827,7 @@ function installImeSafeKeydown(hot, container){
         colWidths:(i)=> (i===0?110:(i===1?180:110)),
       };
       settings._rowEmployees=rowEmployees; settings._colDates=colDates;
-      if(hot){ hot.updateSettings(settings);} else { hot = new Handsontable(container, settings); installImeSafeKeydown(hot, container); }
+      if(hot){ hot.updateSettings(settings);} else { hot = new Handsontable(container, settings);  installImeGuards(hot, container); }
       hot.suspendRender();
       for(let r=0;r<data.length;r++){
         for(let c=1;c<colHeaders.length;c++){
