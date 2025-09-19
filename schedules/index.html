@@ -658,6 +658,36 @@
     /* ================================
        マトリクス描画
     =================================*/
+function installOpenEditorOnCompositionStart(hot, container){
+  if (!hot || !container || hot.__imeOpenOnCompStartInstalled) return;
+  hot.__imeOpenOnCompStartInstalled = true;
+
+  const handler = (e) => {
+    // 既に編集中なら何もしない
+    const ed = hot.getActiveEditor?.();
+    const isOpen = ed && ed.isOpened && ed.isOpened();
+    if (isOpen) return;
+
+    // セル選択が無い／読み取り専用は対象外
+    const sel = hot.getSelectedLast?.();
+    if (!sel) return;
+    const [r, c] = [sel[0], sel[1]];
+    const meta = hot.getCellMeta(r, c);
+    if (meta?.readOnly) return;
+
+    // エディタを開いてテキストエリアにフォーカス（キーは捨てない）
+    ed?.beginEditing?.('');
+    ed?.TEXTAREA?.focus();
+    // preventDefault / stopPropagation はしない
+  };
+
+  // Handsontable のドキュメント捕捉より前に取るため capture:true
+  container.addEventListener('compositionstart', handler, { capture: true });
+
+  hot.addHook?.('afterDestroy', () => {
+    container.removeEventListener('compositionstart', handler, { capture: true });
+  });
+}
     function renderMatrixHot(items, ym, opts={}){
       const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
       const container = $('#matrixGrid'); const today = todayStrJST();
@@ -689,13 +719,12 @@
         afterChange:(changes, source)=>{
           if(!changes) return; const userSources=new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']); const isUser=userSources.has(source);
           for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ markDirty(row,col,true); } }
-          hot.render();
         },
         stretchH:'all', height:650,
         colWidths:(i)=> (i===0?110:(i===1?180:110)),
       };
       settings._rowEmployees=rowEmployees; settings._colDates=colDates;
-      if(hot){ hot.updateSettings(settings);} else { hot = new Handsontable(container, settings); }
+      if(hot){ hot.updateSettings(settings);} else { hot = new Handsontable(container, settings); installOpenEditorOnCompositionStart(hot, container);}
       hot.suspendRender();
       for(let r=0;r<data.length;r++){
         for(let c=1;c<colHeaders.length;c++){
