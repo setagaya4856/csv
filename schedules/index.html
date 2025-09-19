@@ -658,6 +658,78 @@
     /* ================================
        マトリクス描画
     =================================*/
+    function isPlainPrintableKey(e){
+      if (!e) return false;
+      if (e.ctrlKey || e.metaKey) return false;
+      // 1 文字キー or IMEのProcessキー
+      if (e.key === 'Process' || e.keyCode === 229) return true;
+      return (typeof e.key === 'string' && e.key.length === 1);
+    }
+    
+    // 追加: “最初の一打” を HOT より先に横取りして、エディタへリダイレクト
+    function installImeKeyRedirect(hot){
+      if (!hot || hot.__imeKeyRedirectInstalled) return;
+      hot.__imeKeyRedirectInstalled = true;
+    
+      // HOT が使っている document を取得（iframe対策）
+      const doc = hot.rootDocument || document;
+    
+      const handler = (e) => {
+        // 既にエディタ開いていれば何もしない（通常処理へ）
+        const ed = hot.getActiveEditor?.();
+        const isOpen = ed && ed.isOpened && ed.isOpened();
+        if (isOpen) return;
+    
+        // セル選択が無い or 印字系じゃない → 何もしない
+        if (!hot.getSelectedLast?.()) return;
+        if (!isPlainPrintableKey(e)) return;
+    
+        // ここで HOT 本体のキーハンドラより先に止める（キャプチャ段階）
+        e.stopImmediatePropagation();
+        e.preventDefault();
+    
+        // 先にエディタを開いて textarea にフォーカス
+        ed?.beginEditing?.('');
+        const ta = ed?.TEXTAREA;
+        if (!ta) return;
+    
+        // 次のマイクロタスクで “同じキー” を textarea に投げる
+        queueMicrotask(() => {
+          ta.focus();
+          try{
+            // keydown を再発火（IME ON なら 'Process'/229 が飛ぶので英字は入らない）
+            const evt = new KeyboardEvent('keydown', {
+              key: e.key,
+              code: e.code,
+              keyCode: e.keyCode,
+              which: e.which,
+              bubbles: true,
+              cancelable: true,
+              composed: true
+            });
+            ta.dispatchEvent(evt);
+          }catch{
+            // KeyboardEvent の制約が厳しい環境用：フォールバックで直接文字を差す
+            if (e.key && e.key.length === 1) {
+              const pos = ta.selectionStart ?? ta.value.length;
+              const v = ta.value;
+              ta.value = v.slice(0, pos) + e.key + v.slice(pos);
+              ta.setSelectionRange(pos + 1, pos + 1);
+              // Handsontable のエディタに値変更を知らせる
+              ta.dispatchEvent(new Event('input', { bubbles:true }));
+            }
+          }
+        });
+      };
+    
+      // ★★ 重要：capture = true で登録（HOTのハンドラより先に動く）
+      doc.addEventListener('keydown', handler, true);
+    
+      // HOT 破棄時の掃除（画面遷移等）
+      hot.addHook('afterDestroy', () => {
+        doc.removeEventListener('keydown', handler, true);
+      });
+    }
     function renderMatrixHot(items, ym, opts={}){
       const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
       const container = $('#matrixGrid'); const today = todayStrJST();
@@ -698,22 +770,7 @@
       if(hot){ hot.updateSettings(settings);
       } else { 
         hot = new Handsontable(container, settings);
-        hot.addHook('beforeKeyDown', (e) => {
-          if (!e) return;
-          const isImeStart = e.isComposing || e.key === 'Process' || e.keyCode === 229;
-          if (!isImeStart) return;
-          const ed = hot.getActiveEditor?.();
-          // まだエディタが開いてなければ開いて、IMEの合成先を用意
-          if (!ed?.isOpened?.()) {
-            ed?.beginEditing?.();                  // 値はそのまま（空セルなら空のまま）
-            // IMEの合成を確実にテキストエリアに載せる
-            const ta = ed?.TEXTAREA;
-            if (ta) ta.focus();
-          }
-          // ここが肝：HOT内部のキー処理（英字注入や移動）だけ止める
-          e.stopImmediatePropagation();
-          // preventDefault はしない → ブラウザの IME 合成は通す（キーは捨てない）
-        });
+        installImeKeyRedirect(hot); // ← これを追加
       }
       for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
       hot.render();
