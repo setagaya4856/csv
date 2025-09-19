@@ -659,30 +659,47 @@
        マトリクス描画
     =================================*/
     function installImeFix(hot){
-      // 合成中のHOTショートカット無効化（移動/確定を止める）
+      let composing = false;
+    
+      // HOT のスクロールホルダー（キャプチャフェーズで拾う）
+      const holder =
+        hot.rootElement.querySelector('.ht_master .wtHolder') || hot.rootElement;
+    
+      // IME開始：合成フラグON & まだ編集してなければ開く
+      holder.addEventListener('compositionstart', () => {
+        composing = true;
+        const ed = hot.getActiveEditor?.();
+        // 選択中セルがある前提。未オープンなら開いておく（初打ち落ち対策）
+        if (ed && !ed.isOpened()) {
+          ed.beginEditing(''); // ここでエディタを開く（空スタート）
+        }
+      }, true);
+    
+      // IME終了：合成フラグOFF
+      holder.addEventListener('compositionend', () => {
+        composing = false;
+      }, true);
+    
+      // IME合成中は HOT のナビゲーション/ショートカットを完全停止
       hot.addHook('beforeKeyDown', (e) => {
-        if (e?.isComposing || e?.keyCode === 229 || e?.key === 'Process') {
+        const imeKey = e?.isComposing || e?.keyCode === 229 || e?.key === 'Process';
+        if (composing || imeKey) {
+          // ナビゲーションやHOTのショートカットを止める
           e.stopImmediatePropagation();
+    
+          // まだエディタが開いてないなら、このkeydownで移動されないように抑止
+          const ed = hot.getActiveEditor?.();
+          if (!ed || !ed.isOpened()) {
+            e.preventDefault();
+          }
+          // ※ エディタが開いていれば preventDefault は不要（ブラウザのIME入力を通す）
         }
       });
     
-      // IME開始で、最初にプリセットされた英字1文字を消す
-      hot.addHook('afterBeginEditing', () => {
-        const ed = hot.getActiveEditor();
-        const ta = ed && ed.TEXTAREA;
-        if (!ta || ta.__imePatched) return;
-        ta.__imePatched = true;
-    
-        // 空セルからの入力のみ対象（不要ならこの条件を外す）
-        const originalEmpty = (ed.originalValue == null || ed.originalValue === '');
-    
-        ta.addEventListener('compositionstart', () => {
-          if (originalEmpty && ta.value && ta.value.length === 1 && /^[A-Za-z]$/.test(ta.value)) {
-            ta.value = '';
-            try { ta.setSelectionRange(0, 0); } catch {}
-          }
-        }, { passive: true });
-      });
+      // 念のため：テキストエディタに IME を積極ON（非標準だけど Win で効く）
+      const style = document.createElement('style');
+      style.textContent = `.handsontableInput{ ime-mode:auto; }`;
+      document.head.appendChild(style);
     }
     function renderMatrixHot(items, ym, opts={}){
       const { colHeaders, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
