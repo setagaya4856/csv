@@ -739,7 +739,7 @@
       if(hot){ hot.updateSettings(settings);
       } else { 
         hot = new Handsontable(container, settings);
-        installImeKeyRedirect(hot); // ← これを追加
+        installOpenEditorOnFirstKey(hot, container); // ← これを追加
       }
       for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
       hot.render();
