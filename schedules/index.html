@@ -695,7 +695,20 @@
         colWidths:(i)=> (i===0?110:(i===1?180:110)),
       };
       settings._rowEmployees=rowEmployees; settings._colDates=colDates;
-      if(hot){ hot.updateSettings(settings); hot.render(); } else { hot = new Handsontable(container, settings); }
+      if(hot){
+        hot.updateSettings(settings); hot.render(); 
+      } else {
+        hot = new Handsontable(container, settings);
+        // ★ IMEガード：合成中はHOTのキー処理（ナビゲーション/確定）を止める
+        hot.addHook('beforeKeyDown', (e) => {
+          // e.isComposing: 標準フラグ / 229: IME処理中の汎用コード / 'Process': macなど
+          if (e?.isComposing || e?.keyCode === 229 || e?.key === 'Process') {
+            // ここで HOT 側のショートカットや移動処理を止める
+            e.stopImmediatePropagation();
+            // preventDefault() は基本しない（ブラウザのIME入力は通す）
+          }
+        });
+      }
       for(let r=0;r<data.length;r++){ for(let c=1;c<colHeaders.length;c++){ applyValueRule(hot,r,c,data[r][c]); } }
       hot.render();
       // スクロール
