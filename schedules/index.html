@@ -614,6 +614,12 @@
     const _ctx = _measureCanvas.getContext('2d');
     function measureTextWidth(text, font){ _ctx.font = font; return _ctx.measureText(text).width; }
     function fitTextRenderer(instance, td, row, col, prop, value){
+      // 編集中のセルには触らない（オーバーレイに任せる）
+      const ed = instance.getActiveEditor?.();
+      if (ed && ed.isOpened && ed.isOpened() &&
+          ed.cellProperties?.row === row && ed.cellProperties?.col === col) {
+        return;
+      }
       Handsontable.renderers.TextRenderer.apply(this, arguments);
       td.style.whiteSpace='nowrap'; td.style.overflow='hidden'; td.style.textOverflow='ellipsis';
       const raw = (value==null?'':String(value)); const show = raw.replace(/\r?\n/g, ' / ');
@@ -650,8 +656,16 @@
     const dirtyKey=(r,c)=>`${r}:${c}`;
     function addClassMeta(h,r,c,cls){ const meta=h.getCellMeta(r,c); const now=new Set(String(meta.className||'').split(/\s+/).filter(Boolean)); if(!now.has(cls)){ now.add(cls); h.setCellMeta(r,c,'className', Array.from(now).join(' ')); } }
     function removeClassMeta(h,r,c,cls){ const meta=h.getCellMeta(r,c); const next=String(meta.className||'').split(/\s+/).filter(x=>x&&x!==cls).join(' '); h.setCellMeta(r,c,'className', next); }
-    function markDirty(row,col,yes){ const key=dirtyKey(row,col); if(yes){ dirtyCells.add(key); if(hot) addClassMeta(hot,row,col,'dirty-cell'); } else { dirtyCells.delete(key); if(hot) removeClassMeta(hot,row,col,'dirty-cell'); } const td=hot?.getCell(row,col); if(td) td.classList.toggle('dirty-cell', !!yes); updateDirtyBadge(); }
-    function clearAllDirty(){ for(const k of dirtyCells){ const [r,c]=k.split(':').map(Number); if(hot) removeClassMeta(hot,r,c,'dirty-cell'); const td=hot?.getCell(r,c); if(td) td.classList.remove('dirty-cell'); } dirtyCells.clear(); updateDirtyBadge(); }
+    function safeRenderIfIdle(h){
+      const ed = h?.getActiveEditor?.();
+      const open = ed && ed.isOpened && ed.isOpened();
+      if (!open) {
+        // 編集を邪魔しないよう次フレームで反映
+        requestAnimationFrame(()=> h?.render());
+      }
+    }
+    function markDirty(row,col,yes){ const key=dirtyKey(row,col); if(yes){ dirtyCells.add(key); if(hot) addClassMeta(hot,row,col,'dirty-cell'); } else { dirtyCells.delete(key); if(hot) removeClassMeta(hot,row,col,'dirty-cell'); } updateDirtyBadge(); safeRenderIfIdle(hot);}
+    function clearAllDirty(){ for(const k of dirtyCells){ const [r,c]=k.split(':').map(Number); if(hot) removeClassMeta(hot,r,c,'dirty-cell'); } dirtyCells.clear(); updateDirtyBadge(); safeRenderIfIdle(hot);}
     function hasDirty(){ return dirtyCells.size>0; }
     function updateDirtyBadge(){ const el=$('#dirtyBadge'); if(!el) return; el.style.display = hasDirty()? '':'none'; }
 
