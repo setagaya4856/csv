@@ -664,7 +664,7 @@
         requestAnimationFrame(()=> h?.render());
       }
     }
-    function markDirty(row,col,yes){ const key=dirtyKey(row,col); if(yes){ dirtyCells.add(key); if(hot) addClassMeta(hot,row,col,'dirty-cell'); } else { dirtyCells.delete(key); if(hot) removeClassMeta(hot,row,col,'dirty-cell'); } updateDirtyBadge(); safeRenderIfIdle(hot);}
+    //function markDirty(row,col,yes){ const key=dirtyKey(row,col); if(yes){ dirtyCells.add(key); if(hot) addClassMeta(hot,row,col,'dirty-cell'); } else { dirtyCells.delete(key); if(hot) removeClassMeta(hot,row,col,'dirty-cell'); } updateDirtyBadge(); safeRenderIfIdle(hot);}
     function clearAllDirty(){ for(const k of dirtyCells){ const [r,c]=k.split(':').map(Number); if(hot) removeClassMeta(hot,r,c,'dirty-cell'); } dirtyCells.clear(); updateDirtyBadge(); safeRenderIfIdle(hot);}
     function hasDirty(){ return dirtyCells.size>0; }
     function updateDirtyBadge(){ const el=$('#dirtyBadge'); if(!el) return; el.style.display = hasDirty()? '':'none'; }
@@ -835,7 +835,8 @@ function installImeGuards(hot, container){
         },
         afterChange:(changes, source)=>{
           if(!changes) return; const userSources=new Set(['edit','CopyPaste.paste','Autofill.fill','UndoRedo.undo','UndoRedo.redo']); const isUser=userSources.has(source);
-          for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ markDirty(row,col,true); } }
+          for(const [row,col,_oldVal,newVal] of changes){ applyValueRule(hot,row,col,newVal); if(isUser && col>=1){ //markDirty(row,col,true);
+          } }
         },
         stretchH:'all', height:650,
         colWidths:(i)=> (i===0?110:(i===1?180:110)),
