@@ -695,7 +695,7 @@
         ta.addEventListener('compositionstart', () => {
           // 編集開始直後に IME が始まったか？
           const dt = performance.now() - (ref?.t ?? 0);
-          const justOpened = ref && dt < 150; // 調整可: 100〜200ms
+          const justOpened = ref && dt < 200; // 調整可: 100〜200ms
           // 初期値がその1文字だけの英字か？
           const isJustThatChar =
             ta.value.length === 1 && ta.value === ref?.ch && /^[a-zA-Z]$/.test(ref.ch);
