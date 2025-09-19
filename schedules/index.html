@@ -678,7 +678,7 @@ function installOpenEditorOnCompositionStart(hot, container){
     // エディタを開いてテキストエリアにフォーカス（キーは捨てない）
     ed?.beginEditing?.('');
     ed?.TEXTAREA?.focus();
-    // preventDefault / stopPropagation はしない
+    console.debug('[IME] compositionstart -> beginEditing');
   };
 
   // Handsontable のドキュメント捕捉より前に取るため capture:true
