@@ -439,12 +439,14 @@
     function hasDirty(){ return dirtySet.size>0; }
     function updateDirtyBadge(){ $('#dirtyBadge').style.display = hasDirty()? '':'none'; }
     function clearAllDirtyVisual(){
-      if(!table) return;
-      table.getCells().forEach(c=> c.getElement().classList.remove('dirty-cell'));
+      table.getRows().forEach(row => {
+        row.getCells().forEach(cell => {
+          cell.getElement().classList.remove('dirty-cell');
+        });
+      });
       dirtySet.clear();
       updateDirtyBadge();
     }
-
     function weekdayOf(y,m,d){ const t=[0,3,2,5,0,3,5,1,4,6,2,4]; if(m<3) y-=1; return (y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)+t[m-1]+d)%7; }
     function classesByDate(ds, today){
       if(!ds) return [];
