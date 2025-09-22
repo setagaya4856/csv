@@ -545,22 +545,27 @@
     }
 
     function afterTableBuiltApplyDateClasses(ym){
-      if(!table) return;
+      if (!table) return;
       const today = todayStrJST();
+    
       // 各セルに曜日/今日クラス＋値規則（休→休日色）
-      table.getData().forEach((r, rIdx)=>{
-        table.getColumns().forEach((col, cIdx)=>{
+      table.getData().forEach((r, rIdx) => {
+        table.getColumns().forEach((col, cIdx) => {
           const f = col.getField();
-          if(!f || f.startsWith('__')) return;
-          const colIndex = cIdx; // 包括的に列順でOK
-          const ds = tableMeta.colDates[colIndex];
-          table.getCell(rIdx, f)?.then(cell=>{
+          if (!f || f.startsWith('__')) return;
+    
+          const ds = tableMeta.colDates[cIdx];
+          const cell = table.getCell(rIdx, f);  // ← 同期的にセルを取得
+    
+          if (cell) {
             const el = cell.getElement();
-            // 既存クラスを一旦剥がして付け直し
-            ['ht-today','ht-sat','ht-sun','ht-holiday'].forEach(k=> el.classList.remove(k));
-            classesByDate(ds, today).forEach(k=> el.classList.add(k));
-            classesByValue(cell.getValue()).forEach(k=> el.classList.add(k));
-          }).catch(()=>{});
+            // 既存クラスを一旦剥がす
+            ['ht-today','ht-sat','ht-sun','ht-holiday'].forEach(k => el.classList.remove(k));
+            // 日付ごとの色付け
+            classesByDate(ds, today).forEach(k => el.classList.add(k));
+            // 値ルール（例: "休" が入ってたら休日色）
+            classesByValue(cell.getValue()).forEach(k => el.classList.add(k));
+          }
         });
       });
     }
