@@ -181,8 +181,8 @@
 
   <!-- Supabase -->
   <script type="module">
+    import Tabulator from 'https://unpkg.com/tabulator-tables@5.6.2/dist/js/tabulator_esm.min.js';
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-    const Tabulator = window.Tabulator;
 
     /* ================================
        設定
@@ -597,8 +597,7 @@
         table.setColumns(columns);
         table.replaceData(data);
       }else{
-        const TabulatorCtor = window.Tabulator ?? window.TabulatorFull;
-        table = new TabulatorCtor('#matrixGrid', {
+        table = new Tabulator('#matrixGrid', {
           data,
           columns,
           reactiveData:false,
