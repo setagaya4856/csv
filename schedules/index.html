@@ -597,7 +597,8 @@
         table.setColumns(columns);
         table.replaceData(data);
       }else{
-        table = new Tabulator('#matrixGrid', {
+        const TabulatorCtor = window.Tabulator ?? window.TabulatorFull;
+        table = new TabulatorCtor('#matrixGrid', {
           data,
           columns,
           reactiveData:false,
