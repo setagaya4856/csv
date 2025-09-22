@@ -549,21 +549,22 @@
       const today = todayStrJST();
     
       // 各セルに曜日/今日クラス＋値規則（休→休日色）
-      table.getData().forEach((r, rIdx) => {
+      table.getRows().forEach((row, rIdx) => {
         table.getColumns().forEach((col, cIdx) => {
           const f = col.getField();
           if (!f || f.startsWith('__')) return;
     
           const ds = tableMeta.colDates[cIdx];
-          const cell = table.getCell(rIdx, f);  // ← 同期的にセルを取得
+          const cell = row.getCell(f);   // ← row経由でセルを取る
     
           if (cell) {
             const el = cell.getElement();
-            // 既存クラスを一旦剥がす
-            ['ht-today','ht-sat','ht-sun','ht-holiday'].forEach(k => el.classList.remove(k));
-            // 日付ごとの色付け
+            // 既存クラスをリセット
+            ['ht-today','ht-sat','ht-sun','ht-holiday']
+              .forEach(k => el.classList.remove(k));
+            // 曜日クラス
             classesByDate(ds, today).forEach(k => el.classList.add(k));
-            // 値ルール（例: "休" が入ってたら休日色）
+            // 値ルールクラス（例: "休"）
             classesByValue(cell.getValue()).forEach(k => el.classList.add(k));
           }
         });
