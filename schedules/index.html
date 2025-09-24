@@ -681,9 +681,17 @@
             },
             rowContextMenu: [
               {
-                label:"コピー（表示範囲）",
-                action:function(e, row){ table.copyToClipboard("table"); }
+                label: "コピー（選択範囲）",
+                action: function(e, row){
+                  table.copyToClipboard("selected"); // ← 選択セルだけコピー
+                }
               },
+              {
+                label: "貼り付け（選択範囲）",
+                action: function(e, row){
+                  table.pasteFromClipboard(); // ← 選択範囲に貼り付け
+                }
+              }
             ],
           });
           // 2. ここでイベントハンドラを登録
