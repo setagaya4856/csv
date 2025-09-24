@@ -612,9 +612,26 @@
             height:650,
             layout:"fitDataStretch",
             virtualDom:true,
-            clipboard:true,                // クリップボードON（Ctrl/Cmd+C/V）
-            clipboardPasteParser:"table",  // 表貼付でOK
             rowFormatter,
+            // ① セル範囲選択をON
+            selectableRange: 1,              // 複数レンジにしたければ true
+            selectableRangeColumns: true,    // ヘッダクリックで列全体選択可
+            selectableRangeRows: true,       // 行番号クリックで行全体選択可
+            selectableRangeClearCells: true, // Del/Backspace で選択セルをクリア
+          
+            // ② 編集トリガーをダブルクリックに（=ドラッグで編集が開かない）
+            editTriggerEvent: "dblclick",
+          
+            // ③ クリップボードを「レンジ」モードに
+            clipboard: true,
+            clipboardCopyRowRange: "range",
+            clipboardPasteParser: "range",
+            clipboardPasteAction: "range",
+            clipboardCopyStyled: false,
+            clipboardCopyConfig: {
+              rowHeaders: false,
+              columnHeaders: false,
+            },
             columnDefaults:{
               headerSort:false,
               editor:"textarea",
