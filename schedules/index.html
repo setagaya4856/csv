@@ -585,7 +585,44 @@
       el.classList.remove('ht-holiday');
       classesByValue(cell.getValue()).forEach(k=> el.classList.add(k));
     }
-
+    
+    // 単一行用カスタムエディタ：Enterで右隣セルへ
+    function singlelineEditor(cell, onRendered, success, cancel){
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = (cell.getValue() ?? "").toString();
+      input.autocomplete = "off";
+      input.inputMode = "text";
+    
+      onRendered(() => input.focus({preventScroll:true}));
+    
+      input.addEventListener("keydown", (e) => {
+        // IME未確定はスルー（Enterでも確定させない）
+        if (e.isComposing) return;
+    
+        if (e.key === "Enter") {
+          e.preventDefault();
+          success(input.value); // まず確定
+    
+          // 右隣の「編集可能セル」にフォーカスして即編集
+          const row = cell.getRow();
+          const cells = row.getCells();
+          const idx = cells.findIndex(c => c === cell);
+          for (let i = idx + 1; i < cells.length; i++) {
+            const next = cells[i];
+            // 編集可能か判定（isEditable が関数の場合にも対応）
+            const col = next.getColumn();
+            const editable = typeof col.isEditable === "function" ? col.isEditable(next) : !!col.isEditable;
+            if (editable) { next.edit(true); break; }
+          }
+        } else if (e.key === "Escape") {
+          cancel(); // 編集キャンセル
+        }
+      });
+    
+      return input;
+    }
+    
     async function renderMatrix(items, ym, { scrollToToday=false }={}){
       const { columns, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
       tableMeta = { colDates, rowEmployees };
@@ -639,14 +676,8 @@
             },
             columnDefaults:{
               headerSort:false,
-              editor:"input",
-              editorParams:{
-                verticalNavigation:"editor",
-                elementAttributes:{
-                  inputmode:'text',
-                  style:"white-space:pre-wrap"
-                }
-              },
+              editor: singlelineEditor,
+              editorParams: { },                    // （不要なら空でOK）
             },
             rowContextMenu: [
               {
@@ -655,13 +686,34 @@
               },
             ],
           });
-          // Enterで編集開始
+          // 2. ここでイベントハンドラを登録
+          let lastSelectedCell = null;
+          
+          table.on("cellSelected", (cell) => { 
+            lastSelectedCell = cell;
+          });
+          
           table.on("cellKeyDown", (e, cell) => {
-            if(e.key === "Enter"){
+            if (cell.isEdited && cell.isEdited()) return;
+          
+            if (e.key === "Enter") {
               e.preventDefault();
-              cell.edit(true);   // ← セル編集モードに入る
+              cell.edit(true);
+              return;
+            }
+          
+            const isPrintable = e.key.length === 1 || e.key === "Process";
+            if (isPrintable && !e.ctrlKey && !e.metaKey && !e.altKey) {
+              cell.edit(true); // ← 入力開始
             }
           });
+          
+          // 3. compositionstart 保険
+          document.getElementById("matrixGrid").addEventListener("compositionstart", () => {
+            if (lastSelectedCell && !(lastSelectedCell.isEdited && lastSelectedCell.isEdited())) {
+              lastSelectedCell.edit(true);
+            }
+          }, true);
         }
       }
       // 表示後に日付クラス反映
