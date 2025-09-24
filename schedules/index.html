@@ -664,9 +664,15 @@
             clipboard: true,
             clipboardCopyRowRange: "range",
             clipboardPasteParser: (clipboard) => {
+              // Tabulator の "table" パーサーと同等処理
               return clipboard
-                .split(/\r?\n/)
-                .map(line => line.split("\t").map(cell => cell.replace(/\r?\n/g," ")));
+                .trim()
+                .split(/\r?\n/)                       // 行ごとに分割
+                .map(line => 
+                  line.split("\t").map(cell => 
+                    cell.replace(/[\r\n]+/g, " ")     // ← セル内の改行を全部スペースに
+                  )
+                );
             },
             clipboardPasteAction: "range",
             clipboardCopyStyled: false,
