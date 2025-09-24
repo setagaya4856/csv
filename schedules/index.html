@@ -613,6 +613,7 @@
             layout:"fitDataStretch",
             virtualDom:true,
             rowFormatter,
+            keybindings:true,  // ← キーボード操作ON
             // ① セル範囲選択をON
             selectableRange: 1,              // 複数レンジにしたければ true
             selectableRangeColumns: true,    // ヘッダクリックで列全体選択可
@@ -625,7 +626,11 @@
             // ③ クリップボードを「レンジ」モードに
             clipboard: true,
             clipboardCopyRowRange: "range",
-            clipboardPasteParser: "range",
+            clipboardPasteParser: (clipboard) => {
+              return clipboard
+                .split(/\r?\n/)
+                .map(line => line.split("\t").map(cell => cell.replace(/\r?\n/g," ")));
+            },
             clipboardPasteAction: "range",
             clipboardCopyStyled: false,
             clipboardCopyConfig: {
@@ -634,8 +639,14 @@
             },
             columnDefaults:{
               headerSort:false,
-              editor:"textarea",
-              editorParams:{ verticalNavigation:"editor", elementAttributes:{ inputmode:'text', style:"white-space:pre-wrap" } },
+              editor:"input",
+              editorParams:{
+                verticalNavigation:"editor",
+                elementAttributes:{
+                  inputmode:'text',
+                  style:"white-space:pre-wrap"
+                }
+              },
             },
             rowContextMenu: [
               {
@@ -644,9 +655,15 @@
               },
             ],
           });
+          // Enterで編集開始
+          table.on("cellKeyDown", (e, cell) => {
+            if(e.key === "Enter"){
+              e.preventDefault();
+              cell.edit(true);   // ← セル編集モードに入る
+            }
+          });
         }
       }
-
       // 表示後に日付クラス反映
       table.on("dataProcessed", ()=>{
         afterTableBuiltApplyDateClasses(ym);
