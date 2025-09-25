@@ -797,6 +797,17 @@
               lastSelectedCell.edit(true);
             }
           }, true);
+          gridEl.addEventListener("keydown", (e)=> {
+            if ((e.key?.length===1) || e.key==="Process" || e.key==="Enter") {
+              console.log("[DBG] keydown:", e.key, "isComp?", e.isComposing);
+            }
+          }, true);
+          
+          gridEl.addEventListener("compositionstart", ()=> console.log("[DBG] compositionstart"));
+          gridEl.addEventListener("compositionend",   ()=> console.log("[DBG] compositionend"));
+          gridEl.addEventListener("beforeinput", (e)=> {
+            console.log("[DBG] beforeinput:", e.inputType, "data:", e.data, "isComp?", e.isComposing);
+          }, true);
         }
       }
       // 表示後に日付クラス反映
