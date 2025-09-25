@@ -765,8 +765,8 @@
               // IMEが始まるか様子見 → 始まったら何もしない／始まらなければ注入
               const thisKey = e.key; // 印刷可能キーのみ値がある
               const plannedAt = performance.now();
-              const INJECT_DELAY_MS = 40; // 30〜60ms で調整
-              const COMP_WINDOW_MS  = 70; // 50〜90ms で調整
+              const INJECT_DELAY_MS = 60; // 30〜60ms で調整
+              const COMP_WINDOW_MS  = 90; // 50〜90ms で調整
           
               // 印刷可能キーのみ注入候補
               if (printable) {
