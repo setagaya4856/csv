@@ -681,14 +681,14 @@
              // 貼り付けは Ctrl/Cmd+V を使用（右クリックで案内を出したい場合は下の追加例を参照）
            ],
           });
-          // 2. ここでイベントハンドラを登録
+          // 直前に選択されたセルを覚える
           let lastSelectedCell = null;
+          table.on("cellSelected", (cell) => { lastSelectedCell = cell; });
           
-          table.on("cellSelected", (cell) => { 
-            lastSelectedCell = cell;
-          });
-          
-          table.on("cellKeyDown", (e, cell) => {
+          // フォーカス位置に依存しないキー処理
+          table.on("tableKeyDown", (e) => {
+            const cell = lastSelectedCell;
+            if (!cell) return;
             if (cell.isEdited && cell.isEdited()) return;
           
             if (e.key === "Enter") {
@@ -697,24 +697,67 @@
               return;
             }
           
-            const isPrintable = e.key.length === 1 || e.key === "Process";
+            const isPrintable = (e.key && e.key.length === 1) || e.key === "Process";
             if (isPrintable && !e.ctrlKey && !e.metaKey && !e.altKey) {
-              const firstChar = (e.key.length === 1) ? e.key : null; // IMEのProcessは null
+              const firstChar = (e.key.length === 1) ? e.key : null;
               cell.edit(true);
               if (firstChar) {
-               setTimeout(() => {
-                 const ed = cell.getElement().querySelector("input,textarea");
-                 if (ed) {
-                   const atEnd = ed.value.length;
-                   ed.setSelectionRange(atEnd, atEnd);
-                   const newVal = ed.value + firstChar;
-                   ed.value = newVal;
-                   ed.dispatchEvent(new Event("input", { bubbles:true }));
-                   ed.setSelectionRange(newVal.length, newVal.length);
-                 }
-               }, 0);
+                setTimeout(() => {
+                  const ed = cell.getElement().querySelector("input,textarea");
+                  if (ed) {
+                    const atEnd = ed.value.length;
+                    ed.setSelectionRange(atEnd, atEnd);
+                    const newVal = ed.value + firstChar;
+                    ed.value = newVal;
+                    ed.dispatchEvent(new Event("input", { bubbles:true }));
+                    ed.setSelectionRange(newVal.length, newVal.length);
+                  }
+                }, 0);
               }
             }
+          });
+          
+          // IME用：compositionstartで編集開始
+          document.getElementById("matrixGrid").addEventListener("compositionstart", () => {
+            if (lastSelectedCell && !(lastSelectedCell.isEdited && lastSelectedCell.isEdited())) {
+              lastSelectedCell.edit(true);
+            }
+          }, true);
+          
+          // 保険：ドキュメント全体でkeydownも拾う
+          document.addEventListener("keydown", (e) => {
+            if (lastSelectedCell && lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
+            const ae = document.activeElement;
+            if (!ae || !ae.closest("#matrixGrid")) return;
+          
+            const cell = lastSelectedCell;
+            if (!cell) return;
+          
+            if (e.key === "Enter") {
+              e.preventDefault();
+              cell.edit(true);
+              return;
+            }
+          
+            const isPrintable = (e.key && e.key.length === 1) || e.key === "Process";
+            if (isPrintable && !e.ctrlKey && !e.metaKey && !e.altKey) {
+              const firstChar = (e.key.length === 1) ? e.key : null;
+              cell.edit(true);
+              if (firstChar) {
+                setTimeout(() => {
+                  const ed = cell.getElement().querySelector("input,textarea");
+                  if (ed) {
+                    const atEnd = ed.value.length;
+                    ed.setSelectionRange(atEnd, atEnd);
+                    const newVal = ed.value + firstChar;
+                    ed.value = newVal;
+                    ed.dispatchEvent(new Event("input", { bubbles:true }));
+                    ed.setSelectionRange(newVal.length, newVal.length);
+                  }
+                }, 0);
+              }
+            }
+          }, true);
           });
           
           // 3. compositionstart 保険
