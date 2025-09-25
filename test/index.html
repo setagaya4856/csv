@@ -1,10 +1,21 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Jspreadsheet CE テスト</title>
+
+  <!-- jSuites（先に読み込む） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites/dist/jsuites.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jsuites/dist/jsuites.js"></script>
+
+  <!-- Jspreadsheet CE -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce/dist/jspreadsheet.css" />
   <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce/dist/index.js"></script>
+
+  <style>
+    body{ font-family: system-ui, sans-serif; }
+    #sheet{ max-width: 520px; margin: 24px auto; }
+  </style>
 </head>
 <body>
   <div id="sheet"></div>
@@ -15,17 +26,29 @@
       ['', ''],
     ];
 
+    // CE最新版ならこれでOK（worksheets不要）
     jspreadsheet(document.getElementById('sheet'), {
-      worksheets: [   // ← これを使うと確実に通る
-        {
-          data: data,
-          columns: [
-            { type:'text', title:'午前', width:220 },
-            { type:'text', title:'午後', width:220 },
-          ],
-        }
-      ]
+      data,
+      columns: [
+        { type: 'text', title: '午前', width: 240 },
+        { type: 'text', title: '午後', width: 240 },
+      ],
+      // 必要に応じて
+      // allowInsertRow:false, allowDeleteRow:false, allowInsertColumn:false, allowDeleteColumn:false,
     });
+
+    // もし上でエラーが出る環境の場合は、下の worksheets 形式に切替えて試してもOK
+    /*
+    jspreadsheet(document.getElementById('sheet'), {
+      worksheets: [{
+        data,
+        columns: [
+          { type: 'text', title: '午前', width: 240 },
+          { type: 'text', title: '午後', width: 240 },
+        ],
+      }]
+    });
+    */
   </script>
 </body>
 </html>
