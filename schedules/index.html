@@ -704,110 +704,107 @@
             if (document.activeElement !== gridEl) gridEl.focus();
           });
           
-          // 直前に選択されたセルを覚える
+          // 直近のセルを覚える（既存のハンドラはそのままでOK）
           let lastSelectedCell = null;
-          // クリック/選択/タップの各フェーズで更新しておく
-          table.on("cellClick",     (e, cell) => { lastSelectedCell = cell; });
-          table.on("cellSelected",  (cell)    => { lastSelectedCell = cell; });
-          table.on("cellMouseDown", (e, cell) => { lastSelectedCell = cell; });
-          table.on("cellTap",       (e, cell) => { lastSelectedCell = cell; });
-          table.on("cellContext", (e, cell) => { lastSelectedCell = cell; });
+          table.on("cellClick",     (e, cell)=> lastSelectedCell = cell);
+          table.on("cellSelected",  (cell)=>    lastSelectedCell = cell);
+          table.on("cellMouseDown", (e, cell)=> lastSelectedCell = cell);
+          table.on("cellTap",       (e, cell)=> lastSelectedCell = cell);
+          table.on("cellContext",   (e, cell)=> lastSelectedCell = cell);
           
-          // IME状態フラグ（任意：ログ・デバッグ用）
+          // IME状態と直近開始時刻
+          let isComposing = false;
           let lastCompStartAt = 0;
+          
+          // editor DOM を待つ
+          async function waitForEditor(cell, tries = 10){
+            return new Promise(resolve=>{
+              const tick=()=>{
+                const ed = cell.getElement()?.querySelector("input,textarea,[contenteditable='true']");
+                if (ed) return resolve(ed);
+                if (tries-- <= 0) return resolve(null);
+                requestAnimationFrame(tick);
+              };
+              tick();
+            });
+          }
+          
           gridEl.addEventListener("compositionstart", () => {
+            isComposing = true;
             lastCompStartAt = performance.now();
             if (lastSelectedCell && !(lastSelectedCell.isEdited && lastSelectedCell.isEdited())) {
-              lastSelectedCell.edit(true); // 編集だけ開く（未確定はブラウザに任せる）
+              lastSelectedCell.edit(true); // 編集だけ開く（未確定はIMEに任せる）
             }
           }, true);
-          function wasCompositionJustStarted(sinceMs = 60){
-            return (performance.now() - lastCompStartAt) <= sinceMs;
-          }
-          gridEl.addEventListener("beforeinput", async (e) => {
-            if (!lastSelectedCell) return;
           
-            // 既に editor が開いていればブラウザに任せる（未確定や確定処理を邪魔しない）
-            if (lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
+          gridEl.addEventListener("compositionend", () => { isComposing = false; }, true);
           
-            const it = e.inputType || "";
-          
-            // ★ IME 系は止めない（未確定描画はブラウザに任せる）
-            if (e.isComposing || it.startsWith("insertComposition")) {
-              lastSelectedCell.edit(true);
-              return; // preventDefault しない
-            }
-          
-            // ★ ここがポイント：insertText は常にいったん止めて保留
-            if (it === "insertText" && typeof e.data === "string" && e.data.length > 0) {
-              e.preventDefault();
-              lastSelectedCell.edit(true);
-          
-              // editor DOM を待つ（あなたの waitForEditor があればそれを使ってOK）
-              const ed = await (async function waitForEditor(cell, tries = 10){
-                return new Promise(res=>{
-                  const tick=()=> {
-                    const el = cell.getElement?.();
-                    const ed = el?.querySelector?.("input,textarea,[contenteditable='true']");
-                    if (ed) return res(ed);
-                    if (tries-- <= 0) return res(null);
-                    requestAnimationFrame(tick);
-                  };
-                  tick();
-                });
-              })(lastSelectedCell);
-              if (!ed) return;
-          
-              // 少し待って、直近に composition が始まっていたら → 注入キャンセル
-              const INJECT_DELAY_MS = 35; // 環境で 30〜60 に調整可
-              setTimeout(() => {
-                if (wasCompositionJustStarted(60)) return; // ← IMEオンだったので a は捨てる
-          
-                // ← IMEオフ（composition来なかった）なのでここで初めて1文字注入
-                const start = ed.selectionStart ?? ed.value?.length ?? 0;
-                const end   = ed.selectionEnd   ?? ed.value?.length ?? 0;
-                const prev  = typeof ed.value === "string" ? ed.value : "";
-                const next  = prev.slice(0, start) + e.data + prev.slice(end);
-                ed.value = next;
-                ed.dispatchEvent(new Event("input", { bubbles:true }));
-                if (typeof ed.setSelectionRange === "function") ed.setSelectionRange(start + e.data.length, start + e.data.length);
-                ed.focus();
-              }, INJECT_DELAY_MS);
-            }
-          }, true);
-
+          // ★ キー入力は keydown 主導に一本化（beforeinput は使わない）
           document.addEventListener("keydown", (e) => {
             if (!lastSelectedCell) return;
-            if (lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
           
+            // 入力要素上はノータッチ
             const t = e.target, tag = (t?.tagName || "").toUpperCase();
             if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t?.isContentEditable) return;
           
             const printable = e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
-            const isProcess = e.key === "Process";
-            const isEnter   = e.key === "Enter";
+            const isProcess = (e.key === "Process"); // IMEスタートトークン（環境により来たり来なかったり）
+            const isEnter   = (e.key === "Enter");
           
-            if (printable || isProcess) {
-              // 注入は beforeinput 側。ここでは開くだけ。
-              lastSelectedCell.edit(true);
-              return;
-            }
-            if (isEnter) {
-              e.preventDefault(); // Enter だけは確定/移動の都合で潰してOK
-              lastSelectedCell.edit(true);
+            // 既に編集中ならブラウザに任せる（IME/通常ともに自然挙動）
+            if (lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
+          
+            // ここがポイント：印刷可能キーと Process は既定動作を止める
+            if (printable || isProcess || isEnter) {
+              e.preventDefault();          // ← insertText を根元で止める
+              lastSelectedCell.edit(true); // 編集だけ開く
+          
+              // Enter は注入不要（確定/移動用）。ここで終了
+              if (isEnter) return;
+          
+              // IMEが始まるか様子見 → 始まったら何もしない／始まらなければ注入
+              const thisKey = e.key; // 印刷可能キーのみ値がある
+              const plannedAt = performance.now();
+              const INJECT_DELAY_MS = 40; // 30〜60ms で調整
+              const COMP_WINDOW_MS  = 70; // 50〜90ms で調整
+          
+              // 印刷可能キーのみ注入候補
+              if (printable) {
+                (async () => {
+                  const ed = await waitForEditor(lastSelectedCell);
+                  if (!ed) return;
+          
+                  setTimeout(() => {
+                    const compStartedRecently = (performance.now() - lastCompStartAt) <= COMP_WINDOW_MS;
+                    if (isComposing || compStartedRecently) {
+                      // → IMEオンだったので注入キャンセル（未確定はIMEに任せる）
+                      return;
+                    }
+                    // → IMEオフ：ここで初めて1文字注入（1打鍵=1文字）
+                    const start = ed.selectionStart ?? ed.value?.length ?? 0;
+                    const end   = ed.selectionEnd   ?? ed.value?.length ?? 0;
+                    const prev  = typeof ed.value === "string" ? ed.value : "";
+                    const next  = prev.slice(0, start) + thisKey + prev.slice(end);
+                    ed.value = next;
+                    ed.dispatchEvent(new Event("input", { bubbles: true }));
+                    if (typeof ed.setSelectionRange === "function") ed.setSelectionRange(start + thisKey.length, start + thisKey.length);
+                    ed.focus();
+                  }, INJECT_DELAY_MS);
+                })();
+              }
             }
           }, true);
           gridEl.addEventListener("keydown", (e)=> {
-            if ((e.key?.length===1) || e.key==="Process" || e.key==="Enter") {
-              console.log("[DBG] keydown:", e.key, "isComp?", e.isComposing);
-            }
-          }, true);
-          
-          gridEl.addEventListener("compositionstart", ()=> console.log("[DBG] compositionstart"));
-          gridEl.addEventListener("compositionend",   ()=> console.log("[DBG] compositionend"));
-          gridEl.addEventListener("beforeinput", (e)=> {
-            console.log("[DBG] beforeinput:", e.inputType, "data:", e.data, "isComp?", e.isComposing);
-          }, true);
+  if ((e.key?.length===1) || e.key==="Process" || e.key==="Enter") {
+    console.log("[DBG] keydown:", e.key, "isComp?", e.isComposing);
+  }
+}, true);
+
+gridEl.addEventListener("compositionstart", ()=> console.log("[DBG] compositionstart"));
+gridEl.addEventListener("compositionend",   ()=> console.log("[DBG] compositionend"));
+gridEl.addEventListener("beforeinput", (e)=> {
+  console.log("[DBG] beforeinput:", e.inputType, "data:", e.data, "isComp?", e.isComposing);
+}, true);
         }
       }
       // 表示後に日付クラス反映
