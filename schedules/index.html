@@ -685,22 +685,28 @@
           let lastSelectedCell = null;
           table.on("cellSelected", (cell) => { lastSelectedCell = cell; });
           
-          // フォーカス位置に依存しないキー処理
+          // フォーカス位置に依存しないキー処理：テーブル全体で拾う
           table.on("tableKeyDown", (e) => {
             const cell = lastSelectedCell;
             if (!cell) return;
+          
+            // すでに編集中なら何もしない
             if (cell.isEdited && cell.isEdited()) return;
           
+            // Enterで編集開始
             if (e.key === "Enter") {
               e.preventDefault();
               cell.edit(true);
               return;
             }
           
+            // 文字キー or IME開始(Process) → 編集開始
             const isPrintable = (e.key && e.key.length === 1) || e.key === "Process";
             if (isPrintable && !e.ctrlKey && !e.metaKey && !e.altKey) {
-              const firstChar = (e.key.length === 1) ? e.key : null;
+              const firstChar = (e.key.length === 1) ? e.key : null; // IME開始(Process)は null
               cell.edit(true);
+          
+              // 1文字目が落ちない対策：エディタ生成後に注入（IMEのときは注入しない）
               if (firstChar) {
                 setTimeout(() => {
                   const ed = cell.getElement().querySelector("input,textarea");
@@ -717,19 +723,23 @@
             }
           });
           
-          // IME用：compositionstartで編集開始
+          // IMEの compositionstart で未編集なら即編集（未確定入力をそのまま入れる）
           document.getElementById("matrixGrid").addEventListener("compositionstart", () => {
             if (lastSelectedCell && !(lastSelectedCell.isEdited && lastSelectedCell.isEdited())) {
               lastSelectedCell.edit(true);
             }
           }, true);
           
-          // 保険：ドキュメント全体でkeydownも拾う
+          // さらに保険：フォーカスが #matrixGrid 内にあるときは document でも拾う
           document.addEventListener("keydown", (e) => {
+            // エディタ表示中なら触らない
             if (lastSelectedCell && lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
-            const ae = document.activeElement;
-            if (!ae || !ae.closest("#matrixGrid")) return;
           
+            // テーブル内にフォーカスがあるときのみ
+            const ae = document.activeElement;
+            if (!ae || !ae.closest || !ae.closest("#matrixGrid")) return;
+          
+            // 上と同じロジックをフォールバックで実施
             const cell = lastSelectedCell;
             if (!cell) return;
           
@@ -756,14 +766,6 @@
                   }
                 }, 0);
               }
-            }
-          }, true);
-          });
-          
-          // 3. compositionstart 保険
-          document.getElementById("matrixGrid").addEventListener("compositionstart", () => {
-            if (lastSelectedCell && !(lastSelectedCell.isEdited && lastSelectedCell.isEdited())) {
-              lastSelectedCell.edit(true);
             }
           }, true);
         }
