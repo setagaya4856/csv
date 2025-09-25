@@ -1,23 +1,28 @@
-<!doctype html>
-<meta charset="utf-8">
-<link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
-<div id="grid"></div>
-<script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
-<script type="module">
-  console.log("Tabulator object:", window.Tabulator);
-  // UMD版の場合は TabulatorFull を使う
-  const Tab = window.TabulatorFull || window.Tabulator;
-
-  const table = new Tab("#grid", {
-    height: 200,
-    data: [
-      {id:1, name:"Alice"},
-      {id:2, name:"Bob"},
-      {id:3, name:"Carol"},
-    ],
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce/dist/jspreadsheet.css">
+<script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce/dist/jspreadsheet.js"></script>
+<div id="sheet"></div>
+<script>
+  const data = [
+    ['午前メモ', '午後メモ'],
+    ['', ''],
+  ];
+  const sheet = jspreadsheet(document.getElementById('sheet'), {
+    data,
     columns: [
-      {title:"ID", field:"id"},
-      {title:"Name", field:"name"},
+      { type:'text', title:'午前', width:220 },
+      { type:'text', title:'午後', width:220 },
     ],
+    // UI
+    rowResize: true,
+    columnDrag: false,
+    allowInsertColumn: false,
+    allowDeleteColumn: false,
+    allowInsertRow: false,
+    allowDeleteRow: false,
+    // IMEは contenteditable に任せるのでフックは軽めでOK
+    onchange: (el, cell, x, y, value) => {
+      // TODO: Supabaseへ反映等
+      // console.log('changed', {x,y,value});
+    },
   });
 </script>
