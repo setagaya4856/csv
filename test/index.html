@@ -1,28 +1,31 @@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce/dist/jspreadsheet.css" />
-<script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce/dist/index.js"></script>
-<div id="sheet"></div>
-<script>
-  const data = [
-    ['午前メモ', '午後メモ'],
-    ['', ''],
-  ];
-  const sheet = jspreadsheet(document.getElementById('sheet'), {
-    data,
-    columns: [
-      { type:'text', title:'午前', width:220 },
-      { type:'text', title:'午後', width:220 },
-    ],
-    // UI
-    rowResize: true,
-    columnDrag: false,
-    allowInsertColumn: false,
-    allowDeleteColumn: false,
-    allowInsertRow: false,
-    allowDeleteRow: false,
-    // IMEは contenteditable に任せるのでフックは軽めでOK
-    onchange: (el, cell, x, y, value) => {
-      // TODO: Supabaseへ反映等
-      // console.log('changed', {x,y,value});
-    },
-  });
-</script>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Jspreadsheet CE テスト</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce/dist/jspreadsheet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce/dist/index.js"></script>
+</head>
+<body>
+  <div id="sheet"></div>
+
+  <script>
+    const data = [
+      ['午前メモ', '午後メモ'],
+      ['', ''],
+    ];
+
+    jspreadsheet(document.getElementById('sheet'), {
+      worksheets: [   // ← これを使うと確実に通る
+        {
+          data: data,
+          columns: [
+            { type:'text', title:'午前', width:220 },
+            { type:'text', title:'午後', width:220 },
+          ],
+        }
+      ]
+    });
+  </script>
+</body>
+</html>
