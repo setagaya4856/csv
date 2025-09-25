@@ -716,65 +716,80 @@
           table.on("cellTap",       (e, cell) => { lastSelectedCell = cell; });
           table.on("cellContext", (e, cell) => { lastSelectedCell = cell; });
 
-          // Enter だけは keydown で「編集開始」のトリガーにする（注入はしない）
+          // editor DOM を待って取得するユーティリティ
+          function waitForEditor(cell, tries = 10) {
+            return new Promise((resolve) => {
+              const tryOnce = () => {
+                const el = cell.getElement();
+                const ed = el.querySelector("input,textarea, [contenteditable='true']");
+                if (ed) return resolve(ed);
+                if (tries <= 0) return resolve(null);
+                // Tabulator が editor を挿すのは次フレーム以降になることがある
+                requestAnimationFrame(() => { tries--; tryOnce(); });
+              };
+              tryOnce();
+            });
+          }
+
+          // Enter で編集開始（注入はしない）※既存の Enter ハンドラがあればそれでOK
           document.addEventListener("keydown", (e) => {
             if (!lastSelectedCell) return;
-          
-            // 既に editor が開いているなら関与しない
             if (lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
           
-            // 入力系要素上は関与しない
             const t = e.target, tag = (t?.tagName || "").toUpperCase();
             if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t?.isContentEditable) return;
           
             if (e.key === "Enter") {
               e.preventDefault();
-              lastSelectedCell.edit(true); // ここでは注入しない
+              lastSelectedCell.edit(true);
+            }
+          
+            // ★ フォールバック：一部環境で beforeinput が来ない印刷可能キー
+            const isPrintable = e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
+            if (isPrintable) {
+              // 注入はしない（重複防止）。編集だけ開く。
+              lastSelectedCell.edit(true);
             }
           }, true);
-                    // 文字注入は beforeinput に一本化：
-          // - IME中（isComposing=true or inputType.startsWith("insertComposition")）→ 注入しない
-          // - 通常の1文字入力（inputType==="insertText" && data がある）→ 編集開始して data を注入
-          gridEl.addEventListener("beforeinput", (e) => {
+          
+          gridEl.addEventListener("beforeinput", async (e) => {
             if (!lastSelectedCell) return;
           
-            // 既に editor が開いているならブラウザに任せる
+            // 既に editor が開いているならブラウザに任せる（ここでは何もしない）
             if (lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
           
-            // 入力系要素上は関与しない
             const t = e.target, tag = (t?.tagName || "").toUpperCase();
             if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t?.isContentEditable) return;
           
-            // IME中 or composition テキスト → 注入しない（未確定をエディタに乗せるだけ）
             const it = e.inputType || "";
             const isComp = e.isComposing || it.startsWith("insertComposition");
+          
             if (isComp) {
-              // まず編集を開くだけ
+              // IME 未確定：編集だけ開く（注入しない）
               lastSelectedCell.edit(true);
-              return;
+              return; // preventDefault しない
             }
           
-            // 通常の1文字入力（ペースト等は別経路で Tabulator が処理）
+            // 通常の1文字入力（insertText）
             if (it === "insertText" && typeof e.data === "string" && e.data.length > 0) {
-              // 自前で処理するので既定を止める
-              e.preventDefault();
-          
-              // 編集を開いて、1文字目を注入
+              e.preventDefault(); // 自前で注入するので止める
               lastSelectedCell.edit(true);
+              const ed = await waitForEditor(lastSelectedCell);
+              if (!ed) return; // 安全側
           
-              // エディタDOMが載るまで少し遅らせて注入
-              setTimeout(() => {
-                const ed = lastSelectedCell.getElement().querySelector("input,textarea");
-                if (!ed) return;
+              // 末尾に1文字追加（必要ならキャレット位置に差し替え可能）
+              const start = ed.selectionStart ?? ed.value?.length ?? 0;
+              const end   = ed.selectionEnd   ?? ed.value?.length ?? 0;
+              const prev  = typeof ed.value === "string" ? ed.value : "";
+              const next  = prev.slice(0, start) + e.data + prev.slice(end);
           
-                // 既存値の末尾に data を連結。必要ならキャレット位置に合わせて挿入へ変更も可能
-                const atEnd = ed.value.length;
-                ed.setSelectionRange(atEnd, atEnd);
-                const newVal = ed.value + e.data;
-                ed.value = newVal;
-                ed.dispatchEvent(new Event("input", { bubbles: true }));
-                ed.setSelectionRange(newVal.length, newVal.length);
-              }, 0);
+              ed.value = next;
+              ed.dispatchEvent(new Event("input", { bubbles: true }));
+              const caret = start + e.data.length;
+              if (typeof ed.setSelectionRange === "function") {
+                ed.setSelectionRange(caret, caret);
+              }
+              ed.focus();
             }
           }, true);
           
