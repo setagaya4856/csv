@@ -715,54 +715,73 @@
           table.on("cellMouseDown", (e, cell) => { lastSelectedCell = cell; });
           table.on("cellTap",       (e, cell) => { lastSelectedCell = cell; });
           table.on("cellContext", (e, cell) => { lastSelectedCell = cell; });
-          
-          // IMEの compositionstart で未編集なら即編集（未確定入力をそのまま入れる）
-          document.getElementById("matrixGrid").addEventListener("compositionstart", () => {
-            if (lastSelectedCell && !(lastSelectedCell.isEdited && lastSelectedCell.isEdited())) {
-              lastSelectedCell.edit(true);
-            }
-          }, true);
 
+          // Enter だけは keydown で「編集開始」のトリガーにする（注入はしない）
           document.addEventListener("keydown", (e) => {
             if (!lastSelectedCell) return;
           
-            // 既に編集中なら何もしない
+            // 既に editor が開いているなら関与しない
             if (lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
           
-            // 入力系要素上はスルー
+            // 入力系要素上は関与しない
             const t = e.target, tag = (t?.tagName || "").toUpperCase();
             if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t?.isContentEditable) return;
           
-            // Enter → 編集開始
             if (e.key === "Enter") {
               e.preventDefault();
+              lastSelectedCell.edit(true); // ここでは注入しない
+            }
+          }, true);
+                    // 文字注入は beforeinput に一本化：
+          // - IME中（isComposing=true or inputType.startsWith("insertComposition")）→ 注入しない
+          // - 通常の1文字入力（inputType==="insertText" && data がある）→ 編集開始して data を注入
+          gridEl.addEventListener("beforeinput", (e) => {
+            if (!lastSelectedCell) return;
+          
+            // 既に editor が開いているならブラウザに任せる
+            if (lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
+          
+            // 入力系要素上は関与しない
+            const t = e.target, tag = (t?.tagName || "").toUpperCase();
+            if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t?.isContentEditable) return;
+          
+            // IME中 or composition テキスト → 注入しない（未確定をエディタに乗せるだけ）
+            const it = e.inputType || "";
+            const isComp = e.isComposing || it.startsWith("insertComposition");
+            if (isComp) {
+              // まず編集を開くだけ
               lastSelectedCell.edit(true);
               return;
             }
           
-            // 文字キー or IME開始(Process) → 編集開始
-            const looksPrintable = (e.key && e.key.length === 1) || e.key === "Process";
-            if (looksPrintable && !e.ctrlKey && !e.metaKey && !e.altKey) {
-              // 編集開始だけ先にやる（IMEの未確定をエディタに乗せる）
+            // 通常の1文字入力（ペースト等は別経路で Tabulator が処理）
+            if (it === "insertText" && typeof e.data === "string" && e.data.length > 0) {
+              // 自前で処理するので既定を止める
+              e.preventDefault();
+          
+              // 編集を開いて、1文字目を注入
               lastSelectedCell.edit(true);
           
-              // ▼ ここがポイント：IME中 or key==='Process' なら「最初の1文字注入」をしない
-              const shouldInjectFirstChar =
-                !isComposing && e.key !== "Process" && e.key && e.key.length === 1;
+              // エディタDOMが載るまで少し遅らせて注入
+              setTimeout(() => {
+                const ed = lastSelectedCell.getElement().querySelector("input,textarea");
+                if (!ed) return;
           
-              if (shouldInjectFirstChar) {
-                setTimeout(() => {
-                  const ed = lastSelectedCell.getElement().querySelector("input,textarea");
-                  if (ed) {
-                    const atEnd = ed.value.length;
-                    ed.setSelectionRange(atEnd, atEnd);
-                    const newVal = ed.value + e.key;
-                    ed.value = newVal;
-                    ed.dispatchEvent(new Event("input", { bubbles:true }));
-                    ed.setSelectionRange(newVal.length, newVal.length);
-                  }
-                }, 0);
-              }
+                // 既存値の末尾に data を連結。必要ならキャレット位置に合わせて挿入へ変更も可能
+                const atEnd = ed.value.length;
+                ed.setSelectionRange(atEnd, atEnd);
+                const newVal = ed.value + e.data;
+                ed.value = newVal;
+                ed.dispatchEvent(new Event("input", { bubbles: true }));
+                ed.setSelectionRange(newVal.length, newVal.length);
+              }, 0);
+            }
+          }, true);
+          
+          // IMEの開始で editor を自動オープン（安全側ダブルガード）
+          gridEl.addEventListener("compositionstart", () => {
+            if (lastSelectedCell && !(lastSelectedCell.isEdited && lastSelectedCell.isEdited())) {
+              lastSelectedCell.edit(true); // 注入はしない
             }
           }, true);
         }
