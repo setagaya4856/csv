@@ -716,16 +716,23 @@
           // IME状態フラグ（任意：ログ・デバッグ用）
           let isComposing = false;
           gridEl.addEventListener("compositionstart", () => {
+            console.log("[DBG] compositionstart");
             isComposing = true;
             // まだ未編集なら「編集だけ」開く（未確定はブラウザが描画）
             if (lastSelectedCell && !(lastSelectedCell.isEdited && lastSelectedCell.isEdited())) {
               lastSelectedCell.edit(true);
             }
           }, true);
-          gridEl.addEventListener("compositionend", () => { isComposing = false; }, true);
+          gridEl.addEventListener("compositionend", () => { console.log("[DBG] compositionend"); isComposing = false; }, true);
+gridEl.addEventListener("beforeinput", (e)=> {
+  console.log("[DBG] beforeinput:", e.inputType, "data:", e.data, "isComp?", e.isComposing);
+}, true);
           
           // ★ 文字は一切“注入しない”。keydown で「とにかく早く editor を開く」だけ。
           document.addEventListener("keydown", (e) => {
+            if ((e.key?.length===1) || e.key==="Process" || e.key==="Enter") {
+              console.log("[DBG] keydown:", e.key, "isComp?", e.isComposing);
+            }
             if (!lastSelectedCell) return;
           
             // 入力要素上はノータッチ
