@@ -653,7 +653,7 @@
             rowFormatter,
             keybindings:true,  // ← キーボード操作ON
             // ① セル範囲選択をON
-            selectableRange: 1,              // 複数レンジにしたければ true
+            selectableRange: true,              // 複数レンジにしたければ true
             selectableRangeColumns: true,    // ヘッダクリックで列全体選択可
             selectableRangeRows: true,       // 行番号クリックで行全体選択可
             selectableRangeClearCells: true, // Del/Backspace で選択セルをクリア
@@ -681,47 +681,21 @@
              // 貼り付けは Ctrl/Cmd+V を使用（右クリックで案内を出したい場合は下の追加例を参照）
            ],
           });
+          const gridEl = document.getElementById("matrixGrid");
+          gridEl.setAttribute("tabindex", "0");          // フォーカス可能に
+          gridEl.style.outline = "none";                 // フォーカス枠は消す
+          gridEl.addEventListener("mousedown", () => {
+            // クリック・ドラッグ開始で必ずフォーカスを掴む
+            if (document.activeElement !== gridEl) gridEl.focus();
+          });
           // 直前に選択されたセルを覚える
           let lastSelectedCell = null;
-          table.on("cellSelected", (cell) => { lastSelectedCell = cell; });
-          
-          // フォーカス位置に依存しないキー処理：テーブル全体で拾う
-          table.on("tableKeyDown", (e) => {
-            const cell = lastSelectedCell;
-            if (!cell) return;
-          
-            // すでに編集中なら何もしない
-            if (cell.isEdited && cell.isEdited()) return;
-          
-            // Enterで編集開始
-            if (e.key === "Enter") {
-              e.preventDefault();
-              cell.edit(true);
-              return;
-            }
-          
-            // 文字キー or IME開始(Process) → 編集開始
-            const isPrintable = (e.key && e.key.length === 1) || e.key === "Process";
-            if (isPrintable && !e.ctrlKey && !e.metaKey && !e.altKey) {
-              const firstChar = (e.key.length === 1) ? e.key : null; // IME開始(Process)は null
-              cell.edit(true);
-          
-              // 1文字目が落ちない対策：エディタ生成後に注入（IMEのときは注入しない）
-              if (firstChar) {
-                setTimeout(() => {
-                  const ed = cell.getElement().querySelector("input,textarea");
-                  if (ed) {
-                    const atEnd = ed.value.length;
-                    ed.setSelectionRange(atEnd, atEnd);
-                    const newVal = ed.value + firstChar;
-                    ed.value = newVal;
-                    ed.dispatchEvent(new Event("input", { bubbles:true }));
-                    ed.setSelectionRange(newVal.length, newVal.length);
-                  }
-                }, 0);
-              }
-            }
-          });
+          // クリック/選択/タップの各フェーズで更新しておく
+          table.on("cellClick",     (e, cell) => { lastSelectedCell = cell; });
+          table.on("cellSelected",  (cell)    => { lastSelectedCell = cell; });
+          table.on("cellMouseDown", (e, cell) => { lastSelectedCell = cell; });
+          table.on("cellTap",       (e, cell) => { lastSelectedCell = cell; });
+          table.on("cellContext", (e, cell) => { lastSelectedCell = cell; });
           
           // IMEの compositionstart で未編集なら即編集（未確定入力をそのまま入れる）
           document.getElementById("matrixGrid").addEventListener("compositionstart", () => {
@@ -729,33 +703,36 @@
               lastSelectedCell.edit(true);
             }
           }, true);
-          
-          // さらに保険：フォーカスが #matrixGrid 内にあるときは document でも拾う
+
           document.addEventListener("keydown", (e) => {
-            // エディタ表示中なら触らない
+            // エディタ開いてたら何もしない
             if (lastSelectedCell && lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
           
-            // テーブル内にフォーカスがあるときのみ
-            const ae = document.activeElement;
-            if (!ae || !ae.closest || !ae.closest("#matrixGrid")) return;
+            // 直近セルが未選択なら何もしない
+            if (!lastSelectedCell) return;
           
-            // 上と同じロジックをフォールバックで実施
-            const cell = lastSelectedCell;
-            if (!cell) return;
+            // 入力要素上のキーはスルー（他UIを壊さない）
+            const t = e.target;
+            const tag = (t && t.tagName || "").toUpperCase();
+            if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
           
+            // Enterで編集開始
             if (e.key === "Enter") {
               e.preventDefault();
-              cell.edit(true);
+              lastSelectedCell.edit(true);
               return;
             }
           
+            // 文字キー or IME開始(Process) → 編集開始
             const isPrintable = (e.key && e.key.length === 1) || e.key === "Process";
             if (isPrintable && !e.ctrlKey && !e.metaKey && !e.altKey) {
-              const firstChar = (e.key.length === 1) ? e.key : null;
-              cell.edit(true);
+              const firstChar = (e.key.length === 1) ? e.key : null; // IME開始は null
+              lastSelectedCell.edit(true);
+          
+              // 1文字目が落ちない対策：エディタDOM生成後に注入（IMEは注入しない）
               if (firstChar) {
                 setTimeout(() => {
-                  const ed = cell.getElement().querySelector("input,textarea");
+                  const ed = lastSelectedCell.getElement().querySelector("input,textarea");
                   if (ed) {
                     const atEnd = ed.value.length;
                     ed.setSelectionRange(atEnd, atEnd);
@@ -767,7 +744,7 @@
                 }, 0);
               }
             }
-          }, true);
+          }, true); // ← capture = true
         }
       }
       // 表示後に日付クラス反映
