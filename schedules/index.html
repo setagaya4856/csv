@@ -586,6 +586,21 @@
       classesByValue(cell.getValue()).forEach(k=> el.classList.add(k));
     }
     
+    function isCellActuallyEditable(cell){
+      const col = cell.getColumn();
+      const def = col.getDefinition();
+      // editable が関数なら呼ぶ／真偽値ならその値／未指定は true
+      let editable = true;
+      if (typeof def.editable === "function") {
+        try { editable = !!def.editable(cell); } catch { editable = false; }
+      } else if (def.editable === false) {
+        editable = false;
+      }
+      // editor が無効なら編集不可
+      if (def.editor === false || def.editor == null) editable = false;
+      return editable;
+    }
+    
     // 単一行用カスタムエディタ：Enterで右隣セルへ
     function singlelineEditor(cell, onRendered, success, cancel){
       const input = document.createElement("input");
@@ -611,7 +626,7 @@
           for (let i = idx + 1; i < cells.length; i++) {
             const next = cells[i];
             // 編集可能か判定（isEditable が関数の場合にも対応）
-            if (next.isEditable && next.isEditable()) { // ← セル側のAPIを使う
+            if (isCellActuallyEditable(next)) {
              next.edit(true);
              break;
             }
@@ -681,6 +696,7 @@
              // 貼り付けは Ctrl/Cmd+V を使用（右クリックで案内を出したい場合は下の追加例を参照）
            ],
           });
+          let isComposing = false;
           const gridEl = document.getElementById("matrixGrid");
           gridEl.setAttribute("tabindex", "0");          // フォーカス可能に
           gridEl.style.outline = "none";                 // フォーカス枠は消す
@@ -688,6 +704,9 @@
             // クリック・ドラッグ開始で必ずフォーカスを掴む
             if (document.activeElement !== gridEl) gridEl.focus();
           });
+          gridEl.addEventListener("compositionstart", () => { isComposing = true; }, true);
+          gridEl.addEventListener("compositionend",   () => { isComposing = false; }, true);
+          
           // 直前に選択されたセルを覚える
           let lastSelectedCell = null;
           // クリック/選択/タップの各フェーズで更新しておく
@@ -705,18 +724,16 @@
           }, true);
 
           document.addEventListener("keydown", (e) => {
-            // エディタ開いてたら何もしない
-            if (lastSelectedCell && lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
-          
-            // 直近セルが未選択なら何もしない
             if (!lastSelectedCell) return;
           
-            // 入力要素上のキーはスルー（他UIを壊さない）
-            const t = e.target;
-            const tag = (t && t.tagName || "").toUpperCase();
-            if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
+            // 既に編集中なら何もしない
+            if (lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
           
-            // Enterで編集開始
+            // 入力系要素上はスルー
+            const t = e.target, tag = (t?.tagName || "").toUpperCase();
+            if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t?.isContentEditable) return;
+          
+            // Enter → 編集開始
             if (e.key === "Enter") {
               e.preventDefault();
               lastSelectedCell.edit(true);
@@ -724,19 +741,22 @@
             }
           
             // 文字キー or IME開始(Process) → 編集開始
-            const isPrintable = (e.key && e.key.length === 1) || e.key === "Process";
-            if (isPrintable && !e.ctrlKey && !e.metaKey && !e.altKey) {
-              const firstChar = (e.key.length === 1) ? e.key : null; // IME開始は null
+            const looksPrintable = (e.key && e.key.length === 1) || e.key === "Process";
+            if (looksPrintable && !e.ctrlKey && !e.metaKey && !e.altKey) {
+              // 編集開始だけ先にやる（IMEの未確定をエディタに乗せる）
               lastSelectedCell.edit(true);
           
-              // 1文字目が落ちない対策：エディタDOM生成後に注入（IMEは注入しない）
-              if (firstChar) {
+              // ▼ ここがポイント：IME中 or key==='Process' なら「最初の1文字注入」をしない
+              const shouldInjectFirstChar =
+                !isComposing && e.key !== "Process" && e.key && e.key.length === 1;
+          
+              if (shouldInjectFirstChar) {
                 setTimeout(() => {
                   const ed = lastSelectedCell.getElement().querySelector("input,textarea");
                   if (ed) {
                     const atEnd = ed.value.length;
                     ed.setSelectionRange(atEnd, atEnd);
-                    const newVal = ed.value + firstChar;
+                    const newVal = ed.value + e.key;
                     ed.value = newVal;
                     ed.dispatchEvent(new Event("input", { bubbles:true }));
                     ed.setSelectionRange(newVal.length, newVal.length);
@@ -744,7 +764,7 @@
                 }, 0);
               }
             }
-          }, true); // ← capture = true
+          }, true);
         }
       }
       // 表示後に日付クラス反映
