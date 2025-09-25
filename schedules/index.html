@@ -595,7 +595,7 @@
       input.inputMode = "text";
     
       onRendered(() => input.focus({preventScroll:true}));
-    
+      input.addEventListener("blur", () => success(input.value));
       input.addEventListener("keydown", (e) => {
         // IME未確定はスルー（Enterでも確定させない）
         if (e.isComposing) return;
@@ -611,9 +611,10 @@
           for (let i = idx + 1; i < cells.length; i++) {
             const next = cells[i];
             // 編集可能か判定（isEditable が関数の場合にも対応）
-            const col = next.getColumn();
-            const editable = typeof col.isEditable === "function" ? col.isEditable(next) : !!col.isEditable;
-            if (editable) { next.edit(true); break; }
+            if (next.isEditable && next.isEditable()) { // ← セル側のAPIを使う
+             next.edit(true);
+             break;
+            }
           }
         } else if (e.key === "Escape") {
           cancel(); // 編集キャンセル
@@ -659,46 +660,26 @@
           
             // ② 編集トリガーをダブルクリックに（=ドラッグで編集が開かない）
             editTriggerEvent: "dblclick",
-          
-            // ③ クリップボードを「レンジ」モードに
+
+            // ▼ クリップボードを「レンジ」基準に統一（貼り付けは Ctrl/Cmd+V で動きます）
             clipboard: true,
-            clipboardCopyRowRange: "range",
-            clipboardPasteParser: (clipboard) => {
-              // Tabulator の "table" パーサーと同等処理
-              return clipboard
-                .trim()
-                .split(/\r?\n/)                       // 行ごとに分割
-                .map(line => 
-                  line.split("\t").map(cell => 
-                    cell.replace(/[\r\n]+/g, " ")     // ← セル内の改行を全部スペースに
-                  )
-                );
-            },
-            clipboardPasteAction: "range",
             clipboardCopyStyled: false,
-            clipboardCopyConfig: {
-              rowHeaders: false,
-              columnHeaders: false,
-            },
+            clipboardCopyConfig: { rowHeaders:false, columnHeaders:false },
+            clipboardCopyRowRange: "range",
+            clipboardPasteParser:  "range",
+            clipboardPasteAction:  "range",
             columnDefaults:{
               headerSort:false,
               editor: singlelineEditor,
               editorParams: { },                    // （不要なら空でOK）
             },
-            rowContextMenu: [
-              {
-                label: "コピー（選択範囲）",
-                action: function(e, row){
-                  table.copyToClipboard("selected"); // ← 選択セルだけコピー
-                }
-              },
-              {
-                label: "貼り付け（選択範囲）",
-                action: function(e, row){
-                  table.pasteFromClipboard(); // ← 選択範囲に貼り付け
-                }
-              }
-            ],
+           rowContextMenu: [
+             {
+               label: "コピー（選択範囲）",
+               action: () => table.copyToClipboard("range"),
+             },
+             // 貼り付けは Ctrl/Cmd+V を使用（右クリックで案内を出したい場合は下の追加例を参照）
+           ],
           });
           // 2. ここでイベントハンドラを登録
           let lastSelectedCell = null;
@@ -718,7 +699,21 @@
           
             const isPrintable = e.key.length === 1 || e.key === "Process";
             if (isPrintable && !e.ctrlKey && !e.metaKey && !e.altKey) {
-              cell.edit(true); // ← 入力開始
+              const firstChar = (e.key.length === 1) ? e.key : null; // IMEのProcessは null
+              cell.edit(true);
+              if (firstChar) {
+               setTimeout(() => {
+                 const ed = cell.getElement().querySelector("input,textarea");
+                 if (ed) {
+                   const atEnd = ed.value.length;
+                   ed.setSelectionRange(atEnd, atEnd);
+                   const newVal = ed.value + firstChar;
+                   ed.value = newVal;
+                   ed.dispatchEvent(new Event("input", { bubbles:true }));
+                   ed.setSelectionRange(newVal.length, newVal.length);
+                 }
+               }, 0);
+              }
             }
           });
           
