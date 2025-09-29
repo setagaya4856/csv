@@ -2,53 +2,61 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>Jspreadsheet CE テスト</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AG Grid 最小サンプル</title>
 
-  <!-- jSuites（先に読み込む） -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites/dist/jsuites.css" />
-  <script src="https://cdn.jsdelivr.net/npm/jsuites/dist/jsuites.js"></script>
-
-  <!-- Jspreadsheet CE -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce/dist/jspreadsheet.css" />
-  <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce/dist/index.js"></script>
+  <!-- AG Grid Community (UMD) とテーマCSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-theme-alpine.css">
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
 
   <style>
-    body{ font-family: system-ui, sans-serif; }
-    #sheet{ max-width: 520px; margin: 24px auto; }
+    html, body { height: 100%; margin: 0; }
+    #app { height: 100%; display: grid; place-items: stretch; padding: 12px; box-sizing: border-box; }
+    #grid { height: 85vh; width: 100%; }
   </style>
 </head>
 <body>
-  <div id="sheet"></div>
+  <div id="app">
+    <h1 style="margin:0 0 8px;">AG Grid 最小サンプル（Community）</h1>
+
+    <!-- テーマクラスを付けたコンテナ -->
+    <div id="grid" class="ag-theme-alpine"></div>
+  </div>
 
   <script>
-    const data = [
-      ['午前メモ', '午後メモ'],
-      ['', ''],
+    // 列定義（最小）
+    const columnDefs = [
+      { field: 'make', headerName: 'メーカー', sortable: true, filter: true },
+      { field: 'model', headerName: 'モデル', sortable: true, filter: true, editable: true },
+      { field: 'price', headerName: '価格', sortable: true, filter: 'agNumberColumnFilter', editable: true, valueFormatter: p => p.value?.toLocaleString?.() }
     ];
 
-    // CE最新版ならこれでOK（worksheets不要）
-    jspreadsheet(document.getElementById('sheet'), {
-      data,
-      columns: [
-        { type: 'text', title: '午前', width: 240 },
-        { type: 'text', title: '午後', width: 240 },
-      ],
-      // 必要に応じて
-      // allowInsertRow:false, allowDeleteRow:false, allowInsertColumn:false, allowDeleteColumn:false,
-    });
+    // サンプルデータ
+    const rowData = [
+      { make: 'Toyota',  model: 'Celica',     price: 3500000 },
+      { make: 'Ford',    model: 'Mondeo',     price: 3200000 },
+      { make: 'Porsche', model: 'Boxster',    price: 9200000 },
+      { make: 'Honda',   model: 'Civic',      price: 2800000 },
+      { make: 'Mazda',   model: 'Roadster',   price: 3300000 },
+    ];
 
-    // もし上でエラーが出る環境の場合は、下の worksheets 形式に切替えて試してもOK
-    /*
-    jspreadsheet(document.getElementById('sheet'), {
-      worksheets: [{
-        data,
-        columns: [
-          { type: 'text', title: '午前', width: 240 },
-          { type: 'text', title: '午後', width: 240 },
-        ],
-      }]
+    // 共通オプション（最小）
+    const gridOptions = {
+      columnDefs,
+      rowData,
+      defaultColDef: {
+        resizable: true,
+      },
+      rowSelection: 'multiple',
+      animateRows: true,
+    };
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', () => {
+      const eGridDiv = document.getElementById('grid');
+      new agGrid.Grid(eGridDiv, gridOptions);
     });
-    */
   </script>
 </body>
 </html>
