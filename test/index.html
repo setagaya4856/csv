@@ -3,43 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AG Grid 最小サンプル</title>
-
-  <!-- AG Grid Community (最新UMD) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
+  <title>AG Grid 最小（Theming API）</title>
+  <!-- ★ CSSは読み込まない -->
   <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-
   <style>
     html, body { height: 100%; margin: 0; }
     #grid { height: 100vh; width: 100%; }
   </style>
 </head>
 <body>
-  <div id="grid" class="ag-theme-alpine"></div>
-
+  <div id="grid"></div>
   <script>
     const columnDefs = [
-      { field: 'make', headerName: 'メーカー', sortable: true, filter: true },
-      { field: 'model', headerName: 'モデル', sortable: true, filter: true, editable: true },
-      { field: 'price', headerName: '価格', sortable: true, filter: 'agNumberColumnFilter', editable: true }
+      { field: 'make',  headerName: 'メーカー', sortable: true, filter: true },
+      { field: 'model', headerName: 'モデル',   sortable: true, filter: true, editable: true },
+      { field: 'price', headerName: '価格',     sortable: true, filter: 'agNumberColumnFilter', editable: true }
     ];
-
     const rowData = [
-      { make: 'Toyota',  model: 'Celica',   price: 3500000 },
-      { make: 'Ford',    model: 'Mondeo',   price: 3200000 },
-      { make: 'Porsche', model: 'Boxster',  price: 9200000 }
+      { make: 'Toyota',  model: 'Celica',  price: 3500000 },
+      { make: 'Ford',    model: 'Mondeo',  price: 3200000 },
+      { make: 'Porsche', model: 'Boxster', price: 9200000 },
     ];
 
     const gridOptions = {
       columnDefs,
       rowData,
-      defaultColDef: { resizable: true }
+      defaultColDef: { resizable: true },
+      // ★ 新テーマ（CSS不要）
+      theme: agGrid.themeQuartz, // オプション: agGrid.themeBalham 等も可
     };
 
     document.addEventListener('DOMContentLoaded', () => {
-      const gridDiv = document.getElementById('grid');
-      agGrid.createGrid(gridDiv, gridOptions); // ★ ここが新しい書き方
+      agGrid.createGrid(document.getElementById('grid'), gridOptions);
     });
   </script>
 </body>
