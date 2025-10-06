@@ -12,11 +12,30 @@
 
   <!-- UI 基本 -->
   <style>
-    :root { --pad:12px; }
-    /* 画面自体の横スクロールも抑止（保険） */
-    html, body { overflow-x: hidden; }
-    body{ font-family: system-ui, -apple-system, "ヒラギノ角ゴ ProN", Meiryo, sans-serif; margin:0; background:#f7f7f7; }
-    header{ position:sticky; top:0; z-index:100; background:#fff; border-bottom:1px solid #e5e5e5; }
+    :root {
+      /* 既存 --pad は残しつつ、安全域を考慮した余白を加算したい場合に使えます */
+      --safe-top: env(safe-area-inset-top, 0px);
+      --pad:12px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    /* 100vhのアドレスバー問題を避ける：svh/dvh対応 */
+    html, body {
+      height: 100%;
+      overflow-x: hidden; 
+    }
+    body {
+      font-family: system-ui, -apple-system, "ヒラギノ角ゴ ProN", Meiryo, sans-serif; margin:0; background:#f7f7f7; 
+      min-height: 100svh;    /* iOS/最新ブラウザで安定 */
+      min-height: 100dvh;    /* こちらが使える環境ではより正確 */
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    
+    /* 最下部のフッタ安全域（既存footerを活用） */
+    footer {
+      height: calc(24px + var(--safe-bottom));
+    }
+    header{ position:sticky; top:0; z-index:100; background:#fff; border-bottom:1px solid #e5e5e5; padding-top: calc(8px + var(--safe-top));}
     .bar{ display:flex; gap:8px; align-items:center; padding:8px var(--pad); flex-wrap:wrap; }
     .grow{ flex:1 1 auto; }
     select, input, button, textarea{ font:inherit; padding:8px; border:1px solid #ccc; border-radius:8px; background:#fff; }
