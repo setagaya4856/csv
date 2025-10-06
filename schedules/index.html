@@ -133,8 +133,13 @@
     /* =============================== 設定 =============================== */
     const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,        // 端末ごとにセッション保持
+        autoRefreshToken: false,     // ★自動リフレッシュを止める
+        detectSessionInUrl: true,
+      },
+    });
     const JP_CAL_OPTS = {
       format:'YYYY-MM-DD', firstDay:0,
       months:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
@@ -185,6 +190,26 @@
       cell.style.whiteSpace = 'pre-wrap';     // 改行・折返し許可
       cell.style.wordBreak = 'break-word';    // 単語も折り返す
       cell.style.textOverflow = 'clip';       // 省略記号は不要
+    }
+    function showLoginModal() {
+      document.getElementById('loginModal').style.display = '';
+      document.getElementById('appRoot').style.display = 'none';
+    }
+    
+    async function getActiveSessionOrLogout() {
+      const { data: { session } } = await supabase.auth.getSession();
+      const now = Math.floor(Date.now() / 1000);
+    
+      const exp = session?.expires_at ?? 0;
+      const isExpired = !session || !session.access_token || exp <= now;
+    
+      if (isExpired) {
+        // 自動ログアウト（local scope）
+        try { await supabase.auth.signOut({ scope: 'local' }); } catch {} 
+        showLoginModal();
+        throw new Error('session_expired'); // ここで以降の処理を止める
+      }
+      return session; // まだ有効
     }
     /* =============================== 状態 =============================== */
     let employeesAll = [];
@@ -492,8 +517,7 @@
       if(am) upserts.push({ employee_id, date, slot:'am', place:am }); else deletes.push({ employee_id, date, slot:'am' });
       if(pm) upserts.push({ employee_id, date, slot:'pm', place:pm }); else deletes.push({ employee_id, date, slot:'pm' });
 
-      const { data:{ session } } = await supabase.auth.getSession();
-      const token = session?.access_token; if(!token){ alert('未ログイン'); return; }
+      const { access_token: token } = await getActiveSessionOrLogout();
 
       // 送信
       if(deletes.length){
