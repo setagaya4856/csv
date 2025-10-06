@@ -82,6 +82,15 @@
     /* 片手操作向けにボタン大きめ */
     .btn{ padding:10px 14px; border-radius:10px; border:1px solid #bbb; background:#fff; }
     .btn-primary{ background:#1a73e8; color:#fff; border-color:#1a73e8; }
+    #toggleQuickBtn {
+      font-size: 1.4em;
+      line-height: 1;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      text-align: center;
+      padding: 0;
+    }
   </style>
 
   <!-- ===== Jspreadsheet CE + jSuites ===== -->
@@ -447,6 +456,15 @@
       $('#monthSelect').addEventListener('change', async ()=>{
         await renderGrid($('#monthSelect').value, $('#deptSelect').value);
       });
+      
+      // クイック登録 開閉トグル
+      $('#toggleQuickBtn').addEventListener('click', () => {
+        const panel = $('#quickPanel');
+        const btn = $('#toggleQuickBtn');
+        const open = panel.style.display !== 'none';
+        panel.style.display = open ? 'none' : '';
+        btn.textContent = open ? '＋' : '－';
+      });
     });
   </script>
 </head>
@@ -480,13 +498,19 @@
     <!-- クイック登録（自分のみ／会社予定登録は無し） -->
     <div class="panel">
       <div class="row">
-        <label>日付</label>
-        <input id="qDate" type="date" />
+        <button id="toggleQuickBtn" class="btn">＋</button>
         <button id="quickSaveBtn" class="btn-primary">クイック登録</button>
       </div>
-      <div class="row" style="margin-top:8px">
-        <input id="qAm"  type="text" placeholder="午前の予定（例：現場A）" style="flex:1 1 200px;" />
-        <input id="qPm"  type="text" placeholder="午後の予定（例：現場B）" style="flex:1 1 200px;" />
+      <!-- ↓ ここを最初は非表示 -->
+      <div id="quickPanel" style="display:none; margin-top:8px;">
+        <div class="row">
+          <label>日付</label>
+          <input id="qDate" type="date" />
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <input id="qAm" type="text" placeholder="午前の予定（例：現場A）" style="flex:1 1 200px;" />
+          <input id="qPm" type="text" placeholder="午後の予定（例：現場B）" style="flex:1 1 200px;" />
+        </div>
       </div>
     </div>
 
