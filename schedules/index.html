@@ -19,7 +19,6 @@
     .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
     /* 予定テーブル：Jspreadsheet をモバイル向けに */
-    .grid-wrap{ height: 100px; overflow:auto; -webkit-overflow-scrolling:touch; }
     .jexcel_content td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .jexcel .readonly{ background:#fafafa; }
     .jexcel .jexcel_frozen{ background:#fff; }
@@ -243,7 +242,7 @@
         data, columns,
         freezeColumns:1,
         tableOverflow:true,
-        tableHeight: 100, 
+        tableHeight: 300, 
         allowInsertColumn:false, allowDeleteColumn:false,
         allowInsertRow:false, allowDeleteRow:false,
         editable:false, selectionCopy:true,
@@ -446,7 +445,7 @@
 
     <!-- スケジュール（表示のみ、x/y入替） -->
     <div class="panel">
-      <div class="grid-wrap"><div id="grid"></div></div>
+      <div id="grid"></div>
       <div class="muted" style="margin-top:8px;">※ 表示専用（タップ編集なし）。祝日・土日・今日を色付け。</div>
     </div>
   </div>
