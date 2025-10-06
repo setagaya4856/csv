@@ -199,18 +199,34 @@
     async function getActiveSessionOrLogout() {
       const { data: { session } } = await supabase.auth.getSession();
       const now = Math.floor(Date.now() / 1000);
-    
       const exp = session?.expires_at ?? 0;
-      const isExpired = !session || !session.access_token || exp <= now;
     
-      if (isExpired) {
-        // 自動ログアウト（local scope）
-        try { await supabase.auth.signOut({ scope: 'local' }); } catch {} 
-        showLoginModal();
-        throw new Error('session_expired'); // ここで以降の処理を止める
+      // セッションなし or アクセストークン期限切れ → ログアウト＆ログイン要求
+      if (!session || !session.access_token || exp <= now) {
+        try { await supabase.auth.signOut({ scope: 'local' }); } catch {}
+        showLoginModal();                // ← 既存のモーダル展開関数を呼ぶ
+        throw new Error('session_expired');
       }
-      return session; // まだ有効
+      return session;
     }
+    // --- 失効・サインアウト監視（グローバル） ---
+    supabase.auth.onAuthStateChange((evt) => {
+      if (evt === 'SIGNED_OUT') {
+        showLoginModal();  // すぐログイン画面へ
+      }
+    });
+    
+    // 定期チェック（5分ごと）& タブ復帰時チェック
+    const SESSION_CHECK_MS = 5 * 60 * 1000;
+    setInterval(async () => {
+      try { await getActiveSessionOrLogout(); } catch {}
+    }, SESSION_CHECK_MS);
+    
+    document.addEventListener('visibilitychange', async () => {
+      if (document.visibilityState === 'visible') {
+        try { await getActiveSessionOrLogout(); } catch {}
+      }
+    });
     /* =============================== 状態 =============================== */
     let employeesAll = [];
     let employeesVisible = [];
@@ -377,11 +393,9 @@
     }
 
     async function renderGrid(ym, dept){
-      const { data:{ session } } = await supabase.auth.getSession();
-      if(!session) return;
+      const { access_token: token } = await getActiveSessionOrLogout(); // ← ここで期限検査
       await preloadHolidaysForMonths([ym]);
-
-      const items = await fetchMonthData(ym, session.access_token);
+      const items = await fetchMonthData(ym, token);
       const { columns, data, colMeta } = buildSwappedMatrix(items, ym, dept);
 
       // ★ メモ行を作成（A列は「メモ」固定、以降は各従業員の note）
@@ -554,7 +568,16 @@
       $('#loginPanel').style.display = session ? 'none' : '';
       $('#appPanel').style.display   = session ? '' : 'none';
 
-      if(session){
+      let sessionObj = null;
+      try {
+        sessionObj = await getActiveSessionOrLogout();  // 失効ならここでモーダル表示&throw
+      } catch {
+        // 既に showLoginModal 済み。以降の初期描画は止める
+      }
+      $('#loginPanel').style.display = sessionObj ? 'none' : '';
+      $('#appPanel').style.display   = sessionObj ? '' : 'none';
+
+      if (sessionObj) {
         await loadCurrentUserAndEmployees();
         fillDepartmentOptions(currentUser.department);
         const ym = $('#monthSelect').value;
@@ -572,11 +595,8 @@
       });
       // ログアウトボタン処理
       $('#logoutBtn').addEventListener('click', async () => {
-        const { data:{ session } } = await supabase.auth.getSession();
-        if (session) {
-          await supabase.auth.signOut();
-          location.reload();
-        }
+        try { await supabase.auth.signOut({ scope: 'local' }); } catch {}
+        location.reload();
       });
       // 更新ボタン（F5と同じ）
       $('#refreshBtn').addEventListener('click', () => {
