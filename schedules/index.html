@@ -8,16 +8,38 @@
   <!-- UI 基本 -->
   <style>
     :root { --pad:12px; }
+    /* 画面自体の横スクロールも抑止（保険） */
+    html, body { overflow-x: hidden; }
     body{ font-family: system-ui, -apple-system, "ヒラギノ角ゴ ProN", Meiryo, sans-serif; margin:0; background:#f7f7f7; }
     header{ position:sticky; top:0; z-index:100; background:#fff; border-bottom:1px solid #e5e5e5; }
     .bar{ display:flex; gap:8px; align-items:center; padding:8px var(--pad); flex-wrap:wrap; }
     .grow{ flex:1 1 auto; }
     select, input, button, textarea{ font:inherit; padding:8px; border:1px solid #ccc; border-radius:8px; background:#fff; }
     button{ cursor:pointer; }
-    .panel{ background:#fff; margin:12px; padding:12px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+    .panel{ background:#fff; margin:12px; padding:12px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.04); 
+      box-sizing: border-box;
+      overflow: hidden;          /* はみ出しをカット */}
     .muted{ color:#666; font-size:.9em; }
     .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-
+    /* グリッド：幅は親いっぱいに固定 */
+    #grid { 
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    
+    /* Jspreadsheet 本体とスクロール領域も親幅にフィットさせる */
+    #grid .jexcel {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    
+    #grid .jexcel_content {
+      width: 100% !important;    /* ← ここ大事：親幅に合わせる */
+      max-width: 100% !important;
+      overflow: auto;            /* 横/縦スクロールはここで出す */
+      -webkit-overflow-scrolling: touch; /* iOS 慣性 */
+    }
     /* 予定テーブル：Jspreadsheet をモバイル向けに */
     .jexcel_content td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .jexcel .readonly{ background:#fafafa; }
