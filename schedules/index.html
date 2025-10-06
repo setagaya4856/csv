@@ -499,7 +499,14 @@
         if(error){ alert('ログイン失敗: '+error.message); return; }
         location.reload();
       });
-
+      // ログアウトボタン処理
+      $('#logoutBtn').addEventListener('click', async () => {
+        const { data:{ session } } = await supabase.auth.getSession();
+        if (session) {
+          await supabase.auth.signOut();
+          location.reload();
+        }
+      });
       // クイック登録保存
       $('#quickSaveBtn').addEventListener('click', saveQuick);
 
@@ -529,8 +536,7 @@
     <div class="bar">
       <strong>行動予定表（モバイル）</strong>
       <span class="grow"></span>
-      <button id="logoutBtn" class="btn" onclick="(async()=>{const { data:{ session } } = await supabase.auth.getSession(); if(session){ await supabase.auth.signOut(); location.reload(); }})()">ログアウト</button>
-    </div>
+      <button id="logoutBtn" class="btn">ログアウト</button>
     <div class="bar">
       <label class="muted">部署</label>
       <select id="deptSelect" class="grow"></select>
