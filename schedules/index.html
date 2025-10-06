@@ -302,8 +302,8 @@
         byKey.get(k).push(it.title);
       }
 
-      const columns = [{ type:'text', title:'日付', width:80 }].concat(
-        emps.map(e => ({ type:'text', title:e.name, width:100 }))
+      const columns = [{ type:'text', title:'日付', width:60 }].concat(
+        emps.map(e => ({ type:'text', title:e.name, width:80 }))
       );
       const data = rowKeys.map(({date,slot})=>{
         const row = [ dayLabel(date,slot) ];
