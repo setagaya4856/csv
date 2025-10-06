@@ -65,7 +65,12 @@
       -webkit-overflow-scrolling: touch; /* iOS 慣性 */
     }
     /* 予定テーブル：Jspreadsheet をモバイル向けに */
-    .jexcel_content td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .jexcel_content td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; 
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none; /* iOSのコピー/ペースト呼び出しを抑止 */
+      caret-color: transparent;    /* キャレット非表示 */
+    }
     .jexcel .readonly{ background:#fafafa; }
     .jexcel .jexcel_frozen{ background:#fff; }
     .cell-date{ font-weight:600; }
