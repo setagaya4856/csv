@@ -108,7 +108,7 @@
 
     /* 読み取り専用セルの文字をやや濃いグレーに */
     .jexcel .readonly {
-      color: #333 !important;      /* ← デフォルト #999 より濃く */
+      color: #444 !important;      /* ← デフォルト #999 より濃く */
       background-color: #fafafa;   /* 背景は今まで通り薄灰 */
     }
   </style>
@@ -379,34 +379,38 @@
         allowInsertRow:false, allowDeleteRow:false,
         editable:false, selectionCopy:true,
         updateTable: (el, cell, x, y, src, val) => {
-          // ★ y=0 はメモ行：専用スタイルのみ適用
-          if (y === 0) {
+          const memoOffset = 1;                 // 先頭にメモ行がある
+          const dataRow = y - memoOffset;       // 実データに対応する行index（rowKeys用）
+        
+          // --- メモ行（y===0）は装飾だけ ---
+          if (dataRow < 0) {
+            cell.classList.remove('ht-today','ht-sat','ht-sun','ht-holiday');
             cell.classList.add('memo-row');
-            // A列は少し強調
-            if (x === 0) cell.classList.add('cell-date');
-            // メモも縮小表示して見やすく
+            if (x === 0) cell.classList.add('cell-date'); // 「メモ」ラベルを太字っぽく
             const text = (val || '').toString();
             if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 3 });
             return;
           }
-          const rk = colMeta.rowKeys[y];
+        
+          // --- ここから通常データ行（rowKeys は dataRow を使う） ---
+          const rk = colMeta.rowKeys[dataRow];
           if (!rk) return;
         
-          // --- 土日祝・今日の色付け ---
+          // まず既存の休日系クラスを除去
+          for (const c of ['ht-today','ht-sat','ht-sun','ht-holiday']) cell.classList.remove(c);
+        
+          // 土日祝・今日の色付け
           const classes = classesForYmd(rk.date);
-          for (const c of ['ht-today','ht-sat','ht-sun','ht-holiday'])
-            cell.classList.remove(c);
           classes.forEach(c => cell.classList.add(c));
         
-          // --- 日付セルを太字に ---
+          // 日付セル（x=0）を強調
           if (x === 0) cell.classList.add('cell-date');
         
-          // --- 「休」「有休」「代休」「休み」などを含む場合も休日色 ---
+          // 「休/有/代/振」を含むセルは休日色
           const text = (val || '').toString();
-          if (/[休有代振]/.test(text)) {
-            cell.classList.add('ht-holiday');
-          }
-          // --- 縮小表示（x>0 の実データ列のみ）---
+          if (/[休有代振]/.test(text)) cell.classList.add('ht-holiday');
+        
+          // 縮小表示（データ列のみ）
           if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 2 });
         }
       });
