@@ -243,19 +243,23 @@
         data, columns,
         freezeColumns:1,
         tableOverflow:true,
-        tableHeight: window.innerHeight - 260, // だいたいの可視高
+        tableHeight: Math.max(420, window.innerHeight - 260), 
         allowInsertColumn:false, allowDeleteColumn:false,
         allowInsertRow:false, allowDeleteRow:false,
         editable:false, selectionCopy:true,
         updateTable:(el, cell, x, y, src, val)=>{
-          // x==0 は日付セル
-          if (x===0) {
-            cell.classList.add('cell-date');
-            const rk = colMeta.rowKeys[y];
-            const classes = classesForYmd(rk.date);
-            for(const c of ['ht-today','ht-sat','ht-sun','ht-holiday']) cell.classList.remove(c);
-            classes.forEach(c=>cell.classList.add(c));
-          }
+
+        // 行の全セルに日付ベースの色付け（x=0 だけでなく全部）
+        const rk = colMeta.rowKeys[y];
+        if (!rk) return;
+        const classes = classesForYmd(rk.date); // ['ht-today','ht-sat','ht-sun','ht-holiday'] など
+
+        // 既存クラスを一度除去してから付与
+        for (const c of ['ht-today','ht-sat','ht-sun','ht-holiday']) cell.classList.remove(c);
+        classes.forEach(c => cell.classList.add(c));
+      
+        // 日付セルだけ太字に
+        if (x === 0) cell.classList.add('cell-date');
         }
       });
     }
