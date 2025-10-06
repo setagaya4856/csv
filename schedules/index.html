@@ -2,243 +2,112 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>行動予定表（Tabulator版）</title>
+  <title>行動予定表（モバイル）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Tabulator -->
-  <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
-  <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+
+  <!-- UI 基本 -->
   <style>
-    /* ====== 基本 ====== */
-    body{ font-family:system-ui, sans-serif; width:95vw; margin:24px auto; padding:0 12px; }
-    fieldset{ margin:12px 0; padding:12px; }
-    label{ display:block; margin:6px 0 2px; }
-    input, select, textarea{ padding:6px; width:100%; max-width:360px; }
-    button{ margin:6px 6px 0 0; padding:6px 12px; cursor:pointer; }
-    pre{ background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto; }
+    :root { --pad:12px; }
+    body{ font-family: system-ui, -apple-system, "ヒラギノ角ゴ ProN", Meiryo, sans-serif; margin:0; background:#f7f7f7; }
+    header{ position:sticky; top:0; z-index:100; background:#fff; border-bottom:1px solid #e5e5e5; }
+    .bar{ display:flex; gap:8px; align-items:center; padding:8px var(--pad); flex-wrap:wrap; }
+    .grow{ flex:1 1 auto; }
+    select, input, button, textarea{ font:inherit; padding:8px; border:1px solid #ccc; border-radius:8px; background:#fff; }
+    button{ cursor:pointer; }
+    .panel{ background:#fff; margin:12px; padding:12px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+    .muted{ color:#666; font-size:.9em; }
     .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
-    /* タブ風ボタン */
-    .tabs{ display:flex; gap:6px; margin:8px 0 12px; }
-    .tabs button{ padding:6px 10px; border:1px solid #ccc; background:#f6f6f6; border-radius:6px; }
-    .tabs button.active{ background:#fff; border-color:#999; font-weight:600; box-shadow:0 1px 0 #ddd; }
+    /* 予定テーブル：Jspreadsheet をモバイル向けに */
+    .grid-wrap{ overflow:auto; -webkit-overflow-scrolling:touch; }
+    .jexcel_content td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .jexcel .readonly{ background:#fafafa; }
+    .jexcel .jexcel_frozen{ background:#fff; }
+    .cell-date{ font-weight:600; }
+    .ht-today{ background:#fff9db !important; }
+    .ht-sat  { background:#e6ffed !important; }
+    .ht-sun, .ht-holiday{ background:#ffe5e5 !important; }
 
-    /* 部署色（8色バケット） */
-    .dep-1{ background:#fff7e6 !important; }
-    .dep-2{ background:#e6f7ff !important; }
-    .dep-3{ background:#f9f0ff !important; }
-    .dep-4{ background:#e6fffb !important; }
-    .dep-5{ background:#f6ffed !important; }
-    .dep-6{ background:#fff1f0 !important; }
-    .dep-7{ background:#f0f5ff !important; }
-    .dep-8{ background:#fefefe !important; }
+    /* 行ラベル（左固定列）を少し太く */
+    .jexcel td.cell-date{ font-weight:700; }
 
-    .dep-head{ box-shadow: inset 0 2px #888; }
-    .my-row{ background-color: rgba(128,128,128,0.08) !important; }
+    /* フッタ余白（iOS スクロール安全域） */
+    footer{ height:24px; }
 
-    /* 祝土日＆今日（クラス名は Tabulatorでも使い回し） */
-    .ht-today  { background:#fff9db !important; }
-    .ht-sat    { background:#e6ffed !important; }
-    .ht-sun    { background:#ffe5e5 !important; }
-    .ht-holiday{ background:#ffe5e5 !important; }
-
-    .my-row.ht-holiday,
-    .my-row.ht-today,
-    .my-row.ht-sun,
-    .my-row.ht-sat {
-      box-shadow: inset 0 2px rgba(128,128,128,0.4),
-                  inset 0 -2px rgba(128,128,128,0.4);
-    }
-
-    .name-note{ font-size:.85em; color:#666; white-space:pre-wrap; }
-    .icon-btn{ appearance:none; border:1px solid #bbb; background:#fff; border-radius:6px; padding:2px 8px; line-height:1.2; }
-    .icon-btn:hover{ background:#f6f6f6; }
-
-    /* 会社予定一覧ラッパ */
-    #sched-list-wrap{ max-height:420px; overflow:auto; border:1px solid #ddd; border-radius:6px; padding:6px 8px; background:#fff; }
-    #sched-list h3{ margin:6px 0; font-size:14px; }
-    #sched-list li{ margin:2px 0; line-height:1.2; }
-
-    /* 未保存ハイライト */
-    .dirty-cell{ outline:2px solid #e53935 !important; outline-offset:-2px; }
-
-    /* イベント削除ボタン（管理者のみ可視） */
-    .ev-item{ display:flex; align-items:flex-start; gap:8px; margin:4px 0; }
-    .ev-main{ flex:1 1 auto; }
-    .ev-del{ appearance:none; background:transparent; border:none; color:#e53935; font:inherit; padding:2px 6px; cursor:pointer; }
-    .ev-del:hover{ text-decoration:underline; }
-
-    .tabsbar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:space-between; margin:8px 0 12px; }
-    .tabs-ctrl{ display:flex; align-items:center; gap:8px; }
-
-    #quickRow{ display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin:6px 0 8px; }
-    #quickEntry, #companyEntry{ flex:1 1 360px; min-width:320px; }
-
-    .panel{ border:1px solid #ddd; border-radius:8px; padding:10px; background:#fff; }
-
-    .is-hidden{ display:none !important; }
-
-    .admin-only{ display:none; }
-    .admin-visible .admin-only{ display:inline-block; }
-
-    #dirtyBadge { color:#d32f2f; font-weight:700; }
+    /* 片手操作向けにボタン大きめ */
+    .btn{ padding:10px 14px; border-radius:10px; border:1px solid #bbb; background:#fff; }
+    .btn-primary{ background:#1a73e8; color:#fff; border-color:#1a73e8; }
   </style>
-</head>
-<body>
-  <!-- ログインモーダル -->
-  <div id="loginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.25); z-index:9999;">
-    <div style="max-width:400px;margin:10vh auto;padding:16px;background:#fff;border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,.12);">
-      <form id="loginForm" autocomplete="on">
-        <label for="email">メール</label>
-        <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="username" inputmode="email" required>
-        <label for="password" style="margin-top:8px;">パスワード</label>
-        <input id="password" name="password" type="password" placeholder="8文字以上" autocomplete="current-password" required>
-        <div class="row" style="margin-top:8px">
-          <button type="submit">ログイン</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
-  <h1 style="display:flex;align-items:center;gap:8px;">
-    行動予定表（Tabulator テスト版）
-    <button id="logoutBtn">ログアウト</button>
+  <!-- ===== Jspreadsheet CE + jSuites ===== -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites@4.15.0/dist/jsuites.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.11.4/dist/jspreadsheet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jsuites@4.15.0/dist/jsuites.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.11.4/dist/index.js"></script>
 
-    <!-- クイック登録（フォーム切替） -->
-    <button id="toggleQuickEntryBtn" class="icon-btn" aria-expanded="false">＋</button>
-    <button id="quickSaveBtn">クイック登録</button>
-
-    <!-- 会社スケジュール追加（管理者のみ可視） -->
-    <button id="toggleCompanyAddBtn" class="icon-btn admin-only" aria-expanded="false">＋</button>
-    <button id="companySaveBtn" class="admin-only" title="全体スケジュールを追加">全体表示登録</button>
-
-    <p style="color:#666; font-size:.20em; margin:4px 0 0;">
-       セル内で改行するときは <kbd>Alt</kbd>+<kbd>Enter</kbd> を使ってください
-    </p>
-  </h1>
-
-  <!-- ログイン後エリア -->
-  <div id="appRoot" style="display:none">
-    <div id="mainPanel" class="panel">
-
-      <div id="quickRow">
-        <!-- ▼ クイック登録（フォーム） -->
-        <div id="quickEntry" class="">
-          <fieldset>
-            <legend>クイック登録</legend>
-            <label>日付</label>
-            <input id="quick-date" type="date">
-            <label>午前</label>
-            <textarea id="quick-am" rows="3" placeholder="午前の予定"></textarea>
-            <label>午後</label>
-            <textarea id="quick-pm" rows="3" placeholder="午後の予定"></textarea>
-          </fieldset>
-        </div>
-
-        <!-- ▼ 会社予定 追加（フォーム） -->
-        <div id="companyEntry" class="is-hidden">
-          <fieldset>
-            <legend>会社スケジュール追加</legend>
-            <label>種別</label>
-            <select id="comp-kind">
-              <option value="event">event</option>
-              <option value="notice">notice</option>
-            </select>
-            <label>開始日</label>
-            <input id="comp-date" type="date">
-            <label>終了日（任意・notice向け）</label>
-            <input id="comp-date-end" type="date">
-            <label>開始(HH:MM)（event時）</label>
-            <input id="comp-start" type="text" placeholder="0930 または 09:30">
-            <label>終了(HH:MM)（event時）</label>
-            <input id="comp-end" type="text" placeholder="1730 または 17:30">
-            <label>行事名/タイトル</label>
-            <input id="comp-title" type="text" placeholder="タイトル">
-            <label>備考/内容</label>
-            <textarea id="comp-memo" rows="3" placeholder="内容"></textarea>
-          </fieldset>
-        </div>
-      </div>
-
-      <div class="tabsbar">
-        <div id="matrixCtrl" class="tabs-ctrl">
-          <button id="toggleCompanyListBtn" class="icon-btn" aria-expanded="true">−</button>
-          <button id="saveMatrixBtn">保存</button>
-          <span id="dirtyBadge">未保存の変更あり</span>
-          <div id="month-tabs" class="tabs"></div>
-        </div>
-      </div>
-
-      <div id="sched-list-wrap">
-        <div id="sched-list"></div>
-      </div>
-
-      <div id="matrixGrid" style="width:100%;"></div>
-    </div>
-  </div>
-
-  <!-- Supabase -->
+  <!-- ===== Supabase & 祝日 ===== -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    import * as holiday_jp from 'https://esm.sh/@holiday-jp/holiday_jp@2';
 
-    /* ================================
-       設定
-    =================================*/
+    /* =============================== 設定 =============================== */
     const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    /* ================================
-       DOM/LS/Utils
-    =================================*/
-    const $ = (q)=>document.querySelector(q);
-    const _LS = { get(k, d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch{ return d; }}, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} } };
-    const fnUrl = (name)=> `${SUPABASE_URL}/functions/v1/${name}`;
-    const fetchJsonStrict = async (fnName, opts)=>{
-      const res = await fetch(fnUrl(fnName), { cache:'no-store', ...opts });
-      const t = await res.text(); let j=null; try{ j=JSON.parse(t);}catch{}
-      if(!res.ok || (j && j.ok===false)) throw new Error(j?.error || t || `HTTP ${res.status}`);
-      return j ?? {};
+    const JP_CAL_OPTS = {
+      format:'YYYY-MM-DD', firstDay:0,
+      months:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+      monthsShort:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+      weekdays:['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'],
+      weekdays_short:['日','月','火','水','木','金','土'],
+      today:'今日', clear:'クリア', close:'閉じる'
     };
-    const todayJST = ()=>{ const now=new Date(); return new Date(now.getTime() + (9*60 + now.getTimezoneOffset())*60000); };
-    const ymOf = (d)=> `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const todayStrJST = ()=>{
-      const dt = new Date();
-      const f = new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'});
-      const parts = Object.fromEntries(f.formatToParts(dt).map(p=>[p.type,p.value]));
-      return `${parts.year}-${parts.month}-${parts.day}`;
-    };
-    const escapeHtml = (s)=> String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    /* ================================
-       権限・ログインUI
-    =================================*/
-    function setAdminVisibility(isAdmin){
-      document.body.classList.toggle('admin-visible', !!isAdmin);
-      const entry = $('#companyEntry');
-      if(!isAdmin && entry) entry.classList.add('is-hidden');
-      const tgl = $('#toggleCompanyAddBtn');
-      if(tgl){ tgl.setAttribute('aria-expanded', entry && !entry.classList.contains('is-hidden') ? 'true':'false'); }
-    }
-    function setQuickEntryVisibility(isActive){
-      const quickBtn = $('#quickSaveBtn');
-      const quickToggle = $('#toggleQuickEntryBtn');
-      if (!isActive) {
-        if (quickBtn) quickBtn.style.display = 'none';
-        if (quickToggle) quickToggle.style.display = 'none';
-      } else {
-        if (quickBtn) quickBtn.style.display = '';
-        if (quickToggle) quickToggle.style.display = '';
-      }
-    }
-    function toggleUIBySession(isLoggedIn){
-      $('#appRoot').style.display = isLoggedIn ? '' : 'none';
-      $('#loginModal').style.display = isLoggedIn ? 'none' : '';
-    }
-
-    let currentUser = { email:null, employee_id:null, is_admin:false , is_active:false };
+    /* =============================== 状態 =============================== */
     let employeesAll = [];
     let employeesVisible = [];
+    let currentUser = { email:null, employee_id:null, department:null, is_active:false };
+    let grid = null;
 
+    const monthCache = new Map(); // ym -> normalized items
+    const holidaySet = new Set(); // 'YYYY-MM-DD'
+    const holidaysLoadedYm = new Set();
+
+    const $ = (q)=>document.querySelector(q);
+    const fmt = new Intl.DateTimeFormat('ja-JP',{ timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
+    const todayYmd = ()=> {
+      const p = Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));
+      return `${p.year}-${p.month}-${p.day}`;
+    };
+    const ymOf = (d)=> `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const monthsAround = (base=new Date(), back=3, fwd=3)=>{
+      const list=[]; const d=new Date(base.getFullYear(), base.getMonth()-back, 1);
+      const end=new Date(base.getFullYear(), base.getMonth()+fwd+1, 1);
+      while(d<end){ list.push(ymOf(d)); d.setMonth(d.getMonth()+1,1); }
+      return list;
+    };
+
+    /* =============================== 祝日 =============================== */
+    const ymdJST = (date)=> {
+      const p = Object.fromEntries(fmt.formatToParts(date).map(x=>[x.type,x.value]));
+      return `${p.year}-${p.month}-${p.day}`;
+    };
+    async function preloadHolidaysForMonths(months){
+      const need = months.filter(m=>!holidaysLoadedYm.has(m));
+      if(!need.length) return;
+      need.sort();
+      const first = need[0], last = need[need.length-1];
+      const start = new Date(`${first}-01T00:00:00+09:00`);
+      const [ly,lm] = last.split('-').map(Number);
+      const end = new Date(new Date(Date.UTC(ly, lm-1, 1)).setUTCMonth(lm)); // 翌月初
+      const list = holiday_jp.between(start, end) || [];
+      for(const h of list){ holidaySet.add(ymdJST(h.date)); }
+      need.forEach(m=>holidaysLoadedYm.add(m));
+    }
+    const isHoliday = (ymd)=> holidaySet.has(ymd);
+
+    /* =============================== 認証＆従業員 =============================== */
     async function loadCurrentUserAndEmployees(){
       const { data:{ session } } = await supabase.auth.getSession();
       const email = session?.user?.email ?? null;
@@ -248,178 +117,48 @@
         .order('row_index', { ascending:true })
         .order('name', { ascending:true });
       if(error) throw error;
-      employeesAll = emps ?? [];
-      employeesVisible = employeesAll.filter(e=> e.is_active !== false);
-      const me = employeesAll.find(e => (e.email||'').toLowerCase()===(email||'').toLowerCase());
-      currentUser = {
-        email,
-        employee_id: me?.id ?? null,
-        is_admin: !!me?.is_admin,
-        is_active: !!me && me.is_active !== false
-      };
-      setAdminVisibility(currentUser.is_admin);
-      setQuickEntryVisibility(currentUser.is_active);
+      employeesAll = emps || [];
+      employeesVisible = employeesAll.filter(e => e.is_active !== false);
+      const me = employeesAll.find(e => (e.email||'').toLowerCase() === (email||'').toLowerCase());
+      currentUser = { email, employee_id: me?.id ?? null, department: me?.department ?? null, is_active: !!me && me.is_active !== false };
       return currentUser;
     }
 
-    /* ================================
-       会社予定一覧（従来ロジック）
-    =================================*/
-    async function fetchCompanyEventsForMonth(ym){
-      const [y,m]=ym.split('-').map(Number); const start=new Date(y,m-1,1); const end=new Date(y,m,1);
-      const d2=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      const { data, error } = await supabase
-        .from('company_events')
-        .select('id, kind, date, date_end, timestart, timeend, event, memo')
-        .or(`and(date.gte.${d2(start)},date.lt.${d2(end)}),and(date.lte.${d2(end)},date_end.gte.${d2(start)})`)
-        .order('date', { ascending: true })
-        .order('timestart', { ascending: true });
-      if(error) throw error; return data||[];
-    }
-
-    async function renderCompanyEventList(ym){
-      const listEl=$('#sched-list'); const toggleBtn=$('#toggleCompanyListBtn');
-      try{
-        const events = await fetchCompanyEventsForMonth(ym);
-        if(toggleBtn){
-          toggleBtn.disabled=false;
-          toggleBtn.title = events.length ? '会社予定を開閉' : 'この月は会社予定がありません（開閉可）';
-        }
-        if(!events.length){
-          listEl.innerHTML='<p>該当なし</p>';
-          const wrap=$('#sched-list-wrap');
-          if(wrap){ wrap.classList.remove('is-hidden'); try{ localStorage.setItem('open.companyList','true'); }catch{} }
-          window.__syncCompanyListToggle?.();
-          return;
-        }
-        const notices = events.filter(ev=> ev.kind==='notice');
-        const normals = events.filter(ev=> ev.kind!=='notice');
-        notices.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.date_end||'').localeCompare(b.date_end||'')||(a.event||'').localeCompare(b.event||'', 'ja'));
-        normals.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.timestart||'').localeCompare(b.timestart||'')||(a.event||'').localeCompare(b.event||'', 'ja'));
-        let html='';
-        for(const ev of notices){
-          const memo = ev.memo ? `<div style="color:#333; font-size:.9em; white-space:pre-wrap; margin-top:2px;">${escapeHtml(ev.memo)}</div>`:'';
-          const delBtn = currentUser?.is_admin ? `<button class="ev-del admin-only" data-ev-id="${ev.id}">削除</button>`:'';
-          html += `
-            <div class="ev-item" style="border-left:4px solid #9c27b0; padding-left:8px; margin:6px 0;">
-              ${delBtn}
-              <div class="ev-main">
-                <div style="font-weight:700; white-space:pre-wrap;">${escapeHtml(ev.event)}</div>
-                ${memo}
-              </div>
-            </div>`;
-        }
-        const groups=new Map();
-        for(const ev of normals){ const day=ev.date; if(!groups.has(day)) groups.set(day,[]); groups.get(day).push(ev); }
-        for(const [day, arr] of groups){
-          const d = new Date(`${day}T00:00:00`); const wd='日月火水木金土'[d.getDay()];
-          html += `<h3>${day}（${wd}）</h3><ul style="margin:0 0 8px 16px; padding:0">`;
-          arr.sort((a,b)=>(a.timestart||'').localeCompare(b.timestart||'')||(a.event||'').localeCompare(b.event||'', 'ja'));
-          for(const ev of arr){
-            const tstart = ev.timestart ? ev.timestart.slice(0,5):'';
-            const tend   = ev.timeend   ? ev.timeend.slice(0,5):'';
-            const time   = (tstart && tend) ? `${tstart}–${tend}` : (tstart||'');
-            const memo   = ev.memo ? `<div style="color:#666; font-size:.9em; white-space:pre-wrap">${escapeHtml(ev.memo)}</div>`:'';
-            const delBtn = currentUser?.is_admin ? `<button class="ev-del admin-only" data-ev-id="${ev.id}">削除</button>`:'';
-            html += `<li class="ev-item">${delBtn}<div class="ev-main"><strong style="white-space:pre-wrap">${escapeHtml(ev.event)}</strong> ${time}${memo}</div></li>`;
-          }
-          html += `</ul>`;
-        }
-        listEl.innerHTML=html;
-        window.__syncCompanyListToggle?.();
-      }catch(e){ listEl.innerHTML=''; console.error(e); }
-    }
-
-    async function deleteCompanyEventById(id){
-      const { data:{ session } } = await supabase.auth.getSession();
-      const token=session?.access_token; if(!token) throw new Error('未ログインです');
-      return await fetchJsonStrict('company-events-delete', {
-        method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify({ id }), cache:'no-store'
-      });
-    }
-    $('#sched-list')?.addEventListener('click', async (e)=>{
-      const btn = e.target instanceof HTMLElement ? e.target.closest('button.ev-del') : null; if(!btn) return;
-      if(!currentUser?.is_admin) return alert('権限がありません');
-      const id = btn.getAttribute('data-ev-id'); if(!id) return;
-      if(!confirm('この全体スケジュールを削除します。よろしいですか？')) return;
-      try{ await deleteCompanyEventById(id); const activeYm=$('#month-tabs button.active')?.dataset.month; if(activeYm) await renderCompanyEventList(activeYm); alert('削除しました'); }catch(err){ console.error(err); alert('削除に失敗しました：'+err.message); }
-    });
-
-    /* ================================
-       月タブ・トグル・キャッシュ
-    =================================*/
-    window.__monthCache = window.__monthCache || new Map();
-    const monthCache = window.__monthCache;
-
-    const monthsAround=(base,back=3,forward=3)=>{
-      const list=[]; const d=new Date(base.getFullYear(), base.getMonth()-back, 1);
-      const end=new Date(base.getFullYear(), base.getMonth()+forward+1, 1);
-      while(d<end){ list.push(ymOf(d)); d.setMonth(d.getMonth()+1,1); }
-      return list;
-    };
-    function buildMonthTabs(baseDate=todayJST()){
-      const months=monthsAround(baseDate,3,3); const todayYm=ymOf(baseDate); const wrap=$('#month-tabs'); wrap.innerHTML='';
-      for(const ym of months){ const b=document.createElement('button'); b.textContent=ym; b.dataset.month=ym; if(ym===todayYm) b.classList.add('active'); b.addEventListener('click', ()=>onMonthTabClick(b)); wrap.appendChild(b); }
-      return { months, todayYm };
-    }
-    async function onMonthTabClick(btn){
-      if(hasDirty()){ const ok = confirm('未保存の変更があります。月を移動すると破棄されます。移動しますか？'); if(!ok) return; clearAllDirtyVisual(); }
-      $('#month-tabs button.active')?.classList.remove('active'); btn.classList.add('active');
-      const ym = btn.dataset.month; const isThisMonth = ym === ymOf(todayJST()); await loadMonth(ym, { scrollToToday:isThisMonth });
-    }
-
-    /* ================================
-       データ正規化（従来互換）
-    =================================*/
-    function normalizeSchedules(json) {
+    /* =============================== 月データ取得（既存APIの1ヶ月単位） =============================== */
+    function normalizeSchedules(json){
+      // サーバが {days, rows} を返す前提（desktop版互換）
       if (json && Array.isArray(json.rows)) {
-        const normDay = (s)=> (String(s||'').trim().slice(0,10));
-        const items=[];
-        for(const row of json.rows){
+        const arr=[];
+        for (const row of json.rows){
           const emp = row.employee_name || row.name || '（未割当）';
           const cells = row.cells || {};
           for(const k of Object.keys(cells)){
-            const d = normDay(k); if(!d) continue;
-            const cell = cells[k] || {};
-            const pushOne=(txt, slot, hour)=>{
-              const t=(txt??'').toString().trim(); if(!t) return;
-              items.push({
-                raw:{ ...row, date:d, cell },
+            const d = String(k).slice(0,10);
+            const c = cells[k]||{};
+            const push = (txt, slot, hour)=>{
+              const t = (txt??'').toString().trim(); if(!t) return;
+              arr.push({
                 employee_name: emp,
-                title: t,
+                employee_id: row.employee_id,
+                date: d,
                 slot,
-                start: new Date(`${d}T${String(hour).padStart(2,'0')}:00:00+09:00`),
-                end: null,
-                baseDate: new Date(`${d}T00:00:00+09:00`),
-                location:'', note:''
+                title: t,
+                startHour: hour
               });
             };
-            pushOne(cell.am, 'am', 9);
-            pushOne(cell.pm, 'pm', 13);
+            push(c.am, 'am', 9);
+            push(c.pm, 'pm', 13);
           }
         }
-        return items;
-      }
-      const arr0 = Array.isArray(json) ? json : (json?.items || json?.data || json?.schedules || null);
-      if(arr0){
-        const pick=(obj, keys)=>{ for(const k of keys){ if(obj[k]!=null) return obj[k]; const lk=Object.keys(obj).find(t=>t.toLowerCase()===k.toLowerCase()); if(lk && obj[lk]!=null) return obj[lk]; } };
-        const toDate=(v)=>{ if(!v) return null; if(/^\d{4}-\d{2}$/.test(v)) return new Date(v+'-01T00:00:00+09:00'); if(/^\d{4}-\d{2}-\d{2}$/.test(v)) return new Date(v+'T00:00:00+09:00'); const n=Number(v); if(!Number.isNaN(n) && String(v).length>=10) return new Date(n); const d=new Date(v); return Number.isNaN(d.getTime())?null:d; };
-        return arr0.map(x=>{
-          const title = pick(x,['title','summary','name','subject']) ?? '';
-          const date  = pick(x,['date','day','dt']);
-          const start = pick(x,['start','start_at','startAt','start_time','startTime','from']) || date;
-          const end   = pick(x,['end','end_at','endAt','end_time','endTime','to']);
-          const dDate=toDate(date), dStart=toDate(start)||dDate, dEnd=toDate(end);
-          return { raw:x, title:String(title||'(無題)'), start:dStart, end:dEnd, baseDate:dDate||dStart||null, location:'', note:'' };
-        }).filter(x=>x.baseDate);
+        return arr;
       }
       return [];
     }
-
     async function fetchMonthData(ym, token){
       if(monthCache.has(ym)) return monthCache.get(ym);
-      const ts = Date.now();
-      const res = await fetch(`${fnUrl('schedules-get')}?month=${encodeURIComponent(ym)}&_=${ts}`, {
+      const ids = employeesVisible.map(e=>e.id).filter(v=>v!=null);
+      const qsEmp = ids.length ? `&emp_ids=${encodeURIComponent(ids.join(','))}` : '';
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/schedules-get?month=${encodeURIComponent(ym)}${qsEmp}&_=${Date.now()}`, {
         headers:{ Authorization:`Bearer ${token}` }, cache:'no-store'
       });
       const json = await res.json();
@@ -428,713 +167,289 @@
       return items;
     }
 
-    /* ================================
-       マトリクス（Tabulator）
-    =================================*/
-    let table = null;
-    let tableMeta = { colDates:[], rowEmployees:[] };
-    let dirtySet = new Set();
-
-    const dirtyKey = (rowIndex, field)=> `${rowIndex}::${field}`;
-    function hasDirty(){ return dirtySet.size>0; }
-    function updateDirtyBadge(){ $('#dirtyBadge').style.display = hasDirty()? '':'none'; }
-    function clearAllDirtyVisual(){
-      table.getRows().forEach(row => {
-        row.getCells().forEach(cell => {
-          cell.getElement().classList.remove('dirty-cell');
-        });
-      });
-      dirtySet.clear();
-      updateDirtyBadge();
+    /* =============================== 行列入替えマトリクス =============================== */
+    function weekday(y,m,d){ const t=[0,3,2,5,0,3,5,1,4,6,2,4]; if(m<3) y-=1; return (y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)+t[m-1]+d)%7; }
+    function dayLabel(ymd, slot){
+      const [y,m,d] = ymd.split('-').map(Number);
+      const wd = '日月火水木金土'[weekday(y,m,d)];
+      return `${m}/${d}（${wd}） ${slot==='am'?'午前':'午後'}`;
     }
-    function weekdayOf(y,m,d){ const t=[0,3,2,5,0,3,5,1,4,6,2,4]; if(m<3) y-=1; return (y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)+t[m-1]+d)%7; }
-    function classesByDate(ds, today){
-      if(!ds) return [];
-      const [y,m,d]=ds.split('-').map(Number);
-      const wd=weekdayOf(y,m,d);
-      const arr=[];
-      if(ds===today) arr.push('ht-today');
-      if(wd===6) arr.push('ht-sat');
-      if(wd===0) arr.push('ht-sun');
-      return arr;
-    }
-    function classesByValue(v){ return String(v??'').includes('休') ? ['ht-holiday'] : []; }
-    function bucketByDepartment(dep){ const s=String(dep||''); let h=0; for(let i=0;i<s.length;i++) h=(h*31 + s.charCodeAt(i))>>>0; return (h%8)+1; }
 
-    function buildFullMatrixWithEmployees(items, ym){
+    // 選択部署の社員だけカラムに並べ、行は日×(午前/午後)
+    function buildSwappedMatrix(items, ym, dept){
+      const emps = employeesVisible
+        .filter(e => !dept || (String(e.department||'')===String(dept)))
+        .sort((a,b)=>(a.row_index??0)-(b.row_index??0) || a.name.localeCompare(b.name,'ja'));
+
       const [y,m] = ym.split('-').map(Number);
-      const last=new Date(y,m,0);
-      const days=Array.from({length:last.getDate()},(_,i)=>i+1);
+      const last = new Date(y, m, 0).getDate();
+      const days = Array.from({length:last}, (_,i)=>`${y}-${String(m).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`);
 
-      const byEmpKey = new Map();
-      for(const it of items){
-        const row = it.raw || {};
-        const empId = row.employee_id || row.id || row.emp_id || null;
-        const name = it.employee_name || row.employee_name || row.name || '（未割当）';
-        const email = row.email || ''; const dep=row.department||''; const note=row.note||'';
-        const key = empId ?? `name:${name}`;
-        if(!byEmpKey.has(key)) byEmpKey.set(key,{ employee_id:empId, name, email, department:dep, note, cells:{} });
-        const d = it.baseDate.getDate();
-        if(!byEmpKey.get(key).cells[d]) byEmpKey.get(key).cells[d] = { am:[], pm:[] };
-        const hour = it.start?.getHours() ?? 0;
-        const slot = (it.slot==='am'||it.slot==='pm')?it.slot:(hour<12?'am':'pm');
-        byEmpKey.get(key).cells[d][slot].push(it.title);
-      }
-
-      // 行順序は employeesVisible（row_index → name）
-      const rowsMeta = employeesVisible.slice().sort(
-        (a,b)=>(a.row_index??0)-(b.row_index??0) || a.name.localeCompare(b.name,'ja')
-      );
-
-      const data=[]; const rowEmployees=[];
-      const columns=[
-        { title:'名前', field:'__name', frozen:true, width:110, headerSort:false, hozAlign:'left', formatter:(cell)=>cell.getValue() },
-        { title:'メモ', field:'__note', frozen:true, width:180, headerSort:false, editor:true, editorParams:{ elementAttributes:{ inputmode:'text' } } },
-      ];
-      const colDates=[null,null];
+      // 2行/日（午前・午後）
+      const rowKeys = [];
+      const rowLabels = [];
       for(const d of days){
-        const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const fAm=`d${String(d).padStart(2,'0')}_am`, fPm=`d${String(d).padStart(2,'0')}_pm`;
-        columns.push(
-          { title:`${m}/${d} 午前`, field:fAm, width:110, headerSort:false, formatter:multilineEllipsisFormatter, cellEdited:onCellEdited },
-          { title:`${m}/${d} 午後`, field:fPm, width:110, headerSort:false, formatter:multilineEllipsisFormatter, cellEdited:onCellEdited },
-        );
-        colDates.push(ds, ds);
+        rowKeys.push({date:d, slot:'am'}); rowLabels.push(dayLabel(d,'am'));
+        rowKeys.push({date:d, slot:'pm'}); rowLabels.push(dayLabel(d,'pm'));
       }
 
-      for(const emp of rowsMeta){
-        const key = emp.id ?? `name:${emp.name}`;
-        const agg = byEmpKey.get(key);
-        const row = { __name:emp.name, __note:emp.note||'' };
-        for(const d of days){
-          row[`d${String(d).padStart(2,'0')}_am`] = agg?.cells?.[d]?.am?.join('\n') ?? '';
-          row[`d${String(d).padStart(2,'0')}_pm`] = agg?.cells?.[d]?.pm?.join('\n') ?? '';
+      // items を (date, slot, empId) ごとに集計
+      const byKey = new Map(); // `${date}|${slot}|${empId}` -> [texts]
+      for(const it of items){
+        const k = `${it.date}|${it.slot}|${it.employee_id}`;
+        if(!byKey.has(k)) byKey.set(k, []);
+        byKey.get(k).push(it.title);
+      }
+
+      const columns = [{ type:'text', title:'日付', width:160 }].concat(
+        emps.map(e => ({ type:'text', title:e.name, width:140 }))
+      );
+      const data = rowKeys.map(({date,slot})=>{
+        const row = [ dayLabel(date,slot) ];
+        for(const e of emps){
+          const k = `${date}|${slot}|${e.id}`;
+          const txt = (byKey.get(k)||[]).join('\n');
+          row.push(txt);
         }
-        // 行メタ
-        row.__meta = { id:emp.id, name:emp.name, email:emp.email, department:emp.department, is_admin:!!emp.is_admin };
-        data.push(row);
-        rowEmployees.push({ id:emp.id, name:emp.name, email:emp.email, department:emp.department, note:emp.note, is_admin:!!emp.is_admin });
-      }
-      return { columns, data, colDates, rowEmployees };
-    }
-
-    function multilineEllipsisFormatter(cell){
-      // 改行を " / " にして省略表示（TabulatorはCSSでellipsisされる）
-      const v = (cell.getValue() ?? '').toString();
-      const show = v.replace(/\r?\n/g, ' / ');
-      return `<div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(show)}</div>`;
-    }
-
-    function canEditRow(rowData){
-      const email = (rowData?.__meta?.email || '').toLowerCase();
-      const me = (currentUser?.email || '').toLowerCase();
-      return currentUser.is_admin || (email && email===me);
-    }
-
-    function rowFormatter(row){
-      const data = row.getData();
-      const dep = data?.__meta?.department || '';
-      const bucket = bucketByDepartment(dep);
-      // 左2セル（frozen）に部署色
-      const cells = row.getCells().slice(0,2);
-      cells.forEach(c => c.getElement().classList.add(`dep-${bucket}`));
-      // 自分の行
-      if( (data?.__meta?.email||'').toLowerCase() === (currentUser?.email||'').toLowerCase() ){
-        row.getElement().classList.add('my-row');
-      }
-    }
-
-    function afterTableBuiltApplyDateClasses(ym){
-      if (!table) return;
-      const today = todayStrJST();
-    
-      // 各セルに曜日/今日クラス＋値規則（休→休日色）
-      table.getRows().forEach((row, rIdx) => {
-        table.getColumns().forEach((col, cIdx) => {
-          const f = col.getField();
-          if (!f || f.startsWith('__')) return;
-    
-          const ds = tableMeta.colDates[cIdx];
-          const cell = row.getCell(f);   // ← row経由でセルを取る
-    
-          if (cell) {
-            const el = cell.getElement();
-            // 既存クラスをリセット
-            ['ht-today','ht-sat','ht-sun','ht-holiday']
-              .forEach(k => el.classList.remove(k));
-            // 曜日クラス
-            classesByDate(ds, today).forEach(k => el.classList.add(k));
-            // 値ルールクラス（例: "休"）
-            classesByValue(cell.getValue()).forEach(k => el.classList.add(k));
-          }
-        });
-      });
-    }
-
-    function onCellEdited(cell){
-      // 未保存マーキング
-      const row = cell.getRow();
-      const rowIndex = row.getPosition(true); // display position
-      const field = cell.getField();
-      const key = dirtyKey(rowIndex, field);
-      dirtySet.add(key);
-      cell.getElement().classList.add('dirty-cell');
-      updateDirtyBadge();
-      // 値ルール（休→休日色）を即時反映
-      const el = cell.getElement();
-      el.classList.remove('ht-holiday');
-      classesByValue(cell.getValue()).forEach(k=> el.classList.add(k));
-    }
-    
-    function isCellActuallyEditable(cell){
-      const col = cell.getColumn();
-      const def = col.getDefinition();
-      // editable が関数なら呼ぶ／真偽値ならその値／未指定は true
-      let editable = true;
-      if (typeof def.editable === "function") {
-        try { editable = !!def.editable(cell); } catch { editable = false; }
-      } else if (def.editable === false) {
-        editable = false;
-      }
-      // editor が無効なら編集不可
-      if (def.editor === false || def.editor == null) editable = false;
-      return editable;
-    }
-    
-    // 単一行用カスタムエディタ：Enterで右隣セルへ
-    function singlelineEditor(cell, onRendered, success, cancel){
-      const input = document.createElement("input");
-      input.type = "text";
-      input.value = (cell.getValue() ?? "").toString();
-      input.autocomplete = "off";
-      input.inputMode = "text";
-    
-      onRendered(() => input.focus({preventScroll:true}));
-      input.addEventListener("blur", () => success(input.value));
-      input.addEventListener("keydown", (e) => {
-        // IME未確定はスルー（Enterでも確定させない）
-        if (e.isComposing) return;
-    
-        if (e.key === "Enter") {
-          e.preventDefault();
-          success(input.value); // まず確定
-    
-          // 右隣の「編集可能セル」にフォーカスして即編集
-          const row = cell.getRow();
-          const cells = row.getCells();
-          const idx = cells.findIndex(c => c === cell);
-          for (let i = idx + 1; i < cells.length; i++) {
-            const next = cells[i];
-            // 編集可能か判定（isEditable が関数の場合にも対応）
-            if (isCellActuallyEditable(next)) {
-             next.edit(true);
-             break;
-            }
-          }
-        } else if (e.key === "Escape") {
-          cancel(); // 編集キャンセル
-        }
-      });
-    
-      return input;
-    }
-    
-    async function renderMatrix(items, ym, { scrollToToday=false }={}){
-      const { columns, data, colDates, rowEmployees } = buildFullMatrixWithEmployees(items, ym);
-      tableMeta = { colDates, rowEmployees };
-
-      // 各列の editable を「この行が編集可か」で動的制御
-      for(const col of columns){
-        if(col.field==='__name'){ col.editor=false; col.editable=false; continue; }
-        if(col.field==='__note'){ col.editable = (cell)=> canEditRow(cell.getRow().getData()); continue; }
-        col.editable = (cell)=> canEditRow(cell.getRow().getData());
-      }
-
-      if(table){
-        table.setColumns(columns);
-        table.replaceData(data);
-      }else{
-        const Tab = window.TabulatorFull || window.Tabulator;
-        if (!Tab) {
-          console.error('Tabulator がwindowに見つかりません。CDNと読み込み順を確認してください');
-        } else {
-          table = new Tab('#matrixGrid', {
-            data,
-            columns,
-            reactiveData:false,
-            height:650,
-            layout:"fitDataStretch",
-            virtualDom:true,
-            rowFormatter,
-            keybindings:true,  // ← キーボード操作ON
-            // ① セル範囲選択をON
-            selectableRange: true,              // 複数レンジにしたければ true
-            selectableRangeColumns: true,    // ヘッダクリックで列全体選択可
-            selectableRangeRows: true,       // 行番号クリックで行全体選択可
-            selectableRangeClearCells: true, // Del/Backspace で選択セルをクリア
-          
-            // ② 編集トリガーをダブルクリックに（=ドラッグで編集が開かない）
-            editTriggerEvent: "dblclick",
-
-            // ▼ クリップボードを「レンジ」基準に統一（貼り付けは Ctrl/Cmd+V で動きます）
-            clipboard: true,
-            clipboardCopyStyled: false,
-            clipboardCopyConfig: { rowHeaders:false, columnHeaders:false },
-            clipboardCopyRowRange: "range",
-            clipboardPasteParser:  "range",
-            clipboardPasteAction:  "range",
-            columnDefaults:{
-              headerSort:false,
-              editor: singlelineEditor,
-              editorParams: { },                    // （不要なら空でOK）
-            },
-           rowContextMenu: [
-             {
-               label: "コピー（選択範囲）",
-               action: () => table.copyToClipboard("range"),
-             },
-             // 貼り付けは Ctrl/Cmd+V を使用（右クリックで案内を出したい場合は下の追加例を参照）
-           ],
-          });
-          const gridEl = document.getElementById("matrixGrid");
-          gridEl.setAttribute("tabindex", "0");          // フォーカス可能に
-          gridEl.style.outline = "none";                 // フォーカス枠は消す
-          gridEl.addEventListener("mousedown", () => {
-            // クリック・ドラッグ開始で必ずフォーカスを掴む
-            if (document.activeElement !== gridEl) gridEl.focus();
-          });
-          
-          // 直近のセルを覚える（既存のハンドラはそのままでOK）
-          let lastSelectedCell = null;
-          table.on("cellClick",     (e, cell)=> lastSelectedCell = cell);
-          table.on("cellSelected",  (cell)=>    lastSelectedCell = cell);
-          table.on("cellMouseDown", (e, cell)=> lastSelectedCell = cell);
-          table.on("cellTap",       (e, cell)=> lastSelectedCell = cell);
-          table.on("cellContext",   (e, cell)=> lastSelectedCell = cell);
-          
-          // IME状態と直近開始時刻
-          let isComposing = false;
-          let lastCompStartAt = 0;
-          
-          // editor DOM を待つ
-          async function waitForEditor(cell, tries = 10){
-            return new Promise(resolve=>{
-              const tick=()=>{
-                const ed = cell.getElement()?.querySelector("input,textarea,[contenteditable='true']");
-                if (ed) return resolve(ed);
-                if (tries-- <= 0) return resolve(null);
-                requestAnimationFrame(tick);
-              };
-              tick();
-            });
-          }
-          
-          gridEl.addEventListener("compositionstart", () => {
-            isComposing = true;
-            lastCompStartAt = performance.now();
-            if (lastSelectedCell && !(lastSelectedCell.isEdited && lastSelectedCell.isEdited())) {
-              lastSelectedCell.edit(true); // 編集だけ開く（未確定はIMEに任せる）
-            }
-          }, true);
-          
-          gridEl.addEventListener("compositionend", () => { isComposing = false; }, true);
-          
-          // ★ キー入力は keydown 主導に一本化（beforeinput は使わない）
-          document.addEventListener("keydown", (e) => {
-            if (!lastSelectedCell) return;
-          
-            // 入力要素上はノータッチ
-            const t = e.target, tag = (t?.tagName || "").toUpperCase();
-            if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t?.isContentEditable) return;
-          
-            const printable = e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
-            const isProcess = (e.key === "Process"); // IMEスタートトークン（環境により来たり来なかったり）
-            const isEnter   = (e.key === "Enter");
-          
-            // 既に編集中ならブラウザに任せる（IME/通常ともに自然挙動）
-            if (lastSelectedCell.isEdited && lastSelectedCell.isEdited()) return;
-          
-            // ここがポイント：印刷可能キーと Process は既定動作を止める
-            if (printable || isProcess || isEnter) {
-              e.preventDefault();          // ← insertText を根元で止める
-              lastSelectedCell.edit(true); // 編集だけ開く
-          
-              // Enter は注入不要（確定/移動用）。ここで終了
-              if (isEnter) return;
-          
-              // IMEが始まるか様子見 → 始まったら何もしない／始まらなければ注入
-              const thisKey = e.key; // 印刷可能キーのみ値がある
-              const plannedAt = performance.now();
-              const INJECT_DELAY_MS = 60; // 30〜60ms で調整
-              const COMP_WINDOW_MS  = 90; // 50〜90ms で調整
-          
-              // 印刷可能キーのみ注入候補
-              if (printable) {
-                (async () => {
-                  const ed = await waitForEditor(lastSelectedCell);
-                  if (!ed) return;
-          
-                  setTimeout(() => {
-                    const compStartedRecently = (performance.now() - lastCompStartAt) <= COMP_WINDOW_MS;
-                    if (isComposing || compStartedRecently) {
-                      // → IMEオンだったので注入キャンセル（未確定はIMEに任せる）
-                      return;
-                    }
-                    // → IMEオフ：ここで初めて1文字注入（1打鍵=1文字）
-                    const start = ed.selectionStart ?? ed.value?.length ?? 0;
-                    const end   = ed.selectionEnd   ?? ed.value?.length ?? 0;
-                    const prev  = typeof ed.value === "string" ? ed.value : "";
-                    const next  = prev.slice(0, start) + thisKey + prev.slice(end);
-                    ed.value = next;
-                    ed.dispatchEvent(new Event("input", { bubbles: true }));
-                    if (typeof ed.setSelectionRange === "function") ed.setSelectionRange(start + thisKey.length, start + thisKey.length);
-                    ed.focus();
-                  }, INJECT_DELAY_MS);
-                })();
-              }
-            }
-          }, true);
-          gridEl.addEventListener("keydown", (e)=> {
-  if ((e.key?.length===1) || e.key==="Process" || e.key==="Enter") {
-    console.log("[DBG] keydown:", e.key, "isComp?", e.isComposing);
-  }
-}, true);
-
-gridEl.addEventListener("compositionstart", ()=> console.log("[DBG] compositionstart"));
-gridEl.addEventListener("compositionend",   ()=> console.log("[DBG] compositionend"));
-gridEl.addEventListener("beforeinput", (e)=> {
-  console.log("[DBG] beforeinput:", e.inputType, "data:", e.data, "isComp?", e.isComposing);
-}, true);
-        }
-      }
-      // 表示後に日付クラス反映
-      table.on("dataProcessed", ()=>{
-        afterTableBuiltApplyDateClasses(ym);
+        return row;
       });
 
-      // 水平スクロール位置：今日へ or 先頭へ
-      await new Promise(r=> setTimeout(r, 30));
-      if(scrollToToday){
-        const d = todayJST().getDate();
-        const amField = `d${String(d).padStart(2,'0')}_am`;
-        const col = table.getColumn(amField);
-        if(col){ table.scrollToColumn(col, "start", true); }
-      }else{
-        const first = table.getColumn("__note");
-        if(first){ table.scrollToColumn(first, "start", true); }
-      }
+      const colMeta = { emps, rowKeys, ym };
+      return { columns, data, colMeta };
     }
 
-    /* ================================
-       読み込み＆保存
-    =================================*/
-    async function loadMonth(ym, { scrollToToday }={}){
-      const { data:{ session } } = await supabase.auth.getSession(); if(!session){ alert('未ログインです'); return; }
-      try{
-        const items = await fetchMonthData(ym, session.access_token);
-        await renderCompanyEventList(ym);
-        await renderMatrix(items, ym, { scrollToToday });
-        clearAllDirtyVisual();
-        window.__syncCompanyListToggle?.();
-      }catch(e){ alert('Fetchエラー: '+e.message); }
+    function classesForYmd(ymd){
+      const [y,m,d] = ymd.split('-').map(Number);
+      const wd = weekday(y,m,d);
+      const cls = [];
+      if (ymd===todayYmd()) cls.push('ht-today');
+      if (wd===6) cls.push('ht-sat');
+      if (wd===0) cls.push('ht-sun');
+      if (isHoliday(ymd)) cls.push('ht-holiday');
+      return cls;
     }
 
-    function containsNoteField(field){ return field==='__note'; }
-    function parseSlotFromField(field){
-      const m = field.match(/^d(\d{2})_(am|pm)$/);
-      if(!m) return null;
-      return { day: Number(m[1]), slot: m[2] };
-    }
-
-    $('#saveMatrixBtn')?.addEventListener('click', async ()=>{
-      if(!table) return;
-      if(!hasDirty()) return alert('未保存の変更はありません');
-
-      const settings = tableMeta;
-      const colDates = settings.colDates;
-      const rowEmployees = settings.rowEmployees;
-
+    async function renderGrid(ym, dept){
       const { data:{ session } } = await supabase.auth.getSession();
-      const token=session?.access_token; if(!token) return alert('未ログインです');
+      if(!session) return;
+      await preloadHolidaysForMonths([ym]);
 
-      const upserts=[], deletes=[]; const memoUpdates=new Map();
+      const items = await fetchMonthData(ym, session.access_token);
+      const { columns, data, colMeta } = buildSwappedMatrix(items, ym, dept);
 
-      // dirtySet を走査
-      for(const key of dirtySet){
-        // key = rowIndex::field
-        const [riStr, field] = key.split('::');
-        const rowIndex = Number(riStr);
-        const row = table.getRows()[rowIndex];
-        if(!row) continue;
-
-        const rowData = row.getData();
-        const emp = rowData?.__meta;
-        if(!emp?.id){ 
-          // 未割当行はスキップ
-          continue;
+      const host = document.getElementById('grid');
+      host.innerHTML = '';
+      grid = jspreadsheet(host, {
+        data, columns,
+        freezeColumns:1,
+        tableOverflow:true,
+        tableHeight: window.innerHeight - 260, // だいたいの可視高
+        allowInsertColumn:false, allowDeleteColumn:false,
+        allowInsertRow:false, allowDeleteRow:false,
+        editable:false, selectionCopy:true,
+        updateTable:(el, cell, x, y, src, val)=>{
+          // x==0 は日付セル
+          if (x===0) {
+            cell.classList.add('cell-date');
+            const rk = colMeta.rowKeys[y];
+            const classes = classesForYmd(rk.date);
+            for(const c of ['ht-today','ht-sat','ht-sun','ht-holiday']) cell.classList.remove(c);
+            classes.forEach(c=>cell.classList.add(c));
+          }
         }
-
-        if(containsNoteField(field)){
-          const note = (rowData.__note ?? '').toString();
-          memoUpdates.set(emp.id, note);
-          continue;
-        }
-
-        const slotInfo = parseSlotFromField(field);
-        if(!slotInfo) continue;
-
-        // 列インデックス→日付
-        const col = table.getColumns().find(c=> c.getField()===field);
-        if(!col) continue;
-        const colIndex = table.getColumnPosition(col, true); // display index
-        const ds = colDates[colIndex];
-        if(!ds) continue;
-
-        const val = (rowData[field] ?? '').toString().trim();
-        if(val){
-          upserts.push({ employee_id:emp.id, date:ds, slot:slotInfo.slot, place:val });
-        }else{
-          deletes.push({ employee_id:emp.id, date:ds, slot:slotInfo.slot });
-        }
-      }
-
-      try{
-        // メモ更新（employees.note）
-        for(const [employee_id, note] of memoUpdates){
-          const res = await fetch(fnUrl('employee-note-update'),{
-            method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
-            body:JSON.stringify({ employee_id, note }), cache:'no-store'
-          });
-          const txt = await res.text(); let j=null; try{ j=JSON.parse(txt);}catch{}
-          if(!res.ok || (j && j.ok===false)) throw new Error(j?.error||txt||`HTTP ${res.status}`);
-          const emp = employeesAll.find(e=> e.id===employee_id); if(emp) emp.note=note;
-        }
-
-        if(deletes.length){
-          const r=await fetch(fnUrl('schedules-delete'),{
-            method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
-            body:JSON.stringify(deletes), cache:'no-store'
-          });
-          const j=await r.json().catch(()=>({}));
-          if(!r.ok || !j?.ok) throw new Error(j?.error||`delete HTTP ${r.status}`);
-        }
-
-        if(upserts.length){
-          const r=await fetch(fnUrl('schedules-upsert'),{
-            method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
-            body:JSON.stringify(upserts), cache:'no-store'
-          });
-          const j=await r.json().catch(()=>({}));
-          if(!r.ok || !j?.ok) throw new Error(j?.error||`upsert HTTP ${r.status}`);
-        }
-
-        await loadCurrentUserAndEmployees();
-
-        // 変更のあった月のキャッシュ削除
-        const ymTouched = new Set();
-        for(const key of dirtySet){
-          const [_, field] = key.split('::');
-          const slotInfo = parseSlotFromField(field);
-          if(!slotInfo) continue;
-          // display col → date → ym
-          const col = table.getColumns().find(c=> c.getField()===field);
-          if(!col) continue;
-          const idx = table.getColumnPosition(col, true);
-          const ds = tableMeta.colDates[idx];
-          if(ds) ymTouched.add(ds.slice(0,7));
-        }
-        for(const ym of ymTouched) monthCache.delete(ym);
-
-        clearAllDirtyVisual();
-        const activeYm=$('#month-tabs button.active')?.dataset.month;
-        if(activeYm) await loadMonth(activeYm,{ scrollToToday: (activeYm===ymOf(todayJST())) });
-
-        alert(`保存しました：メモ ${memoUpdates.size} / 予定 変更 ${upserts.length} / 削除 ${deletes.length}`);
-      }catch(e){ console.error(e); alert('保存に失敗しました：'+e.message); }
-    });
-
-    /* ================================
-       クイック登録（フォーム版）
-    =================================*/
-    let myEmployeeId=null, myEmail=null;
-    async function ensureMyEmployeeId(){
-      if(myEmployeeId) return myEmployeeId;
-      const { data:{ session } } = await supabase.auth.getSession();
-      if(!session) throw new Error('未ログインです');
-      myEmail = session.user?.email||null;
-      if(!myEmail) throw new Error('メールが取得できません');
-      const { data, error } = await supabase.from('employees').select('id,email').eq('email', myEmail).maybeSingle();
-      if(error) throw error;
-      if(!data) throw new Error(`employees に email=${myEmail} が見つかりません`);
-      myEmployeeId=data.id;
-      return myEmployeeId;
+      });
     }
-    function ymFromYmd(ymd){ return String(ymd||'').slice(0,7); }
 
-    $('#quickSaveBtn').addEventListener('click', async ()=>{
-      try{
-        const ymd = ($('#quick-date').value||'').trim();
-        if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return alert('日付は YYYY-MM-DD 形式で入力してください');
-        const amText = ($('#quick-am').value||'').trim();
-        const pmText = ($('#quick-pm').value||'').trim();
-        const employee_id = await ensureMyEmployeeId();
+    /* =============================== 部署・月のUI =============================== */
+    function uniqueDepartments(){
+      const set = new Map(); // 表示名の順を維持
+      for(const e of employeesVisible){
+        const dep = e.department || '';
+        if(!set.has(dep)) set.set(dep, dep);
+      }
+      return Array.from(set.keys());
+    }
+    function fillDepartmentOptions(initDept){
+      const sel = document.getElementById('deptSelect');
+      sel.innerHTML = '';
+      for(const dep of uniqueDepartments()){
+        const op = document.createElement('option');
+        op.value = dep; op.textContent = dep||'(未設定)';
+        if (initDept && String(dep)===String(initDept)) op.selected = true;
+        sel.appendChild(op);
+      }
+    }
+    function fillMonthOptions(base=new Date()){
+      const months = monthsAround(base, 3, 3);
+      const sel = document.getElementById('monthSelect');
+      sel.innerHTML = '';
+      for(const ym of months){
+        const op = document.createElement('option');
+        op.value = ym; op.textContent = ym;
+        if (ym===ymOf(base)) op.selected = true;
+        sel.appendChild(op);
+      }
+    }
 
-        const upserts=[], deletes=[];
-        if(amText) upserts.push({ employee_id, date:ymd, slot:'am', place:amText }); else deletes.push({ employee_id, date:ymd, slot:'am' });
-        if(pmText) upserts.push({ employee_id, date:ymd, slot:'pm', place:pmText }); else deletes.push({ employee_id, date:ymd, slot:'pm' });
-
-        const { data:{ session } } = await supabase.auth.getSession(); const token=session?.access_token; if(!token) return alert('アクセストークンが取得できません（未ログインの可能性）');
-
-        if(deletes.length){
-          const r=await fetch(fnUrl('schedules-delete'),{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(deletes) });
-          const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) throw new Error(`削除失敗: ${j?.error||`HTTP ${r.status}`}`);
-        }
-        if(upserts.length){
-          const r=await fetch(fnUrl('schedules-upsert'),{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(upserts) });
-          const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) throw new Error(`保存失敗: ${j?.error||`HTTP ${r.status}`}`);
-        }
-
-        const ym = ymFromYmd(ymd); monthCache.delete(ym);
-        alert('更新しました');
-        await selectMonthAndReload(ym, { scrollToToday:false });
-      }catch(e){ console.error(e); alert('保存に失敗しました：'+e.message); }
-    });
-
-    /* ================================
-       会社予定 追加（フォーム版）
-    =================================*/
-    function normalizeHHMM(raw){
-      const s=String(raw||'').trim(); if(!s) return null;
-      if(/^\d{4}$/.test(s)){ const hh=+s.slice(0,2), mm=+s.slice(2,4); if(hh>=0&&hh<=23&&mm>=0&&mm<=59) return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; return null; }
-      if(/^\d{1,2}:\d{2}$/.test(s)){ const [h,m]=s.split(':').map(Number); if(h>=0&&h<=23&&m>=0&&m<=59) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; return null; }
+    /* =============================== クイック登録 =============================== */
+    function toYMD(v){
+      const pad = n => String(n).padStart(2,'0');
+      if (!v) return null;
+      if (v instanceof Date && !isNaN(v)) return `${v.getFullYear()}-${pad(v.getMonth()+1)}-${pad(v.getDate())}`;
+      const s = String(v).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const d = new Date(s); if (!isNaN(d)) return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
       return null;
     }
-    async function upsertCompanyEvent(payload){
-      const { data:{ session } } = await supabase.auth.getSession();
-      const token=session?.access_token; if(!token) throw new Error('未ログインです');
-      return await fetchJsonStrict('company-events-upsert', {
-        method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(payload)
-      });
+    function normalizeHHMM(raw){
+      const s=String(raw||'').trim(); if(!s) return null;
+      if(/^[0-2]?\d:[0-5]\d$/.test(s)) return s.length===4? '0'+s : s;
+      if(/^\d{4}$/.test(s)){ const hh=+s.slice(0,2), mm=+s.slice(2,4); if(hh>=0&&hh<=23&&mm>=0&&mm<=59) return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; }
+      return null;
     }
-    document.addEventListener('click', async (e)=>{
-      const t = e.target; if(!(t instanceof HTMLElement)) return;
-      if(t.id!=='companySaveBtn') return;
-      if(!currentUser?.is_admin) { alert('権限がありません'); return; }
-      try{
-        const kind = $('#comp-kind').value;
-        const date = ($('#comp-date').value||'').trim();
-        const date_end_raw = ($('#comp-date-end').value||'').trim();
-        const startRaw = ($('#comp-start').value||'').trim();
-        const endRaw   = ($('#comp-end').value||'').trim();
-        const title = ($('#comp-title').value||'').trim();
-        const memo  = ($('#comp-memo').value||'').trim();
 
-        if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return alert('日付は YYYY-MM-DD で入力してください');
-        if(!title) return alert('行事名を入力してください');
+    async function ensureMyEmployeeId(){
+      if(currentUser.employee_id) return currentUser.employee_id;
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session) throw new Error('未ログイン');
+      const { data, error } = await supabase.from('employees').select('id,email').eq('email', session.user.email).maybeSingle();
+      if(error) throw error;
+      if(!data) throw new Error('自分の従業員IDが見つかりません');
+      currentUser.employee_id = data.id;
+      return data.id;
+    }
 
-        const start = (kind==='event') ? normalizeHHMM(startRaw) : null;
-        const end   = (kind==='event') ? normalizeHHMM(endRaw)   : null;
-        if(kind==='event'){
-          if(startRaw && !start) return alert('開始は 0930 または 09:30 の形式で入力してください');
-          if(endRaw   && !end)   return alert('終了は 1730 または 17:30 の形式で入力してください');
-        }
-        const date_end = (date_end_raw && /^\d{4}-\d{2}-\d{2}$/.test(date_end_raw)) ? date_end_raw : null;
+    async function saveQuick(){
+      const date = toYMD(document.getElementById('qDate').value);
+      if(!date){ alert('日付は YYYY-MM-DD で入力してください'); return; }
+      const am = String(document.getElementById('qAm').value||'').trim();
+      const pm = String(document.getElementById('qPm').value||'').trim();
 
-        await upsertCompanyEvent({ kind, date, date_end, timestart:start, timeend:end, event:title, memo });
+      const employee_id = await ensureMyEmployeeId();
+      const upserts=[], deletes=[];
+      if(am) upserts.push({ employee_id, date, slot:'am', place:am }); else deletes.push({ employee_id, date, slot:'am' });
+      if(pm) upserts.push({ employee_id, date, slot:'pm', place:pm }); else deletes.push({ employee_id, date, slot:'pm' });
 
-        const activeYm = $('#month-tabs button.active')?.dataset.month;
-        if(activeYm) await renderCompanyEventList(activeYm);
-        alert('全体スケジュールを追加しました');
-      }catch(err){ console.error(err); alert('追加に失敗しました：'+err.message); }
-    });
+      const { data:{ session } } = await supabase.auth.getSession();
+      const token = session?.access_token; if(!token){ alert('未ログイン'); return; }
 
-    /* ================================
-       ＋／− トグル（HTML常設）
-    =================================*/
-    // クイック登録
-    (function(){
-      const key='open.quickEntry'; const btn=$('#toggleQuickEntryBtn'); const entry=$('#quickEntry');
-      let open = _LS.get(key, false);
-      entry.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open));
-      btn.addEventListener('click', ()=>{
-        open=!open; entry.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open)); _LS.set(key, open);
-        if(open){ const b2=$('#toggleCompanyAddBtn'); const e2=$('#companyEntry'); if(b2&&e2&&!e2.classList.contains('is-hidden')) b2.click(); }
-      });
-    })();
-    // 会社追加
-    (function(){
-      const key='open.companyEntry'; const btn=$('#toggleCompanyAddBtn'); const entry=$('#companyEntry');
-      let open = _LS.get(key, false);
-      entry.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open));
-      btn.addEventListener('click', ()=>{
-        open=!open; entry.classList.toggle('is-hidden', !open); btn.textContent=open?'−':'＋'; btn.setAttribute('aria-expanded', String(open)); _LS.set(key, open);
-        if(open){ const b1=$('#toggleQuickEntryBtn'); const e1=$('#quickEntry'); if(b1&&e1&&!e1.classList.contains('is-hidden')) b1.click(); }
-      });
-    })();
-    // 会社予定一覧の開閉
-    (function(){
-      const key='open.companyList'; const btn=$('#toggleCompanyListBtn'); const wrap=$('#sched-list-wrap');
-      if(localStorage.getItem(key)===null){ try{ localStorage.setItem(key,'true'); }catch{} }
-      let open = _LS.get(key, true);
-      const sync=()=>{ wrap.classList.toggle('is-hidden', !open); btn.textContent = open ? '−':'＋'; btn.setAttribute('aria-expanded', String(open)); };
-      sync();
-      btn.addEventListener('click', ()=>{ open=!open; _LS.set(key, open); sync(); });
-      window.__syncCompanyListToggle = ()=>{ open=_LS.get(key, true); sync(); };
-    })();
-
-    /* ================================
-       月タブ組み立てと起動
-    =================================*/
-    async function selectMonthAndReload(ym, { scrollToToday=false }={}){
-      let btn = document.querySelector(`#month-tabs button[data-month="${ym}"]`);
-      if(!btn){
-        const [y,m]=ym.split('-').map(Number);
-        const base=new Date(y,m-1,1); const months=monthsAround(base,3,3);
-        const wrap=$('#month-tabs'); wrap.innerHTML='';
-        for(const ym2 of months){ const b=document.createElement('button'); b.textContent=ym2; b.dataset.month=ym2; b.addEventListener('click', ()=>onMonthTabClick(b)); wrap.appendChild(b); }
-        btn = document.querySelector(`#month-tabs button[data-month="${ym}"]`);
+      // 送信
+      if(deletes.length){
+        const r=await fetch(`${SUPABASE_URL}/functions/v1/schedules-delete`,{
+          method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+          body:JSON.stringify(deletes)
+        }); const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) { alert('削除失敗'); return; }
       }
-      document.querySelectorAll('#month-tabs button').forEach(b=>b.classList.remove('active'));
-      if(btn) btn.classList.add('active');
-      await loadMonth(ym, { scrollToToday });
+      if(upserts.length){
+        const r=await fetch(`${SUPABASE_URL}/functions/v1/schedules-upsert`,{
+          method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+          body:JSON.stringify(upserts)
+        }); const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) { alert('保存失敗'); return; }
+      }
+
+      // キャッシュ更新＆当月再描画
+      const ym = date.slice(0,7);
+      monthCache.delete(ym);
+      const monthSel = document.getElementById('monthSelect');
+      if (monthSel.value === ym) {
+        await renderGrid(ym, document.getElementById('deptSelect').value);
+      }
+      alert('更新しました');
     }
 
-    async function bootAppIfLoggedIn(){
-      const { data:{ session } } = await supabase.auth.getSession();
-      toggleUIBySession(!!session); if(!session) return;
-      const { todayYm } = buildMonthTabs();
-      // クイックフォーム初期値
-      $('#quick-date').value = todayStrJST();
-      await loadCurrentUserAndEmployees();
-      await loadMonth(todayYm, { scrollToToday:true });
-    }
-
-    // ログイン/ログアウト
-    $('#loginForm')?.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const email=$('#email').value.trim(); const password=$('#password').value;
-      alert('ログイン中...');
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if(error) return alert('エラー: '+error.message);
-      toggleUIBySession(true);
-      await loadCurrentUserAndEmployees();
-      if(!$('#month-tabs button')){ const { todayYm } = buildMonthTabs(); $('#quick-date').value=todayStrJST(); await loadMonth(todayYm, { scrollToToday:true }); }
-    });
-    $('#logoutBtn')?.addEventListener('click', async ()=>{ await supabase.auth.signOut(); });
-
+    /* =============================== 起動 =============================== */
     document.addEventListener('DOMContentLoaded', async ()=>{
-      const FORCE_LOGIN = new URLSearchParams(location.search).get('forceLogin') === '1';
-      if(FORCE_LOGIN) await supabase.auth.signOut();
-      await bootAppIfLoggedIn();
-      supabase.auth.onAuthStateChange(async (evt, session)=>{
-        toggleUIBySession(!!session);
-        if(evt==='SIGNED_OUT'){ clearAllDirtyVisual(); return; }
-        if(session){
-          await loadCurrentUserAndEmployees();
-          if(!$('#month-tabs button')){ const { todayYm } = buildMonthTabs(); $('#quick-date').value=todayStrJST(); await loadMonth(todayYm, { scrollToToday:true }); }
-        }
+      // UI 初期組み立て
+      fillMonthOptions(new Date());
+      $('#qDate').value = todayYmd();
+
+      // 認証状態に応じた表示（モバイルは簡略：未ログインならSupabaseのメール/パスでログイン）
+      const { data:{ session } } = await supabase.auth.getSession();
+      $('#loginPanel').style.display = session ? 'none' : '';
+      $('#appPanel').style.display   = session ? '' : 'none';
+
+      if(session){
+        await loadCurrentUserAndEmployees();
+        fillDepartmentOptions(currentUser.department);
+        const ym = $('#monthSelect').value;
+        await preloadHolidaysForMonths([ym]);
+        await renderGrid(ym, $('#deptSelect').value);
+      }
+
+      // ログイン
+      $('#loginBtn').addEventListener('click', async ()=>{
+        const email = $('#email').value.trim();
+        const password = $('#password').value;
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if(error){ alert('ログイン失敗: '+error.message); return; }
+        location.reload();
+      });
+
+      // クイック登録保存
+      $('#quickSaveBtn').addEventListener('click', saveQuick);
+
+      // 部署変更
+      $('#deptSelect').addEventListener('change', async ()=>{
+        await renderGrid($('#monthSelect').value, $('#deptSelect').value);
+      });
+
+      // 月変更
+      $('#monthSelect').addEventListener('change', async ()=>{
+        await renderGrid($('#monthSelect').value, $('#deptSelect').value);
       });
     });
   </script>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <strong>行動予定表（モバイル）</strong>
+      <span class="grow"></span>
+      <button id="logoutBtn" class="btn" onclick="(async()=>{const { data:{ session } } = await supabase.auth.getSession(); if(session){ await supabase.auth.signOut(); location.reload(); }})()">ログアウト</button>
+    </div>
+    <div class="bar">
+      <label class="muted">部署</label>
+      <select id="deptSelect" class="grow"></select>
+      <label class="muted">月</label>
+      <select id="monthSelect"></select>
+    </div>
+  </header>
+
+  <!-- 未ログイン時 -->
+  <div id="loginPanel" class="panel" style="display:none;">
+    <div class="row">
+      <input id="email" type="email" placeholder="you@example.com" inputmode="email" autocomplete="username" />
+      <input id="password" type="password" placeholder="パスワード" autocomplete="current-password" />
+      <button id="loginBtn" class="btn-primary">ログイン</button>
+    </div>
+    <p class="muted">※ 社内アカウントでログインしてください</p>
+  </div>
+
+  <!-- アプリ本体 -->
+  <div id="appPanel" style="display:none;">
+    <!-- クイック登録（自分のみ／会社予定登録は無し） -->
+    <div class="panel">
+      <div class="row">
+        <label>日付</label>
+        <input id="qDate" type="date" />
+      </div>
+      <div class="row" style="margin-top:8px">
+        <input id="qAm"  type="text" placeholder="午前の予定（例：現場A）" style="flex:1 1 200px;" />
+        <input id="qPm"  type="text" placeholder="午後の予定（例：現場B）" style="flex:1 1 200px;" />
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="quickSaveBtn" class="btn-primary">クイック登録</button>
+        <span class="muted">※ 自分の予定のみ更新。編集モードはありません</span>
+      </div>
+    </div>
+
+    <!-- スケジュール（表示のみ、x/y入替） -->
+    <div class="panel">
+      <div class="grid-wrap"><div id="grid"></div></div>
+      <div class="muted" style="margin-top:8px;">※ 表示専用（タップ編集なし）。祝日・土日・今日を色付け。</div>
+    </div>
+  </div>
+
+  <footer></footer>
 </body>
 </html>
