@@ -96,6 +96,15 @@
       text-align: center;
       padding: 0;
     }
+    /* メモ行（ヘッダー直下の1行目） */
+    #grid .jexcel tbody tr:first-child td.memo-row {
+      background: #f4f8ff;
+      border-bottom: 1px solid #dce6ff;
+      font-weight: 600;
+      white-space: pre-wrap;
+      word-break: break-word;
+      padding: 8px 10px;
+    }
   </style>
 
   <!-- ===== Jspreadsheet CE + jSuites ===== -->
@@ -338,20 +347,42 @@
       const items = await fetchMonthData(ym, session.access_token);
       const { columns, data, colMeta } = buildSwappedMatrix(items, ym, dept);
 
+      // ★ メモ行を作成（A列は「メモ」固定、以降は各従業員の note）
+      const memoRow = ['メモ', ...colMeta.emps.map(e => (e.note || ''))];
+      const dataWithMemo = [memoRow, ...data];  // 先頭に差し込み
       const host = document.getElementById('grid');
       host.innerHTML = '';
       grid = jspreadsheet(host, {
-        data, columns,
+        data: dataWithMemo,
+        columns: columns.map(c => ({ ...c, readOnly:true })), // 念のため全部読み取り専用
         freezeColumns:1,
         tableOverflow:true,
         tableHeight: '400px',
         tableWidth: '100%',     // ← 幅いっぱいに広げる
         editable: false,            // 全体を編集不可
         selectionCopy: true,        // コピーはOK
+        // 編集系の保険
+        oneditionstart: (inst, cell) => { try{ inst.closeEditor(cell, true); }catch{} return false; },
+        onbeforechange: () => false,
+        onbeforepaste:  () => false,
+        onbeforeinsertrow: () => false,
+        onbeforeinsertcolumn: () => false,
+        onbeforedeleterow: () => false,
+        onbeforedeletecolumn: () => false,
         allowInsertColumn:false, allowDeleteColumn:false,
         allowInsertRow:false, allowDeleteRow:false,
         editable:false, selectionCopy:true,
         updateTable: (el, cell, x, y, src, val) => {
+          // ★ y=0 はメモ行：専用スタイルのみ適用
+          if (y === 0) {
+            cell.classList.add('memo-row');
+            // A列は少し強調
+            if (x === 0) cell.classList.add('cell-date');
+            // メモも縮小表示して見やすく
+            const text = (val || '').toString();
+            if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 3 });
+            return;
+          }
           const rk = colMeta.rowKeys[y];
           if (!rk) return;
         
