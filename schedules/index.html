@@ -117,7 +117,49 @@
       weekdays_short:['日','月','火','水','木','金','土'],
       today:'今日', clear:'クリア', close:'閉じる'
     };
-
+    // 文字幅計測のための Canvas コンテキスト（使い回し）
+    const __measure = (() => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      return { canvas, ctx };
+    })();
+    
+    function shrinkToFit(cell, text, { base=14, min=10, maxLines=2 } = {}) {
+      // 改行対応：行ごとに計測
+      const lines = String(text).split('\n');
+      // セル内のパディングを概算（Jspreadsheetのtdデフォルトに合わせて少し余裕）
+      const padX = 12; // 左右合計
+      const availW = Math.max(8, cell.clientWidth - padX);
+    
+      // 計測用フォント設定（cell の実フォントに寄せる）
+      const style = getComputedStyle(cell);
+      const family = style.fontFamily || 'system-ui, sans-serif';
+      const weight = style.fontWeight || '400';
+    
+      let size = base;
+      while (size > min) {
+        __measure.ctx.font = `${weight} ${size}px ${family}`;
+        // 各行が収まるか？（最長行の幅で判定）
+        const widest = Math.max(...lines.map(l => __measure.ctx.measureText(l).width));
+        const fitsWidth = widest <= availW;
+        // 行数も制限（2行まで等）。収めたい場合は折り返しを許容。
+        const willWrapLines = lines.reduce((cnt, l) => {
+          const w = __measure.ctx.measureText(l).width;
+          return cnt + Math.max(1, Math.ceil(w / Math.max(1, availW)));
+        }, 0);
+        const fitsLines = willWrapLines <= maxLines;
+    
+        if (fitsWidth && fitsLines) break;
+        size -= 1;
+      }
+    
+      // 反映
+      cell.style.fontSize = `${size}px`;
+      cell.style.lineHeight = '1.2';
+      cell.style.whiteSpace = 'pre-wrap';     // 改行・折返し許可
+      cell.style.wordBreak = 'break-word';    // 単語も折り返す
+      cell.style.textOverflow = 'clip';       // 省略記号は不要
+    }
     /* =============================== 状態 =============================== */
     let employeesAll = [];
     let employeesVisible = [];
@@ -299,6 +341,8 @@
         tableOverflow:true,
         tableHeight: '400px',
         tableWidth: '100%',     // ← 幅いっぱいに広げる
+        editable: false,            // 全体を編集不可
+        selectionCopy: true,        // コピーはOK
         allowInsertColumn:false, allowDeleteColumn:false,
         allowInsertRow:false, allowDeleteRow:false,
         editable:false, selectionCopy:true,
@@ -320,6 +364,8 @@
           if (/[休有代振]/.test(text)) {
             cell.classList.add('ht-holiday');
           }
+          // --- 縮小表示（x>0 の実データ列のみ）---
+          if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 2 });
         }
       });
     }
