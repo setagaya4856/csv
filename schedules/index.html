@@ -273,7 +273,7 @@
     function dayLabel(ymd, slot){
       const [y,m,d] = ymd.split('-').map(Number);
       const wd = '日月火水木金土'[weekday(y,m,d)];
-      return `${d} ${slot==='am'?'AM':'PM'}`;
+      return `${d}${slot==='am'?'AM':'PM'}`;
     }
 
     // 選択部署の社員だけカラムに並べ、行は日×(午前/午後)
