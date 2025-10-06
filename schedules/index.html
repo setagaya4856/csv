@@ -19,7 +19,7 @@
     .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
     /* 予定テーブル：Jspreadsheet をモバイル向けに */
-    .grid-wrap{ overflow:auto; -webkit-overflow-scrolling:touch; }
+    .grid-wrap{ height: 600px; overflow:auto; -webkit-overflow-scrolling:touch; }
     .jexcel_content td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .jexcel .readonly{ background:#fafafa; }
     .jexcel .jexcel_frozen{ background:#fff; }
@@ -243,7 +243,7 @@
         data, columns,
         freezeColumns:1,
         tableOverflow:true,
-        tableHeight: Math.max(420, window.innerHeight - 260), 
+        tableHeight: 600, 
         allowInsertColumn:false, allowDeleteColumn:false,
         allowInsertRow:false, allowDeleteRow:false,
         editable:false, selectionCopy:true,
