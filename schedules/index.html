@@ -111,6 +111,12 @@
       color: #444 !important;      /* ← デフォルト #999 より濃く */
       background-color: #fafafa;   /* 背景は今まで通り薄灰 */
     }
+    #refreshBtn {
+      font-size: 1.2em;
+      line-height: 1;
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
   </style>
 
   <!-- ===== Jspreadsheet CE + jSuites ===== -->
@@ -548,6 +554,10 @@
           location.reload();
         }
       });
+      // 更新ボタン（F5と同じ）
+      $('#refreshBtn').addEventListener('click', () => {
+        location.reload();   // ページ全体をリロード
+      });
       // クイック登録保存
       $('#quickSaveBtn').addEventListener('click', saveQuick);
 
@@ -577,6 +587,7 @@
     <div class="bar">
       <strong>行動予定表（モバイル）</strong>
       <span class="grow"></span>
+      <button id="refreshBtn" class="btn">⟳</button>
       <button id="logoutBtn" class="btn">ログアウト</button>
     </div>
     <div class="bar">
