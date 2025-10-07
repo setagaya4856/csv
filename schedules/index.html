@@ -473,6 +473,21 @@
           // 縮小表示（データ列のみ）
           if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 2 });
         }
+        // grid 生成の直後に追加
+        const myId = currentUser?.employee_id ?? null;
+        const myEmail = (currentUser?.email || '').toLowerCase();
+        const myIdxInEmps = colMeta.emps.findIndex(e =>
+          (myId && String(e.id) === String(myId)) ||
+          ((e?.email || '').toLowerCase() === myEmail)
+        );
+        // 表の列番号：0が日付列なので +1
+        grid.options._myCol = (myIdxInEmps >= 0) ? (1 + myIdxInEmps) : null;
+        // 自分の列を赤く（セル側）
+        const myCol = grid?.options?._myCol ?? null;
+        if (myCol != null && x === myCol) {
+          cell.classList.add('myself');        // 強いCSSで赤
+          cell.style.color = '#d32f2f';        // 競合対策の保険
+        }
       });
     }
 
