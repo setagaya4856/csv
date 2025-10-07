@@ -410,15 +410,6 @@
       const dataWithMemo = [memoRow, ...data];  // 先頭に差し込み
       const host = document.getElementById('grid');
       host.innerHTML = '';
-      // ★ 自分の列インデックスを先に決める（0は日付列なので +1）
-      const myId = currentUser?.employee_id ?? null;
-      const myEmail = (currentUser?.email || '').toLowerCase();
-      const myIdxInEmps = colMeta.emps.findIndex(e =>
-        (myId && String(e.id) === String(myId)) ||
-        ((e?.email || '').toLowerCase() === myEmail)
-      );
-      const myCol = (myIdxInEmps >= 0) ? (1 + myIdxInEmps) : null;
-      
       grid = jspreadsheet(host, {
         data: dataWithMemo,
         columns: columns.map(c => ({ ...c, readOnly:true })), // 念のため全部読み取り専用
@@ -428,8 +419,6 @@
         tableWidth: '100%',     // ← 幅いっぱいに広げる
         editable: false,            // 全体を編集不可
         selectionCopy: true,        // コピーはOK
-        _myCol: myCol,
-        colMeta,
         // 編集系の保険
         oneditionstart: (inst, cell) => { try{ inst.closeEditor(cell, true); }catch{} return false; },
         onbeforechange: () => false,
@@ -442,13 +431,11 @@
         allowInsertRow:false, allowDeleteRow:false,
         editable:false, selectionCopy:true,
         updateTable: (el, cell, x, y, src, val) => {
+          cell.classList.remove('ht-today','ht-sat','ht-sun','ht-holiday','memo-row','cell-date','myself');
           if (x === 0) cell.style.color = ''; // インライン色のリセット（保険）
           const memoOffset = 1;                 // 先頭にメモ行がある
           const dataRow = y - memoOffset;       // 実データに対応する行index（rowKeys用）
-          // まず毎回リセット（前フレーム痕跡を除去）
-          cell.classList.remove('ht-today','ht-sat','ht-sun','ht-holiday','memo-row','cell-date','myself');
-          if (x === 0) cell.style.color = ''; // インライン色を保険で消す
-          
+        
           // --- メモ行（y===0）は装飾だけ ---
           if (dataRow < 0) {
             cell.classList.add('memo-row');
@@ -457,6 +444,25 @@
             if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 3 });
             return;
           }
+          
+          // grid 生成の直後に追加
+          const myId = currentUser?.employee_id ?? null;
+          const myEmail = (currentUser?.email || '').toLowerCase();
+          const myIdxInEmps = colMeta.emps.findIndex(e =>
+            (myId && String(e.id) === String(myId)) ||
+            ((e?.email || '').toLowerCase() === myEmail)
+          );
+          
+          // 表の列番号：0が日付列なので +1
+          grid.options._myCol = (myIdxInEmps >= 0) ? (1 + myIdxInEmps) : null;
+          
+          // 自分の列を赤く（セル側）
+          const myCol = grid?.options?._myCol ?? null;
+          if (myCol != null && x === myCol) {
+            cell.classList.add('myself');        // 強いCSSで赤
+            cell.style.color = '#d32f2f';        // 競合対策の保険
+          }
+          
           // --- ここから通常データ行（rowKeys は dataRow を使う） ---
           const rk = colMeta.rowKeys[dataRow];
           if (!rk) return;
@@ -475,12 +481,6 @@
           const text = (val || '').toString();
           if (/[休有代振]/.test(text)) cell.classList.add('ht-holiday');
           
-          // 自分の“列”を赤（セルのみ。ヘッダは変更しない）
-          const myColOpt = grid?.options?._myCol ?? null;
-          if (myColOpt != null && x === myColOpt) {
-            cell.classList.add('myself');     // 強いCSSで赤
-            cell.style.color = '#d32f2f';     // 競合対策の最終兵器（インライン）
-          }
           // 縮小表示（データ列のみ）
           if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 2 });
         }
