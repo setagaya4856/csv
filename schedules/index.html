@@ -125,6 +125,19 @@
       color: #d32f2f !important;
       font-weight: 700;
     }
+    /* ==== Help modal (mobile) ==== */
+    .help-modal{ position:fixed; inset:0; display:none; z-index:10000; }
+    .help-modal[aria-hidden="false"]{ display:block; }
+    .help-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.4); }
+    .help-panel{
+      position:relative; max-width:640px; margin:8vh auto; background:#fff;
+      border-radius:12px; padding:16px; box-shadow:0 8px 30px rgba(0,0,0,.18);
+    }
+    .help-close{
+      position:absolute; right:10px; top:8px; font-size:22px; line-height:1;
+      border:0; background:transparent; cursor:pointer;
+    }
+    .help-body{ margin:8px 0 4px; max-height:60vh; overflow:auto; }
   </style>
 
   <!-- ===== Jspreadsheet CE + jSuites ===== -->
@@ -646,6 +659,30 @@
         btn.textContent = open ? '＋' : '－';
       });
     });
+    /* ==== Help modal (mobile) ==== */
+    function openHelpModal(){
+      const m = document.getElementById('helpModal');
+      m?.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeHelpModal(){
+      const m = document.getElementById('helpModal');
+      m?.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+    /* 初期ロード時：ログインに成功してグリッド描画した直後に一度だけ強制表示 */
+    async function renderGrid(ym, dept){
+      const { access_token: token } = await getActiveSessionOrLogout();
+      await preloadHolidaysForMonths([ym]);
+      const items = await fetchMonthData(ym, token);
+      const { columns, data, colMeta } = buildSwappedMatrix(items, ym, dept);
+      // …（既存の grid = jspreadsheet(...) 初期化処理はそのまま）
+      // ↓↓↓ 追加：初回だけ自動オープン
+      if (!window.__mobileHelpShownOnce) {
+        window.__mobileHelpShownOnce = true;
+        openHelpModal();
+      }
+    }
   </script>
 </head>
 <body>
@@ -700,7 +737,19 @@
       <div id="grid"></div>
     </div>
   </div>
-
+  <div id="helpModal" class="help-modal" aria-hidden="true">
+    <div class="help-backdrop" data-help-close></div>
+    <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <button class="help-close" type="button" title="閉じる" data-help-close>&times;</button>
+      <h2 id="helpTitle">使い方（モバイル）</h2>
+      <div id="helpBody" class="help-body">
+        <p>・上部の「部署」「月」で表示を切り替えられます。</p>
+        <p>・表は <strong>行=日付(AM/PM)</strong>、<strong>列=社員</strong> で表示されます（閲覧専用）。</p>
+        <p>・自分の列は赤字で強調されます。土日・祝日・本日は自動で色付き。</p>
+        <p>・「＋」→「予定登録」で、自分の午前/午後予定をクイック登録できます。</p>
+        <p>・スクロールは指で横/縦に動かせます。長押しでセル選択のみも可能。</p>
+      </div>
+    </div>
   <footer></footer>
 </body>
 </html>
