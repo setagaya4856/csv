@@ -458,6 +458,7 @@
         data: dataWithMemo,
         columns: columns.map(c => ({ ...c, readOnly:true })),
         rowHeaders: true,                 // 有効化だけする
+        rowHeaderWidth: 96, // ← 行ヘッダの希望幅
         rows: rowsMeta,             // ★ ここで各行ヘッダのタイトルを設定
         freezeRows: 1,         // ← メモ行（先頭1行）を固定
         tableOverflow:true,
@@ -513,6 +514,23 @@
           
           // 縮小表示（データ列のみ）
           if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 2 });
+          {
+            const bodyTable   = host.querySelector('.jexcel_content table');
+            const headerTable = host.querySelector('table.jexcel_header');
+            const setCol0 = (tbl) => {
+              const col = tbl?.querySelector('colgroup col:first-child');
+              if (col) {
+                col.style.width    = '96px';
+                col.style.minWidth = '96px';
+                col.style.maxWidth = '96px';
+              }
+            };
+            setCol0(bodyTable);
+            setCol0(headerTable);
+            // 角セルの見た目（任意）
+            const corner = host.querySelector('.jexcel_corner');
+            if (corner) corner.style.width = '96px';
+          }
         }
       });
     }
