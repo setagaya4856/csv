@@ -158,6 +158,8 @@
     .help-body{ margin:8px 0 4px; max-height:60vh; overflow:auto; }
     /* 親がスクロールを奪わないように（重要） */
     .panel { overflow: visible; }   /* ← ここが hidden だと sticky が効かないことがある */
+    /* フィルハンドル（右下の小さな四角）を非表示 */
+#grid .jexcel .jexcel_filler { display: none !important; }
   </style>
 
   <!-- ===== Jspreadsheet CE + jSuites ===== -->
