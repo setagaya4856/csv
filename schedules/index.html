@@ -163,6 +163,13 @@
       background: #fff;
       box-shadow: 1px 1px 0 #eee; /* 任意 */
     }
+    #grid .jexcel .jexcel_corner,
+    #grid .jexcel .jexcel_row {
+      width: 80px !important;      /* ← 好きな幅に */
+      min-width: 80px !important;
+      max-width: 80px !important;
+      box-sizing: border-box;
+    }
     /* 親がスクロールを奪わないように（重要） */
     .panel { overflow: visible; }   /* ← ここが hidden だと sticky が効かないことがある */
   </style>
