@@ -109,7 +109,7 @@
     }
     /* 行ヘッダ（左）を sticky に */
     #grid .jexcel .jexcel_row {
-      font-weight: 600;
+      font-weight: 500;
       position: sticky;
       left: 0;
       z-index: 2;        /* ヘッダとデータの間にくるように */
@@ -157,9 +157,7 @@
     }
     .help-body{ margin:8px 0 4px; max-height:60vh; overflow:auto; }
     /* 親がスクロールを奪わないように（重要） */
-    .panel { overflow: visible; }   /* ← ここが hidden だと sticky が効かないことがある */
-    /* フィルハンドル（右下の小さな四角）を非表示 */
-#grid .jexcel .jexcel_filler { display: none !important; }
+    .panel { overflow: visible; } 
   </style>
 
   <!-- ===== Jspreadsheet CE + jSuites ===== -->
@@ -516,23 +514,6 @@
           
           // 縮小表示（データ列のみ）
           if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 2 });
-          {
-            const bodyTable   = host.querySelector('.jexcel_content table');
-            const headerTable = host.querySelector('table.jexcel_header');
-            const setCol0 = (tbl) => {
-              const col = tbl?.querySelector('colgroup col:first-child');
-              if (col) {
-                col.style.width    = '96px';
-                col.style.minWidth = '96px';
-                col.style.maxWidth = '96px';
-              }
-            };
-            setCol0(bodyTable);
-            setCol0(headerTable);
-            // 角セルの見た目（任意）
-            const corner = host.querySelector('.jexcel_corner');
-            if (corner) corner.style.width = '96px';
-          }
         }
       });
     }
