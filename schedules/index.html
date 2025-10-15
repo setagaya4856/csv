@@ -1,4 +1,4 @@
-q<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" /><!-- iOS: ホーム画面追加で全画面表示 -->
@@ -28,8 +28,7 @@ q<!DOCTYPE html>
       font-family: system-ui, -apple-system, "ヒラギノ角ゴ ProN", Meiryo, sans-serif; margin:0; background:#f7f7f7; 
       min-height: 100svh;    /* iOS/最新ブラウザで安定 */
       min-height: 100dvh;    /* こちらが使える環境ではより正確 */
-      padding-top: var(--safe-top);
-      padding-bottom: var(--safe-bottom);
+      padding-top: var(--safe-top);      padding-bottom: var(--safe-bottom);
     }
     
     /* 最下部のフッタ安全域（既存footerを活用） */
@@ -89,15 +88,6 @@ q<!DOCTYPE html>
     /* 片手操作向けにボタン大きめ */
     .btn{ padding:10px 14px; border-radius:10px; border:1px solid #bbb; background:#fff; }
     .btn-primary{ background:#1a73e8; color:#fff; border-color:#1a73e8; }
-    #toggleQuickBtn {
-      font-size: 1.4em;
-      line-height: 1;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      text-align: center;
-      padding: 0;
-    }
     /* メモ行（ヘッダー直下の1行目） */
     #grid .jexcel tbody tr:first-child td.memo-row {
       background: #f4f8ff;
@@ -219,6 +209,15 @@ q<!DOCTYPE html>
     .dep-7{ background:#f0f5ff !important; }
     .dep-8{ background:#fefefe !important; }
     .dep-head{ box-shadow: inset 0 2px #888; }
+
+    /* トグルの見た目 */
+    .togglebar{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:8px var(--pad); }
+    .tgl{ padding:0 8px; border:1px solid #bbb; background:#fff; border-radius:8px; height:28px; min-width:34px; cursor:pointer; }
+    .tgl[aria-pressed="true"]{ font-weight:700; border-color:#666; }
+    .tgl:disabled{ opacity:.45; pointer-events:none; filter:grayscale(40%); }
+
+    /* 各パネル共通 */
+    .quick-section{ margin:12px; }
   </style>
 
   <!-- ===== Jspreadsheet CE + jSuites ===== -->
@@ -332,7 +331,7 @@ q<!DOCTYPE html>
     /* =============================== 状態 =============================== */
     let employeesAll = [];
     let employeesVisible = [];
-    let currentUser = { email:null, employee_id:null, department:null, is_active:false };
+    let currentUser = { email:null, employee_id:null, department:null, is_active:false, is_admin:false };
     let grid = null;
 
     const monthCache = new Map(); // ym -> normalized items
@@ -390,7 +389,13 @@ q<!DOCTYPE html>
       employeesAll = emps || [];
       employeesVisible = employeesAll.filter(e => e.is_active !== false);
       const me = employeesAll.find(e => (e.email||'').toLowerCase() === (email||'').toLowerCase());
-      currentUser = { email, employee_id: me?.id ?? null, department: me?.department ?? null, is_active: !!me && me.is_active !== false };
+      currentUser = {
+        email,
+        employee_id: me?.id ?? null,
+        department: me?.department ?? null,
+        is_active: !!me && me.is_active !== false,
+        is_admin: !!me?.is_admin,     // ★ これを入れる
+      };
       return currentUser;
     }
 
@@ -625,7 +630,158 @@ q<!DOCTYPE html>
       }
     }
 
-    /* =============================== クイック登録 =============================== */
+    /* =============================== 登録パネル =============================== */
+    /* ===== 相互排他トグル ===== */
+    const panels = {
+      notice: { btn: document.getElementById('tglNotice'),  id:'noticePanel',  saveBtn:null },
+      quick:  { btn: document.getElementById('tglQuick'),   id:'quickPanel2',  saveBtn:document.getElementById('quickSaveBtn2') },
+      memo:   { btn: document.getElementById('tglMemo'),    id:'memoPanel',    saveBtn:document.getElementById('memoSaveBtn') },
+      company:{ btn: document.getElementById('tglCompany'), id:'companyPanel', saveBtn:document.getElementById('companySaveBtn2') },
+    };
+
+    function openPanel(key){
+      for (const [k, conf] of Object.entries(panels)) {
+        const btn = conf.btn;
+        const panel = document.getElementById(conf.id);
+        const saveBtn = conf.saveBtn;
+        const isCurrent = (k === key);
+
+        // もし今開いているパネルを再度クリックした場合 → 全部閉じる
+        const isOpen = btn.getAttribute('aria-pressed') === 'true';
+        const willCloseAll = isCurrent && isOpen;
+
+        // 表示状態を決定
+        const pressed = !willCloseAll && isCurrent;
+
+        // ボタン表示を更新
+        btn.setAttribute('aria-pressed', String(pressed));
+        btn.textContent = pressed ? '－' : '＋';
+
+        // パネルと保存ボタンの表示制御
+        if (panel) panel.style.display = pressed ? '' : 'none';
+        if (saveBtn) saveBtn.disabled = !pressed;
+      }
+
+      // ✅ 「お知らせ」トグルに連動して文字色変更
+      const noticeBtn = document.getElementById('tglNotice');
+      const noticeLabel = noticeBtn?.nextElementSibling; // ← 「お知らせ」span
+      if (noticeBtn && noticeLabel) {
+        const isOpen = noticeBtn.getAttribute('aria-pressed') === 'true';
+        noticeLabel.style.color = isOpen ? '#333' : '#999';  // 開いてると黒、閉じてるとグレー
+      }
+    }
+
+    // クリック（※「お知らせ」はラベル非ボタン。左の＋/−のみ反応）
+    for(const [k,conf] of Object.entries(panels)){
+      conf.btn?.addEventListener('click', ()=> openPanel(k));
+    }
+
+    /* ===== 役割に応じた可視制御 ===== */
+    // どこかのタイミング(ログイン後/ユーザー読込後)で呼ぶ
+    function applyRoleVisibility(){
+      // 非アクティブ → クイック＆メモを非表示（トグルボタン＋パネル＋保存ボタン）
+      const isActive  = !!currentUser?.is_active;
+      const isAdmin   = !!currentUser?.is_admin;
+
+      // quick
+      document.getElementById('tglQuick').style.display     = isActive ? '' : 'none';
+      document.getElementById('quickSaveBtn2').style.display= isActive ? '' : 'none';
+      document.getElementById('quickPanel2').style.display  = isActive ? 'none' : 'none'; // 初期は閉
+      // memo
+      document.getElementById('tglMemo').style.display      = isActive ? '' : 'none';
+      document.getElementById('memoSaveBtn').style.display  = isActive ? '' : 'none';
+      document.getElementById('memoPanel').style.display    = 'none';
+
+      // 会社予定登録（管理者のみ）
+      document.getElementById('tglCompany').style.display   = isAdmin ? '' : 'none';
+      document.getElementById('companySaveBtn2').style.display = isAdmin ? '' : 'none';
+      document.getElementById('companyPanel').style.display = 'none';
+
+      // 初期は「お知らせ」を開く
+      openPanel('notice');
+    }
+
+    /* ===== 会社予定一覧（お知らせ）==== */
+    function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    async function fetchCompanyEventsForMonth(ym){
+      const [y,m]=ym.split('-').map(Number);
+      const start=new Date(y,m-1,1), end=new Date(y,m,1);
+      const d2=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const { data, error } = await supabase
+        .from('company_events')
+        .select('id, kind, date, date_end, timestart, timeend, event, memo')
+        .or(`and(date.gte.${d2(start)},date.lt.${d2(end)}),and(date.lte.${d2(end)},date_end.gte.${d2(start)})`)
+        .order('date',{ascending:true})
+        .order('timestart',{ascending:true});
+      if(error) throw error; return data||[];
+    }
+
+    async function renderCompanyList(ym){
+      const box = document.getElementById('companyListBody');
+      try{
+        const evs = await fetchCompanyEventsForMonth(ym);
+        if(!evs.length){ box.innerHTML = '<p class="muted">該当なし</p>'; return; }
+
+        const notices = evs.filter(e=>e.kind==='notice');
+        const normals = evs.filter(e=>e.kind!=='notice');
+
+        let html='';
+        // お知らせ(優先)
+        for(const e of notices){
+          const del = currentUser?.is_admin ? `<button class="ev-del" data-ev-id="${e.id}" style="color:#e53935;background:transparent;border:none;cursor:pointer">削除</button>` : '';
+          html += `<div class="ev-item" style="border-left:4px solid #9c27b0;padding-left:8px;margin:6px 0;display:flex;gap:8px;align-items:flex-start;">
+            ${del}<div class="ev-main"><div style="font-weight:700;white-space:pre-wrap">${esc(e.event)}</div>${e.memo?`<div style="white-space:pre-wrap">${esc(e.memo)}</div>`:''}</div>
+          </div>`;
+        }
+        // 日別グループ
+        const byDay = new Map();
+        for(const e of normals){ const k=e.date; if(!byDay.has(k)) byDay.set(k,[]); byDay.get(k).push(e); }
+        for(const [day, arr] of byDay){
+          html += `<h3 style="margin:6px 0">${esc(day)}</h3><ul style="margin:0 0 8px 16px;padding:0">`;
+          arr.sort((a,b)=>(a.timestart||'').localeCompare(b.timestart||''));
+          for(const e of arr){
+            const t1=e.timestart?e.timestart.slice(0,5):'', t2=e.timeend?e.timeend.slice(0,5):'';
+            const tt=t1&&t2?`${t1}–${t2}`:(t1||'');
+            const del = currentUser?.is_admin ? `<button class="ev-del" data-ev-id="${e.id}" style="color:#e53935;background:transparent;border:none;cursor:pointer">削除</button>` : '';
+            html += `<li class="ev-item" style="display:flex;gap:8px;align-items:flex-start;">
+              ${del}<div class="ev-main"><strong style="white-space:pre-wrap">${esc(e.event)}</strong> ${tt}${e.memo?`<div class="muted" style="white-space:pre-wrap">${esc(e.memo)}</div>`:''}</div>
+            </li>`;
+          }
+          html += `</ul>`;
+        }
+        box.innerHTML = html;
+      }catch(e){
+        console.error(e);
+        box.textContent = '読み込みに失敗しました';
+      }
+    }
+
+    // 削除（管理者のみ）
+    async function deleteCompanyEventById(id){
+      const { data:{ session } } = await supabase.auth.getSession();
+      const token=session?.access_token; if(!token) throw new Error('未ログイン');
+      const res=await fetch(`${SUPABASE_URL}/functions/v1/company-events-delete`,{
+        method:'POST',
+        headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+        body:JSON.stringify({ id }), cache:'no-store'
+      });
+      const txt=await res.text(); let j=null; try{ j=JSON.parse(txt);}catch{}
+      if(!res.ok || (j&&j.ok===false)) throw new Error(j?.error||txt||`HTTP ${res.status}`);
+      return j??{};
+    }
+
+    document.getElementById('noticePanel').addEventListener('click', async (e)=>{
+      const btn = e.target instanceof HTMLElement ? e.target.closest('button.ev-del') : null; if(!btn) return;
+      if(!currentUser?.is_admin) return alert('権限がありません');
+      const id = btn.getAttribute('data-ev-id'); if(!id) return;
+      if(!confirm('この全体スケジュールを削除します。よろしいですか？')) return;
+      try{
+        await deleteCompanyEventById(id);
+        await renderCompanyList(document.getElementById('monthSelect').value);
+        alert('削除しました');
+      }catch(err){ alert('削除に失敗しました：'+err.message); }
+    });
     function toYMD(v){
       const pad = n => String(n).padStart(2,'0');
       if (!v) return null;
@@ -653,48 +809,76 @@ q<!DOCTYPE html>
       return data.id;
     }
 
-    async function saveQuick(){
-      const date = toYMD(document.getElementById('qDate').value);
-      if(!date){ alert('日付は YYYY-MM-DD で入力してください'); return; }
-      const am = String(document.getElementById('qAm').value||'').trim();
-      const pm = String(document.getElementById('qPm').value||'').trim();
+    // 予定（午前・午後）
+    document.getElementById('quickSaveBtn2').addEventListener('click', async ()=>{
+      try{
+        const date = toYMD(document.getElementById('qDate2').value);
+        if(!date){ alert('日付(YYYY-MM-DD)を入力'); return; }
+        const am = (document.getElementById('qAm2').value||'').trim();
+        const pm = (document.getElementById('qPm2').value||'').trim();
+        const employee_id = await ensureMyEmployeeId();
+        const upserts=[], deletes=[];
+        if(am) upserts.push({ employee_id, date, slot:'am', place:am }); else deletes.push({ employee_id, date, slot:'am' });
+        if(pm) upserts.push({ employee_id, date, slot:'pm', place:pm }); else deletes.push({ employee_id, date, slot:'pm' });
 
-      const employee_id = await ensureMyEmployeeId();
-      const upserts=[], deletes=[];
-      if(am) upserts.push({ employee_id, date, slot:'am', place:am }); else deletes.push({ employee_id, date, slot:'am' });
-      if(pm) upserts.push({ employee_id, date, slot:'pm', place:pm }); else deletes.push({ employee_id, date, slot:'pm' });
-
-      const { access_token: token } = await getActiveSessionOrLogout();
-
-      // 送信
-      if(deletes.length){
-        const r=await fetch(`${SUPABASE_URL}/functions/v1/schedules-delete`,{
+        const { data:{ session } } = await supabase.auth.getSession();
+        const token=session?.access_token; if(!token) throw new Error('未ログイン');
+        if(deletes.length){
+          const r=await fetch(`${SUPABASE_URL}/functions/v1/schedules-delete`,{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(deletes) });
+          const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) throw new Error(j?.error||`HTTP ${r.status}`);
+        }
+        if(upserts.length){
+          const r=await fetch(`${SUPABASE_URL}/functions/v1/schedules-upsert`,{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(upserts) });
+          const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) throw new Error(j?.error||`HTTP ${r.status}`);
+        }
+        alert('更新しました');
+      }catch(e){ alert('保存失敗：'+e.message); }
+    });
+    // メモ（自分）
+    document.getElementById('memoSaveBtn').addEventListener('click', async ()=>{
+      try{
+        const note = (document.getElementById('qNote2').value||'').trim();
+        const employee_id = await ensureMyEmployeeId();
+        const { data:{ session } } = await supabase.auth.getSession();
+        const token=session?.access_token; if(!token) throw new Error('未ログイン');
+        const r = await fetch(`${SUPABASE_URL}/functions/v1/employee-note-update`,{
           method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
-          body:JSON.stringify(deletes)
-        }); const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) { alert('削除失敗'); return; }
-      }
-      if(upserts.length){
-        const r=await fetch(`${SUPABASE_URL}/functions/v1/schedules-upsert`,{
-          method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
-          body:JSON.stringify(upserts)
-        }); const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) { alert('保存失敗'); return; }
-      }
+          body:JSON.stringify({ employee_id, note })
+        });
+        const j=await r.json().catch(()=>({})); if(!r.ok || j?.ok===false) throw new Error(j?.error||`HTTP ${r.status}`);
+        alert('メモを保存しました');
+      }catch(e){ alert('保存失敗：'+e.message); }
+    });
+    /* ===== 会社予定登録（管理者）===== */
+    document.getElementById('companySaveBtn2').addEventListener('click', async ()=>{
+      if(!currentUser?.is_admin) return alert('権限がありません');
+      try{
+        const kind = document.getElementById('cKind2').value;
+        const date = toYMD(document.getElementById('cDate2').value);
+        const date_end = toYMD(document.getElementById('cDateEnd2').value);
+        const start = kind==='event' ? normalizeHHMM(document.getElementById('cStart2').value) : null;
+        const end   = kind==='event' ? normalizeHHMM(document.getElementById('cEnd2').value)   : null;
+        const title = (document.getElementById('cTitle2').value||'').trim();
+        const memo  = (document.getElementById('cMemo2').value||'').trim();
+        if(!date) return alert('開始日を入力してください');
+        if(!title) return alert('タイトルを入力してください');
 
-      // キャッシュ更新＆当月再描画
-      const ym = date.slice(0,7);
-      monthCache.delete(ym);
-      const monthSel = document.getElementById('monthSelect');
-      if (monthSel.value === ym) {
-        await renderGrid(ym, document.getElementById('deptSelect').value);
-      }
-      alert('更新しました');
-    }
+        const { data:{ session } } = await supabase.auth.getSession();
+        const token=session?.access_token; if(!token) throw new Error('未ログイン');
+        const r = await fetch(`${SUPABASE_URL}/functions/v1/company-events-upsert`,{
+          method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+          body:JSON.stringify({ kind, date, date_end: date_end||null, timestart:start, timeend:end, event:title, memo })
+        });
+        const j=await r.json().catch(()=>({})); if(!r.ok || j?.ok===false) throw new Error(j?.error||`HTTP ${r.status}`);
+        alert('全体スケジュールを登録しました');
+        renderCompanyList(document.getElementById('monthSelect').value);
+      }catch(e){ alert('登録失敗：'+e.message); }
+    });
 
     /* =============================== 起動 =============================== */
     document.addEventListener('DOMContentLoaded', async ()=>{
       // UI 初期組み立て
       fillMonthOptions(new Date());
-      $('#qDate').value = todayYmd();
 
       // 認証状態に応じた表示（モバイルは簡略：未ログインならSupabaseのメール/パスでログイン）
       const { data:{ session } } = await supabase.auth.getSession();
@@ -713,9 +897,43 @@ q<!DOCTYPE html>
       if (sessionObj) {
         await loadCurrentUserAndEmployees();
         fillDepartmentOptions(currentUser.department);
-        const ym = $('#monthSelect').value;
-        await preloadHolidaysForMonths([ym]);
-        await renderGrid(ym, $('#deptSelect').value);
+        
+        // ★ ここを追加：アクティブでないユーザーは
+        // 1) クイック登録を無効化
+        // 2) 部署セレクトを「本日の予定一覧」にしてカード表示へ
+        if (!currentUser.is_active) {
+          const sel = document.getElementById('deptSelect');
+          if (sel) sel.value = '__TODAY__';
+
+          await renderTodayCards();
+          document.getElementById('gridPanel').style.display  = 'none';
+          document.getElementById('todayPanel').style.display = '';
+        } else {
+          const ym = document.getElementById('monthSelect').value;
+          await preloadHolidaysForMonths([ym]);
+          await renderGrid(ym, document.getElementById('deptSelect').value);
+        }
+        (async function afterLoginInit(){
+          // 既存の session チェック後に…
+          try{
+            // 既存 today設定
+            const today = (function(){ try{
+              const fmt = new Intl.DateTimeFormat('ja-JP',{ timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit' });
+              const p = Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));
+              return `${p.year}-${p.month}-${p.day}`;
+            }catch{return ''; } })();
+            const qd = document.getElementById('qDate2'); if(qd) qd.value = today;
+
+            applyRoleVisibility();                       // 権限で可視切替
+            openPanel('notice');
+            renderCompanyList(document.getElementById('monthSelect').value); // お知らせ(一覧)初期描画
+
+            // 月変更に追従
+            document.getElementById('monthSelect').addEventListener('change', ()=>{
+              renderCompanyList(document.getElementById('monthSelect').value);
+            });
+          }catch{}
+        })();
       }
 
       // ログイン
@@ -735,8 +953,6 @@ q<!DOCTYPE html>
       $('#refreshBtn').addEventListener('click', () => {
         location.reload();   // ページ全体をリロード
       });
-      // クイック登録保存
-      $('#quickSaveBtn').addEventListener('click', saveQuick);
 
       // 部署変更
       $('#deptSelect').addEventListener('change', async ()=>{
@@ -746,15 +962,6 @@ q<!DOCTYPE html>
       // 月変更
       $('#monthSelect').addEventListener('change', async ()=>{
         await renderGrid($('#monthSelect').value, $('#deptSelect').value);
-      });
-      
-      // クイック登録 開閉トグル
-      $('#toggleQuickBtn').addEventListener('click', () => {
-        const panel = $('#quickPanel');
-        const btn = $('#toggleQuickBtn');
-        const open = panel.style.display !== 'none';
-        panel.style.display = open ? 'none' : '';
-        btn.textContent = open ? '＋' : '－';
       });
     });
 
@@ -915,36 +1122,75 @@ q<!DOCTYPE html>
   </div>
 
   <!-- アプリ本体 -->
-  <div id="appPanel" style="display:none;">
-    <!-- クイック登録（自分のみ／会社予定登録は無し） -->
-    <div class="panel">
-      <div class="row">
-        <button id="toggleQuickBtn" class="btn">＋</button>
-        <button id="quickSaveBtn" class="btn-primary">予定</button>
-      </div>
-      <!-- ↓ ここを最初は非表示 -->
-      <div id="quickPanel" style="display:none; margin-top:8px;">
-        <div class="row">
-          <label>日付</label>
-          <input id="qDate" type="date" />
-        </div>
-        <div class="row" style="margin-top:8px;">
-          <input id="qAm" type="text" placeholder="午前の予定（例：現場A）" style="flex:1 1 200px;" />
-          <input id="qPm" type="text" placeholder="午後の予定（例：現場B）" style="flex:1 1 200px;" />
-        </div>
-      </div>
-    </div>
+   <!-- 相互排他トグル(お知らせ/クイック登録/メモ/会社予定登録) -->
+  <div class="togglebar">
+    <!-- お知らせ：非ボタンはラベルのみ。切替は左の（＋/−）で -->
+    <button id="tglNotice" class="tgl" type="button" aria-pressed="true" data-target="noticePanel">＋</button>
+    <span>お知らせ</span>
 
-    <!-- スケジュール（表示のみ、x/y入替） -->
-    <div id="gridPanel" class="panel">
-      <div id="grid"></div>
+    <!-- クイック登録 -->
+    <button id="tglQuick" class="tgl" type="button" aria-pressed="false" data-target="quickPanel2">＋</button>
+    <button id="quickSaveBtn2" class="btn" type="button">予定</button>
+
+    <!-- メモ -->
+    <button id="tglMemo" class="tgl" type="button" aria-pressed="false" data-target="memoPanel">＋</button>
+    <button id="memoSaveBtn" class="btn" type="button">メモ</button>
+
+    <!-- 会社予定登録（管理者のみ可視） -->
+    <button id="tglCompany" class="tgl" type="button" aria-pressed="false" data-target="companyPanel" style="display:none">＋</button>
+    <button id="companySaveBtn2" class="btn" type="button" style="display:none">全体</button>
+  </div>
+  <div id="appPanel" style="display:none;">
+  <!-- お知らせ（＝会社予定一覧） -->
+  <div id="noticePanel" class="panel quick-section" style="display:;">
+    <div id="companyListBody" class="muted">読み込み中…</div>
+  </div>
+
+  <!-- クイック登録（新パネル）※既存の#quickPanelとは別。中身はシンプル -->
+  <div id="quickPanel2" class="panel quick-section" style="display:none;">
+    <div class="row">
+      <label>日付</label>
+      <input id="qDate2" type="date" />
     </div>
-    
-    <!-- ★ 本日の予定一覧（カードレイアウト） -->
-    <div id="todayPanel" class="panel" style="display:none;">
-      <div id="todayCards"></div>
+    <div class="row" style="margin-top:8px;">
+      <input id="qAm2" type="text" placeholder="午前（例：現場A）" style="flex:1 1 200px;">
+      <input id="qPm2" type="text" placeholder="午後（例：現場B）" style="flex:1 1 200px;">
     </div>
   </div>
+
+  <!-- メモ（自分の） -->
+  <div id="memoPanel" class="panel quick-section" style="display:none;">
+    <textarea id="qNote2" placeholder="自分のメモ（全月共通）" style="width:100%;min-height:72px;"></textarea>
+  </div>
+
+  <!-- 会社予定登録（管理者のみ可視） -->
+  <div id="companyPanel" class="panel quick-section" style="display:none;">
+    <div class="row" style="gap:6px;flex-wrap:wrap;">
+      <select id="cKind2" style="min-width:108px;">
+        <option value="event">行事</option>
+        <option value="notice">お知らせ</option>
+      </select>
+      <input id="cDate2" type="date">
+      <input id="cDateEnd2" type="date" placeholder="終了日(任意)">
+      <input id="cStart2" type="text" placeholder="開始 0930/09:30" inputmode="numeric" style="max-width:140px;">
+      <input id="cEnd2"   type="text" placeholder="終了 1730/17:30" inputmode="numeric" style="max-width:140px;">
+      <input id="cTitle2" type="text" placeholder="行事名/タイトル" style="flex:1 1 220px;">
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <textarea id="cMemo2" placeholder="備考/内容（改行可）" style="width:100%;min-height:70px;"></textarea>
+    </div>
+  </div>
+    
+  <!-- スケジュール（表示のみ、x/y入替） -->
+  <div id="gridPanel" class="panel">
+    <div id="grid"></div>
+  </div>
+  
+  <!-- ★ 本日の予定一覧（カードレイアウト） -->
+  <div id="todayPanel" class="panel" style="display:none;">
+    <div id="todayCards"></div>
+  </div>
+
   <div id="helpModal" class="help-modal" aria-hidden="true">
     <div class="help-backdrop" data-help-close></div>
     <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
