@@ -112,7 +112,38 @@
       word-break: break-word;
       padding: 8px 10px;
     }
+    /* 本体テーブルの行見出し col を 80px に */
+    #grid .jexcel .jexcel_content table colgroup col:first-child {
+      width: 80px !important;
+      min-width: 80px !important;
+      max-width: 80px !important;
+    }
+    /* ヘッダテーブル（上部）側も揃える */
+    #grid .jexcel > table.jexcel_header colgroup col:first-child {
+      width: 80px !important;
+      min-width: 80px !important;
+      max-width: 80px !important;
+    }
 
+    /* 行ヘッダ（左）を sticky に */
+    #grid .jexcel .jexcel_row {
+      font-weight: 600;
+      min-width: 72px;  /* rowHeaderWidth と合わせる */
+      position: sticky;
+      left: 0;
+      z-index: 2;        /* ヘッダとデータの間にくるように */
+      box-shadow: 1px 0 0 #eee; /* 仕切り線（任意） */
+    }
+
+    /* 左上の角（行ヘッダ×列ヘッダの交点）も固定に */
+    #grid .jexcel .jexcel_corner {
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 4;
+      background: #fff;
+      box-shadow: 1px 1px 0 #eee; /* 任意 */
+    }
     /* 読み取り専用セルの文字をやや濃いグレーに */
     .jexcel .readonly {
       color: #555 !important;      /* ← デフォルト #999 より濃く */
@@ -144,32 +175,6 @@
       border:0; background:transparent; cursor:pointer;
     }
     .help-body{ margin:8px 0 4px; max-height:60vh; overflow:auto; }
-    /* 行ヘッダ（左）を sticky に */
-    #grid .jexcel .jexcel_row {
-      font-weight: 600;
-      min-width: 72px;  /* rowHeaderWidth と合わせる */
-      position: sticky;
-      left: 0;
-      z-index: 2;        /* ヘッダとデータの間にくるように */
-      box-shadow: 1px 0 0 #eee; /* 仕切り線（任意） */
-    }
-
-    /* 左上の角（行ヘッダ×列ヘッダの交点）も固定に */
-    #grid .jexcel .jexcel_corner {
-      position: sticky;
-      top: 0;
-      left: 0;
-      z-index: 4;
-      background: #fff;
-      box-shadow: 1px 1px 0 #eee; /* 任意 */
-    }
-    #grid .jexcel .jexcel_corner,
-    #grid .jexcel .jexcel_row {
-      width: 120px !important;      /* ← 好きな幅に */
-      min-width: 120px !important;
-      max-width: 120px !important;
-      box-sizing: border-box;
-    }
     /* 親がスクロールを奪わないように（重要） */
     .panel { overflow: visible; }   /* ← ここが hidden だと sticky が効かないことがある */
   </style>
