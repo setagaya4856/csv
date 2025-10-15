@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <!-- ノッチ端末の安全域 -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>行動予定表（モバイル）</title>
+  <title>行動予定表</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <link rel="icon" href="https://www.tjs.jp/wp/wp-content/uploads/2023/12/favicon.png" type="image/png">
@@ -999,7 +999,6 @@
             const qd = document.getElementById('qDate2'); if(qd) qd.value = today;
 
             applyRoleVisibility();                       // 権限で可視切替
-            openPanel('notice');
             renderCompanyList(document.getElementById('monthSelect').value); // お知らせ(一覧)初期描画
 
             // 月変更に追従
@@ -1199,7 +1198,7 @@
    <!-- 相互排他トグル(お知らせ/クイック登録/メモ/会社予定登録) -->
   <div class="togglebar">
     <!-- お知らせ：非ボタンはラベルのみ。切替は左の（＋/−）で -->
-    <button id="tglNotice" class="tgl" type="button" aria-pressed="true" data-target="noticePanel">＋</button>
+    <button id="tglNotice" class="tgl" type="button" aria-pressed="false" data-target="noticePanel">＋</button>
     <span>お知らせ</span>
 
     <!-- クイック登録 -->
