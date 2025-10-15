@@ -57,8 +57,14 @@
     #grid .jexcel {
       width: 100% !important;
       max-width: 100% !important;
+      position: relative;
     }
-    
+    #grid .jexcel_header {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: #fff;
+    }
     #grid .jexcel_content {
       width: 100% !important;    /* ← ここ大事：親幅に合わせる */
       max-width: 100% !important;
@@ -138,6 +144,26 @@
       border:0; background:transparent; cursor:pointer;
     }
     .help-body{ margin:8px 0 4px; max-height:60vh; overflow:auto; }
+    /* 行ヘッダ（左）を sticky に */
+    #grid .jexcel .jexcel_row {
+      font-weight: 600;
+      position: sticky;
+      left: 0;
+      z-index: 2;        /* ヘッダとデータの間にくるように */
+      box-shadow: 1px 0 0 #eee; /* 仕切り線（任意） */
+    }
+
+    /* 左上の角（行ヘッダ×列ヘッダの交点）も固定に */
+    #grid .jexcel .jexcel_corner {
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 4;
+      background: #fff;
+      box-shadow: 1px 1px 0 #eee; /* 任意 */
+    }
+    /* 親がスクロールを奪わないように（重要） */
+    .panel { overflow: visible; }   /* ← ここが hidden だと sticky が効かないことがある */
   </style>
 
   <!-- ===== Jspreadsheet CE + jSuites ===== -->
@@ -385,12 +411,10 @@
         byKey.get(k).push(it.title);
       }
 
-      const columns = [{ type:'text', title:'日付', width:60 }].concat(
-        emps.map(e => ({ type:'text', title:e.name, width:80 }))
-      );
+      const columns = emps.map(e => ({ type:'text', title:e.name, width:80 }));
       const data = rowKeys.map(({date,slot})=>{
-        const row = [ dayLabel(date,slot) ];
-        for(const e of emps){
+        const row = [];
+        for (const e of emps) {
           const k = `${date}|${slot}|${e.id}`;
           const txt = (byKey.get(k)||[]).join('\n');
           row.push(txt);
@@ -398,7 +422,7 @@
         return row;
       });
 
-      const colMeta = { emps, rowKeys, ym };
+      const colMeta = { emps, rowKeys, rowLabels, ym };
       return { columns, data, colMeta };
     }
 
@@ -420,7 +444,7 @@
       const { columns, data, colMeta } = buildSwappedMatrix(items, ym, dept);
 
       // ★ メモ行を作成（A列は「メモ」固定、以降は各従業員の note）
-      const memoRow = ['メモ', ...colMeta.emps.map(e => (e.note || ''))];
+      const memoRow = [...colMeta.emps.map(e => (e.note || ''))];
       const dataWithMemo = [memoRow, ...data];  // 先頭に差し込み
       const myId = currentUser?.employee_id ?? null;
       const myEmail = (currentUser?.email || '').toLowerCase();
@@ -428,13 +452,21 @@
         (myId && String(e.id) === String(myId)) ||
         ((e?.email || '').toLowerCase() === myEmail)
       );
-      const myCol = (myIdxInEmps >= 0) ? (1 + myIdxInEmps) : null; // ← 0は日付列なので+1
+      const myCol = (myIdxInEmps >= 0) ? myIdxInEmps : null; // ← 0は日付列なので+1
       const host = document.getElementById('grid');
       host.innerHTML = '';
+      
+      // ← 行ヘッダ用のラベルを rows メタに詰める（0行目はメモ）
+      const rowHeaderLabels = ['メモ', ...colMeta.rowLabels];  // 例: ['メモ','1AM','1PM',...]
+      const rowsMeta = {};
+      rowHeaderLabels.forEach((txt, i) => { rowsMeta[i] = { title: String(txt) }; });
+
       grid = jspreadsheet(host, {
         data: dataWithMemo,
-        columns: columns.map(c => ({ ...c, readOnly:true })), // 念のため全部読み取り専用
-        freezeColumns:1,
+        columns: columns.map(c => ({ ...c, readOnly:true })),
+        rowHeaders: true,                 // 有効化だけする
+        rows: rowsMeta,             // ★ ここで各行ヘッダのタイトルを設定
+        freezeRows: 1,         // ← メモ行（先頭1行）を固定
         tableOverflow:true,
         tableHeight: '400px',
         tableWidth: '100%',     // ← 幅いっぱいに広げる
@@ -452,15 +484,14 @@
         allowInsertRow:false, allowDeleteRow:false,
         editable:false, selectionCopy:true,
         updateTable: (el, cell, x, y, src, val) => {
-          cell.classList.remove('ht-today','ht-sat','ht-sun','ht-holiday','memo-row','cell-date','myself');
-          if (x === 0) cell.style.color = ''; // インライン色のリセット（保険）
+          cell.classList.remove('ht-today','ht-sat','ht-sun','ht-holiday','memo-row','myself');
+          cell.style.color = '';
           const memoOffset = 1;                 // 先頭にメモ行がある
           const dataRow = y - memoOffset;       // 実データに対応する行index（rowKeys用）
         
           // --- メモ行（y===0）は装飾だけ ---
           if (dataRow < 0) {
             cell.classList.add('memo-row');
-            if (x === 0) cell.classList.add('cell-date'); // 「メモ」ラベルを太字っぽく
             const text = (val || '').toString();
             if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 3 });
             return;
@@ -476,9 +507,6 @@
           // 土日祝・今日の色付け
           const classes = classesForYmd(rk.date);
           classes.forEach(c => cell.classList.add(c));
-        
-          // 日付セル（x=0）を強調
-          if (x === 0) cell.classList.add('cell-date');
         
           // 「休/有/代/振」を含むセルは休日色
           const text = (val || '').toString();
@@ -740,17 +768,16 @@
       <button class="help-close" type="button" title="閉じる" data-help-close>&times;</button>
       <h2 id="helpTitle">使い方（モバイル）</h2>
       <div id="helpBody" class="help-body">
-        <p>※URLや仕様は変更になる可能性があります</p><br>
-        <p>・PC版との違い</p>
-        <p>スケジュールの表示は閲覧のみで編集は不可。<br>
+        <p>※URLや仕様は変更になる可能性があります<br>
+        ・PC版との違い<br>
+        スケジュールの表示は閲覧のみで編集は不可。<br>
         表示は部署・月を選択してください。<br>
         PC版とは縦横が入れ替わっています。<br>
         スケジュールの編集登録は自分の分のみ可能<br>
         メモ欄は編集不可<br>
         上部クイック登録からのみ編集可能です<br>
-        ブラウザ下部のボタンからホーム画面に追加<br>
-        することで、上下のノッチ・URL欄が無い状態<br>
-        での表示が可能です</p>
+        ブラウザ下部のボタンからホーム画面に追加することで<br>
+        上下のノッチ・URL欄が無い状態での表示が可能です</p>
       </div>
     </div>
   <footer></footer>
