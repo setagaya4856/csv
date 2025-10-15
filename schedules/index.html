@@ -209,6 +209,16 @@ q<!DOCTYPE html>
       border-left: 3px solid #f0f0f0;
       padding-left: 6px;
     }
+    /* 部署色(8色バケット) */
+    .dep-1{ background:#fff7e6 !important; }
+    .dep-2{ background:#e6f7ff !important; }
+    .dep-3{ background:#f9f0ff !important; }
+    .dep-4{ background:#e6fffb !important; }
+    .dep-5{ background:#f6ffed !important; }
+    .dep-6{ background:#fff1f0 !important; }
+    .dep-7{ background:#f0f5ff !important; }
+    .dep-8{ background:#fefefe !important; }
+    .dep-head{ box-shadow: inset 0 2px #888; }
   </style>
 
   <!-- ===== Jspreadsheet CE + jSuites ===== -->
@@ -775,13 +785,18 @@ q<!DOCTYPE html>
 
       // 部署ごとにセクション
       const frag = document.createDocumentFragment();
+      let depIndex = 0;
       for (const [dep, list] of byDept) {
+        depIndex++;
+        const colorClass = `dep-${((depIndex - 1) % 8) + 1}`;  // dep-1〜dep-8をループ
+
         // セクション
         const sec = document.createElement('section');
-        sec.className = 'today-section';
+        sec.className = `today-section ${colorClass}`;
 
         const h = document.createElement('h3');
         h.textContent = dep || '(未設定)';
+        h.classList.add('dep-head');
         sec.appendChild(h);
 
         const grid = document.createElement('div');
@@ -794,7 +809,7 @@ q<!DOCTYPE html>
           const sched = byEmp.get(e.id) || { am:'', pm:'' };
 
           const card = document.createElement('div');
-          card.className = 'today-card';
+          card.className = `today-card ${colorClass}`;
           card.innerHTML = `
             <div class="row4">
               <div class="cell">
@@ -821,10 +836,8 @@ q<!DOCTYPE html>
         sec.appendChild(grid);
         frag.appendChild(sec);
       }
-
       container.appendChild(frag);
     }
-
     /** 今日のカード表示：データ読み出し→描画→表示切替 */
     async function renderTodayCards(){
       const { access_token: token } = await getActiveSessionOrLogout();
