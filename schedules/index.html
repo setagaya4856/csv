@@ -80,14 +80,9 @@
     }
     .jexcel .readonly{ background:#fafafa; }
     .jexcel .jexcel_frozen{ background:#fff; }
-    .cell-date{ font-weight:600; }
     .ht-today{ background:#fff9db !important; }
     .ht-sat  { background:#e6ffed !important; }
     .ht-sun, .ht-holiday{ background:#ffe5e5 !important; }
-
-    /* 行ラベル（左固定列）を少し太く */
-    .jexcel td.cell-date{ font-weight:700; }
-
     /* フッタ余白（iOS スクロール安全域） */
     footer{ height:24px; }
 
@@ -112,19 +107,6 @@
       word-break: break-word;
       padding: 8px 10px;
     }
-    /* 本体テーブルの行見出し col を 80px に */
-    #grid .jexcel .jexcel_content table colgroup col:first-child {
-      width: 120px !important;
-      min-width: 120px !important;
-      max-width: 120px !important;
-    }
-    /* ヘッダテーブル（上部）側も揃える */
-    #grid .jexcel > table.jexcel_header colgroup col:first-child {
-      width: 120px !important;
-      min-width: 120px !important;
-      max-width: 120px !important;
-    }
-
     /* 行ヘッダ（左）を sticky に */
     #grid .jexcel .jexcel_row {
       font-weight: 600;
