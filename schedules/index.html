@@ -72,7 +72,7 @@ q<!DOCTYPE html>
       -webkit-overflow-scrolling: touch; /* iOS 慣性 */
     }
     /* 予定テーブル：Jspreadsheet をモバイル向けに */
-    .jexcel_content td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; 
+    .jexcel_content td{ white-space: nowrap; overflow:hidden; text-overflow:ellipsis; 
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none; /* iOSのコピー/ペースト呼び出しを抑止 */
@@ -553,7 +553,7 @@ q<!DOCTYPE html>
           if (dataRow < 0) {
             cell.classList.add('memo-row');
             const text = (val || '').toString();
-            // if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 3 });
+            if (x >= 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 3 });
             return;
           }
           
@@ -579,7 +579,7 @@ q<!DOCTYPE html>
           }
           
           // 縮小表示（データ列のみ）
-          if (x > 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 2 });
+          if (x >= 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 2 });
         }
       });
     }
