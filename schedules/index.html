@@ -410,8 +410,11 @@
         if(!byKey.has(k)) byKey.set(k, []);
         byKey.get(k).push(it.title);
       }
-
-      const columns = emps.map(e => ({ type:'text', title:e.name, width:80 }));
+const columns = [
+  { type:'text', title:'日付', width:120 }   // ← ★ここが日付列の幅
+].concat(
+  emps.map(e => ({ type:'text', title:e.name, width:80 }))
+);
       const data = rowKeys.map(({date,slot})=>{
         const row = [];
         for (const e of emps) {
@@ -465,7 +468,6 @@
         data: dataWithMemo,
         columns: columns.map(c => ({ ...c, readOnly:true })),
         rowHeaders: true,                 // 有効化だけする
-        rowHeaderWidth: 120,
         rows: rowsMeta,             // ★ ここで各行ヘッダのタイトルを設定
         freezeRows: 1,         // ← メモ行（先頭1行）を固定
         tableOverflow:true,
