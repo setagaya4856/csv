@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+q<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" /><!-- iOS: ホーム画面追加で全画面表示 -->
@@ -158,6 +158,57 @@
     .help-body{ margin:8px 0 4px; max-height:60vh; overflow:auto; }
     /* 親がスクロールを奪わないように（重要） */
     .panel { overflow: visible; } 
+
+    /* ===== 今日の予定（カード） ===== */
+    .today-section {
+      margin-bottom: 16px;
+    }
+    .today-section h3 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+      color: #333;
+      padding: 4px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr;      /* モバイル1列 */
+      gap: 8px;
+    }
+    @media (min-width: 560px) {
+      .card-grid { grid-template-columns: 1fr 1fr; } /* 横幅あれば2列 */
+    }
+    .today-card {
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.04);
+    }
+    .today-card .row4 {
+      display: grid;
+      grid-template-columns: 1.1fr 1.3fr 1fr 1fr; /* 名前/メモ/AM/PM */
+      gap: 8px;
+      align-items: start;
+    }
+    .today-card .cell {
+      min-width: 0;
+    }
+    .today-card .label {
+      display: block;
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 2px;
+    }
+    .today-card .val {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .today-card .name { font-weight: 700; }
+    .today-card .am, .today-card .pm {
+      border-left: 3px solid #f0f0f0;
+      padding-left: 6px;
+    }
   </style>
 
   <!-- ===== Jspreadsheet CE + jSuites ===== -->
@@ -291,6 +342,11 @@
       while(d<end){ list.push(ymOf(d)); d.setMonth(d.getMonth()+1,1); }
       return list;
     };
+
+    function ymdToday() {
+      const p = Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));
+      return `${p.year}-${p.month}-${p.day}`;
+    }
 
     /* =============================== 祝日 =============================== */
     const ymdJST = (date)=> {
@@ -530,6 +586,16 @@
     function fillDepartmentOptions(initDept){
       const sel = document.getElementById('deptSelect');
       sel.innerHTML = '';
+
+      // ★ 先頭に「本日の予定一覧」
+      {
+        const op = document.createElement('option');
+        op.value = '__TODAY__';
+        op.textContent = '本日の予定一覧';
+        sel.appendChild(op);
+      }
+
+      // 既存：部署一覧
       for(const dep of uniqueDepartments()){
         const op = document.createElement('option');
         op.value = dep; op.textContent = dep||'(未設定)';
@@ -681,6 +747,111 @@
         btn.textContent = open ? '＋' : '－';
       });
     });
+
+    /** items(am/pmテキスト)＋employeesVisibleから、今日のカードを部署ごとに生成して #todayCards に描画 */
+    function renderTodayCardsFrom(items){
+      const container = document.getElementById('todayCards');
+      container.innerHTML = '';
+
+      const today = ymdToday();
+
+      // 今日の (empId -> {am, pm}) を集計
+      const byEmp = new Map();
+      for (const it of items) {
+        if (it.date !== today) continue;
+        if (!byEmp.has(it.employee_id)) byEmp.set(it.employee_id, { am:'', pm:'' });
+        const dst = byEmp.get(it.employee_id);
+        if (it.slot === 'am') dst.am = it.title || '';
+        if (it.slot === 'pm') dst.pm = it.title || '';
+      }
+
+      // 従業員を部署でグルーピング（is_active だけ表示）
+      const byDept = new Map(); // dep -> [employee]
+      for (const e of employeesVisible) {
+        const dep = e.department || '';
+        if (!byDept.has(dep)) byDept.set(dep, []);
+        byDept.get(dep).push(e);
+      }
+
+      // 部署ごとにセクション
+      const frag = document.createDocumentFragment();
+      for (const [dep, list] of byDept) {
+        // セクション
+        const sec = document.createElement('section');
+        sec.className = 'today-section';
+
+        const h = document.createElement('h3');
+        h.textContent = dep || '(未設定)';
+        sec.appendChild(h);
+
+        const grid = document.createElement('div');
+        grid.className = 'card-grid';
+
+        // 部署の従業員順（row_index→名前）
+        list.sort((a,b)=>(a.row_index??0)-(b.row_index??0) || a.name.localeCompare(b.name,'ja'));
+
+        for (const e of list) {
+          const sched = byEmp.get(e.id) || { am:'', pm:'' };
+
+          const card = document.createElement('div');
+          card.className = 'today-card';
+          card.innerHTML = `
+            <div class="row4">
+              <div class="cell">
+                <span class="label">名前</span>
+                <div class="val name">${e.name || ''}</div>
+              </div>
+              <div class="cell">
+                <span class="label">メモ</span>
+                <div class="val memo">${(e.note||'')}</div>
+              </div>
+              <div class="cell am">
+                <span class="label">午前</span>
+                <div class="val">${sched.am || ''}</div>
+              </div>
+              <div class="cell pm">
+                <span class="label">午後</span>
+                <div class="val">${sched.pm || ''}</div>
+              </div>
+            </div>
+          `;
+          grid.appendChild(card);
+        }
+
+        sec.appendChild(grid);
+        frag.appendChild(sec);
+      }
+
+      container.appendChild(frag);
+    }
+
+    /** 今日のカード表示：データ読み出し→描画→表示切替 */
+    async function renderTodayCards(){
+      const { access_token: token } = await getActiveSessionOrLogout();
+
+      const ym = ymOf(new Date()); // 今日の月
+      // 既存の月データAPIを使って当月の items を取得し、今日だけ抽出
+      const items = await fetchMonthData(ym, token);
+      renderTodayCardsFrom(items);
+
+      // 表示切替
+      document.getElementById('gridPanel').style.display  = 'none';
+      document.getElementById('todayPanel').style.display = '';
+    }
+    // 部署変更
+    document.getElementById('deptSelect').addEventListener('change', async ()=>{
+      const val = document.getElementById('deptSelect').value;
+
+      if (val === '__TODAY__') {
+        await renderTodayCards();  // ← カードモード
+        return;
+      }
+
+      // ← グリッドモード
+      document.getElementById('todayPanel').style.display = 'none';
+      document.getElementById('gridPanel').style.display  = '';
+      await renderGrid(document.getElementById('monthSelect').value, val);
+    });
     /* ==== Help modal (mobile) ==== */
     function openHelpModal(){
       const m = document.getElementById('helpModal');
@@ -736,7 +907,7 @@
     <div class="panel">
       <div class="row">
         <button id="toggleQuickBtn" class="btn">＋</button>
-        <button id="quickSaveBtn" class="btn-primary">予定登録</button>
+        <button id="quickSaveBtn" class="btn-primary">予定</button>
       </div>
       <!-- ↓ ここを最初は非表示 -->
       <div id="quickPanel" style="display:none; margin-top:8px;">
@@ -752,8 +923,13 @@
     </div>
 
     <!-- スケジュール（表示のみ、x/y入替） -->
-    <div class="panel">
+    <div id="gridPanel" class="panel">
       <div id="grid"></div>
+    </div>
+    
+    <!-- ★ 本日の予定一覧（カードレイアウト） -->
+    <div id="todayPanel" class="panel" style="display:none;">
+      <div id="todayCards"></div>
     </div>
   </div>
   <div id="helpModal" class="help-modal" aria-hidden="true">
