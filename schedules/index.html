@@ -147,6 +147,7 @@
     /* 行ヘッダ（左）を sticky に */
     #grid .jexcel .jexcel_row {
       font-weight: 600;
+      min-width: 72px;  /* rowHeaderWidth と合わせる */
       position: sticky;
       left: 0;
       z-index: 2;        /* ヘッダとデータの間にくるように */
@@ -410,11 +411,7 @@
         if(!byKey.has(k)) byKey.set(k, []);
         byKey.get(k).push(it.title);
       }
-const columns = [
-  { type:'text', title:'日付', width:120 }   // ← ★ここが日付列の幅
-].concat(
-  emps.map(e => ({ type:'text', title:e.name, width:80 }))
-);
+      const columns = emps.map(e => ({ type:'text', title:e.name, width:80 }));
       const data = rowKeys.map(({date,slot})=>{
         const row = [];
         for (const e of emps) {
