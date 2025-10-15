@@ -226,8 +226,8 @@
   <script src="https://cdn.jsdelivr.net/npm/jsuites@4.15.0/dist/jsuites.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.11.4/dist/index.js"></script>
 
-  <!-- ===== Supabase & 祝日 ===== -->
   <script type="module">
+    /*  ===== Supabase & 祝日 ===== */
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     import * as holiday_jp from 'https://esm.sh/@holiday-jp/holiday_jp@2';
 
@@ -356,7 +356,36 @@
       const p = Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));
       return `${p.year}-${p.month}-${p.day}`;
     }
+    
+    function detectEnvironment() {
+      const isSmallViewport = matchMedia('(max-width: 480px)').matches; // SE2=375px想定
+      const isCoarsePointer = matchMedia('(pointer: coarse)').matches;
+      const noHover        = matchMedia('(hover: none)').matches;
+      const anyCoarse      = matchMedia('(any-pointer: coarse)').matches;
 
+      const touchPoints    = navigator.maxTouchPoints || 0;
+      const ua             = navigator.userAgent || '';
+      const uaIsMobile     = /Android|iPhone|iPad|iPod/i.test(ua);
+      const uaCHMobile     = navigator.userAgentData?.mobile === true;
+
+      const isStandalone   = matchMedia('(display-mode: standalone)').matches;
+
+      // “スマホっぽい”を多数決で
+      const votes = [
+        isSmallViewport, isCoarsePointer, noHover, anyCoarse,
+        touchPoints > 0, uaIsMobile, uaCHMobile, isStandalone
+      ].filter(Boolean).length;
+
+      const isProbablyMobile = votes >= 3; // しきい値は2〜4で調整
+
+      // 参考: “PCっぽさ”
+      const isProbablyDesktop =
+        matchMedia('(pointer: fine)').matches &&
+        matchMedia('(hover: hover)').matches &&
+        !isSmallViewport;
+
+      return { isProbablyMobile, isProbablyDesktop };
+    }
     /* =============================== 祝日 =============================== */
     const ymdJST = (date)=> {
       const p = Object.fromEntries(fmt.formatToParts(date).map(x=>[x.type,x.value]));
@@ -588,7 +617,23 @@
         }
       });
     }
+    // 現在のセレクト状態に合わせて再描画する
+    async function refreshView({ companyOnly = false } = {}) {
+      const ym   = document.getElementById('monthSelect').value;
+      if (companyOnly) {
+        await renderCompanyList(ym);         // お知らせ（会社予定一覧）だけ更新
+        return;
+      }
+      const dept = document.getElementById('deptSelect').value;
 
+      if (dept === '__TODAY__') {
+        await renderTodayCards();            // 今日の予定カードを更新
+      } else {
+        await preloadHolidaysForMonths([ym]);
+        await renderGrid(ym, dept);          // グリッドを更新
+      }
+      await renderCompanyList(ym);           // ついでにお知らせも更新
+    }
     /* =============================== 部署・月のUI =============================== */
     function uniqueDepartments(){
       const set = new Map(); // 表示名の順を維持
@@ -639,35 +684,49 @@
       company:{ btn: document.getElementById('tglCompany'), id:'companyPanel', saveBtn:document.getElementById('companySaveBtn2') },
     };
 
-    function openPanel(key){
+    function openPanel(key) {
+      // null または undefined の場合 → 全部閉じる
+      if (key == null) {
+        for (const conf of Object.values(panels)) {
+          if (conf.btn) {
+            conf.btn.setAttribute('aria-pressed', 'false');
+            conf.btn.textContent = '＋';
+          }
+          const el = document.getElementById(conf.id);
+          if (el) el.style.display = 'none';
+          if (conf.saveBtn) conf.saveBtn.disabled = true;
+        }
+        // お知らせラベル更新
+        const noticeBtn = document.getElementById('tglNotice');
+        const noticeLabel = noticeBtn ? noticeBtn.nextElementSibling : null;
+        if (noticeLabel) noticeLabel.style.color = '#999';
+        return; // 全閉じ完了
+      }
+
+      // 通常動作：指定キーを開く／閉じる
       for (const [k, conf] of Object.entries(panels)) {
         const btn = conf.btn;
         const panel = document.getElementById(conf.id);
         const saveBtn = conf.saveBtn;
+
         const isCurrent = (k === key);
+        const isOpen = btn && btn.getAttribute('aria-pressed') === 'true';
+        const pressed = isCurrent ? !isOpen : false; // 再クリックで閉じる
 
-        // もし今開いているパネルを再度クリックした場合 → 全部閉じる
-        const isOpen = btn.getAttribute('aria-pressed') === 'true';
-        const willCloseAll = isCurrent && isOpen;
-
-        // 表示状態を決定
-        const pressed = !willCloseAll && isCurrent;
-
-        // ボタン表示を更新
-        btn.setAttribute('aria-pressed', String(pressed));
-        btn.textContent = pressed ? '－' : '＋';
-
-        // パネルと保存ボタンの表示制御
+        if (btn) {
+          btn.setAttribute('aria-pressed', String(pressed));
+          btn.textContent = pressed ? '－' : '＋';
+        }
         if (panel) panel.style.display = pressed ? '' : 'none';
         if (saveBtn) saveBtn.disabled = !pressed;
       }
 
-      // ✅ 「お知らせ」トグルに連動して文字色変更
+      // お知らせラベルの色更新
       const noticeBtn = document.getElementById('tglNotice');
-      const noticeLabel = noticeBtn?.nextElementSibling; // ← 「お知らせ」span
-      if (noticeBtn && noticeLabel) {
-        const isOpen = noticeBtn.getAttribute('aria-pressed') === 'true';
-        noticeLabel.style.color = isOpen ? '#333' : '#999';  // 開いてると黒、閉じてるとグレー
+      const noticeLabel = noticeBtn ? noticeBtn.nextElementSibling : null;
+      if (noticeLabel) {
+        const isOpen = noticeBtn && noticeBtn.getAttribute('aria-pressed') === 'true';
+        noticeLabel.style.color = isOpen ? '#333' : '#999';
       }
     }
 
@@ -679,26 +738,32 @@
     /* ===== 役割に応じた可視制御 ===== */
     // どこかのタイミング(ログイン後/ユーザー読込後)で呼ぶ
     function applyRoleVisibility(){
-      // 非アクティブ → クイック＆メモを非表示（トグルボタン＋パネル＋保存ボタン）
+      const { isProbablyMobile } = detectEnvironment();
       const isActive  = !!currentUser?.is_active;
       const isAdmin   = !!currentUser?.is_admin;
 
-      // quick
-      document.getElementById('tglQuick').style.display     = isActive ? '' : 'none';
-      document.getElementById('quickSaveBtn2').style.display= isActive ? '' : 'none';
-      document.getElementById('quickPanel2').style.display  = isActive ? 'none' : 'none'; // 初期は閉
-      // memo
-      document.getElementById('tglMemo').style.display      = isActive ? '' : 'none';
-      document.getElementById('memoSaveBtn').style.display  = isActive ? '' : 'none';
-      document.getElementById('memoPanel').style.display    = 'none';
+      // クイック/メモ（非アクティブは非表示）
+      document.getElementById('tglQuick').style.display       = isActive ? '' : 'none';
+      document.getElementById('quickSaveBtn2').style.display  = isActive ? '' : 'none';
+      document.getElementById('quickPanel2').style.display    = 'none';
 
-      // 会社予定登録（管理者のみ）
-      document.getElementById('tglCompany').style.display   = isAdmin ? '' : 'none';
-      document.getElementById('companySaveBtn2').style.display = isAdmin ? '' : 'none';
-      document.getElementById('companyPanel').style.display = 'none';
+      document.getElementById('tglMemo').style.display        = isActive ? '' : 'none';
+      document.getElementById('memoSaveBtn').style.display    = isActive ? '' : 'none';
+      document.getElementById('memoPanel').style.display      = 'none';
 
-      // 初期は「お知らせ」を開く
-      openPanel('notice');
+      // 会社予定：モバイルは強制非表示（管理者でも）
+      const showCompany = !isProbablyMobile && isAdmin;
+      document.getElementById('tglCompany').style.display     = showCompany ? '' : 'none';
+      document.getElementById('companySaveBtn2').style.display= showCompany ? '' : 'none';
+      document.getElementById('companyPanel').style.display   = 'none';
+
+      // 初期の開閉：
+      if (isProbablyMobile) {
+        // モバイル：全部オフ（＝パネル非表示、ボタン無効化）
+        openPanel(null);
+      } else {
+        openPanel('notice');
+      }
     }
 
     /* ===== 会社予定一覧（お知らせ）==== */
@@ -778,7 +843,7 @@
       if(!confirm('この全体スケジュールを削除します。よろしいですか？')) return;
       try{
         await deleteCompanyEventById(id);
-        await renderCompanyList(document.getElementById('monthSelect').value);
+        await refreshView({ companyOnly: true });
         alert('削除しました');
       }catch(err){ alert('削除に失敗しました：'+err.message); }
     });
@@ -831,6 +896,11 @@
           const r=await fetch(`${SUPABASE_URL}/functions/v1/schedules-upsert`,{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(upserts) });
           const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) throw new Error(j?.error||`HTTP ${r.status}`);
         }
+        
+        // ★ 追加：当月キャッシュ破棄 → 再描画
+        const ym = (document.getElementById('qDate2').value || '').slice(0,7);
+        if (ym) monthCache.delete(ym);
+        await refreshView();
         alert('更新しました');
       }catch(e){ alert('保存失敗：'+e.message); }
     });
@@ -846,6 +916,10 @@
           body:JSON.stringify({ employee_id, note })
         });
         const j=await r.json().catch(()=>({})); if(!r.ok || j?.ok===false) throw new Error(j?.error||`HTTP ${r.status}`);
+        
+        // ★ 追加：社員情報を再読込してから再描画
+        await loadCurrentUserAndEmployees();
+        await refreshView();
         alert('メモを保存しました');
       }catch(e){ alert('保存失敗：'+e.message); }
     });
@@ -870,8 +944,8 @@
           body:JSON.stringify({ kind, date, date_end: date_end||null, timestart:start, timeend:end, event:title, memo })
         });
         const j=await r.json().catch(()=>({})); if(!r.ok || j?.ok===false) throw new Error(j?.error||`HTTP ${r.status}`);
+        await refreshView({ companyOnly: true });
         alert('全体スケジュールを登録しました');
-        renderCompanyList(document.getElementById('monthSelect').value);
       }catch(e){ alert('登録失敗：'+e.message); }
     });
 
