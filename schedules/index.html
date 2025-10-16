@@ -7,8 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <!-- ノッチ端末の安全域 -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>行動予定表</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>行動予定表（モバイル）</title>
 
   <link rel="icon" href="https://www.tjs.jp/wp/wp-content/uploads/2023/12/favicon.png" type="image/png">
   <!-- UI 基本 -->
@@ -554,9 +553,13 @@
       const rowsMeta = {};
       rowHeaderLabels.forEach((txt, i) => { rowsMeta[i] = { title: String(txt) }; });
 
+      const { isProbablyDesktop } = detectEnvironment();
+      const allowEditing = !!isProbablyDesktop;
+      const columnDefs = columns.map(c => ({ ...c, readOnly: !allowEditing }));
+
       grid = jspreadsheet(host, {
         data: dataWithMemo,
-        columns: columns.map(c => ({ ...c, readOnly:true })),
+        columns: columnDefs,
         rowHeaders: true,                 // 有効化だけする
         rowHeaderWidth: 96, // ← 行ヘッダの希望幅
         rows: rowsMeta,             // ★ ここで各行ヘッダのタイトルを設定
@@ -564,19 +567,34 @@
         tableOverflow:true,
         tableHeight: '400px',
         tableWidth: '100%',     // ← 幅いっぱいに広げる
-        editable: false,            // 全体を編集不可
+        editable: allowEditing,            // デスクトップ環境では編集可
         selectionCopy: true,        // コピーはOK
         // 編集系の保険
-        oneditionstart: (inst, cell) => { try{ inst.closeEditor(cell, true); }catch{} return false; },
-        onbeforechange: () => false,
-        onbeforepaste:  () => false,
-        onbeforeinsertrow: () => false,
-        onbeforeinsertcolumn: () => false,
-        onbeforedeleterow: () => false,
-        onbeforedeletecolumn: () => false,
+        oneditionstart: (inst, cell) => {
+          if (allowEditing) return;
+          try{ inst.closeEditor(cell, true); }catch{}
+          return false;
+        },
+        onbeforechange: () => {
+          if (!allowEditing) return false;
+        },
+        onbeforepaste:  () => {
+          if (!allowEditing) return false;
+        },
+        onbeforeinsertrow: () => {
+          if (!allowEditing) return false;
+        },
+        onbeforeinsertcolumn: () => {
+          if (!allowEditing) return false;
+        },
+        onbeforedeleterow: () => {
+          if (!allowEditing) return false;
+        },
+        onbeforedeletecolumn: () => {
+          if (!allowEditing) return false;
+        },
         allowInsertColumn:false, allowDeleteColumn:false,
         allowInsertRow:false, allowDeleteRow:false,
-        editable:false, selectionCopy:true,
         updateTable: (el, cell, x, y, src, val) => {
           cell.classList.remove('ht-today','ht-sat','ht-sun','ht-holiday','memo-row','myself');
           cell.style.color = '';
@@ -1195,73 +1213,74 @@
   </div>
 
   <!-- アプリ本体 -->
+  <div id="appPanel" style="display:none;">
    <!-- 相互排他トグル(お知らせ/クイック登録/メモ/会社予定登録) -->
-  <div class="togglebar">
-    <!-- お知らせ：非ボタンはラベルのみ。切替は左の（＋/−）で -->
-    <button id="tglNotice" class="tgl" type="button" aria-pressed="false" data-target="noticePanel">＋</button>
-    <span>お知らせ</span>
+    <div class="togglebar">
+      <!-- お知らせ：非ボタンはラベルのみ。切替は左の（＋/−）で -->
+      <button id="tglNotice" class="tgl" type="button" aria-pressed="false" data-target="noticePanel">＋</button>
+      <span>お知らせ</span>
 
-    <!-- クイック登録 -->
-    <button id="tglQuick" class="tgl" type="button" aria-pressed="false" data-target="quickPanel2">＋</button>
-    <button id="quickSaveBtn2" class="btn" type="button">予定</button>
+      <!-- クイック登録 -->
+      <button id="tglQuick" class="tgl" type="button" aria-pressed="false" data-target="quickPanel2">＋</button>
+      <button id="quickSaveBtn2" class="btn" type="button">予定</button>
 
-    <!-- メモ -->
-    <button id="tglMemo" class="tgl" type="button" aria-pressed="false" data-target="memoPanel">＋</button>
-    <button id="memoSaveBtn" class="btn" type="button">メモ</button>
+      <!-- メモ -->
+      <button id="tglMemo" class="tgl" type="button" aria-pressed="false" data-target="memoPanel">＋</button>
+      <button id="memoSaveBtn" class="btn" type="button">メモ</button>
+
+      <!-- 会社予定登録（管理者のみ可視） -->
+      <button id="tglCompany" class="tgl" type="button" aria-pressed="false" data-target="companyPanel" style="display:none">＋</button>
+      <button id="companySaveBtn2" class="btn" type="button" style="display:none">全体</button>
+    </div>
+    <!-- お知らせ（＝会社予定一覧） -->
+    <div id="noticePanel" class="panel quick-section" style="display:none;">
+      <div id="companyListBody" class="muted">読み込み中…</div>
+    </div>
+
+    <!-- クイック登録（新パネル）※既存の#quickPanelとは別。中身はシンプル -->
+    <div id="quickPanel2" class="panel quick-section" style="display:none;">
+      <div class="row">
+        <label>日付</label>
+        <input id="qDate2" type="date" />
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <input id="qAm2" type="text" placeholder="午前（例：現場A）" style="flex:1 1 200px;">
+        <input id="qPm2" type="text" placeholder="午後（例：現場B）" style="flex:1 1 200px;">
+      </div>
+    </div>
+
+    <!-- メモ（自分の） -->
+    <div id="memoPanel" class="panel quick-section" style="display:none;">
+      <textarea id="qNote2" placeholder="自分のメモ（全月共通）" style="width:100%;min-height:72px;"></textarea>
+    </div>
 
     <!-- 会社予定登録（管理者のみ可視） -->
-    <button id="tglCompany" class="tgl" type="button" aria-pressed="false" data-target="companyPanel" style="display:none">＋</button>
-    <button id="companySaveBtn2" class="btn" type="button" style="display:none">全体</button>
-  </div>
-  <div id="appPanel" style="display:none;">
-  <!-- お知らせ（＝会社予定一覧） -->
-  <div id="noticePanel" class="panel quick-section" style="display:;">
-    <div id="companyListBody" class="muted">読み込み中…</div>
-  </div>
-
-  <!-- クイック登録（新パネル）※既存の#quickPanelとは別。中身はシンプル -->
-  <div id="quickPanel2" class="panel quick-section" style="display:none;">
-    <div class="row">
-      <label>日付</label>
-      <input id="qDate2" type="date" />
+    <div id="companyPanel" class="panel quick-section" style="display:none;">
+      <div class="row" style="gap:6px;flex-wrap:wrap;">
+        <select id="cKind2" style="min-width:108px;">
+          <option value="event">行事</option>
+          <option value="notice">お知らせ</option>
+        </select>
+        <input id="cDate2" type="date">
+        <input id="cDateEnd2" type="date" placeholder="終了日(任意)">
+        <input id="cStart2" type="text" placeholder="開始 0930/09:30" inputmode="numeric" style="max-width:140px;">
+        <input id="cEnd2"   type="text" placeholder="終了 1730/17:30" inputmode="numeric" style="max-width:140px;">
+        <input id="cTitle2" type="text" placeholder="行事名/タイトル" style="flex:1 1 220px;">
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <textarea id="cMemo2" placeholder="備考/内容（改行可）" style="width:100%;min-height:70px;"></textarea>
+      </div>
     </div>
-    <div class="row" style="margin-top:8px;">
-      <input id="qAm2" type="text" placeholder="午前（例：現場A）" style="flex:1 1 200px;">
-      <input id="qPm2" type="text" placeholder="午後（例：現場B）" style="flex:1 1 200px;">
-    </div>
-  </div>
-
-  <!-- メモ（自分の） -->
-  <div id="memoPanel" class="panel quick-section" style="display:none;">
-    <textarea id="qNote2" placeholder="自分のメモ（全月共通）" style="width:100%;min-height:72px;"></textarea>
-  </div>
-
-  <!-- 会社予定登録（管理者のみ可視） -->
-  <div id="companyPanel" class="panel quick-section" style="display:none;">
-    <div class="row" style="gap:6px;flex-wrap:wrap;">
-      <select id="cKind2" style="min-width:108px;">
-        <option value="event">行事</option>
-        <option value="notice">お知らせ</option>
-      </select>
-      <input id="cDate2" type="date">
-      <input id="cDateEnd2" type="date" placeholder="終了日(任意)">
-      <input id="cStart2" type="text" placeholder="開始 0930/09:30" inputmode="numeric" style="max-width:140px;">
-      <input id="cEnd2"   type="text" placeholder="終了 1730/17:30" inputmode="numeric" style="max-width:140px;">
-      <input id="cTitle2" type="text" placeholder="行事名/タイトル" style="flex:1 1 220px;">
-    </div>
-    <div class="row" style="margin-top:6px;">
-      <textarea id="cMemo2" placeholder="備考/内容（改行可）" style="width:100%;min-height:70px;"></textarea>
-    </div>
-  </div>
     
-  <!-- スケジュール（表示のみ、x/y入替） -->
-  <div id="gridPanel" class="panel">
-    <div id="grid"></div>
-  </div>
+    <!-- スケジュール（表示のみ、x/y入替） -->
+    <div id="gridPanel" class="panel">
+      <div id="grid"></div>
+    </div>
   
-  <!-- ★ 本日の予定一覧（カードレイアウト） -->
-  <div id="todayPanel" class="panel" style="display:none;">
-    <div id="todayCards"></div>
+    <!-- ★ 本日の予定一覧（カードレイアウト） -->
+    <div id="todayPanel" class="panel" style="display:none;">
+      <div id="todayCards"></div>
+    </div>
   </div>
 
   <div id="helpModal" class="help-modal" aria-hidden="true">
@@ -1282,6 +1301,7 @@
         上下のノッチ・URL欄が無い状態での表示が可能です</p>
       </div>
     </div>
+  </div>
   <footer></footer>
 </body>
 </html>
