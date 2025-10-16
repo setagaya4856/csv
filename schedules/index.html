@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <!-- ノッチ端末の安全域 -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>行動予定表（モバイル）</title>
+  <title>行動予定表</title>
 
   <link rel="icon" href="https://www.tjs.jp/wp/wp-content/uploads/2023/12/favicon.png" type="image/png">
   <!-- UI 基本 -->
@@ -168,7 +168,7 @@
     .help-body{ margin:8px 0 4px; max-height:60vh; overflow:auto; }
     /* 親がスクロールを奪わないように（重要） */
     .panel { overflow: visible; } 
-
+    #companyListBody { max-height: 30vh; overflow: auto; }
     /* ===== 今日の予定（カード） ===== */
     .today-section {
       margin-bottom: 16px;
@@ -324,7 +324,7 @@
     
       // セッションなし or アクセストークン期限切れ → ログアウト＆ログイン要求
       if (!session || !session.access_token || exp <= now) {
-        try { await supabase.auth.signOut({ scope: 'local' }); } catch {}
+        try { await supabase.auth.signOut({ scope: 'local' }); } catch (err) {}
         showLoginModal();                // ← 既存のモーダル展開関数を呼ぶ
         throw new Error('session_expired');
       }
@@ -340,12 +340,12 @@
     // 定期チェック（5分ごと）& タブ復帰時チェック
     const SESSION_CHECK_MS = 5 * 60 * 1000;
     setInterval(async () => {
-      try { await getActiveSessionOrLogout(); } catch {}
+      try { await getActiveSessionOrLogout(); } catch (err) {}
     }, SESSION_CHECK_MS);
     
     document.addEventListener('visibilitychange', async () => {
       if (document.visibilityState === 'visible') {
-        try { await getActiveSessionOrLogout(); } catch {}
+        try { await getActiveSessionOrLogout(); } catch (err) {}
       }
     });
     /* =============================== 状態 =============================== */
@@ -359,6 +359,7 @@
     let gridIsEditable = false;
     let lastDeptSelectValue = '';
     let lastMonthSelectValue = '';
+    let memoTargetEmployeeId = null;
 
     const normalizeCellValue = (value)=> value == null ? '' : String(value);
 
@@ -421,6 +422,74 @@
           saveBtn.disabled = !gridIsEditable || count === 0;
         }
       }
+    }
+
+    // ===== 管理者のメモ対象選択 用ユーティリティ =====
+    function sortActiveEmployeesForMemo() {
+      return employeesVisible
+        .filter(e => e && e.id != null)
+        .slice()
+        .sort((a, b) => {
+          const ra = a.row_index ?? 0;
+          const rb = b.row_index ?? 0;
+          if (ra !== rb) return ra - rb;
+          return String(a.name || '').localeCompare(String(b.name || ''), 'ja');
+        });
+    }
+
+    function findActiveEmployeeById(empId) {
+      if (empId == null) return null;
+      return employeesVisible.find(e => e && e.id != null && String(e.id) === String(empId)) || null;
+    }
+
+    function syncMemoTextarea(empId) {
+      const textarea = document.getElementById('qNote2');
+      if (!textarea) return;
+      const target = findActiveEmployeeById(empId);
+      textarea.value = target?.note || '';
+    }
+
+    function updateMemoTargetUI({ preserveSelection = false } = {}) {
+      const wrap = document.getElementById('memoTargetWrap');
+      const select = document.getElementById('memoTargetSelect');
+      if (!wrap || !select) {
+        syncMemoTextarea(memoTargetEmployeeId);
+        return;
+      }
+
+      const isAdmin = !!currentUser?.is_admin;
+      if (!isAdmin) {
+        wrap.style.display = 'none';
+        memoTargetEmployeeId = currentUser?.employee_id != null ? String(currentUser.employee_id) : null;
+        syncMemoTextarea(memoTargetEmployeeId);
+        return;
+      }
+
+      wrap.style.display = '';
+      const activeList = sortActiveEmployeesForMemo();
+      const prevSelection = preserveSelection ? memoTargetEmployeeId : null;
+      select.innerHTML = '';
+      for (const emp of activeList) {
+        const option = document.createElement('option');
+        option.value = String(emp.id);
+        option.textContent = emp.name || '(未設定)';
+        select.appendChild(option);
+      }
+
+      let nextId = null;
+      if (prevSelection && findActiveEmployeeById(prevSelection)) {
+        nextId = prevSelection;
+      } else if (currentUser?.employee_id != null && findActiveEmployeeById(currentUser.employee_id)) {
+        nextId = String(currentUser.employee_id);
+      } else if (activeList.length) {
+        nextId = String(activeList[0].id);
+      }
+
+      memoTargetEmployeeId = nextId;
+      if (select.options.length) {
+        select.value = memoTargetEmployeeId ?? '';
+      }
+      syncMemoTextarea(memoTargetEmployeeId);
     }
 
     const monthCache = new Map(); // ym -> normalized items
@@ -670,10 +739,10 @@
         }
         let targetCell = (cellEl && cellEl.nodeType === 1) ? cellEl : null;
         if (!targetCell && typeof instance.getCellFromCoords === 'function') {
-          try { targetCell = instance.getCellFromCoords(colIndex, rowIndex); } catch {}
+          try { targetCell = instance.getCellFromCoords(colIndex, rowIndex); } catch (err) {}
         }
         if (!targetCell && typeof instance.getCell === 'function') {
-          try { targetCell = instance.getCell(colIndex, rowIndex); } catch {}
+          try { targetCell = instance.getCell(colIndex, rowIndex); } catch (err) {}
         }
         if (targetCell) {
           if (dirtyCells.has(key)) targetCell.classList.add('dirty-cell');
@@ -693,7 +762,9 @@
         tableHeight: '400px',
         tableWidth: '100%',     // ← 幅いっぱいに広げる
         editable: allowEditing,            // デスクトップ環境では編集可
-        selectionCopy: true,        // コピーはOK
+        selectionCopy: true,
+        // 先頭メモ行は常に読み取り専用
+        cells: (cell, x, y, value) => { if (y === 0) return { readOnly: true }; },        // コピーはOK
         onchange: (instance, cell, x, y, value) => {
           if (!gridIsEditable) return;
           if (Array.isArray(x)) {
@@ -707,14 +778,8 @@
           }
         },
         // 編集系の保険
-        oneditionstart: (inst, cell) => {
-          if (allowEditing) return;
-          try{ inst.closeEditor(cell, true); }catch{}
-          return false;
-        },
-        onbeforechange: () => {
-          if (!allowEditing) return false;
-        },
+        oneditionstart: (inst, cell) => { try { const yAttr = cell && typeof cell.getAttribute === 'function' ? cell.getAttribute('data-y') : null; console.debug('[grid] oneditionstart y=', yAttr); if (String(yAttr) === '0') { inst.closeEditor(cell, true); return false; } } catch (err) {} if (allowEditing) return; try{ inst.closeEditor(cell, true); }catch (err) {} return false; },
+        onbeforechange: (inst, cell, x, y, value) => { try { console.debug('[grid] onbeforechange y=', y); } catch (err) {} const deny = (yy) => (yy === 0); if (Array.isArray(y)) { if (y.some(deny)) return false; } else if (deny(y)) return false; if (!allowEditing) return false; },
         onbeforepaste:  () => {
           if (!allowEditing) return false;
         },
@@ -995,7 +1060,7 @@
         headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
         body:JSON.stringify({ id }), cache:'no-store'
       });
-      const txt=await res.text(); let j=null; try{ j=JSON.parse(txt);}catch{}
+      const txt=await res.text(); let j=null; try{ j=JSON.parse(txt);}catch (err) {}
       if(!res.ok || (j&&j.ok===false)) throw new Error(j?.error||txt||`HTTP ${res.status}`);
       return j??{};
     }
@@ -1046,7 +1111,7 @@
         if(!date){ alert('日付(YYYY-MM-DD)を入力'); return; }
         const am = (document.getElementById('qAm2').value||'').trim();
         const pm = (document.getElementById('qPm2').value||'').trim();
-        const employee_id = await ensureMyEmployeeId();
+        let employee_id; if (currentUser?.is_admin) { const v = document.getElementById('memoTargetSelect')?.value; employee_id = v ? Number(v) : await ensureMyEmployeeId(); } else { employee_id = await ensureMyEmployeeId(); }
         const upserts=[], deletes=[];
         if(am) upserts.push({ employee_id, date, slot:'am', place:am }); else deletes.push({ employee_id, date, slot:'am' });
         if(pm) upserts.push({ employee_id, date, slot:'pm', place:pm }); else deletes.push({ employee_id, date, slot:'pm' });
@@ -1073,10 +1138,11 @@
     document.getElementById('memoSaveBtn').addEventListener('click', async ()=>{
       try{
         const note = (document.getElementById('qNote2').value||'').trim();
-        const employee_id = await ensureMyEmployeeId();
-        const { data:{ session } } = await supabase.auth.getSession();
-        const token=session?.access_token; if(!token) throw new Error('未ログイン');
-        const r = await fetch(`${SUPABASE_URL}/functions/v1/employee-note-update`,{
+        let employee_id; if (currentUser?.is_admin) { const v = document.getElementById('memoTargetSelect')?.value; employee_id = v ? Number(v) : await ensureMyEmployeeId(); } else { employee_id = await ensureMyEmployeeId(); }
+          const { data:{ session } } = await supabase.auth.getSession();
+          const token=session?.access_token; if(!token) throw new Error('未ログイン');
+
+          const r = await fetch(`${SUPABASE_URL}/functions/v1/employee-note-update`,{
           method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
           body:JSON.stringify({ employee_id, note })
         });
@@ -1084,6 +1150,7 @@
         
         // ★ 追加：社員情報を再読込してから再描画
         await loadCurrentUserAndEmployees();
+        try { updateMemoTargetUI({ preserveSelection: true }); } catch (err) {}
         await refreshView();
         alert('メモを保存しました');
       }catch(e){ alert('保存失敗：'+e.message); }
@@ -1101,10 +1168,10 @@
         const memo  = (document.getElementById('cMemo2').value||'').trim();
         if(!date) return alert('開始日を入力してください');
         if(!title) return alert('タイトルを入力してください');
+          const { data:{ session } } = await supabase.auth.getSession();
+          const token=session?.access_token; if(!token) throw new Error('未ログイン');
 
-        const { data:{ session } } = await supabase.auth.getSession();
-        const token=session?.access_token; if(!token) throw new Error('未ログイン');
-        const r = await fetch(`${SUPABASE_URL}/functions/v1/company-events-upsert`,{
+          const r = await fetch(`${SUPABASE_URL}/functions/v1/company-events-upsert`,{
           method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
           body:JSON.stringify({ kind, date, date_end: date_end||null, timestart:start, timeend:end, event:title, memo })
         });
@@ -1136,6 +1203,39 @@
       if (sessionObj) {
         await loadCurrentUserAndEmployees();
         fillDepartmentOptions(currentUser.department);
+        (function ensureMemoTargetUI(){
+          const panel = document.getElementById('memoPanel');
+          const textarea = document.getElementById('qNote2');
+          if (!panel || !textarea) return;
+          if (!document.getElementById('memoTargetWrap')) {
+            const wrap = document.createElement('div');
+            wrap.id = 'memoTargetWrap';
+            wrap.className = 'row';
+            wrap.style.gap = '6px';
+            wrap.style.marginBottom = '6px';
+            wrap.style.display = 'none';
+            const label = document.createElement('label');
+            label.setAttribute('for', 'memoTargetSelect');
+            label.textContent = '対象';
+            const sel = document.createElement('select');
+            sel.id = 'memoTargetSelect';
+            sel.style.minWidth = '160px';
+            wrap.appendChild(label);
+            wrap.appendChild(sel);
+            panel.insertBefore(wrap, textarea);
+          }
+        })();
+        updateMemoTargetUI({ preserveSelection: false });
+        (function bindMemoSelect(){
+          const memoSelect = document.getElementById('memoTargetSelect');
+          if (memoSelect) {
+            memoSelect.addEventListener('change', (event) => {
+              const val = event?.target?.value ?? '';
+              memoTargetEmployeeId = val ? String(val) : null;
+              syncMemoTextarea(memoTargetEmployeeId);
+            });
+          }
+        })();
         
         // ★ ここを追加：アクティブでないユーザーは
         // 1) クイック登録を無効化
@@ -1171,7 +1271,7 @@
             document.getElementById('monthSelect').addEventListener('change', ()=>{
               renderCompanyList(document.getElementById('monthSelect').value);
             });
-          }catch{}
+          }catch (err) {}
         })();
       }
 
@@ -1185,7 +1285,7 @@
       });
       // ログアウトボタン処理
       $('#logoutBtn').addEventListener('click', async () => {
-        try { await supabase.auth.signOut({ scope: 'local' }); } catch {}
+        try { await supabase.auth.signOut({ scope: 'local' }); } catch (err) {}
         location.reload();
       });
       // 更新ボタン（F5と同じ）
@@ -1485,3 +1585,4 @@
   <footer></footer>
 </body>
 </html>
+
