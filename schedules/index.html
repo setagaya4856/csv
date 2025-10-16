@@ -87,6 +87,27 @@
     /* 片手操作向けにボタン大きめ */
     .btn{ padding:10px 14px; border-radius:10px; border:1px solid #bbb; background:#fff; }
     .btn-primary{ background:#1a73e8; color:#fff; border-color:#1a73e8; }
+    .dirty-badge{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      margin-left:6px;
+      padding:0 8px;
+      min-width:24px;
+      height:24px;
+      border-radius:12px;
+      background:#ff7043;
+      color:#fff;
+      font-size:0.75rem;
+      font-weight:600;
+      transition:background-color .2s ease;
+    }
+    .dirty-badge.is-empty{
+      background:#4caf50;
+    }
+    .dirty-cell{
+      box-shadow: inset 0 0 0 2px rgba(255,112,67,0.65);
+    }
     /* メモ行（ヘッダー直下の1行目） */
     #grid .jexcel tbody tr:first-child td.memo-row {
       background: #f4f8ff;
@@ -332,6 +353,75 @@
     let employeesVisible = [];
     let currentUser = { email:null, employee_id:null, department:null, is_active:false, is_admin:false };
     let grid = null;
+    let currentGridMeta = null;
+    let initialGridSnapshot = [];
+    const dirtyCells = new Set();
+    let gridIsEditable = false;
+    let lastDeptSelectValue = '';
+    let lastMonthSelectValue = '';
+
+    const normalizeCellValue = (value)=> value == null ? '' : String(value);
+
+    function resetDirtyState(snapshot = []) {
+      initialGridSnapshot = snapshot.map(row => row.map(normalizeCellValue));
+      dirtyCells.clear();
+      updateDirtyBadge();
+    }
+
+    function hasDirtyChanges() {
+      return gridIsEditable && dirtyCells.size > 0;
+    }
+
+    function confirmDiscardIfDirty() {
+      if (!hasDirtyChanges()) return true;
+      return window.confirm('未保存の変更があります。破棄して移動しますか？');
+    }
+
+    function snapshotSelectValues() {
+      const deptEl = document.getElementById('deptSelect');
+      if (deptEl) lastDeptSelectValue = deptEl.value;
+      const monthEl = document.getElementById('monthSelect');
+      if (monthEl) lastMonthSelectValue = monthEl.value;
+    }
+
+    function getCellKeyFromMeta(meta, x, y) {
+      if (!meta) return null;
+      const emps = meta.emps || [];
+      const emp = emps[x];
+      if (!emp) return null;
+      if (y === 0) {
+        const memoId = emp.id != null ? String(emp.id) : `col${x}`;
+        return `memo|${memoId}`;
+      }
+      const rows = meta.rowKeys || [];
+      const rowInfo = rows[y - 1];
+      if (!rowInfo) return null;
+      const empId = emp.id != null ? String(emp.id) : `emp${x}`;
+      return `${rowInfo.date}|${rowInfo.slot}|${empId}`;
+    }
+
+    function updateDirtyBadge() {
+      const badge = document.getElementById('dirtyBadge');
+      const saveBtn = document.getElementById('gridSaveBtn');
+      const count = dirtyCells.size;
+      const { isProbablyMobile } = detectEnvironment();
+
+      if (badge) {
+        badge.textContent = count;
+        badge.classList.toggle('is-empty', count === 0);
+        badge.style.display = isProbablyMobile ? 'none' : 'inline-flex';
+      }
+
+      if (saveBtn) {
+        if (isProbablyMobile) {
+          saveBtn.style.display = 'none';
+          saveBtn.disabled = true;
+        } else {
+          saveBtn.style.display = '';
+          saveBtn.disabled = !gridIsEditable || count === 0;
+        }
+      }
+    }
 
     const monthCache = new Map(); // ym -> normalized items
     const holidaySet = new Set(); // 'YYYY-MM-DD'
@@ -557,6 +647,41 @@
       const allowEditing = !!isProbablyDesktop;
       const columnDefs = columns.map(c => ({ ...c, readOnly: !allowEditing }));
 
+      currentGridMeta = colMeta;
+      gridIsEditable = allowEditing;
+      const initialSnapshot = dataWithMemo.map(row => row.map(normalizeCellValue));
+      resetDirtyState(initialSnapshot);
+
+      updateDirtyBadge();
+
+      const applyDirtyChange = (instance, colIndex, rowIndex, providedValue, cellEl) => {
+        if (!gridIsEditable) return;
+        const key = getCellKeyFromMeta(currentGridMeta, colIndex, rowIndex);
+        if (!key) return;
+        const currentValue = normalizeCellValue(
+          providedValue !== undefined ? providedValue : instance.getValueFromCoords(colIndex, rowIndex)
+        );
+        const originalRow = initialGridSnapshot[rowIndex] || [];
+        const originalValue = normalizeCellValue(originalRow[colIndex]);
+        if (currentValue === originalValue) {
+          dirtyCells.delete(key);
+        } else {
+          dirtyCells.add(key);
+        }
+        let targetCell = (cellEl && cellEl.nodeType === 1) ? cellEl : null;
+        if (!targetCell && typeof instance.getCellFromCoords === 'function') {
+          try { targetCell = instance.getCellFromCoords(colIndex, rowIndex); } catch {}
+        }
+        if (!targetCell && typeof instance.getCell === 'function') {
+          try { targetCell = instance.getCell(colIndex, rowIndex); } catch {}
+        }
+        if (targetCell) {
+          if (dirtyCells.has(key)) targetCell.classList.add('dirty-cell');
+          else targetCell.classList.remove('dirty-cell');
+        }
+        updateDirtyBadge();
+      };
+
       grid = jspreadsheet(host, {
         data: dataWithMemo,
         columns: columnDefs,
@@ -569,6 +694,18 @@
         tableWidth: '100%',     // ← 幅いっぱいに広げる
         editable: allowEditing,            // デスクトップ環境では編集可
         selectionCopy: true,        // コピーはOK
+        onchange: (instance, cell, x, y, value) => {
+          if (!gridIsEditable) return;
+          if (Array.isArray(x)) {
+            x.forEach((colIndex, idx) => {
+              const rowIndex = Array.isArray(y) ? y[idx] : y;
+              const val = Array.isArray(value) ? value[idx] : undefined;
+              applyDirtyChange(instance, colIndex, rowIndex, val, Array.isArray(cell) ? cell[idx] : cell);
+            });
+          } else {
+            applyDirtyChange(instance, x, y, value, cell);
+          }
+        },
         // 編集系の保険
         oneditionstart: (inst, cell) => {
           if (allowEditing) return;
@@ -596,9 +733,13 @@
         allowInsertColumn:false, allowDeleteColumn:false,
         allowInsertRow:false, allowDeleteRow:false,
         updateTable: (el, cell, x, y, src, val) => {
-          cell.classList.remove('ht-today','ht-sat','ht-sun','ht-holiday','memo-row','myself');
+          cell.classList.remove('ht-today','ht-sat','ht-sun','ht-holiday','memo-row','myself','dirty-cell');
           cell.style.color = '';
           const memoOffset = 1;                 // 先頭にメモ行がある
+          const dirtyKey = gridIsEditable ? getCellKeyFromMeta(currentGridMeta, x, y) : null;
+          if (dirtyKey && dirtyCells.has(dirtyKey)) {
+            cell.classList.add('dirty-cell');
+          }
           const dataRow = y - memoOffset;       // 実データに対応する行index（rowKeys用）
         
           // --- メモ行（y===0）は装飾だけ ---
@@ -631,9 +772,10 @@
           }
           
           // 縮小表示（データ列のみ）
-          if (x >= 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 2 });
-        }
-      });
+        if (x >= 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 2 });
+      }
+    });
+      snapshotSelectValues();
     }
     // 現在のセレクト状態に合わせて再描画する
     async function refreshView({ companyOnly = false } = {}) {
@@ -680,6 +822,7 @@
         if (initDept && String(dep)===String(initDept)) op.selected = true;
         sel.appendChild(op);
       }
+      snapshotSelectValues();
     }
     function fillMonthOptions(base=new Date()){
       const months = monthsAround(base, 3, 3);
@@ -691,6 +834,7 @@
         if (ym===ymOf(base)) op.selected = true;
         sel.appendChild(op);
       }
+      snapshotSelectValues();
     }
 
     /* =============================== 登録パネル =============================== */
@@ -802,6 +946,8 @@
 
     async function renderCompanyList(ym){
       const box = document.getElementById('companyListBody');
+      const { isProbablyMobile } = detectEnvironment();
+      const canDeleteNotice = !!currentUser?.is_admin && !isProbablyMobile;
       try{
         const evs = await fetchCompanyEventsForMonth(ym);
         if(!evs.length){ box.innerHTML = '<p class="muted">該当なし</p>'; return; }
@@ -812,7 +958,7 @@
         let html='';
         // お知らせ(優先)
         for(const e of notices){
-          const del = currentUser?.is_admin ? `<button class="ev-del" data-ev-id="${e.id}" style="color:#e53935;background:transparent;border:none;cursor:pointer">削除</button>` : '';
+          const del = canDeleteNotice ? `<button class="ev-del" data-ev-id="${e.id}" style="color:#e53935;background:transparent;border:none;cursor:pointer">削除</button>` : '';
           html += `<div class="ev-item" style="border-left:4px solid #9c27b0;padding-left:8px;margin:6px 0;display:flex;gap:8px;align-items:flex-start;">
             ${del}<div class="ev-main"><div style="font-weight:700;white-space:pre-wrap">${esc(e.event)}</div>${e.memo?`<div style="white-space:pre-wrap">${esc(e.memo)}</div>`:''}</div>
           </div>`;
@@ -826,7 +972,7 @@
           for(const e of arr){
             const t1=e.timestart?e.timestart.slice(0,5):'', t2=e.timeend?e.timeend.slice(0,5):'';
             const tt=t1&&t2?`${t1}–${t2}`:(t1||'');
-            const del = currentUser?.is_admin ? `<button class="ev-del" data-ev-id="${e.id}" style="color:#e53935;background:transparent;border:none;cursor:pointer">削除</button>` : '';
+            const del = canDeleteNotice ? `<button class="ev-del" data-ev-id="${e.id}" style="color:#e53935;background:transparent;border:none;cursor:pointer">削除</button>` : '';
             html += `<li class="ev-item" style="display:flex;gap:8px;align-items:flex-start;">
               ${del}<div class="ev-main"><strong style="white-space:pre-wrap">${esc(e.event)}</strong> ${tt}${e.memo?`<div class="muted" style="white-space:pre-wrap">${esc(e.memo)}</div>`:''}</div>
             </li>`;
@@ -855,6 +1001,7 @@
     }
 
     document.getElementById('noticePanel').addEventListener('click', async (e)=>{
+      if (detectEnvironment().isProbablyMobile) return;
       const btn = e.target instanceof HTMLElement ? e.target.closest('button.ev-del') : null; if(!btn) return;
       if(!currentUser?.is_admin) return alert('権限がありません');
       const id = btn.getAttribute('data-ev-id'); if(!id) return;
@@ -996,6 +1143,7 @@
         if (!currentUser.is_active) {
           const sel = document.getElementById('deptSelect');
           if (sel) sel.value = '__TODAY__';
+          snapshotSelectValues();
 
           await renderTodayCards();
           document.getElementById('gridPanel').style.display  = 'none';
@@ -1045,15 +1193,29 @@
         location.reload();   // ページ全体をリロード
       });
 
-      // 部署変更
-      $('#deptSelect').addEventListener('change', async ()=>{
-        await renderGrid($('#monthSelect').value, $('#deptSelect').value);
-      });
-
       // 月変更
       $('#monthSelect').addEventListener('change', async ()=>{
-        await renderGrid($('#monthSelect').value, $('#deptSelect').value);
+        const monthEl = document.getElementById('monthSelect');
+        const newMonth = monthEl?.value ?? '';
+        if (!confirmDiscardIfDirty()) {
+          if (monthEl) monthEl.value = lastMonthSelectValue;
+          await renderCompanyList(lastMonthSelectValue || (monthEl?.value ?? ''));
+          return;
+        }
+        lastMonthSelectValue = newMonth;
+        const deptValue = $('#deptSelect').value;
+        if (deptValue === '__TODAY__') {
+          lastDeptSelectValue = deptValue;
+          gridIsEditable = false;
+          resetDirtyState([]);
+          await renderTodayCards();
+          snapshotSelectValues();
+          return;
+        }
+        await renderGrid(newMonth, deptValue);
+        snapshotSelectValues();
       });
+      snapshotSelectValues();
     });
 
     /** items(am/pmテキスト)＋employeesVisibleから、今日のカードを部署ごとに生成して #todayCards に描画 */
@@ -1145,16 +1307,31 @@
       const items = await fetchMonthData(ym, token);
       renderTodayCardsFrom(items);
 
+      gridIsEditable = false;
+      currentGridMeta = null;
+      resetDirtyState([]);
+
       // 表示切替
       document.getElementById('gridPanel').style.display  = 'none';
       document.getElementById('todayPanel').style.display = '';
+      snapshotSelectValues();
     }
     // 部署変更
     document.getElementById('deptSelect').addEventListener('change', async ()=>{
-      const val = document.getElementById('deptSelect').value;
+      const deptEl = document.getElementById('deptSelect');
+      const val = deptEl?.value ?? '';
+      if (!confirmDiscardIfDirty()) {
+        if (deptEl) deptEl.value = lastDeptSelectValue;
+        return;
+      }
+      lastDeptSelectValue = val;
 
       if (val === '__TODAY__') {
+        gridIsEditable = false;
+        currentGridMeta = null;
+        resetDirtyState([]);
         await renderTodayCards();  // ← カードモード
+        snapshotSelectValues();
         return;
       }
 
@@ -1162,6 +1339,7 @@
       document.getElementById('todayPanel').style.display = 'none';
       document.getElementById('gridPanel').style.display  = '';
       await renderGrid(document.getElementById('monthSelect').value, val);
+      snapshotSelectValues();
     });
     /* ==== Help modal (mobile) ==== */
     function openHelpModal(){
@@ -1195,6 +1373,8 @@
       <button id="logoutBtn" class="btn">✕</button>
     </div>
     <div class="bar">
+      <button id="gridSaveBtn" class="btn btn-primary" type="button" style="display:none;">保存</button>
+      <span id="dirtyBadge" class="dirty-badge">0</span>
       <label class="muted">部署</label>
       <select id="deptSelect" class="grow"></select>
       <label class="muted">月</label>
