@@ -110,12 +110,12 @@
     };
     // Columns: 2 frozen meta columns + employees
     const columns = [
-      { title: meta.labels.date, type: 'text', readOnly: true, width: 32 },
-      { title: meta.labels.slot, type: 'text', readOnly: true, width: 32 },
+      { title: meta.labels.date, type: 'text', readOnly: true, width: 20 },
+      { title: meta.labels.slot, type: 'text', readOnly: true, width: 20 },
       ...meta.employees.map((name) => ({
         title: name,
         type: 'text',
-        width: 120,
+        width: 100,
       }))
     ];
 
@@ -174,7 +174,7 @@
           // A列の「表示だけ」をMM-DDにしたい場合
           if (x === 0) {
             const m = String(ymd).match(/^\d{4}-(\d{2})-(\d{2})$/);
-            if (m) cell.textContent = `${m[1]}-${m[2]}`;
+            if (m) cell.textContent = `${m[2]}`;
           }
 
           // 日付ハイライト（当日/土日/休日、「休」）

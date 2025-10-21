@@ -60,7 +60,7 @@ function __todayYmdLocal() {
   function _autoScrollToToday(jss, container, {
     ym = null,              // 'YYYY-MM'（今月判定したい時だけ渡す）
     dateColIndex = 0,       // 日付が入っている列（A列=0）
-    position = 'top'        // 'top' | 'center' | 'bottom'
+    position = 'center'        // 'top' | 'center' | 'bottom'
   } = {}) {
     if (!jss || jss._autoScrollTodayDone) return;
     jss._autoScrollTodayDone = true;

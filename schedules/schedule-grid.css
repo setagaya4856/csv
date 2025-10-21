@@ -58,16 +58,16 @@
 /* 固定列（position: sticky が当たるセル）を最前面＆塗りつぶし */
 .jexcel td[style*="position: sticky"],
 .jexcel th[style*="position: sticky"] {
-  z-index: 10;
-  background-color: #fff;       /* 透け防止 */
-  background-clip: padding-box;
+  z-index: 10 !important;
+  background-color: #fff !important;       /* 透け防止 */
+  background-clip: padding-box !important;
 }
 
 /* 列ヘッダーも上部で固定（縦スクロール時） */
 .jexcel thead th,
 .jexcel thead td {
-  position: sticky;
-  top: 0;
-  z-index: 11;                  /* 固定列より一段前面 */
-  background-color: #fff;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 11 !important;                  /* 固定列より一段前面 */
+  background-color: #fff !important;
 }
