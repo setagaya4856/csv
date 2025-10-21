@@ -102,10 +102,7 @@
     );
     // === 追加: 自分列・祝日セット ===
     const myIndex  = Number(opts?.myIndex);
-    // 祝日: opts.holidays に ['YYYY-MM-DD', ...] を渡すと優先採用
-    const holidaySet = new Set(Array.isArray(opts?.holidays) ? opts.holidays : []);
     const isHolidayLocal = (ymd) => {
-      if (holidaySet.size > 0) return holidaySet.has(ymd);
       try { return (typeof isHoliday === 'function') ? !!isHoliday(ymd) : false; } catch { return false; }
     };
     // Columns: 2 frozen meta columns + employees
@@ -118,7 +115,6 @@
         width: 100,
       }))
     ];
-
     // Data rows & merges: accept direct data/merges or map from schedule list; fallback to blank
     let data = [];
     let merges = {};

@@ -186,7 +186,6 @@
     /*  ===== Supabase & 祝日 ===== */
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     import * as holiday_jp from 'https://esm.sh/@holiday-jp/holiday_jp@2';
-
     /* =============================== 定数 =============================== */
     let employeesAll = [];
     let employeesVisible = [];
@@ -252,7 +251,19 @@
         try { await getActiveSessionOrLogout(); } catch (err) {}
       }
     });
-
+    /* =============================== 祝日 =============================== */
+    const toDate = (v) => { if (v instanceof Date) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
+    if (typeof v === 'string') { 
+      const m = v.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/); 
+      if (m) return new Date(+m[1], +m[2]-1, +m[3]); 
+    } 
+    if (typeof v === 'number') {
+      const s = String(v);
+      if (s.length===8) return new Date(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8));
+    }
+    return new Date(v); };
+    window.holiday_jp = holiday_jp; // ← 公開 
+    window.isHoliday = (ymd) => { try { return !!holiday_jp.isHoliday(toDate(ymd)); } catch { return false; } };
     /* =============================== ダーティ管理状態 =============================== */
     function showOverlay(show = true,msg = '処理中...') {
       const ov = document.getElementById('scheduleOverlay');
@@ -1508,7 +1519,6 @@
   <footer></footer>
 </body>
 </html>
-
 
 
 
