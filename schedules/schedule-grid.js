@@ -113,7 +113,7 @@
       ...meta.employees.map((name) => ({
         title: name,
         type: 'text',
-        width: 150,
+        width: (opts?.isProbablyMobile ? 100 : 150),
       }))
     ];
     // Data rows & merges: accept direct data/merges or map from schedule list; fallback to blank

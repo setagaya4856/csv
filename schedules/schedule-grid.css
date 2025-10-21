@@ -8,6 +8,7 @@
 #grid.is-mobile .jexcel {
   width: 100% !important;
   max-width: 100% !important;
+  position: relative
 }
 
 /* Day highlights */
