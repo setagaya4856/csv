@@ -175,7 +175,12 @@
           if (x === 0) {
             const m = String(ymd).match(/^\d{4}-(\d{2})-(\d{2})$/);
             if (m) cell.textContent = `${m[2]}`;
+    frozen.classList.add('sg-frozen');
           }
+          if (x === 1) {
+    frozen.classList.add('sg-frozen');
+          }
+
 
           // 日付ハイライト（当日/土日/休日、「休」）
           if (x >= 2 && ymd) {

@@ -54,29 +54,33 @@
   color: #d32f2f !important;
   font-weight: 700;
 }
-
-/* ===== 積層と影の抑止 ===== */
-.jexcel .jexcel_frozen{ position:relative; z-index:5; background:#fff; }
-.jexcel .jexcel_content{ position:relative; z-index:1; }
-
-.jexcel { position: relative; }
+/* 透けの原因を抑止（stacking contextを作らない） */
 .jexcel_content{
-  position: relative;
-  z-index: 10;
-  overflow: auto;
-  will-change: transform;
+  /* will-change: transform;  を外す */
+  will-change: auto;
 }
-.jexcel_frozen{
+
+/* 見出し（ヘッダー）を最前面＆塗りつぶし */
+.jexcel .sg-header{
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: #fff !important;
+  background-clip: padding-box;
+}
+
+/* 固定領域そのものを上げて塗りつぶし */
+.jexcel .sg-frozen{
   position: relative;
   z-index: 50;
   background: #fff;
-  box-shadow: none !important;
 }
-.jexcel_frozen td,
-.jexcel_frozen th{
-  position: relative;
+
+/* 固定セルをさらに上に（dirty印より上） */
+.jexcel .sg-frozen-cell{
+  position: relative;            /* sticky はライブラリの inline に任せる */
   z-index: 51;
-  background: #fff;
+  background: #fff !important;
 }
 
 /* Mobile-friendly cell behavior */
