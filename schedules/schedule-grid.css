@@ -58,30 +58,9 @@
   color: #555 !important;
   background-color: #fafafa;
 }
-/* === Jspreadsheet 固定列を最前面に固定 === */
-.jexcel { position: relative; } /* 親に積層基準 */
-
-.jexcel_frozen{
-  position: relative;   /* 既に relative/sticky でもOK。いずれにせよ積層化する */
+.jexcel_freezed{
   z-index: 50;          /* スクロール側より高く */
   background: #fff;     /* 背景を塗る（後ろが透けないように） */
-}
-
-/* 固定側セル自体も前面に（モバイルSafariの積層バグ対策） */
-.jexcel_frozen td,
-.jexcel_frozen th{
-  position: relative;
-  z-index: 51;
-  background: #fff;
-}
-
-/* スクロール側は一段下げる */
-.jexcel_content{
-  position: relative;
-  z-index: 10;
-  /* 念のため、固定列の下潜りを抑制 */
-  overflow: auto;
-  will-change: transform;
 }
 /* Mobile-friendly cell behavior */
 .jexcel_content td{
