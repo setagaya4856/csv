@@ -54,85 +54,35 @@
   color: #d32f2f !important;
   font-weight: 700;
 }
-
-#grid .jexcel_content {
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-}
-#grid .jexcel .jexcel_row {
-  font-weight: 500;
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  box-shadow: 1px 0 0 #eee;
-}
-#grid .jexcel .jexcel_corner {
-  position: sticky;
-  top: 0;
-  left: 0;
-  z-index: 4;
-  background: #fff;
-  box-shadow: 1px 1px 0 #eee;
-}
 .jexcel .readonly {
   color: #555 !important;
   background-color: #fafafa;
 }
-/* Jspreadsheet main and scroll areas fit parent */
-#grid .jexcel {
-  width: 100% !important;
-  max-width: 100% !important;
+/* === Jspreadsheet 固定列を最前面に固定 === */
+.jexcel { position: relative; } /* 親に積層基準 */
+
+.jexcel_frozen{
+  position: relative;   /* 既に relative/sticky でもOK。いずれにせよ積層化する */
+  z-index: 50;          /* スクロール側より高く */
+  background: #fff;     /* 背景を塗る（後ろが透けないように） */
+}
+
+/* 固定側セル自体も前面に（モバイルSafariの積層バグ対策） */
+.jexcel_frozen td,
+.jexcel_frozen th{
   position: relative;
-}
-#grid .jexcel_header {
-  position: sticky;
-  top: 0;
-  z-index: 3;
+  z-index: 51;
   background: #fff;
 }
-#grid .jexcel_content {
-  width: 100% !important;
-  max-width: 100% !important;
+
+/* スクロール側は一段下げる */
+.jexcel_content{
+  position: relative;
+  z-index: 10;
+  /* 念のため、固定列の下潜りを抑制 */
   overflow: auto;
-  -webkit-overflow-scrolling: touch;
+  will-change: transform;
 }
-
-/* Mobile-friendly cell behavior */
-.jexcel_content td{
-  white-space: nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  caret-color: transparent;
-}
-
-/* Readonly/frozen */
-.jexcel .readonly{ background:#fafafa; }
-.jexcel .jexcel_frozen{ background:#fff; }
-
-/* Sticky row headers */
-#grid .jexcel .jexcel_row {
-  font-weight: 500;
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  box-shadow: 1px 0 0 #eee;
-}
-
-/* Sticky top-left corner */
-#grid .jexcel .jexcel_corner {
-  position: sticky;
-  top: 0;
-  left: 0;
-  z-index: 4;
-  background: #fff;
-  box-shadow: 1px 1px 0 #eee;
-}
-
 /* Mobile-friendly cell behavior */
 .jexcel_content td{
   white-space: nowrap;
