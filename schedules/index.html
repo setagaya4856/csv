@@ -182,10 +182,12 @@
   <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.11.4/dist/index.js"></script>
   <script src="./grid-control.js"></script>
   <script src="./schedule-grid.js"></script>
+  
   <script type="module">
     /*  ===== Supabase & 祝日 ===== */
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     import * as holiday_jp from 'https://esm.sh/@holiday-jp/holiday_jp@2';
+
     /* =============================== 定数 =============================== */
     let employeesAll = [];
     let employeesVisible = [];
@@ -204,7 +206,7 @@
       weekdays_short:['日','月','火','水','木','金','土'],
       today:'今日', clear:'クリア', close:'閉じる'
     };
-    /* =============================== 設定 =============================== */
+    /* =============================== ログイン =============================== */
     const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -334,22 +336,6 @@
 
     window.markDirty = markDirty;
     window.updateDirtyBadge = updateDirtyBadge;
-
-    function getCellKeyFromMeta(meta, x, y) {
-      if (!meta) return null;
-      const emps = meta.emps || [];
-      const emp = emps[x];
-      if (!emp) return null;
-      if (y === 0) {
-        const memoId = emp.id != null ? String(emp.id) : `col${x}`;
-        return `memo|${memoId}`;
-      }
-      const rows = meta.rowKeys || [];
-      const rowInfo = rows[y - 1];
-      if (!rowInfo) return null;
-      const empId = emp.id != null ? String(emp.id) : `emp${x}`;
-      return `${rowInfo.date}|${rowInfo.slot}|${empId}`;
-    }
 
     // ===== 管理者のメモ対象選択 用ユーティリティ =====
     function sortActiveEmployeesForMemo() {
@@ -1116,125 +1102,7 @@
       }
     });
 
-    /* =============================== 起動 =============================== */
-    document.addEventListener('DOMContentLoaded', async ()=>{
-      // UI 初期組み立て
-      fillMonthOptions(new Date());
-
-      // 認証状態に応じた表示（モバイルは簡略：未ログインならSupabaseのメール/パスでログイン）
-      const { data:{ session } } = await supabase.auth.getSession();
-      $('#loginPanel').style.display = session ? 'none' : '';
-      $('#appPanel').style.display   = session ? '' : 'none';
-
-      let sessionObj = null;
-      try {
-        sessionObj = await getActiveSessionOrLogout();  // 失効ならここでモーダル表示&throw
-      } catch {
-        // 既に showLoginModal 済み。以降の初期描画は止める
-      }
-      $('#loginPanel').style.display = sessionObj ? 'none' : '';
-      $('#appPanel').style.display   = sessionObj ? '' : 'none';
-
-      if (sessionObj) {
-        await loadCurrentUserAndEmployees();
-        fillDepartmentOptions(currentUser.department);
-        
-        updateMemoTargetUI({ preserveSelection: false });
-        (function bindMemoSelect(){
-          const memoSelect = document.getElementById('memoTargetSelect');
-          if (memoSelect) {
-            memoSelect.addEventListener('change', (event) => {
-              const val = event?.target?.value ?? '';
-              memoTargetEmployeeId = val ? String(val) : null;
-              syncMemoTextarea(memoTargetEmployeeId);
-            });
-          }
-        })();
-        
-        // ★ ここを追加：アクティブでないユーザーは
-        // 1) クイック登録を無効化
-        // 2) 部署セレクトを「本日の予定一覧」にしてカード表示へ
-        if (!currentUser.is_active) {
-          const sel = document.getElementById('deptSelect');
-          if (sel) sel.value = '__TODAY__';
-          snapshotSelectValues();
-
-          clearAllDirty(true,[]);
-          await renderTodayCards();
-          document.getElementById('gridPanel').style.display  = 'none';
-          document.getElementById('todayPanel').style.display = '';
-        } else {
-          clearAllDirty(true,[]);
-          const ym = document.getElementById('monthSelect').value;
-          await renderGrid(ym, document.getElementById('deptSelect').value);
-        }
-        (async function afterLoginInit(){
-          // 既存の session チェック後に…
-          try{
-            // 既存 today設定
-            const today = (function(){ try{
-              const fmt = new Intl.DateTimeFormat('ja-JP',{ timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit' });
-              const p = Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));
-              return `${p.year}-${p.month}-${p.day}`;
-            }catch{return ''; } })();
-            const qd = document.getElementById('qDate2'); if(qd) qd.value = today;
-
-            applyRoleVisibility();                       // 権限で可視切替
-            renderCompanyList(document.getElementById('monthSelect').value); // お知らせ(一覧)初期描画
-
-            // 月変更に追従
-            document.getElementById('monthSelect').addEventListener('change', ()=>{
-              if (!confirmDiscardIfDirty()) { e.preventDefault(); e.target.value = lastMonthSelectValue; return; }
-  
-              renderCompanyList(document.getElementById('monthSelect').value);
-            });
-          }catch (err) {}
-        })();
-      }
-
-      // ログイン
-      $('#loginBtn').addEventListener('click', async ()=>{
-        const email = $('#email').value.trim();
-        const password = $('#password').value;
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if(error){ alert('ログイン失敗: '+error.message); return; }
-        location.reload();
-      });
-      // ログアウトボタン処理
-      $('#logoutBtn').addEventListener('click', async () => {
-        try { await supabase.auth.signOut({ scope: 'local' }); } catch (err) {}
-        location.reload();
-      });
-      // 更新ボタン（F5と同じ）
-      $('#refreshBtn').addEventListener('click', () => {
-        location.reload();   // ページ全体をリロード
-      });
-
-      // 月変更
-      $('#monthSelect').addEventListener('change', async ()=>{
-        const monthEl = document.getElementById('monthSelect');
-        const newMonth = monthEl?.value ?? '';
-        if (!confirmDiscardIfDirty()) {
-          if (monthEl) monthEl.value = lastMonthSelectValue;
-          await renderCompanyList(lastMonthSelectValue || (monthEl?.value ?? ''));
-          return;
-        }
-        lastMonthSelectValue = newMonth;
-        const deptValue = $('#deptSelect').value;
-        if (deptValue === '__TODAY__') {
-          lastDeptSelectValue = deptValue;
-          clearAllDirty(true,[]);
-          await renderTodayCards();
-          snapshotSelectValues();
-          return;
-        }
-        await renderGrid(newMonth, deptValue);
-        snapshotSelectValues();
-      });
-      snapshotSelectValues();
-    });
-
-    /** items(am/pmテキスト)＋employeesVisibleから、今日のカードを部署ごとに生成して #todayCards に描画 */
+    /* =============================== 今日の予定 =============================== */
     function renderTodayCardsFrom(items){
       const container = document.getElementById('todayCards');
       container.innerHTML = '';
@@ -1335,6 +1203,117 @@
         showOverlay(false);
       }
     }
+    /* =============================== 起動 =============================== */
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      // UI 初期組み立て
+      fillMonthOptions(new Date());
+
+      // 認証状態に応じた表示（モバイルは簡略：未ログインならSupabaseのメール/パスでログイン）
+      const { data:{ session } } = await supabase.auth.getSession();
+      $('#loginPanel').style.display = session ? 'none' : '';
+      $('#appPanel').style.display   = session ? '' : 'none';
+
+      let sessionObj = null;
+      try {
+        sessionObj = await getActiveSessionOrLogout();  // 失効ならここでモーダル表示&throw
+      } catch {
+        // 既に showLoginModal 済み。以降の初期描画は止める
+      }
+      $('#loginPanel').style.display = sessionObj ? 'none' : '';
+      $('#appPanel').style.display   = sessionObj ? '' : 'none';
+
+      if (sessionObj) {
+        await loadCurrentUserAndEmployees();
+        fillDepartmentOptions(currentUser.department);
+        
+        updateMemoTargetUI({ preserveSelection: false });
+        (function bindMemoSelect(){
+          const memoSelect = document.getElementById('memoTargetSelect');
+          if (memoSelect) {
+            memoSelect.addEventListener('change', (event) => {
+              const val = event?.target?.value ?? '';
+              memoTargetEmployeeId = val ? String(val) : null;
+              syncMemoTextarea(memoTargetEmployeeId);
+            });
+          }
+        })();
+        
+        // ★ ここを追加：アクティブでないユーザーは
+        // 1) クイック登録を無効化
+        // 2) 部署セレクトを「本日の予定一覧」にしてカード表示へ
+        if (!currentUser.is_active) {
+          const sel = document.getElementById('deptSelect');
+          if (sel) sel.value = '__TODAY__';
+          snapshotSelectValues();
+
+          clearAllDirty(true,[]);
+          await renderTodayCards();
+          document.getElementById('gridPanel').style.display  = 'none';
+          document.getElementById('todayPanel').style.display = '';
+        } else {
+          clearAllDirty(true,[]);
+          const ym = document.getElementById('monthSelect').value;
+          await renderGrid(ym, document.getElementById('deptSelect').value);
+        }
+        (async function afterLoginInit(){
+          // 既存の session チェック後に…
+          try{
+            // 既存 today設定
+            const today = (function(){ try{
+              const fmt = new Intl.DateTimeFormat('ja-JP',{ timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit' });
+              const p = Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));
+              return `${p.year}-${p.month}-${p.day}`;
+            }catch{return ''; } })();
+            const qd = document.getElementById('qDate2'); if(qd) qd.value = today;
+
+            applyRoleVisibility();                       // 権限で可視切替
+            renderCompanyList(document.getElementById('monthSelect').value); // お知らせ(一覧)初期描画
+          }catch (err) {}
+        })();
+      }
+
+      // ログイン
+      $('#loginBtn').addEventListener('click', async ()=>{
+        const email = $('#email').value.trim();
+        const password = $('#password').value;
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if(error){ alert('ログイン失敗: '+error.message); return; }
+        location.reload();
+      });
+      // ログアウトボタン処理
+      $('#logoutBtn').addEventListener('click', async () => {
+        try { await supabase.auth.signOut({ scope: 'local' }); } catch (err) {}
+        location.reload();
+      });
+      // 更新ボタン（F5と同じ）
+      $('#refreshBtn').addEventListener('click', () => {
+        location.reload();   // ページ全体をリロード
+      });
+
+      // 月変更
+      $('#monthSelect').addEventListener('change', async ()=>{
+        const monthEl = document.getElementById('monthSelect');
+        const newMonth = monthEl?.value ?? '';
+        if (!confirmDiscardIfDirty()) {
+          if (monthEl) monthEl.value = lastMonthSelectValue;
+          await renderCompanyList(lastMonthSelectValue || (monthEl?.value ?? ''));
+          return;
+        }
+        lastMonthSelectValue = newMonth;
+        const deptValue = $('#deptSelect').value;
+        clearAllDirty(true,[]);
+        if (deptValue === '__TODAY__') {
+          lastDeptSelectValue = deptValue;
+          await renderTodayCards();
+        }else{
+          await renderGrid(newMonth, deptValue);
+        }
+        await renderCompanyList(newMonth);
+        snapshotSelectValues();
+      });
+      snapshotSelectValues();
+    });
+
     // 部署変更
     document.getElementById('deptSelect').addEventListener('change', async ()=>{
       const deptEl = document.getElementById('deptSelect');

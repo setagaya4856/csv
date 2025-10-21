@@ -78,6 +78,7 @@
       ? document.querySelector(elOrSelector)
       : elOrSelector;
     if (!host) throw new Error('ScheduleGrid: target element not found');
+    host.classList.toggle('is-mobile', !!opts?.isProbablyMobile);
     if (typeof window.jspreadsheet !== 'function') {
       throw new Error('ScheduleGrid: jspreadsheet is not loaded');
     }
@@ -112,7 +113,7 @@
       ...meta.employees.map((name) => ({
         title: name,
         type: 'text',
-        width: 100,
+        width: 150,
       }))
     ];
     // Data rows & merges: accept direct data/merges or map from schedule list; fallback to blank
