@@ -204,16 +204,11 @@
               cell.classList.remove('my-col');
             }
           }
-          // 縮小（clampを使っていないなら第3引数省略で1行省略）
-          if (x >= 1) {
-            try { applyShrinkToFit(cell, SHRINK_MIN_PX); } catch {}
-          }
         } catch (e) {
-          console.warn('[ScheduleGrid:updateTable] err', e);
         }
       },
       // Optional: disable edition for now to keep it simple
-      editable: opts.editable
+      editable: false
     });
     if (ux && window.GridControl?.installCommonJSSUX) {
       try { window.GridControl.installCommonJSSUX(grid, host, ux); } catch (e) { console.warn('installCommonJSSUX failed', e); }

@@ -3,7 +3,7 @@
   <meta charset="UTF-8" /><!-- iOS: ホーム画面追加で全画面表示 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="行動予定表">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <!-- ノッチ端末の安全域 -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>行動予定表</title>
@@ -644,17 +644,17 @@
             dataColStart: 2,
             enableTextFit: true,
             enableInitialTextFit: true,
-            enterBehavior: 'down',
-            enableSelectionTracker: true,
-            allowCopyEmptyGuard: true,
             allowHorizontalWheel: false,
-            onChangeCleaner: true,
             autoScrollToToday: true,
-            tym: ym, 
+            tym: ym,
           };
           const desktopUx = {
             ...commonUx,
             minPx: GridControl.SHRINK_MIN_PX,
+            enterBehavior: 'down',
+            enableSelectionTracker: true,
+            allowCopyEmptyGuard: true,
+            onChangeCleaner: true,
             allowPaste: true,
             editable: true,
             enableFillHandle: false,
@@ -663,6 +663,10 @@
           const mobileUx = {
             ...commonUx,
             minPx: GridControl.SHRINK_MIN_PX,
+            enterBehavior: 'none',
+            enableSelectionTracker: false,
+            allowCopyEmptyGuard: false,
+            onChangeCleaner: false,
             allowPaste: false,
             editable: false,
             enableFillHandle: false,
