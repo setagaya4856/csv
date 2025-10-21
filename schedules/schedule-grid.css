@@ -72,3 +72,21 @@
   -webkit-touch-callout: none;
   caret-color: transparent;
 }
+
+/* Fill handle を最前面に */
+.jexcel .jexcel_corner,
+.jspreadsheet .jexcel_corner,
+.jexcel .jexcel_corner,
+.jspreadsheet .jexcel_corner {
+z-index: 9999 !important;
+pointer-events: auto;
+}
+
+/* 選択枠も前面（必要なら） */
+#grid .jexcel .jexcel_selection,
+#grid .jspreadsheet .jexcel_selection,
+.jexcel .jexcel_selection,
+.jspreadsheet .jexcel_selection {
+z-index: 9998 !important;
+pointer-events: none;
+}

@@ -217,7 +217,7 @@
         }
       },
       // Optional: disable edition for now to keep it simple
-      editable: false
+      editable: true
     });
     if (ux && window.GridControl?.installCommonJSSUX) {
       try { window.GridControl.installCommonJSSUX(grid, host, ux); } catch (e) { console.warn('installCommonJSSUX failed', e); }
