@@ -4,6 +4,12 @@
   max-width: 100%;
   box-sizing: border-box;
 }
+
+#grid .jexcel {
+  width: 100% !important;
+  max-width: 100% !important;
+  position: relative;
+}
 /* Day highlights */
 .ht-today{ background:#fff9db !important; }
 .ht-sat  { background:#e6ffed !important; }
