@@ -1,0 +1,49 @@
+/* Grid container sizing */
+#grid {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+/* Day highlights */
+.ht-today{ background:#fff9db !important; }
+.ht-sat  { background:#e6ffed !important; }
+.ht-sun, .ht-holiday{ background:#ffe5e5 !important; }
+
+/* 擬似要素を置けるように */
+.jexcel td { position: relative; }
+/* Dirty cell marker */
+.dirty-cell::after{
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff7043;                /* オレンジ */
+  box-shadow: 0 0 0 1.5px #fff;       /* 背景に埋もれない縁取り */
+  pointer-events: none;
+  z-index: 2;                          /* セル内容より前に */
+}
+/* ダーティ：左端に細い帯（選択背景に負けにくい） */
+.dirty-cell::before{
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 3px;
+  background: #ff7043;
+  opacity: 0.95;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Stronger readonly color */
+.jexcel .readonly {
+  color: #555 !important;
+  background-color: #fafafa;
+}
+
+.jexcel .my-col {
+  color: #d32f2f !important;
+  font-weight: 700;
+}

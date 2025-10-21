@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-
+﻿<!DOCTYPE html>
 <head>
   <meta charset="UTF-8" /><!-- iOS: ホーム画面追加で全画面表示 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -41,49 +40,11 @@
     button{ cursor:pointer; }
     .panel{ background:#fff; margin:12px; padding:12px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.04); 
       box-sizing: border-box;
-      overflow: hidden;          /* はみ出しをカット */}
+      overflow: visible;          /* はみ出しをカット */}
     .muted{ color:#666; font-size:.9em; }
     .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    /* グリッド：幅は親いっぱいに固定 */
-    #grid { 
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
-    
-    /* Jspreadsheet 本体とスクロール領域も親幅にフィットさせる */
-    #grid .jexcel {
-      width: 100% !important;
-      max-width: 100% !important;
-      position: relative;
-    }
-    #grid .jexcel_header {
-      position: sticky;
-      top: 0;
-      z-index: 3;
-      background: #fff;
-    }
-    #grid .jexcel_content {
-      width: 100% !important;    /* ← ここ大事：親幅に合わせる */
-      max-width: 100% !important;
-      overflow: auto;            /* 横/縦スクロールはここで出す */
-      -webkit-overflow-scrolling: touch; /* iOS 慣性 */
-    }
-    /* 予定テーブル：Jspreadsheet をモバイル向けに */
-    .jexcel_content td{ white-space: nowrap; overflow:hidden; text-overflow:ellipsis; 
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none; /* iOSのコピー/ペースト呼び出しを抑止 */
-      caret-color: transparent;    /* キャレット非表示 */
-    }
-    .jexcel .readonly{ background:#fafafa; }
-    .jexcel .jexcel_frozen{ background:#fff; }
-    .ht-today{ background:#fff9db !important; }
-    .ht-sat  { background:#e6ffed !important; }
-    .ht-sun, .ht-holiday{ background:#ffe5e5 !important; }
-    /* フッタ余白（iOS スクロール安全域） */
-    footer{ height:24px; }
-
+    /* 親がスクロールを奪わないように（重要） */
+    #companyListBody { max-height: 30vh; overflow: auto; }
     /* 片手操作向けにボタン大きめ */
     .btn{ padding:10px 14px; border-radius:10px; border:1px solid #bbb; background:#fff; }
     .btn-primary{ background:#1a73e8; color:#fff; border-color:#1a73e8; }
@@ -105,55 +66,13 @@
     .dirty-badge.is-empty{
       background:#4caf50;
     }
-    .dirty-cell{
-      box-shadow: inset 0 0 0 2px rgba(255,112,67,0.65);
-    }
-    /* メモ行（ヘッダー直下の1行目） */
-    #grid .jexcel tbody tr:first-child td.memo-row {
-      background: #f4f8ff;
-      border-bottom: 1px solid #dce6ff;
-      font-weight: 600;
-      white-space: pre-wrap;
-      word-break: break-word;
-      padding: 8px 10px;
-    }
-    /* 行ヘッダ（左）を sticky に */
-    #grid .jexcel .jexcel_row {
-      font-weight: 500;
-      position: sticky;
-      left: 0;
-      z-index: 2;        /* ヘッダとデータの間にくるように */
-      box-shadow: 1px 0 0 #eee; /* 仕切り線（任意） */
-    }
-
-    /* 左上の角（行ヘッダ×列ヘッダの交点）も固定に */
-    #grid .jexcel .jexcel_corner {
-      position: sticky;
-      top: 0;
-      left: 0;
-      z-index: 4;
-      background: #fff;
-      box-shadow: 1px 1px 0 #eee; /* 任意 */
-    }
-    /* 読み取り専用セルの文字をやや濃いグレーに */
-    .jexcel .readonly {
-      color: #555 !important;      /* ← デフォルト #999 より濃く */
-      background-color: #fafafa;   /* 背景は今まで通り薄灰 */
-    }
     #refreshBtn {
       font-size: 1.2em;
       line-height: 1;
       padding: 6px 10px;
       border-radius: 8px;
     }
-
-    /* 自分の列を赤文字（セル＆ヘッダ両方） */
-    #grid .jexcel td.myself,
-    #grid .jexcel td.myself * {
-      color: #d32f2f !important;
-      font-weight: 700;
-    }
-    /* ==== Help modal (mobile) ==== */
+    /* Help modal (mobile) */
     .help-modal{ position:fixed; inset:0; display:none; z-index:10000; }
     .help-modal[aria-hidden="false"]{ display:block; }
     .help-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.4); }
@@ -166,9 +85,6 @@
       border:0; background:transparent; cursor:pointer;
     }
     .help-body{ margin:8px 0 4px; max-height:60vh; overflow:auto; }
-    /* 親がスクロールを奪わないように（重要） */
-    .panel { overflow: visible; } 
-    #companyListBody { max-height: 30vh; overflow: auto; }
     /* ===== 今日の予定（カード） ===== */
     .today-section {
       margin-bottom: 16px;
@@ -233,24 +149,62 @@
     /* トグルの見た目 */
     .togglebar{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:8px var(--pad); }
     .tgl{ padding:0 8px; border:1px solid #bbb; background:#fff; border-radius:8px; height:28px; min-width:34px; cursor:pointer; }
-    .tgl[aria-pressed="true"]{ font-weight:700; border-color:#666; }
+    .tgl[aria-pressed="true"]{ font-weight:700; border-color:#666; background:#999;}
     .tgl:disabled{ opacity:.45; pointer-events:none; filter:grayscale(40%); }
 
     /* 各パネル共通 */
     .quick-section{ margin:12px; }
+    .schedule-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5000;
+      font-size: 1.5rem;
+      color: #333;
+      backdrop-filter: blur(2px);
+    }
+    .overlay-text {
+      padding: 12px 24px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.8);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
   </style>
 
   <!-- ===== Jspreadsheet CE + jSuites ===== -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites@4.15.0/dist/jsuites.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.11.4/dist/jspreadsheet.css" />
+  <link rel="stylesheet" href="./schedule-grid.css" />
   <script src="https://cdn.jsdelivr.net/npm/jsuites@4.15.0/dist/jsuites.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.11.4/dist/index.js"></script>
-
+  <script src="./grid-control.js"></script>
+  <script src="./schedule-grid.js"></script>
   <script type="module">
     /*  ===== Supabase & 祝日 ===== */
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     import * as holiday_jp from 'https://esm.sh/@holiday-jp/holiday_jp@2';
 
+    /* =============================== 定数 =============================== */
+    let employeesAll = [];
+    let employeesVisible = [];
+    let currentUser = { email:null, employee_id:null, department:null, is_active:false, is_admin:false };
+    let grid = null;
+    let currentGridMeta = null;
+    let initialGridSnapshot = [];
+    let lastDeptSelectValue = '';
+    let lastMonthSelectValue = '';
+    let memoTargetEmployeeId = null;
+    const JP_CAL_OPTS = {
+      format:'YYYY-MM-DD', firstDay:0,
+      months:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+      monthsShort:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+      weekdays:['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'],
+      weekdays_short:['日','月','火','水','木','金','土'],
+      today:'今日', clear:'クリア', close:'閉じる'
+    };
     /* =============================== 設定 =============================== */
     const SUPABASE_URL = 'https://rqrgsytkxbhbrnrhqlca.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcmdzeXRreGJoYnJucmhxbGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODIyODMsImV4cCI6MjA3MTI1ODI4M30.LWeiva7gpFf9lHGuOKqzyr-tZihHuX9KdlHUjuqYDU0';
@@ -261,57 +215,7 @@
         detectSessionInUrl: true,
       },
     });
-    const JP_CAL_OPTS = {
-      format:'YYYY-MM-DD', firstDay:0,
-      months:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
-      monthsShort:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
-      weekdays:['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'],
-      weekdays_short:['日','月','火','水','木','金','土'],
-      today:'今日', clear:'クリア', close:'閉じる'
-    };
-    // 文字幅計測のための Canvas コンテキスト（使い回し）
-    const __measure = (() => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      return { canvas, ctx };
-    })();
-    
-    function shrinkToFit(cell, text, { base=14, min=10, maxLines=2 } = {}) {
-      // 改行対応：行ごとに計測
-      const lines = String(text).split('\n');
-      // セル内のパディングを概算（Jspreadsheetのtdデフォルトに合わせて少し余裕）
-      const padX = 12; // 左右合計
-      const availW = Math.max(8, cell.clientWidth - padX);
-    
-      // 計測用フォント設定（cell の実フォントに寄せる）
-      const style = getComputedStyle(cell);
-      const family = style.fontFamily || 'system-ui, sans-serif';
-      const weight = style.fontWeight || '400';
-    
-      let size = base;
-      while (size > min) {
-        __measure.ctx.font = `${weight} ${size}px ${family}`;
-        // 各行が収まるか？（最長行の幅で判定）
-        const widest = Math.max(...lines.map(l => __measure.ctx.measureText(l).width));
-        const fitsWidth = widest <= availW;
-        // 行数も制限（2行まで等）。収めたい場合は折り返しを許容。
-        const willWrapLines = lines.reduce((cnt, l) => {
-          const w = __measure.ctx.measureText(l).width;
-          return cnt + Math.max(1, Math.ceil(w / Math.max(1, availW)));
-        }, 0);
-        const fitsLines = willWrapLines <= maxLines;
-    
-        if (fitsWidth && fitsLines) break;
-        size -= 1;
-      }
-    
-      // 反映
-      cell.style.fontSize = `${size}px`;
-      cell.style.lineHeight = '1.2';
-      cell.style.whiteSpace = 'pre-wrap';     // 改行・折返し許可
-      cell.style.wordBreak = 'break-word';    // 単語も折り返す
-      cell.style.textOverflow = 'clip';       // 省略記号は不要
-    }
+
     function showLoginModal() {
       document.getElementById('loginModal').style.display = '';
       document.getElementById('appRoot').style.display = 'none';
@@ -348,33 +252,65 @@
         try { await getActiveSessionOrLogout(); } catch (err) {}
       }
     });
-    /* =============================== 状態 =============================== */
-    let employeesAll = [];
-    let employeesVisible = [];
-    let currentUser = { email:null, employee_id:null, department:null, is_active:false, is_admin:false };
-    let grid = null;
-    let currentGridMeta = null;
-    let initialGridSnapshot = [];
+
+    /* =============================== ダーティ管理状態 =============================== */
+    function showOverlay(show = true,msg = '処理中...') {
+      const ov = document.getElementById('scheduleOverlay');
+      if (!ov) return;
+      if (show){
+        ov.querySelector('.overlay-text').textContent = msg;
+        ov.style.display = 'flex';
+      }else{
+        ov.style.display = 'none';
+      }
+    }
+    
     const dirtyCells = new Set();
-    let gridIsEditable = false;
-    let lastDeptSelectValue = '';
-    let lastMonthSelectValue = '';
-    let memoTargetEmployeeId = null;
+    function cellKey(y,x){ return `${y}:${x}`; }
+    function updateDirtyBadge() {
+      const badge = document.getElementById('dirtyBadge');
+      const saveBtn = document.getElementById('gridSaveBtn');
+      const count = dirtyCells.size;
+      const { isProbablyMobile } = detectEnvironment();
 
-    const normalizeCellValue = (value)=> value == null ? '' : String(value);
+      if (badge) {
+        badge.textContent = count;
+        badge.classList.toggle('is-empty', count === 0);
+        badge.style.display = isProbablyMobile ? 'none' : 'inline-flex';
+      }
+      if (saveBtn) {
+        saveBtn.style.display = isProbablyMobile ? 'none' : 'inline-flex';
+      }
+    }
 
-    function resetDirtyState(snapshot = []) {
-      initialGridSnapshot = snapshot.map(row => row.map(normalizeCellValue));
+    function markDirty(y,x,yes){
+      const key = cellKey(y,x);
+      // Prefer current Jspreadsheet instance used by ScheduleGrid
+      const jss = window.GridInstance || grid;
+      const td = jss?.getCellFromCoords?.(x,y);
+      if(yes){ dirtyCells.add(key); td?.classList?.add('dirty-cell'); }
+      else  { dirtyCells.delete(key); td?.classList?.remove('dirty-cell'); }
+      updateDirtyBadge();
+    }
+
+    function clearAllDirty(reset = false,snapshot = []){
+      if(reset){
+        for(const k of dirtyCells){
+          const [y,x] = k.split(':').map(Number);
+          const jss = window.GridInstance || grid;
+          const td = jss?.getCellFromCoords?.(x,y);
+          td?.classList?.remove('dirty-cell');
+        }
+      }else{
+        const normalizeCellValue = (value)=> value == null ? '' : String(value);
+        initialGridSnapshot = snapshot.map(row => row.map(normalizeCellValue));
+      }
       dirtyCells.clear();
       updateDirtyBadge();
     }
 
-    function hasDirtyChanges() {
-      return gridIsEditable && dirtyCells.size > 0;
-    }
-
     function confirmDiscardIfDirty() {
-      if (!hasDirtyChanges()) return true;
+      if (dirtyCells.size == 0) return true;
       return window.confirm('未保存の変更があります。破棄して移動しますか？');
     }
 
@@ -384,6 +320,9 @@
       const monthEl = document.getElementById('monthSelect');
       if (monthEl) lastMonthSelectValue = monthEl.value;
     }
+
+    window.markDirty = markDirty;
+    window.updateDirtyBadge = updateDirtyBadge;
 
     function getCellKeyFromMeta(meta, x, y) {
       if (!meta) return null;
@@ -399,29 +338,6 @@
       if (!rowInfo) return null;
       const empId = emp.id != null ? String(emp.id) : `emp${x}`;
       return `${rowInfo.date}|${rowInfo.slot}|${empId}`;
-    }
-
-    function updateDirtyBadge() {
-      const badge = document.getElementById('dirtyBadge');
-      const saveBtn = document.getElementById('gridSaveBtn');
-      const count = dirtyCells.size;
-      const { isProbablyMobile } = detectEnvironment();
-
-      if (badge) {
-        badge.textContent = count;
-        badge.classList.toggle('is-empty', count === 0);
-        badge.style.display = isProbablyMobile ? 'none' : 'inline-flex';
-      }
-
-      if (saveBtn) {
-        if (isProbablyMobile) {
-          saveBtn.style.display = 'none';
-          saveBtn.disabled = true;
-        } else {
-          saveBtn.style.display = '';
-          saveBtn.disabled = !gridIsEditable || count === 0;
-        }
-      }
     }
 
     // ===== 管理者のメモ対象選択 用ユーティリティ =====
@@ -493,8 +409,6 @@
     }
 
     const monthCache = new Map(); // ym -> normalized items
-    const holidaySet = new Set(); // 'YYYY-MM-DD'
-    const holidaysLoadedYm = new Set();
 
     const $ = (q)=>document.querySelector(q);
     const fmt = new Intl.DateTimeFormat('ja-JP',{ timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
@@ -534,7 +448,7 @@
         touchPoints > 0, uaIsMobile, uaCHMobile, isStandalone
       ].filter(Boolean).length;
 
-      const isProbablyMobile = votes >= 3; // しきい値は2〜4で調整
+      const isProbablyMobile = votes >= 3; // しきい値は2?4で調整
 
       // 参考: “PCっぽさ”
       const isProbablyDesktop =
@@ -544,25 +458,6 @@
 
       return { isProbablyMobile, isProbablyDesktop };
     }
-    /* =============================== 祝日 =============================== */
-    const ymdJST = (date)=> {
-      const p = Object.fromEntries(fmt.formatToParts(date).map(x=>[x.type,x.value]));
-      return `${p.year}-${p.month}-${p.day}`;
-    };
-    async function preloadHolidaysForMonths(months){
-      const need = months.filter(m=>!holidaysLoadedYm.has(m));
-      if(!need.length) return;
-      need.sort();
-      const first = need[0], last = need[need.length-1];
-      const start = new Date(`${first}-01T00:00:00+09:00`);
-      const [ly,lm] = last.split('-').map(Number);
-      const end = new Date(new Date(Date.UTC(ly, lm-1, 1)).setUTCMonth(lm)); // 翌月初
-      const list = holiday_jp.between(start, end) || [];
-      for(const h of list){ holidaySet.add(ymdJST(h.date)); }
-      need.forEach(m=>holidaysLoadedYm.add(m));
-    }
-    const isHoliday = (ymd)=> holidaySet.has(ymd);
-
     /* =============================== 認証＆従業員 =============================== */
     async function loadCurrentUserAndEmployees(){
       const { data:{ session } } = await supabase.auth.getSession();
@@ -616,6 +511,7 @@
       }
       return [];
     }
+
     async function fetchMonthData(ym, token){
       if(monthCache.has(ym)) return monthCache.get(ym);
       const ids = employeesVisible.map(e=>e.id).filter(v=>v!=null);
@@ -628,224 +524,160 @@
       monthCache.set(ym, items);
       return items;
     }
-
-    /* =============================== 行列入替えマトリクス =============================== */
-    function weekday(y,m,d){ const t=[0,3,2,5,0,3,5,1,4,6,2,4]; if(m<3) y-=1; return (y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)+t[m-1]+d)%7; }
-    function dayLabel(ymd, slot){
-      const [y,m,d] = ymd.split('-').map(Number);
-      const wd = '日月火水木金土'[weekday(y,m,d)];
-      return `${d}${slot==='am'?' A':' P'}`;
+    // =============================== 保存API（アップサート/削除） ===============================
+    async function upsertScheduleItems(items){
+      if (!Array.isArray(items) || items.length === 0) return { ok:true, upserts:0, deletes:0 };
+      const { data:{ session } } = await supabase.auth.getSession();
+      const token = session?.access_token; if(!token) throw new Error('未ログイン');
+      const upserts = [];
+      const deletes = [];
+      for (const it of items) {
+        const employee_id = it?.employee_id;
+        const date = (it?.date||'').toString().slice(0,10);
+        const slot = (it?.slot||'').toString().toLowerCase() === 'pm' ? 'pm' : 'am';
+        const place = (it?.place ?? '').toString().trim();
+        if (!employee_id || !date) continue;
+        if (place) upserts.push({ employee_id, date, slot, place });
+        else deletes.push({ employee_id, date, slot });
+      }
+      // 削除 → 追加の順で反映
+      if (deletes.length){
+        const r = await fetch(`${SUPABASE_URL}/functions/v1/schedules-delete`,{
+          method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+          body: JSON.stringify(deletes)
+        });
+        const j = await r.json().catch(()=>({}));
+        if(!r.ok || !j?.ok) throw new Error(j?.error||`delete HTTP ${r.status}`);
+      }
+      if (upserts.length){
+        const r = await fetch(`${SUPABASE_URL}/functions/v1/schedules-upsert`,{
+          method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+          body: JSON.stringify(upserts)
+        });
+        const j = await r.json().catch(()=>({}));
+        if(!r.ok || !j?.ok) throw new Error(j?.error||`upsert HTTP ${r.status}`);
+      }
+      // 触れた月だけキャッシュ破棄
+      const ymSet = new Set(items.map(it => (it?.date||'').toString().slice(0,7)).filter(Boolean));
+      for (const ym of ymSet) { try { monthCache.delete(ym); } catch {} }
+      window.__lastSaveResult = { ok:true, upserts: upserts.length, deletes: deletes.length, touchedMonths: Array.from(ymSet) };
+      return window.__lastSaveResult;
     }
-
+    /* =============================== 行列入替えマトリクス =============================== */
     // 選択部署の社員だけカラムに並べ、行は日×(午前/午後)
-    function buildSwappedMatrix(items, ym, dept){
+    function toScheduleForScheduleGrid(items, ym, dept, employeesVisible) {
       const emps = employeesVisible
-        .filter(e => !dept || (String(e.department||'')===String(dept)))
-        .sort((a,b)=>(a.row_index??0)-(b.row_index??0) || a.name.localeCompare(b.name,'ja'));
-
+        .filter(e => !dept || String(e.department || '') === String(dept))
+        .sort((a,b) => (a.row_index ?? 0) - (b.row_index ?? 0) || a.name.localeCompare(b.name,'ja'));
+      const employeeNames = emps.map(e => e.name);
+      const memoByName = Object.fromEntries(emps.map(e => [e.name, e.note || '']));
+      // 追加: 自分の列 index（currentUser.employee_id と一致する従業員を探す）
+      const myIndex = (function(){
+        try {
+          const myId = currentUser?.employee_id;
+          if (myId == null) return -1;
+          const i = emps.findIndex(e => String(e.id) === String(myId));
+          return i; // 見つからなければ -1
+        } catch { return -1; }
+      })();
+      // month days: ['YYYY-MM-01', ...]
       const [y,m] = ym.split('-').map(Number);
       const last = new Date(y, m, 0).getDate();
-      const days = Array.from({length:last}, (_,i)=>`${y}-${String(m).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`);
+      const mm = String(m).padStart(2,'0');
+      const days = Array.from({ length: last }, (_, i) => `${y}-${mm}-${String(i+1).padStart(2,'0')}`);
 
-      // 2行/日（午前・午後）
+      // date/slot ごとに byName を構築
+      const byDateSlot = new Map(); // d -> { AM: {name:txt}, PM: {name:txt} }
+      const ensure = (d) => { if (!byDateSlot.has(d)) byDateSlot.set(d, { AM:{}, PM:{} }); return byDateSlot.get(d); };
+
+      for (const it of items || []) {
+        const d = String(it?.date || '').trim();
+        if (!d) continue;
+        const slot = (String(it?.slot || '').toUpperCase() === 'PM') ? 'PM' : 'AM';
+        const emp = emps.find(e => String(e.id) === String(it.employee_id));
+        if (!emp) continue;
+        const bucket = ensure(d)[slot];
+        const prev = bucket[emp.name] || '';
+        const add = (it.title || '').trim();
+        bucket[emp.name] = prev ? (prev + (add ? '\n' + add : '')) : add;
+      }
+
+      const schedule = [];
       const rowKeys = [];
-      const rowLabels = [];
-      for(const d of days){
-        rowKeys.push({date:d, slot:'am'}); rowLabels.push(dayLabel(d,'am'));
-        rowKeys.push({date:d, slot:'pm'}); rowLabels.push(dayLabel(d,'pm'));
+      for (const d of days) {
+        const row = byDateSlot.get(d) || { AM:{}, PM:{} };
+        schedule.push({ date: d, slot: 'AM', byName: row.AM });
+        rowKeys.push({ date: d, slot: 'am' });
+        schedule.push({ date: d, slot: 'PM', byName: row.PM });
+        rowKeys.push({ date: d, slot: 'pm' });
       }
 
-      // items を (date, slot, empId) ごとに集計
-      const byKey = new Map(); // `${date}|${slot}|${empId}` -> [texts]
-      for(const it of items){
-        const k = `${it.date}|${it.slot}|${it.employee_id}`;
-        if(!byKey.has(k)) byKey.set(k, []);
-        byKey.get(k).push(it.title);
-      }
-      const columns = emps.map(e => ({ type:'text', title:e.name, width:80 }));
-      const data = rowKeys.map(({date,slot})=>{
-        const row = [];
-        for (const e of emps) {
-          const k = `${date}|${slot}|${e.id}`;
-          const txt = (byKey.get(k)||[]).join('\n');
-          row.push(txt);
-        }
-        return row;
-      });
-
-      const colMeta = { emps, rowKeys, rowLabels, ym };
-      return { columns, data, colMeta };
-    }
-
-    function classesForYmd(ymd){
-      const [y,m,d] = ymd.split('-').map(Number);
-      const wd = weekday(y,m,d);
-      const cls = [];
-      if (ymd===todayYmd()) cls.push('ht-today');
-      if (wd===6) cls.push('ht-sat');
-      if (wd===0) cls.push('ht-sun');
-      if (isHoliday(ymd)) cls.push('ht-holiday');
-      return cls;
+      const meta = {
+        employees: employeeNames,                    // 表示用（既存）
+        labels: { date:'Date', slot:'Slot', am:'AM', pm:'PM', memo:'' },
+        emps: emps.map(e => ({ id: e.id, name: e.name })), // ★ 保存用：列→社員ID
+        rowKeys,                                     // ★ 保存用：行→{date,slot}
+      };
+      return { meta, schedule, memoByName, myIndex };
     }
 
     async function renderGrid(ym, dept){
-      const { access_token: token } = await getActiveSessionOrLogout(); // ← ここで期限検査
-      await preloadHolidaysForMonths([ym]);
-      const items = await fetchMonthData(ym, token);
-      const { columns, data, colMeta } = buildSwappedMatrix(items, ym, dept);
+      const { access_token: token } = await getActiveSessionOrLogout();
+      showOverlay(true,'読込中...');
+      try {
+        // Simple mode: delegate to separated minimal initializer first
+        if (window.ScheduleGrid && typeof window.ScheduleGrid.init === 'function') {
+          const el = document.getElementById('grid');
+          const env = detectEnvironment();
+          const commonUx = {
+            dataColStart: 2,
+            enableTextFit: true,
+            enableInitialTextFit: true,
+            enterBehavior: 'down',
+            enableSelectionTracker: true,
+            allowCopyEmptyGuard: true,
+            allowHorizontalWheel: false,
+            onChangeCleaner: true,
+            autoScrollToToday: true,
+            tym: ym, 
+          };
+          const desktopUx = {
+            ...commonUx,
+            minPx: GridControl.SHRINK_MIN_PX,
+            allowPaste: true,
+            editable: true,
+            enableFillHandle: false,
+            enableClickOpenEditor: true
+          };
+          const mobileUx = {
+            ...commonUx,
+            minPx: GridControl.SHRINK_MIN_PX,
+            allowPaste: false,
+            editable: false,
+            enableFillHandle: false,
+            enableClickOpenEditor: false
+          };
+          const ux = env.isProbablyMobile ? mobileUx : desktopUx;
+          // 1) APIから月データ取得（既存関数）
+          const items = await fetchMonthData(ym, token);
 
-      // ★ メモ行を作成（A列は「メモ」固定、以降は各従業員の note）
-      const memoRow = [...colMeta.emps.map(e => (e.note || ''))];
-      const dataWithMemo = [memoRow, ...data];  // 先頭に差し込み
-      const myId = currentUser?.employee_id ?? null;
-      const myEmail = (currentUser?.email || '').toLowerCase();
-      const myIdxInEmps = colMeta.emps.findIndex(e =>
-        (myId && String(e.id) === String(myId)) ||
-        ((e?.email || '').toLowerCase() === myEmail)
-      );
-      const myCol = (myIdxInEmps >= 0) ? myIdxInEmps : null; // ← 0は日付列なので+1
-      const host = document.getElementById('grid');
-      host.innerHTML = '';
-      
-      // ← 行ヘッダ用のラベルを rows メタに詰める（0行目はメモ）
-      const rowHeaderLabels = ['メモ', ...colMeta.rowLabels];  // 例: ['メモ','1AM','1PM',...]
-      const rowsMeta = {};
-      rowHeaderLabels.forEach((txt, i) => { rowsMeta[i] = { title: String(txt) }; });
-
-      const { isProbablyDesktop } = detectEnvironment();
-      const allowEditing = !!isProbablyDesktop;
-      const columnDefs = columns.map(c => ({ ...c, readOnly: !allowEditing }));
-
-      currentGridMeta = colMeta;
-      gridIsEditable = allowEditing;
-      const initialSnapshot = dataWithMemo.map(row => row.map(normalizeCellValue));
-      resetDirtyState(initialSnapshot);
-
-      updateDirtyBadge();
-
-      const applyDirtyChange = (instance, colIndex, rowIndex, providedValue, cellEl) => {
-        if (!gridIsEditable) return;
-        const key = getCellKeyFromMeta(currentGridMeta, colIndex, rowIndex);
-        if (!key) return;
-        const currentValue = normalizeCellValue(
-          providedValue !== undefined ? providedValue : instance.getValueFromCoords(colIndex, rowIndex)
-        );
-        const originalRow = initialGridSnapshot[rowIndex] || [];
-        const originalValue = normalizeCellValue(originalRow[colIndex]);
-        if (currentValue === originalValue) {
-          dirtyCells.delete(key);
-        } else {
-          dirtyCells.add(key);
-        }
-        let targetCell = (cellEl && cellEl.nodeType === 1) ? cellEl : null;
-        if (!targetCell && typeof instance.getCellFromCoords === 'function') {
-          try { targetCell = instance.getCellFromCoords(colIndex, rowIndex); } catch (err) {}
-        }
-        if (!targetCell && typeof instance.getCell === 'function') {
-          try { targetCell = instance.getCell(colIndex, rowIndex); } catch (err) {}
-        }
-        if (targetCell) {
-          if (dirtyCells.has(key)) targetCell.classList.add('dirty-cell');
-          else targetCell.classList.remove('dirty-cell');
-        }
-        updateDirtyBadge();
-      };
-
-      grid = jspreadsheet(host, {
-        data: dataWithMemo,
-        columns: columnDefs,
-        rowHeaders: true,                 // 有効化だけする
-        rowHeaderWidth: 96, // ← 行ヘッダの希望幅
-        rows: rowsMeta,             // ★ ここで各行ヘッダのタイトルを設定
-        freezeRows: 1,         // ← メモ行（先頭1行）を固定
-        tableOverflow:true,
-        tableHeight: '400px',
-        tableWidth: '100%',     // ← 幅いっぱいに広げる
-        editable: allowEditing,            // デスクトップ環境では編集可
-        selectionCopy: true,
-        onchange: (instance, cell, x, y, value) => {
-          if (!gridIsEditable) return;
-          if (Array.isArray(x)) {
-            x.forEach((colIndex, idx) => {
-              const rowIndex = Array.isArray(y) ? y[idx] : y;
-              const val = Array.isArray(value) ? value[idx] : undefined;
-              applyDirtyChange(instance, colIndex, rowIndex, val, Array.isArray(cell) ? cell[idx] : cell);
-            });
-          } else {
-            applyDirtyChange(instance, x, y, value, cell);
+          // 2) 従業員 → 列見出し、items → schedule に成形
+          const { meta, schedule, memoByName, myIndex } = toScheduleForScheduleGrid(items, ym, dept, employeesVisible);
+          // 3) ScheduleGrid へ投入（第2引数 opts で meta+schedule を渡す）
+          window.GridInstance = window.ScheduleGrid.init(el, { meta, schedule, memoByName, myIndex, isAdmin : currentUser?.is_admin,ym }, ux);
+          // 同期: 既存コード互換のため旧グローバルにも保持
+          grid = window.GridInstance;
+          // ★ 保存用メタを保持（getCellKeyFromMeta が使う構造と揃える）
+          currentGridMeta = {
+            emps: meta.emps,         // [{id,name}] 列順
+            rowKeys: meta.rowKeys,   // [{date,slot}] 行順（0=AM,1=PM…）
           }
-        },
-        // 編集系の保険
-        oneditionstart: (inst, cell) => {
-          if (allowEditing) return;
-          try{ inst.closeEditor(cell, true); }catch{}
-          return false;
-        },
-        onbeforechange: () => {
-          if (!allowEditing) return false;
-        },
-        onbeforepaste:  () => {
-          if (!allowEditing) return false;
-        },
-        onbeforeinsertrow: () => {
-          if (!allowEditing) return false;
-        },
-        onbeforeinsertcolumn: () => {
-          if (!allowEditing) return false;
-        },
-        onbeforedeleterow: () => {
-          if (!allowEditing) return false;
-        },
-        onbeforedeletecolumn: () => {
-          if (!allowEditing) return false;
-        },
-        allowInsertColumn:false, allowDeleteColumn:false,
-        allowInsertRow:false, allowDeleteRow:false,
-        updateTable: (el, cell, x, y, src, val) => {
-          cell.classList.remove('ht-today','ht-sat','ht-sun','ht-holiday','memo-row','myself','dirty-cell');
-          cell.style.color = '';
-          const memoOffset = 1;                 // 先頭にメモ行がある
-          const dirtyKey = gridIsEditable ? getCellKeyFromMeta(currentGridMeta, x, y) : null;
-          if (dirtyKey && dirtyCells.has(dirtyKey)) {
-            cell.classList.add('dirty-cell');
-          }
-          const dataRow = y - memoOffset;       // 実データに対応する行index（rowKeys用）
-        
-          // --- メモ行（y===0）は装飾だけ ---
-          if (dataRow < 0) {
-            cell.classList.add('memo-row');
-            const text = (val || '').toString();
-            if (x >= 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 3 });
-            return;
-          }
-          
-          // --- ここから通常データ行（rowKeys は dataRow を使う） ---
-          const rk = colMeta.rowKeys[dataRow];
-          if (!rk) return;
-        
-          // まず既存の休日系クラスを除去
-          for (const c of ['ht-today','ht-sat','ht-sun','ht-holiday']) cell.classList.remove(c);
-        
-          // 土日祝・今日の色付け
-          const classes = classesForYmd(rk.date);
-          classes.forEach(c => cell.classList.add(c));
-        
-          // 「休/有/代/振」を含むセルは休日色
-          const text = (val || '').toString();
-          if (/[休有代振]/.test(text)) cell.classList.add('ht-holiday');
-          
-          // 自分の列を赤く（セル側）
-          if (myCol != null && x === myCol) {
-            cell.classList.add('myself');        // 強いCSSで赤
-            cell.style.color = '#d32f2f';        // 競合対策の保険
-          }
-          
-          // 縮小表示（データ列のみ）
-        if (x >= 0 && text) shrinkToFit(cell, text, { base: 14, min: 10, maxLines: 2 });
+        };
+      } finally {
+        showOverlay(false);
       }
-    });
-      snapshotSelectValues();
     }
+
     // 現在のセレクト状態に合わせて再描画する
     async function refreshView({ companyOnly = false } = {}) {
       const ym   = document.getElementById('monthSelect').value;
@@ -858,7 +690,6 @@
       if (dept === '__TODAY__') {
         await renderTodayCards();            // 今日の予定カードを更新
       } else {
-        await preloadHolidaysForMonths([ym]);
         await renderGrid(ym, dept);          // グリッドを更新
       }
       await renderCompanyList(ym);           // ついでにお知らせも更新
@@ -961,7 +792,7 @@
       }
     }
 
-    // クリック（※「お知らせ」はラベル非ボタン。左の＋/−のみ反応）
+    // クリック（※「お知らせ」はラベル非ボタン。左の＋/?のみ反応）
     for(const [k,conf] of Object.entries(panels)){
       conf.btn?.addEventListener('click', ()=> openPanel(k));
     }
@@ -1040,7 +871,7 @@
           arr.sort((a,b)=>(a.timestart||'').localeCompare(b.timestart||''));
           for(const e of arr){
             const t1=e.timestart?e.timestart.slice(0,5):'', t2=e.timeend?e.timeend.slice(0,5):'';
-            const tt=t1&&t2?`${t1}–${t2}`:(t1||'');
+            const tt=t1&&t2?`${t1}?${t2}`:(t1||'');
             const del = canDeleteNotice ? `<button class="ev-del" data-ev-id="${e.id}" style="color:#e53935;background:transparent;border:none;cursor:pointer">削除</button>` : '';
             html += `<li class="ev-item" style="display:flex;gap:8px;align-items:flex-start;">
               ${del}<div class="ev-main"><strong style="white-space:pre-wrap">${esc(e.event)}</strong> ${tt}${e.memo?`<div class="muted" style="white-space:pre-wrap">${esc(e.memo)}</div>`:''}</div>
@@ -1110,12 +941,20 @@
 
     // 予定（午前・午後）
     document.getElementById('quickSaveBtn2').addEventListener('click', async ()=>{
+      showOverlay(true,'保存中...');
       try{
         const date = toYMD(document.getElementById('qDate2').value);
         if(!date){ alert('日付(YYYY-MM-DD)を入力'); return; }
         const am = (document.getElementById('qAm2').value||'').trim();
         const pm = (document.getElementById('qPm2').value||'').trim();
-        let employee_id; if (currentUser?.is_admin) { const v = document.getElementById('memoTargetSelect')?.value; employee_id = v ? Number(v) : await ensureMyEmployeeId(); } else { employee_id = await ensureMyEmployeeId(); }
+        let employee_id;
+        if (currentUser?.is_admin) {
+          const v = document.getElementById('memoTargetSelect')?.value;
+          // 数字変換せず、そのまま文字列を使う
+          employee_id = v ? v : await ensureMyEmployeeId();
+        } else {
+          employee_id = await ensureMyEmployeeId();
+        }
         const upserts=[], deletes=[];
         if(am) upserts.push({ employee_id, date, slot:'am', place:am }); else deletes.push({ employee_id, date, slot:'am' });
         if(pm) upserts.push({ employee_id, date, slot:'pm', place:pm }); else deletes.push({ employee_id, date, slot:'pm' });
@@ -1130,16 +969,18 @@
           const r=await fetch(`${SUPABASE_URL}/functions/v1/schedules-upsert`,{ method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(upserts) });
           const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) throw new Error(j?.error||`HTTP ${r.status}`);
         }
-        
         // ★ 追加：当月キャッシュ破棄 → 再描画
         const ym = (document.getElementById('qDate2').value || '').slice(0,7);
         if (ym) monthCache.delete(ym);
         await refreshView();
         alert('更新しました');
-      }catch(e){ alert('保存失敗：'+e.message); }
+      }catch(e){ alert('保存失敗：'+e.message); } finally {
+        showOverlay(false);
+      }
     });
-    // メモ（自分）
+    // メモ
     document.getElementById('memoSaveBtn').addEventListener('click', async ()=>{
+      showOverlay(true,'保存中...');
       try{
         const noteRaw = document.getElementById('qNote2')?.value;
         const note = typeof noteRaw === 'string' ? noteRaw : String(noteRaw ?? '');
@@ -1180,11 +1021,14 @@
         try { updateMemoTargetUI({ preserveSelection: true }); } catch {}
         await refreshView();
         alert('メモを保存しました');
-      }catch(e){ alert('保存失敗: '+ e.message); }
+      }catch(e){ alert('保存失敗: '+ e.message); } finally {
+        showOverlay(false);
+      }
     });
     /* ===== 会社予定登録（管理者）===== */
     document.getElementById('companySaveBtn2').addEventListener('click', async ()=>{
       if(!currentUser?.is_admin) return alert('権限がありません');
+      showOverlay(true,'保存中...');
       try{
         const kind = document.getElementById('cKind2').value;
         const date = toYMD(document.getElementById('cDate2').value);
@@ -1205,7 +1049,56 @@
         const j=await r.json().catch(()=>({})); if(!r.ok || j?.ok===false) throw new Error(j?.error||`HTTP ${r.status}`);
         await refreshView({ companyOnly: true });
         alert('全体スケジュールを登録しました');
-      }catch(e){ alert('登録失敗：'+e.message); }
+      }catch(e){ alert('登録失敗：'+e.message); } finally {
+        showOverlay(false);
+      }
+    });
+    document.getElementById('gridSaveBtn')?.addEventListener('click', async () => {
+      if (dirtyCells.size == 0) return;
+
+      showOverlay(true,'保存中...');
+      try {
+        const dataColStart = 2; // C列〜
+        const payload = [];
+        // dirtyCells に入っている座標だけ処理（全部走査でも可）
+        for (const key of dirtyCells) {
+          const [y, x] = key.split(':').map(Number);
+          if (y === 0) continue;             // ← メモ行は対象外
+          if (x < dataColStart) continue;    // ← A,B列は対象外
+          // 値を取得
+          const place = String(grid.getValueFromCoords(x, y) ?? '').trim();
+          // 空文字は「削除扱い」で送るのか、無視するのかはAPI仕様に合わせて調整
+          // ここでは空も送る（サーバー側で空なら削除/NULLにする想定）
+
+          // 行→ date/slot
+          const date = (grid.getValueFromCoords(0, y) || '').toString().trim()
+                      || (grid.getValueFromCoords(0, y-1) || '').toString().trim(); // マージの影響対策
+          const slotRaw = (grid.getValueFromCoords(1, y) || '').toString().trim().toUpperCase();
+          const slot = (slotRaw === 'PM') ? 'pm' : 'am';
+
+          // 列→ employee_id（meta.emps を使う）
+          const empIdx = x - dataColStart;
+          const empId  = String(currentGridMeta?.emps?.[empIdx]?.id ?? '');
+
+          if (!date || !empId) continue;
+
+          payload.push({ employee_id: empId, date, slot, place });
+        }
+
+        if (payload.length === 0) { showOverlay(false); return; }
+
+          console.log(payload)
+        // ★ここでアップサートAPI呼び出し（実装済みの fetch/Function を使う）
+        await upsertScheduleItems(payload); // ← あなたの既存API関数名に合わせて
+
+        // 成功したらダーティをクリア
+        clearAllDirty(true);
+        alert('保存しました：変更'  + `${window.__lastSaveResult?.upserts ?? 0} / 削除 ${window.__lastSaveResult?.deletes ?? 0}`);
+      } catch (err) {
+        alert('保存に失敗しました: ' + (err?.message || err));
+      } finally {
+        showOverlay(false);
+      }
     });
 
     /* =============================== 起動 =============================== */
@@ -1251,12 +1144,13 @@
           if (sel) sel.value = '__TODAY__';
           snapshotSelectValues();
 
+          clearAllDirty(true,[]);
           await renderTodayCards();
           document.getElementById('gridPanel').style.display  = 'none';
           document.getElementById('todayPanel').style.display = '';
         } else {
+          clearAllDirty(true,[]);
           const ym = document.getElementById('monthSelect').value;
-          await preloadHolidaysForMonths([ym]);
           await renderGrid(ym, document.getElementById('deptSelect').value);
         }
         (async function afterLoginInit(){
@@ -1275,6 +1169,8 @@
 
             // 月変更に追従
             document.getElementById('monthSelect').addEventListener('change', ()=>{
+              if (!confirmDiscardIfDirty()) { e.preventDefault(); e.target.value = lastMonthSelectValue; return; }
+  
               renderCompanyList(document.getElementById('monthSelect').value);
             });
           }catch (err) {}
@@ -1312,8 +1208,7 @@
         const deptValue = $('#deptSelect').value;
         if (deptValue === '__TODAY__') {
           lastDeptSelectValue = deptValue;
-          gridIsEditable = false;
-          resetDirtyState([]);
+          clearAllDirty(true,[]);
           await renderTodayCards();
           snapshotSelectValues();
           return;
@@ -1354,7 +1249,7 @@
       let depIndex = 0;
       for (const [dep, list] of byDept) {
         depIndex++;
-        const colorClass = `dep-${((depIndex - 1) % 8) + 1}`;  // dep-1〜dep-8をループ
+        const colorClass = `dep-${((depIndex - 1) % 8) + 1}`;  // dep-1?dep-8をループ
 
         // セクション
         const sec = document.createElement('section');
@@ -1407,20 +1302,23 @@
     /** 今日のカード表示：データ読み出し→描画→表示切替 */
     async function renderTodayCards(){
       const { access_token: token } = await getActiveSessionOrLogout();
-
+      showOverlay(true,'読込中...');
+      try {
       const ym = ymOf(new Date()); // 今日の月
       // 既存の月データAPIを使って当月の items を取得し、今日だけ抽出
       const items = await fetchMonthData(ym, token);
       renderTodayCardsFrom(items);
 
-      gridIsEditable = false;
       currentGridMeta = null;
-      resetDirtyState([]);
+      clearAllDirty(true,[]);
 
       // 表示切替
       document.getElementById('gridPanel').style.display  = 'none';
       document.getElementById('todayPanel').style.display = '';
       snapshotSelectValues();
+      } finally {
+        showOverlay(false);
+      }
     }
     // 部署変更
     document.getElementById('deptSelect').addEventListener('change', async ()=>{
@@ -1433,9 +1331,8 @@
       lastDeptSelectValue = val;
 
       if (val === '__TODAY__') {
-        gridIsEditable = false;
         currentGridMeta = null;
-        resetDirtyState([]);
+        clearAllDirty(true,[]);
         await renderTodayCards();  // ← カードモード
         snapshotSelectValues();
         return;
@@ -1444,6 +1341,7 @@
       // ← グリッドモード
       document.getElementById('todayPanel').style.display = 'none';
       document.getElementById('gridPanel').style.display  = '';
+      clearAllDirty(true,[]);
       await renderGrid(document.getElementById('monthSelect').value, val);
       snapshotSelectValues();
     });
@@ -1472,19 +1370,19 @@
 <body>
   <header>
     <div class="bar">
-      <strong>行動予定表（モバイル）</strong>
+      <strong>行動予定表</strong>
       <span class="grow"></span>
-      <button id="refreshBtn" class="btn">⟳</button>
+      <button id="refreshBtn" class="btn">🔃</button>
       <button id="helpBtn" class="btn">？</button>
       <button id="logoutBtn" class="btn">✕</button>
     </div>
     <div class="bar">
       <button id="gridSaveBtn" class="btn btn-primary" type="button" style="display:none;">保存</button>
       <span id="dirtyBadge" class="dirty-badge">0</span>
-      <label class="muted">部署</label>
-      <select id="deptSelect" class="grow"></select>
       <label class="muted">月</label>
       <select id="monthSelect"></select>
+      <label class="muted">部署</label>
+      <select id="deptSelect" class="grow"></select>
     </div>
   </header>
 
@@ -1502,7 +1400,7 @@
   <div id="appPanel" style="display:none;">
    <!-- 相互排他トグル(お知らせ/クイック登録/メモ/会社予定登録) -->
     <div class="togglebar">
-      <!-- お知らせ：非ボタンはラベルのみ。切替は左の（＋/−）で -->
+      <!-- お知らせ：非ボタンはラベルのみ。切替は左の（＋/?）で -->
       <button id="tglNotice" class="tgl" type="button" aria-pressed="false" data-target="noticePanel">＋</button>
       <span>お知らせ</span>
 
@@ -1523,7 +1421,7 @@
       <div id="companyListBody" class="muted">読み込み中…</div>
     </div>
 
-    <!-- クイック登録（新パネル）※既存の#quickPanelとは別。中身はシンプル -->
+    <!-- クイック登録 -->
     <div id="quickPanel2" class="panel quick-section" style="display:none;">
       <div class="row">
         <label>日付</label>
@@ -1531,11 +1429,13 @@
       </div>
       <div class="row" style="margin-top:8px;">
         <input id="qAm2" type="text" placeholder="午前（例：現場A）" style="flex:1 1 200px;">
+      </div>
+      <div class="row" style="margin-top:8px;">
         <input id="qPm2" type="text" placeholder="午後（例：現場B）" style="flex:1 1 200px;">
       </div>
     </div>
 
-    <!-- メモ（自分の） -->
+    <!-- メモ -->
     <div id="memoPanel" class="panel quick-section" style="display:none;">
       <div id="memoTargetWrap" class="row" style="gap:6px;margin-bottom:6px;display:none;">
         <label for="memoTargetSelect">対象</label>
@@ -1555,6 +1455,8 @@
         <input id="cDateEnd2" type="date" placeholder="終了日(任意)">
         <input id="cStart2" type="text" placeholder="開始 0930/09:30" inputmode="numeric" style="max-width:140px;">
         <input id="cEnd2"   type="text" placeholder="終了 1730/17:30" inputmode="numeric" style="max-width:140px;">
+      </div>
+      <div class="row" style="gap:6px;flex-wrap:wrap;">
         <input id="cTitle2" type="text" placeholder="行事名/タイトル" style="flex:1 1 220px;">
       </div>
       <div class="row" style="margin-top:6px;">
@@ -1580,19 +1482,33 @@
       <h2 id="helpTitle">使い方（モバイル）</h2>
       <div id="helpBody" class="help-body">
         <p>※URLや仕様は変更になる可能性があります<br>
-        ・PC版との違い<br>
-        スケジュールの表示は閲覧のみで編集は不可。<br>
-        表示は部署・月を選択してください。<br>
-        PC版とは縦横が入れ替わっています。<br>
-        スケジュールの編集登録は自分の分のみ可能<br>
-        メモ欄は編集不可<br>
-        上部クイック登録からのみ編集可能です<br>
+        <br><strong>動作不良時について</strong><br>
+        ボタンが反応しない・保存出来ない・うまく表示されない などが起こったときは<br>
+        保存をせずに<br>・一度ブラウザを落とす<br>・更新(F5)する<br>・ログアウトして再度ログインする<br>
+        などの対応をお願いします<br>
+        メモはいままでと違い全ての月で共通です。下のグリット上では編集不可<br>
+        上部メモ登録欄からのみ編集可能です<br>
+        <br><strong>操作について</strong><br>
+        セルをクリックすると入力欄が開きます。<br>
+        もしエクセルのように中の文字でなくセルを選択したい場合はクリックを長押ししてください。<br>
+        右クリック操作は可能です。「保存」ボタンを押すと変更が保存されます。<br>
+        右クリックメニューの「Save As」はスケジュールの保存とは別の機能なので使わないでください。<br>
+        <br><strong>管理者向け設定について</strong><br>管理者は全員のスケジュール・メモを編集可能になっています<br>さらに上部の全体表示登録欄からお知らせや行事の登録・削除が可能です。<br>「全体表示登録」ボタンの左隣の「＋」または「－」ボタンで入力欄を開閉できます。<br>入力欄に予定を入れて「全体」ボタンを押すと保存されます。<br>削除は削除したい内容の左隣の「削除」のボタンを押してください。<br>
+        全体表示登録、入力欄詳細<br>・種別(必須)-お知らせか行事か選択出来ます。お知らせなら優先して上部に表示<br>・開始日(必須)-行事なら開催日、お知らせなら表示期間を入力<br>・終了日-行事なら複数日にわたる場合入力、お知らせなら表示期間の最後を入力<br>・開始-行事のみ入力、特に入力しなくてもOK(例：0905もしくは9:03)<br>・終了-行事のみ入力、特に入力しなくてもOK(例：0905もしくは9:03)<br>・行事名タイトル(必須)-改行不可<br>・備考内容-改行可能、お知らせの場合は必須<br>
+        <br><strong>その他モバイル機能</strong><br>
         ブラウザ下部のボタンからホーム画面に追加することで<br>
-        上下のノッチ・URL欄が無い状態での表示が可能です</p>
+        上下のノッチ・URL欄が無い状態での表示が可能です<br>
+        ※フィルハンドル、祝日適用については後日実装予定</p>
       </div>
     </div>
+  </div>
+  <div id="scheduleOverlay" class="schedule-overlay">
+    <div class="overlay-text">処理中...</div>
   </div>
   <footer></footer>
 </body>
 </html>
+
+
+
 
