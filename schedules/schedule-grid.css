@@ -10,6 +10,7 @@
   max-width: 100% !important;
   position: relative;
 }
+
 /* Day highlights */
 .ht-today{ background:#fff9db !important; }
 .ht-sat  { background:#e6ffed !important; }
@@ -52,4 +53,21 @@
 .jexcel .my-col {
   color: #d32f2f !important;
   font-weight: 700;
+}
+
+/* 固定列（position: sticky が当たるセル）を最前面＆塗りつぶし */
+.jexcel td[style*="position: sticky"],
+.jexcel th[style*="position: sticky"] {
+  z-index: 10;
+  background-color: #fff;       /* 透け防止 */
+  background-clip: padding-box;
+}
+
+/* 列ヘッダーも上部で固定（縦スクロール時） */
+.jexcel thead th,
+.jexcel thead td {
+  position: sticky;
+  top: 0;
+  z-index: 11;                  /* 固定列より一段前面 */
+  background-color: #fff;
 }
