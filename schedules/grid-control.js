@@ -712,136 +712,6 @@ function __todayYmdLocal() {
     };
   }
 
-  // ========================= Fill Handle (ドラッグで自動入力) =========================
-  function __installFillHandle(jss, container, { dataColStart = 0 } = {}) {
-    if (jss._fillHandleInstalled) return;
-    jss._fillHandleInstalled = true;
-    // コンテナを絶対配置の基準に
-    const cs = getComputedStyle(container);
-    if (!cs || cs.position === 'static') {
-      try { container.style.position = 'relative'; } catch {}
-    }
-    // ハンドル要素を作成
-    const handle = document.createElement('div');
-    handle.className = 'gc-fill-handle';
-    Object.assign(handle.style, {
-      position: 'absolute', width: '8px', height: '8px',
-      background: '#1a73e8', border: '1px solid #fff', borderRadius: '2px',
-      boxShadow: '0 0 0 1px rgba(0,0,0,.25)',
-      cursor: 'crosshair', zIndex: 20, display: 'none'
-    });
-    container.appendChild(handle);
-    let anchor = null; // { x, y, value }
-    let dragging = false;
-    function getCoordsFromCell(td){
-      if (!td) return null;
-      const ay = td.getAttribute('y') ?? td.getAttribute('data-y') ?? td.dataset?.y;
-      const ax = td.getAttribute('x') ?? td.getAttribute('data-x') ?? td.dataset?.x;
-      if (ax == null || ay == null) return null;
-      const x = Number(ax), y = Number(ay);
-      return (Number.isFinite(x) && Number.isFinite(y)) ? { x, y } : null;
-    }
-    function placeHandleOnSelection(){
-      try {
-        // 直近の選択範囲から右下セルを決定
-        let x2, y2;
-        if (jss._lastSel && jss._lastSel.x2 != null) { x2 = Number(jss._lastSel.x2); y2 = Number(jss._lastSel.y2); }
-        else if (typeof jss.getSelected === 'function') {
-          const sel = jss.getSelected();
-          if (sel && sel.length >= 4) { x2 = Number(sel[2]); y2 = Number(sel[3]); }
-        }
-        if (!Number.isFinite(x2) || !Number.isFinite(y2)) { handle.style.display = 'none'; return; }
-        if (x2 < dataColStart || y2 < 1) { handle.style.display = 'none'; return; }
-
-        const td = jss.getCellFromCoords(x2, y2);
-        if (!td || td.classList.contains('readonly')) { handle.style.display = 'none'; return; }
-
-        const r1 = td.getBoundingClientRect();
-        const r2 = container.getBoundingClientRect();
-        const px = (r1.right - r2.left) - 5;
-        const py = (r1.bottom - r2.top) - 5;
-        handle.style.transform = `translate(${Math.floor(px)}px, ${Math.floor(py)}px)`;
-        handle.style.display = '';
-      } catch { handle.style.display = 'none';}
-    }
-    // 選択変更時にハンドル位置を更新
-    const prevSel = jss.options.onselection;
-    jss.options.onselection = function(el, x1, y1, x2, y2){
-      try { placeHandleOnSelection(); } catch {}
-      if (typeof prevSel === 'function') { try { prevSel(el, x1, y1, x2, y2); } catch {} }
-    };
-    // ドラッグ開始
-    handle.addEventListener('mousedown', (ev) => {
-      ev.preventDefault(); ev.stopPropagation();
-      try {
-        // アンカーは現在の右下セル
-        let x2, y2;
-        if (jss._lastSel && jss._lastSel.x2 != null) { x2 = Number(jss._lastSel.x2); y2 = Number(jss._lastSel.y2); }
-        else if (typeof jss.getSelected === 'function') {
-          const sel = jss.getSelected();
-          if (sel && sel.length >= 4) { x2 = Number(sel[2]); y2 = Number(sel[3]); }
-        }
-        if (!Number.isFinite(x2) || !Number.isFinite(y2)) return;
-        const td = jss.getCellFromCoords(x2, y2);
-        if (!td || td.classList.contains('readonly')) return;
-        const val = jss.getValueFromCoords(x2, y2);
-        anchor = { x: x2, y: y2, value: val };
-        dragging = true;
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp, { once: true });
-      } catch {}
-    });
-    function onMove(ev){
-      if (!dragging) return;
-      // 簡易：プレビューは省略（必要なら範囲強調クラスを付与）
-    }
-    function onUp(ev){
-      document.removeEventListener('mousemove', onMove);
-      dragging = false;
-      if (!anchor) return;
-      try {
-        const el = document.elementFromPoint(ev.clientX, ev.clientY);
-        const td = el instanceof HTMLElement ? el.closest('td') : null;
-        const c = getCoordsFromCell(td);
-        if (!c) { anchor = null; return; }
-
-        // 1方向にフィル（縦または横）。両方動いたら差分の大きい軸を優先。
-        const dx = c.x - anchor.x;
-        const dy = c.y - anchor.y;
-        let isVert = Math.abs(dy) >= Math.abs(dx);
-        if (dx === 0 && dy === 0) { anchor = null; return; }
-
-        const srcVal = anchor.value ?? '';
-        if (isVert) {
-          const y1 = Math.min(anchor.y, c.y) + 1;
-          const y2 = Math.max(anchor.y, c.y);
-          for (let y = y1; y <= y2; y++) {
-            if (y < 1) continue; // ヘッダ回避
-            const x = anchor.x; if (x < dataColStart) continue;
-            const cell = jss.getCellFromCoords(x, y);
-            if (!cell || cell.classList.contains('readonly')) continue;
-            try { jss.setValueFromCoords(x, y, srcVal); } catch {}
-          }
-        } else {
-          const x1 = Math.min(anchor.x, c.x) + 1;
-          const x2 = Math.max(anchor.x, c.x);
-          for (let x = x1; x <= x2; x++) {
-            if (x < dataColStart) continue;
-            const y = anchor.y; if (y < 1) continue;
-            const cell = jss.getCellFromCoords(x, y);
-            if (!cell || cell.classList.contains('readonly')) continue;
-            try { jss.setValueFromCoords(x, y, srcVal); } catch {}
-          }
-        }
-      } finally {
-        anchor = null;
-        // 終了後にハンドルを再配置
-        requestAnimationFrame(placeHandleOnSelection);
-      }
-    }
-    // 初期配置（遅延）
-    setTimeout(() => { try { placeHandleOnSelection(); } catch {} }, 0);
-  }
   // === クリーニング/ダーティ/休日ハイライト ===
   function _attachOnChangeCleaner(jss) {
     if (!jss || jss._onChangeCleanerInstalled) return;  // 二重適用防止
@@ -918,8 +788,6 @@ function __todayYmdLocal() {
     enableSelectionTracker = true,
     enableClickOpenEditor = true,
     onChangeCleaner = false,
-    // fill handle (auto-fill by dragging bottom-right handle)
-    enableFillHandle = false,
     // ▼ 追加：初期表示で今日まで横スクロール
     autoScrollToToday = false,
     tym = null,                 // 'YYYY-MM' を渡すと「今月のときのみ」発火
@@ -939,8 +807,7 @@ function __todayYmdLocal() {
       requestAnimationFrame(() => __applyInitialShrinkAll(jss, container, dataColStart));
     }
     if (onChangeCleaner) {_attachOnChangeCleaner(jss);}    
-    if (autoScrollToToday) {_autoScrollToToday(jss, container, tym);}    
-    if (enableFillHandle) { try { __installFillHandle(jss, container, { dataColStart }); } catch (e) { console.warn('fill handle install failed', e); } }
+    if (autoScrollToToday) {_autoScrollToToday(jss, container, tym);}
   };
 
   window.GridControl = { 
