@@ -115,7 +115,7 @@
       ...meta.employees.map((name) => ({
         title: name,
         type: 'text',
-        width: 200,
+        width: 120,
       }))
     ];
 
