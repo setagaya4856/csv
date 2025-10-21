@@ -54,33 +54,83 @@
   color: #d32f2f !important;
   font-weight: 700;
 }
-/* 透けの原因を抑止（stacking contextを作らない） */
-.jexcel_content{
-  /* will-change: transform;  を外す */
-  will-change: auto;
-}
 
-/* 見出し（ヘッダー）を最前面＆塗りつぶし */
-.jexcel .sg-header{
+#grid .jexcel_content {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#grid .jexcel .jexcel_row {
+  font-weight: 500;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  box-shadow: 1px 0 0 #eee;
+}
+#grid .jexcel .jexcel_corner {
   position: sticky;
   top: 0;
-  z-index: 40;
-  background: #fff !important;
-  background-clip: padding-box;
+  left: 0;
+  z-index: 4;
+  background: #fff;
+  box-shadow: 1px 1px 0 #eee;
 }
-
-/* 固定領域そのものを上げて塗りつぶし */
-.jexcel .sg-frozen{
+.jexcel .readonly {
+  color: #555 !important;
+  background-color: #fafafa;
+}
+/* Jspreadsheet main and scroll areas fit parent */
+#grid .jexcel {
+  width: 100% !important;
+  max-width: 100% !important;
   position: relative;
-  z-index: 50;
+}
+#grid .jexcel_header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
   background: #fff;
 }
+#grid .jexcel_content {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
-/* 固定セルをさらに上に（dirty印より上） */
-.jexcel .sg-frozen-cell{
-  position: relative;            /* sticky はライブラリの inline に任せる */
-  z-index: 51;
-  background: #fff !important;
+/* Mobile-friendly cell behavior */
+.jexcel_content td{
+  white-space: nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  caret-color: transparent;
+}
+
+/* Readonly/frozen */
+.jexcel .readonly{ background:#fafafa; }
+.jexcel .jexcel_frozen{ background:#fff; }
+
+/* Sticky row headers */
+#grid .jexcel .jexcel_row {
+  font-weight: 500;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  box-shadow: 1px 0 0 #eee;
+}
+
+/* Sticky top-left corner */
+#grid .jexcel .jexcel_corner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  background: #fff;
+  box-shadow: 1px 1px 0 #eee;
 }
 
 /* Mobile-friendly cell behavior */
