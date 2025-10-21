@@ -54,35 +54,29 @@
   color: #d32f2f !important;
   font-weight: 700;
 }
-/* Prevent bleed-through under frozen headers/columns */
-.jexcel thead th,
-.jexcel thead td {
-  position: sticky;
-  top: 0;
-  z-index: 30;                   /* セルや疑似要素より前面 */
-  background: #fff !important;   /* 透け防止の塗りつぶし */
-  background-clip: padding-box;
-}
 
-/* Frozen columns (cells with sticky/left inline style) */
-.jexcel td[style*="position: sticky"],
-.jexcel th[style*="position: sticky"] {
-  z-index: 20;
-  background: #fff !important;
-  background-clip: padding-box;
-}
+/* ===== 積層と影の抑止 ===== */
+.jexcel .jexcel_frozen{ position:relative; z-index:5; background:#fff; }
+.jexcel .jexcel_content{ position:relative; z-index:1; }
 
-/* Intersection: top-left corner gets the highest */
-.jexcel thead th[style*="position: sticky"],
-.jexcel thead td[style*="position: sticky"] {
-  z-index: 40;
+.jexcel { position: relative; }
+.jexcel_content{
+  position: relative;
+  z-index: 10;
+  overflow: auto;
+  will-change: transform;
 }
-
-/* Selection/drag handles above all */
-.jexcel .jexcel_corner,
-.jexcel .jexcel_selection,
-.jexcel .jexcel_resize {
+.jexcel_frozen{
+  position: relative;
   z-index: 50;
+  background: #fff;
+  box-shadow: none !important;
+}
+.jexcel_frozen td,
+.jexcel_frozen th{
+  position: relative;
+  z-index: 51;
+  background: #fff;
 }
 
 /* Mobile-friendly cell behavior */
