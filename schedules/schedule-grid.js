@@ -194,7 +194,7 @@
           // 自分列の着色 & 他列は視覚的 readonly
           if (x >= 2) {
             const empCol = x - 2; // employees 配列の index
-            if(opts?.sProbablyMobile){
+            if(opts?.isProbablyMobile){
               if (empCol === myIndex) {
                 cell.classList.add('my-col');
               } else {
@@ -217,7 +217,7 @@
         }
       },
       // Optional: disable edition for now to keep it simple
-      editable: true
+      editable: ux?.editable
     });
     if (ux && window.GridControl?.installCommonJSSUX) {
       try { window.GridControl.installCommonJSSUX(grid, host, ux); } catch (e) { console.warn('installCommonJSSUX failed', e); }
