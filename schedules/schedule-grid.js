@@ -194,14 +194,23 @@
           // 自分列の着色 & 他列は視覚的 readonly
           if (x >= 2) {
             const empCol = x - 2; // employees 配列の index
-            if (empCol === myIndex) {
-              cell.classList.add('my-col');
-              cell.classList.remove('readonly');
-            } else {
-              if (!(opts?.isAdmin)){
-                cell.classList.add('readonly');
+            if(opts?.sProbablyMobile){
+              if (empCol === myIndex) {
+                cell.classList.add('my-col');
+              } else {
+                cell.classList.remove('my-col');
               }
-              cell.classList.remove('my-col');
+              cell.classList.add('readonly');
+            }else{
+              if (empCol === myIndex) {
+                cell.classList.add('my-col');
+                cell.classList.remove('readonly');
+              } else {
+                if (!(opts?.isAdmin)){
+                  cell.classList.add('readonly');
+                }
+                cell.classList.remove('my-col');
+              }
             }
           }
         } catch (e) {

@@ -679,7 +679,7 @@
           // 2) 従業員 → 列見出し、items → schedule に成形
           const { meta, schedule, memoByName, myIndex } = toScheduleForScheduleGrid(items, ym, dept, employeesVisible);
           // 3) ScheduleGrid へ投入（第2引数 opts で meta+schedule を渡す）
-          window.GridInstance = window.ScheduleGrid.init(el, { meta, schedule, memoByName, myIndex, isAdmin : currentUser?.is_admin,ym }, ux);
+          window.GridInstance = window.ScheduleGrid.init(el, { meta, schedule, memoByName, myIndex, isAdmin : currentUser?.is_admin,ym,isProbablyMobile : env.isProbablyMobile}, ux);
           // 同期: 既存コード互換のため旧グローバルにも保持
           grid = window.GridInstance;
           // ★ 保存用メタを保持（getCellKeyFromMeta が使う構造と揃える）
