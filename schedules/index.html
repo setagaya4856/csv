@@ -39,7 +39,15 @@
     header{ position:sticky; top:0; z-index:100; background:#fff; border-bottom:1px solid #e5e5e5; padding-top: calc(8px + var(--safe-top));}
     .bar{ display:flex; gap:8px; align-items:center; padding:8px var(--pad); flex-wrap:wrap; }
     .grow{ flex:1 1 auto; }
-    select, input, button, textarea{ font:inherit; padding:8px; border:1px solid #ccc; border-radius:8px; background:#fff; }
+    select, input, button, textarea{
+      font:inherit;
+      padding:8px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      background:#fff;
+      box-sizing:border-box;   /* prevent overflow by including padding/border */
+      max-width:100%;          /* avoid spilling out of narrow containers */
+    }
     button{ cursor:pointer; }
     .panel{ background:#fff; margin:12px; padding:12px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.04); 
       box-sizing: border-box;
