@@ -52,7 +52,7 @@
     .panel{ background:#fff; margin:12px; padding:12px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.04); 
       box-sizing: border-box;
       overflow: visible;          /* はみ出しをカット */}
-    .muted{ color:#666; font-size:.9em; }
+    .muted{ color:#666; font-size:1em; }
     .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     /* 親がスクロールを奪わないように（重要） */
     #companyListBody { max-height: 30vh; overflow: auto; }
@@ -915,22 +915,25 @@
             ${del}<div class="ev-main"><div style="font-weight:700;white-space:pre-wrap">${esc(e.event)}</div>${e.memo?`<div style="white-space:pre-wrap">${esc(e.memo)}</div>`:''}</div>
           </div>`;
         }
-        // 日別グループ
-        const byDay = new Map();
-        for(const e of normals){ const k=e.date; if(!byDay.has(k)) byDay.set(k,[]); byDay.get(k).push(e); }
-        for(const [day, arr] of byDay){
-          html += `<h3 style="margin:6px 0">${esc(day)}</h3><ul style="margin:0 0 8px 16px;padding:0">`;
-          arr.sort((a,b)=>(a.timestart||'').localeCompare(b.timestart||''));
-          for(const e of arr){
-            const t1=e.timestart?e.timestart.slice(0,5):'', t2=e.timeend?e.timeend.slice(0,5):'';
-            const tt=t1&&t2?`${t1}?${t2}`:(t1||'');
-            const del = canDeleteNotice ? `<button class="ev-del" data-ev-id="${e.id}" style="color:#e53935;background:transparent;border:none;cursor:pointer">削除</button>` : '';
-            html += `<li class="ev-item" style="display:flex;gap:8px;align-items:flex-start;">
-              ${del}<div class="ev-main"><strong style="white-space:pre-wrap">${esc(e.event)}</strong> ${tt}${e.memo?`<div class="muted" style="white-space:pre-wrap">${esc(e.memo)}</div>`:''}</div>
-            </li>`;
-          }
-          html += `</ul>`;
+        // 通常イベント（開始日～終了日で1行表示。月跨ぎは取得クエリで両月に含まれる）
+        const items = normals.slice().sort((a,b)=>{
+          const ad=(a.date||''); const bd=(b.date||'');
+          if(ad!==bd) return ad.localeCompare(bd);
+          return (a.timestart||'').localeCompare(b.timestart||'');
+        });
+        if(items.length){ html += `<ul style="margin:0 0 8px 16px;padding:0">`; }
+        for (const e of items) {
+          const hasEnd = !!e.date_end && e.date_end !== e.date;
+          const dateLabel = hasEnd ? `${esc(e.date)} ～ ${esc(e.date_end)}` : `${esc(e.date)}`;
+          const t1=e.timestart?e.timestart.slice(0,5):'';
+          const t2=e.timeend?e.timeend.slice(0,5):'';
+          const tt=t1&&t2?`${t1}～${t2}`:(t1||'');
+          const del = canDeleteNotice ? `<button class="ev-del" data-ev-id="${e.id}" style="color:#e53935;background:transparent;border:none;cursor:pointer">削除</button>` : '';
+          html += `<li class="ev-item" style="display:flex;gap:8px;align-items:flex-start;">
+            ${del}<div class="ev-main"><div class="muted">・${dateLabel}</div><strong style="white-space:pre-wrap">${esc(e.event)}</strong> ${tt}${e.memo?`<div class="muted" style="white-space:pre-wrap">${esc(e.memo)}</div>`:''}</div>
+          </li>`;
         }
+        if(items.length){ html += `</ul>`; }
         box.innerHTML = html;
       }catch(e){
         console.error(e);
@@ -1493,7 +1496,6 @@
     <!-- メモ -->
     <div id="memoPanel" class="panel quick-section" style="display:none;">
       <div id="memoTargetWrap" class="row" style="gap:6px;margin-bottom:6px;display:none;">
-        <label for="memoTargetSelect">対象</label>
         <select id="memoTargetSelect" style="min-width:160px;"></select>
       </div>
       <textarea id="qNote" placeholder="メモ（全月共通）" style="width:100%;min-height:70px;"></textarea>
@@ -1569,7 +1571,6 @@
   <footer></footer>
 </body>
 </html>
-
 
 
 
