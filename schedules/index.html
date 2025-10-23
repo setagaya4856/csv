@@ -1,14 +1,17 @@
 ﻿<!DOCTYPE html>
 <head>
   <meta charset="UTF-8" /><!-- iOS: ホーム画面追加で全画面表示 -->
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="行動予定表">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <!-- ノッチ端末の安全域 -->
+  <!-- PWA manifest -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./favicon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>行動予定表</title>
 
-  <link rel="icon" href="https://www.tjs.jp/wp/wp-content/uploads/2023/12/favicon.png" type="image/png">
+  <link rel="icon" href="./favicon.png" type="image/png">
   <!-- UI 基本 -->
   <style>
     :root {
@@ -362,6 +365,46 @@
       textarea.value = target?.note || '';
     }
 
+    // Sync Quick Registration inputs (AM/PM) for selected employee and date
+    async function syncQuickInputs(empId) {
+      try {
+        const dateEl = document.getElementById('qDate');
+        const amEl = document.getElementById('qAm');
+        const pmEl = document.getElementById('qPm');
+        if (!dateEl || !amEl || !pmEl) return;
+
+        const date = toYMD(dateEl.value);
+        if (!date) { amEl.value = ''; pmEl.value = ''; return; }
+
+        const ym = date.slice(0, 7);
+        let items = monthCache.get(ym);
+        if (!items) {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            if (token) {
+              items = await fetchMonthData(ym, token);
+            }
+          } catch {}
+        }
+
+        let am = '', pm = '';
+        if (items && empId != null) {
+          const strId = String(empId);
+          for (const it of items) {
+            if (String(it.employee_id) === strId && String(it.date).slice(0,10) === date) {
+              const slot = (String(it.slot || '').toLowerCase() === 'pm') ? 'pm' : 'am';
+              if (slot === 'am') am = it.title || '';
+              if (slot === 'pm') pm = it.title || '';
+            }
+          }
+        }
+
+        amEl.value = am || '';
+        pmEl.value = pm || '';
+      } catch {}
+    }
+
     function updateMemoTargetUI({ preserveSelection = false } = {}) {
       const wrap = document.getElementById('memoTargetWrap');
       const select = document.getElementById('memoTargetSelect');
@@ -403,6 +446,7 @@
         select.value = memoTargetEmployeeId ?? '';
       }
       syncMemoTextarea(memoTargetEmployeeId);
+      try { syncQuickInputs(memoTargetEmployeeId); } catch {}
     }
 
     const monthCache = new Map(); // ym -> normalized items
@@ -632,7 +676,7 @@
             enableInitialTextFit: true,
             allowHorizontalWheel: false,
             autoScrollToToday: true,
-            tym: ym,
+            tym: ym
           };
           const desktopUx = {
             ...commonUx,
@@ -1233,6 +1277,17 @@
               const val = event?.target?.value ?? '';
               memoTargetEmployeeId = val ? String(val) : null;
               syncMemoTextarea(memoTargetEmployeeId);
+              try { syncQuickInputs(memoTargetEmployeeId); } catch {}
+            });
+          }
+        })();
+
+        // When date changes, also refresh quick inputs for the selected target
+        (function bindQuickDate(){
+          const qd = document.getElementById('qDate');
+          if (qd) {
+            qd.addEventListener('change', () => {
+              try { syncQuickInputs(memoTargetEmployeeId); } catch {}
             });
           }
         })();
