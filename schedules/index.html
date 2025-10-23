@@ -356,7 +356,7 @@
     }
 
     function syncMemoTextarea(empId) {
-      const textarea = document.getElementById('qNote2');
+      const textarea = document.getElementById('qNote');
       if (!textarea) return;
       const target = findActiveEmployeeById(empId);
       textarea.value = target?.note || '';
@@ -740,9 +740,9 @@
     /* ===== 相互排他トグル ===== */
     const panels = {
       notice: { btn: document.getElementById('tglNotice'),  id:'noticePanel',  saveBtn:null },
-      quick:  { btn: document.getElementById('tglQuick'),   id:'quickPanel2',  saveBtn:document.getElementById('quickSaveBtn2') },
+      quick:  { btn: document.getElementById('tglQuick'),   id:'quickPanel',  saveBtn:document.getElementById('quickSaveBtn') },
       memo:   { btn: document.getElementById('tglMemo'),    id:'memoPanel',    saveBtn:document.getElementById('memoSaveBtn') },
-      company:{ btn: document.getElementById('tglCompany'), id:'companyPanel', saveBtn:document.getElementById('companySaveBtn2') },
+      company:{ btn: document.getElementById('tglCompany'), id:'companyPanel', saveBtn:document.getElementById('companySaveBtn') },
     };
 
     function openPanel(key) {
@@ -805,8 +805,8 @@
 
       // クイック/メモ（非アクティブは非表示）
       document.getElementById('tglQuick').style.display       = isActive ? '' : 'none';
-      document.getElementById('quickSaveBtn2').style.display  = isActive ? '' : 'none';
-      document.getElementById('quickPanel2').style.display    = 'none';
+      document.getElementById('quickSaveBtn').style.display  = isActive ? '' : 'none';
+      document.getElementById('quickPanel').style.display    = 'none';
 
       document.getElementById('tglMemo').style.display        = isActive ? '' : 'none';
       document.getElementById('memoSaveBtn').style.display    = isActive ? '' : 'none';
@@ -815,8 +815,9 @@
       // 会社予定：モバイルは強制非表示（管理者でも）
       const showCompany = !isProbablyMobile && isAdmin;
       document.getElementById('tglCompany').style.display     = showCompany ? '' : 'none';
-      document.getElementById('companySaveBtn2').style.display= showCompany ? '' : 'none';
+      document.getElementById('companySaveBtn').style.display= showCompany ? '' : 'none';
       document.getElementById('companyPanel').style.display   = 'none';
+      document.getElementById('memoTargetSelect').style.display = showCompany ? '' : 'none';
 
       // 初期の開閉：
       if (isProbablyMobile) {
@@ -904,7 +905,7 @@
       const btn = e.target instanceof HTMLElement ? e.target.closest('button.ev-del') : null; if(!btn) return;
       if(!currentUser?.is_admin) return alert('権限がありません');
       const id = btn.getAttribute('data-ev-id'); if(!id) return;
-      if(!confirm('この全体スケジュールを削除します。よろしいですか？')) return;
+      if(!confirm('この書き込みを削除します。よろしいですか？')) return;
       try{
         await deleteCompanyEventById(id);
         await refreshView({ companyOnly: true });
@@ -939,13 +940,13 @@
     }
 
     // 予定（午前・午後）
-    document.getElementById('quickSaveBtn2').addEventListener('click', async ()=>{
+    document.getElementById('quickSaveBtn').addEventListener('click', async ()=>{
       showOverlay(true,'保存中...');
       try{
-        const date = toYMD(document.getElementById('qDate2').value);
+        const date = toYMD(document.getElementById('qDate').value);
         if(!date){ alert('日付(YYYY-MM-DD)を入力'); return; }
-        const am = (document.getElementById('qAm2').value||'').trim();
-        const pm = (document.getElementById('qPm2').value||'').trim();
+        const am = (document.getElementById('qAm').value||'').trim();
+        const pm = (document.getElementById('qPm').value||'').trim();
         let employee_id;
         if (currentUser?.is_admin) {
           const v = document.getElementById('memoTargetSelect')?.value;
@@ -969,7 +970,7 @@
           const j=await r.json().catch(()=>({})); if(!r.ok || !j?.ok) throw new Error(j?.error||`HTTP ${r.status}`);
         }
         // ★ 追加：当月キャッシュ破棄 → 再描画
-        const ym = (document.getElementById('qDate2').value || '').slice(0,7);
+        const ym = (document.getElementById('qDate').value || '').slice(0,7);
         if (ym) monthCache.delete(ym);
         await refreshView();
         alert('更新しました');
@@ -981,7 +982,7 @@
     document.getElementById('memoSaveBtn').addEventListener('click', async ()=>{
       showOverlay(true,'保存中...');
       try{
-        const noteRaw = document.getElementById('qNote2')?.value;
+        const noteRaw = document.getElementById('qNote')?.value;
         const note = typeof noteRaw === 'string' ? noteRaw : String(noteRaw ?? '');
 
         let employee_id;
@@ -1025,17 +1026,17 @@
       }
     });
     /* ===== 会社予定登録（管理者）===== */
-    document.getElementById('companySaveBtn2').addEventListener('click', async ()=>{
+    document.getElementById('companySaveBtn').addEventListener('click', async ()=>{
       if(!currentUser?.is_admin) return alert('権限がありません');
       showOverlay(true,'保存中...');
       try{
-        const kind = document.getElementById('cKind2').value;
-        const date = toYMD(document.getElementById('cDate2').value);
-        const date_end = toYMD(document.getElementById('cDateEnd2').value);
-        const start = kind==='event' ? normalizeHHMM(document.getElementById('cStart2').value) : null;
-        const end   = kind==='event' ? normalizeHHMM(document.getElementById('cEnd2').value)   : null;
-        const title = (document.getElementById('cTitle2').value||'').trim();
-        const memo  = (document.getElementById('cMemo2').value||'').trim();
+        const kind = document.getElementById('cKind').value;
+        const date = toYMD(document.getElementById('cDate').value);
+        const date_end = toYMD(document.getElementById('cDateEnd').value);
+        const start = kind==='event' ? normalizeHHMM(document.getElementById('cStart').value) : null;
+        const end   = kind==='event' ? normalizeHHMM(document.getElementById('cEnd').value)   : null;
+        const title = (document.getElementById('cTitle').value||'').trim();
+        const memo  = (document.getElementById('cMemo').value||'').trim();
         if(!date) return alert('開始日を入力してください');
         if(!title) return alert('タイトルを入力してください');
           const { data:{ session } } = await supabase.auth.getSession();
@@ -1047,7 +1048,7 @@
         });
         const j=await r.json().catch(()=>({})); if(!r.ok || j?.ok===false) throw new Error(j?.error||`HTTP ${r.status}`);
         await refreshView({ companyOnly: true });
-        alert('全体スケジュールを登録しました');
+        alert('掲示板に登録しました');
       }catch(e){ alert('登録失敗：'+e.message); } finally {
         showOverlay(false);
       }
@@ -1262,7 +1263,7 @@
               const p = Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));
               return `${p.year}-${p.month}-${p.day}`;
             }catch{return ''; } })();
-            const qd = document.getElementById('qDate2'); if(qd) qd.value = today;
+            const qd = document.getElementById('qDate'); if(qd) qd.value = today;
 
             applyRoleVisibility();                       // 権限で可視切替
             renderCompanyList(document.getElementById('monthSelect').value); // お知らせ(一覧)初期描画
@@ -1397,8 +1398,8 @@
       <span>お知らせ</span>
 
       <!-- クイック登録 -->
-      <button id="tglQuick" class="tgl" type="button" aria-pressed="false" data-target="quickPanel2">＋</button>
-      <button id="quickSaveBtn2" class="btn" type="button">予定</button>
+      <button id="tglQuick" class="tgl" type="button" aria-pressed="false" data-target="quickPanel">＋</button>
+      <button id="quickSaveBtn" class="btn" type="button">予定</button>
 
       <!-- メモ -->
       <button id="tglMemo" class="tgl" type="button" aria-pressed="false" data-target="memoPanel">＋</button>
@@ -1406,7 +1407,7 @@
 
       <!-- 会社予定登録（管理者のみ可視） -->
       <button id="tglCompany" class="tgl" type="button" aria-pressed="false" data-target="companyPanel" style="display:none">＋</button>
-      <button id="companySaveBtn2" class="btn" type="button" style="display:none">全体</button>
+      <button id="companySaveBtn" class="btn" type="button" style="display:none">掲示板</button>
     </div>
     <!-- お知らせ（＝会社予定一覧） -->
     <div id="noticePanel" class="panel quick-section" style="display:none;">
@@ -1414,16 +1415,16 @@
     </div>
 
     <!-- クイック登録 -->
-    <div id="quickPanel2" class="panel quick-section" style="display:none;">
+    <div id="quickPanel" class="panel quick-section" style="display:none;">
       <div class="row">
         <label>日付</label>
-        <input id="qDate2" type="date" />
+        <input id="qDate" type="date" />
       </div>
       <div class="row" style="margin-top:8px;">
-        <input id="qAm2" type="text" placeholder="午前（例：現場A）" style="flex:1 1 200px;">
+        <input id="qAm" type="text" placeholder="午前（例：現場A）" style="flex:1 1 200px;">
       </div>
       <div class="row" style="margin-top:8px;">
-        <input id="qPm2" type="text" placeholder="午後（例：現場B）" style="flex:1 1 200px;">
+        <input id="qPm" type="text" placeholder="午後（例：現場B）" style="flex:1 1 200px;">
       </div>
     </div>
 
@@ -1433,26 +1434,26 @@
         <label for="memoTargetSelect">対象</label>
         <select id="memoTargetSelect" style="min-width:160px;"></select>
       </div>
-      <textarea id="qNote2" placeholder="メモ（全月共通）" style="width:100%;min-height:70px;"></textarea>
+      <textarea id="qNote" placeholder="メモ（全月共通）" style="width:100%;min-height:70px;"></textarea>
     </div>
 
     <!-- 会社予定登録（管理者のみ可視） -->
     <div id="companyPanel" class="panel quick-section" style="display:none;">
       <div class="row" style="gap:6px;flex-wrap:wrap;">
-        <select id="cKind2" style="min-width:108px;">
+        <select id="cKind" style="min-width:108px;">
           <option value="event">行事</option>
           <option value="notice">お知らせ</option>
         </select>
-        <input id="cDate2" type="date">
-        <input id="cDateEnd2" type="date" placeholder="終了日(任意)">
-        <input id="cStart2" type="text" placeholder="開始 0930/09:30" inputmode="numeric" style="max-width:140px;">
-        <input id="cEnd2"   type="text" placeholder="終了 1730/17:30" inputmode="numeric" style="max-width:140px;">
+        <input id="cDate" type="date">
+        <input id="cDateEnd" type="date" placeholder="終了日(任意)">
+        <input id="cStart" type="text" placeholder="開始 0930/09:30" inputmode="numeric" style="max-width:140px;">
+        <input id="cEnd"   type="text" placeholder="終了 1730/17:30" inputmode="numeric" style="max-width:140px;">
       </div>
       <div class="row" style="gap:6px;flex-wrap:wrap;">
-        <input id="cTitle2" type="text" placeholder="行事名/タイトル" style="flex:1 1 220px;">
+        <input id="cTitle" type="text" placeholder="行事名/タイトル" style="flex:1 1 220px;">
       </div>
       <div class="row" style="margin-top:6px;">
-        <textarea id="cMemo2" placeholder="備考/内容（改行可）" style="width:100%;min-height:70px;"></textarea>
+        <textarea id="cMemo" placeholder="備考/内容（改行可）" style="width:100%;min-height:70px;"></textarea>
       </div>
     </div>
     
@@ -1475,10 +1476,13 @@
       <div id="helpBody" class="help-body">
         <p>※URLや仕様は変更になる可能性があります<br>
         エクセルとは連動していません、テストデータなので自由に編集可能です<br>
+        本運用時にエクセルの行動予定表を完全に移します<br>
+        ログイン者以外には非公開の情報ですが、安全のため個人情報は保存しないでください<br>
         <br><strong>動作不良時について</strong><br>
         ボタンが反応しない・保存出来ない・うまく表示されない などが起こったときは<br>
         保存をせずに<br>・一度ブラウザを落とす<br>・更新(F5)する<br>・ログアウトして再度ログインする<br>
         などの対応をお願いします<br>
+        また不具合などあれば岩井に連絡ください。<br>
         <br><strong>PC操作について</strong><br>
         セルをクリックすると入力欄が開きます。<br>
         もしエクセルのように中の文字でなくセルを選択したい場合はクリックを長押ししてください。<br>
@@ -1492,8 +1496,8 @@
         上部からのみ編集可能です<br>
         またiOSはブラウザ下部のボタンからホーム画面に追加することで<br>
         上下のノッチ・URL欄が無い状態での表示が可能です<br>
-        <br><strong>管理者向け設定について</strong><br>管理者は全員のスケジュール・メモを編集可能になっています<br>さらに上部の全体表示登録欄からお知らせや行事の登録・削除が可能です。<br>「全体表示登録」ボタンの左隣の「＋」または「－」ボタンで入力欄を開閉できます。<br>入力欄に予定を入れて「全体」ボタンを押すと保存されます。<br>削除は削除したい内容の左隣の「削除」のボタンを押してください。<br>
-        全体表示登録、入力欄詳細<br>・種別(必須)-お知らせか行事か選択出来ます。お知らせなら優先して上部に表示<br>・開始日(必須)-行事なら開催日、お知らせなら表示期間を入力<br>・終了日-行事なら複数日にわたる場合入力、お知らせなら表示期間の最後を入力<br>・開始-行事のみ入力、特に入力しなくてもOK(例：0905もしくは9:03)<br>・終了-行事のみ入力、特に入力しなくてもOK(例：0905もしくは9:03)<br>・行事名タイトル(必須)-改行不可<br>・備考内容-改行可能、お知らせの場合は必須<br>
+        <br><strong>管理者向け設定について</strong><br>管理者は全員のスケジュール・メモを編集可能になっています<br>さらに上部の掲示板入力欄からお知らせや行事の登録・削除が可能です。<br>「掲示板」ボタンの左隣の「＋」または「－」ボタンで入力欄を開閉できます。<br>入力欄に予定を入れて「掲示板」ボタンを押すと保存されます。<br>削除は削除したい内容の左隣の「削除」のボタンを押してください。<br>
+        掲示板入力欄詳細<br>・種別(必須)-お知らせか行事か選択出来ます。お知らせなら優先して上部に表示<br>・開始日(必須)-行事なら開催日、お知らせなら表示期間を入力<br>・終了日-行事なら複数日にわたる場合入力、お知らせなら表示期間の最後を入力<br>・開始-行事のみ入力、特に入力しなくてもOK(例：0905もしくは9:03)<br>・終了-行事のみ入力、特に入力しなくてもOK(例：0905もしくは9:03)<br>・行事名タイトル(必須)-改行不可<br>・備考内容-改行可能、お知らせの場合は必須<br>
       </div>
     </div>
   </div>
