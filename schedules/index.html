@@ -460,11 +460,6 @@
     const monthCache = new Map(); // ym -> normalized items
 
     const $ = (q)=>document.querySelector(q);
-    const fmt = new Intl.DateTimeFormat('ja-JP',{ timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
-    const todayYmd = ()=> {
-      const p = Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));
-      return `${p.year}-${p.month}-${p.day}`;
-    };
     const ymOf = (d)=> `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     const monthsAround = (base=new Date(), back=3, fwd=3)=>{
       const list=[]; const d=new Date(base.getFullYear(), base.getMonth()-back, 1);
@@ -473,11 +468,26 @@
       return list;
     };
 
-    function ymdToday() {
-      const p = Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));
-      return `${p.year}-${p.month}-${p.day}`;
-    }
-    
+    // ページ読み込み時のJST“今日”を固定
+    const JST_NOW = (() => {
+      const parts = Object.fromEntries(
+      new Intl.DateTimeFormat('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(new Date()).map(x => [x.type, x.value])
+      );
+      const { year, month, day } = parts;
+      // JSTのその日 12:00 を指す“安全な瞬間”（TZずれ回避用）
+      const safeForTZ = new Date(Date.UTC(+year, +month - 1, +day, 3, 0, 0)); // 12:00 JST = 03:00 UTC
+      return Object.freeze({
+      year, month, day,
+      ym: `${year}-${month}`,
+      ymd: `${year}-${month}-${day}`,
+      asDate: new Date(+year, +month - 1, +day),
+      safeForTZ,
+      });
+    })();
+
     function detectEnvironment() {
       const isSmallViewport = matchMedia('(max-width: 480px)').matches; // SE2=375px想定
       const isCoarsePointer = matchMedia('(pointer: coarse)').matches;
@@ -884,16 +894,23 @@
     function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     async function fetchCompanyEventsForMonth(ym){
-      const [y,m]=ym.split('-').map(Number);
-      const start=new Date(y,m-1,1), end=new Date(y,m,1);
-      const d2=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const [y, m] = ym.split('-').map(Number);
+      const pad = n => String(n).padStart(2,'0');
+      const start = `${y}-${pad(m)}-01`;
+      const endY = (m === 12) ? y + 1 : y;
+      const endM = (m === 12) ? 1 : m + 1;
+      const end = `${endY}-${pad(endM)}-01`;
+
       const { data, error } = await supabase
-        .from('company_events')
-        .select('id, kind, date, date_end, timestart, timeend, event, memo')
-        .or(`and(date.gte.${d2(start)},date.lt.${d2(end)}),and(date.lte.${d2(end)},date_end.gte.${d2(start)})`)
-        .order('date',{ascending:true})
-        .order('timestart',{ascending:true});
-      if(error) throw error; return data||[];
+      .from('company_events')
+      .select('id, kind, date, date_end, timestart, timeend, event, memo')
+      // 単日 or 期間イベントの重なりを包含、endは「翌月1日」未満に統一
+      .or(`and(date.gte.${start},date.lt.${end}),and(date.lt.${end},date_end.gte.${start})`)
+      .order('date',{ascending:true})
+      .order('timestart',{ascending:true});
+
+      if (error) throw error;
+      return data || [];
     }
 
     async function renderCompanyList(ym){
@@ -1161,7 +1178,7 @@
       const container = document.getElementById('todayCards');
       container.innerHTML = '';
 
-      const today = ymdToday();
+      const today = JST_NOW.ymd;
 
       // 今日の (empId -> {am, pm}) を集計
       const byEmp = new Map();
@@ -1241,18 +1258,18 @@
       const { access_token: token } = await getActiveSessionOrLogout();
       showOverlay(true,'読込中...');
       try {
-      const ym = ymOf(new Date()); // 今日の月
-      // 既存の月データAPIを使って当月の items を取得し、今日だけ抽出
-      const items = await fetchMonthData(ym, token);
-      renderTodayCardsFrom(items);
+        const ym = JST_NOW.ym;// 今日の月
+        // 既存の月データAPIを使って当月の items を取得し、今日だけ抽出
+        const items = await fetchMonthData(ym, token);
+        renderTodayCardsFrom(items);
 
-      currentGridMeta = null;
-      clearAllDirty(true,[]);
+        currentGridMeta = null;
+        clearAllDirty(true,[]);
 
-      // 表示切替
-      document.getElementById('gridPanel').style.display  = 'none';
-      document.getElementById('todayPanel').style.display = '';
-      snapshotSelectValues();
+        // 表示切替
+        document.getElementById('gridPanel').style.display  = 'none';
+        document.getElementById('todayPanel').style.display = '';
+        snapshotSelectValues();
       } finally {
         showOverlay(false);
       }
@@ -1260,7 +1277,7 @@
     /* =============================== 起動 =============================== */
     document.addEventListener('DOMContentLoaded', async ()=>{
       // UI 初期組み立て
-      fillMonthOptions(new Date());
+      fillMonthOptions(JST_NOW.asDate);
 
       // 認証状態に応じた表示（モバイルは簡略：未ログインならSupabaseのメール/パスでログイン）
       const { data:{ session } } = await supabase.auth.getSession();
@@ -1324,11 +1341,7 @@
           // 既存の session チェック後に…
           try{
             // 既存 today設定
-            const today = (function(){ try{
-              const fmt = new Intl.DateTimeFormat('ja-JP',{ timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit' });
-              const p = Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));
-              return `${p.year}-${p.month}-${p.day}`;
-            }catch{return ''; } })();
+            const today = JST_NOW.ymd;
             const qd = document.getElementById('qDate'); if(qd) qd.value = today;
 
             applyRoleVisibility();                       // 権限で可視切替

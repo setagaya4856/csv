@@ -44,13 +44,7 @@
   }
 
 // ローカル日付で 'YYYY-MM-DD' を作る（JST安全）
-function __todayYmdLocal() {
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm   = String(now.getMonth() + 1).padStart(2, '0');
-  const dd   = String(now.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
+function __todayYmdLocal() { return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }); }
 
 /**
  * 初期表示：対象月(ym)が今月なら「今日」の行まで自動スクロール（縦）

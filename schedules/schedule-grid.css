@@ -16,6 +16,11 @@
 .ht-sat  { background:#e6ffed !important; }
 .ht-sun, .ht-holiday{ background:#ffe5e5 !important; }
 
+/* AM/PM の間にごく薄いセパレーター（低優先度） */
+.jexcel_content .ht-row-am {
+  border-top: 3px solid rgba(0,0,0,0.12);
+}
+
 /* 擬似要素を置けるように */
 .jexcel td { position: relative; }
 /* Dirty cell marker */

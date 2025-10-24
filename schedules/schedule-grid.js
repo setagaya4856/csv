@@ -164,7 +164,7 @@
 
           // ScheduleGrid では A列が日付（行＝日付、列＝社員）
           const raw = String((data?.[y]?.[0] ?? '')).trim(); // A列：日付
-          const today = (new Date()).toISOString().slice(0,10);
+          const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
 
           const ymd = getYmdForRow(data, y);
 
@@ -174,14 +174,13 @@
             if (m) cell.textContent = `${m[2]}`;
           }
 
-
           // 日付ハイライト（当日/土日/休日、「休」）
           if (x >= 2 && ymd) {
           // PC版の classesByDate 相当（weekday判定＋祝日判定）
             const [Y,M,D] = ymd.split('-').map(Number);
             const wd = (function weekday(y,m,d){ const t=[0,3,2,5,0,3,5,1,4,6,2,4]; if(m<3) y-=1; return (y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)+t[m-1]+d)%7; })(Y,M,D);
             const add = [];
-            const today = new Date().toISOString().slice(0,10);
+            const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
             if (ymd === today) add.push('ht-today');
             if (wd === 6) add.push('ht-sat');
             if (wd === 0) add.push('ht-sun');
@@ -213,6 +212,12 @@
                 cell.classList.remove('my-col');
               }
             }
+          }
+          
+          if (y > 0 && (y % 2 === 1)) { 
+            cell.classList.add('ht-row-am');
+          }else{
+            cell.classList.remove('ht-row-am');
           }
         } catch (e) {
         }
